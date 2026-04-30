@@ -16,7 +16,7 @@ export default function Navbar() {
       isScrolled ? 'bg-white/80 backdrop-blur-md border-b border-zinc-100 py-4' : 'bg-transparent'
     }`}>
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <div className="text-xl font-serif tracking-[0.2em] text-zinc-900">Saskia Cleaning</div>
+        <div className="text-xl font-serif tracking-[0.2em] "> <span className='text-zinc-900'>Saskia</span> <span className='text-stone-400'>Cleaning</span> </div>
         
         <div className="hidden md:flex gap-12 text-[10px] uppercase tracking-[0.3em] font-semibold text-zinc-500">
           <a href="#" className="hover:text-black transition">Expertise</a>
