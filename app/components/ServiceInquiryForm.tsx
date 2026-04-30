@@ -69,7 +69,7 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
 
 {/* Center Image (KEY CHANGE) */}
 <div className="flex justify-center items-center py-10">
-  <div className="relative w-[75%] aspect-[3/4] overflow-hidden shadow-xl">
+  <div className="relative w-[75%] h-[65%]  aspect-[3/4] overflow-hidden shadow-xl">
     
     <AnimatePresence mode="wait">
       <motion.img
