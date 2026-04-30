@@ -4,6 +4,9 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import ServiceInquiryForm from "./ServiceInquiryForm";
+import ArchitecturalCarousel from "./ArchitecturalCarousel"
+
+
 
 export default function Hero() {
   const containerRef = useRef(null);
@@ -82,11 +85,13 @@ export default function Hero() {
             className="absolute left-0 bottom-20 w-3/5 h-3/5 border-[12px] border-[#FCFAF8] overflow-hidden rounded-sm shadow-2xl hidden md:block z-20"
           >
             <div className="relative w-full h-full overflow-hidden">
-              <img 
+              {/* <img 
                 src="https://images.unsplash.com/photo-1613545325278-f24b0cae1224?q=80&w=2070" 
                 className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-[2.5s] ease-out" 
                 alt="Meticulous Architectural Detail"
-              />
+              /> */}
+              <ArchitecturalCarousel />
+        
             </div>
           </motion.div>
 

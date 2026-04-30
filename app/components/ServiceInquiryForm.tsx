@@ -133,17 +133,26 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
+  
     if (!validateStep()) return;
-
+  
     setIsSubmitting(true);
     setSubmitError("");
     setSuccessMessage("");
-
+  
     try {
-      // Replace this with your real API call.
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
+      const response = await fetch("/api/service-inquiry", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Submission failed");
+      }
+  
       setSuccessMessage(
         "Your request has been received. A concierge will be in contact shortly to confirm the next steps."
       );
