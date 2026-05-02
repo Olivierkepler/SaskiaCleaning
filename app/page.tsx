@@ -5,6 +5,7 @@ import { TrustBar } from './components/TrustBar';
 import { Services } from './components/Services';
 import Contact from './components/Contact';
 import SectionWrapper from './components/SectionWrapper';
+import CleaningPricingCalculator from './components/CleaningPricingCalculator';
 import { motion } from 'framer-motion';
 
 export default function Home() {
@@ -18,6 +19,10 @@ export default function Home() {
       <SectionWrapper>
         <TrustBar />
       </SectionWrapper>
+{/* 
+      <SectionWrapper>
+       <CleaningPricingCalculator/>
+      </SectionWrapper> */}
 
       {/* 3. BentoGrid: 3D Scale Reveal */}
       <SectionWrapper>
