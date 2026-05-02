@@ -1,279 +1,183 @@
 "use client";
 
-import Image from "next/image";
-
 const serviceCategories = [
   {
     title: "Residential Cleaning",
-    description: "Home cleaning packages for apartments, houses, and move-in or move-out needs.",
+    tag: "Most Popular",
+    image:
+      "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1200&q=80",
+    description:
+      "Home cleaning packages for apartments, houses, and move-in or move-out needs.",
     services: [
-      {
-        name: "Basic Cleaning",
-        price: "$100",
-        priceNote: "starting price",
-        image: "/images/services/basic-cleaning.jpg",
-        description: "Light cleaning for bedrooms, bathrooms, kitchen surfaces, floors, and common areas.",
-      },
-      {
-        name: "Standard Cleaning",
-        price: "$140",
-        priceNote: "starting price",
-        image: "/images/services/standard-cleaning.jpg",
-        description: "A fuller cleaning service including dusting, vacuuming, mopping, counters, sinks, and bathroom refresh.",
-      },
-      {
-        name: "Deep Cleaning",
-        price: "$220",
-        priceNote: "starting price",
-        image: "/images/services/deep-cleaning.jpg",
-        description: "Detailed cleaning for neglected areas, baseboards, appliances, fixtures, and high-touch surfaces.",
-      },
-      {
-        name: "Move-In / Move-Out Cleaning",
-        price: "$250",
-        priceNote: "starting price",
-        image: "/images/services/move-cleaning.jpg",
-        description: "Complete cleaning for empty homes, apartments, and rental spaces before or after moving.",
-      },
+      { name: "Basic Cleaning", price: "$100+" },
+      { name: "Standard Cleaning", price: "$140+" },
+      { name: "Deep Cleaning", price: "$220+" },
+      { name: "Move-In / Move-Out Cleaning", price: "$250+" },
     ],
   },
   {
     title: "Commercial Cleaning",
-    description: "Professional cleaning services for offices, retail spaces, and small businesses.",
+    tag: "Business",
+    image:
+      "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
+    description:
+      "Professional cleaning services for offices, retail spaces, and small businesses.",
     services: [
-      {
-        name: "Office Cleaning",
-        price: "$0.15",
-        priceNote: "per sq. ft.",
-        image: "/images/services/office-cleaning.jpg",
-        description: "Cleaning for desks, floors, trash removal, bathrooms, break rooms, and shared workspaces.",
-      },
-      {
-        name: "Retail Cleaning",
-        price: "$0.18",
-        priceNote: "per sq. ft.",
-        image: "/images/services/retail-cleaning.jpg",
-        description: "Keeps storefronts, fitting rooms, floors, counters, and customer areas clean and welcoming.",
-      },
-      {
-        name: "Small Business Cleaning",
-        price: "$180",
-        priceNote: "starting price",
-        image: "/images/services/business-cleaning.jpg",
-        description: "Flexible cleaning for salons, studios, clinics, shops, and small professional spaces.",
-      },
-      {
-        name: "Recurring Janitorial Cleaning",
-        price: "$350",
-        priceNote: "weekly starting price",
-        image: "/images/services/janitorial-cleaning.jpg",
-        description: "Scheduled maintenance cleaning for businesses that need consistent weekly service.",
-      },
+      { name: "Office Cleaning", price: "$0.15 / sq. ft." },
+      { name: "Retail Cleaning", price: "$0.18 / sq. ft." },
+      { name: "Small Business Cleaning", price: "$180+" },
+      { name: "Recurring Janitorial Cleaning", price: "$350+ weekly" },
     ],
   },
   {
     title: "Laundry Services",
-    description: "Laundry care for clients who need clothes, bedding, and linens washed, dried, and folded.",
+    tag: "Laundry Care",
+    image:
+      "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=1200&q=80",
+    description:
+      "Laundry care for clothes, bedding, linens, washing, drying, folding, and pressing.",
     services: [
-      {
-        name: "Wash & Fold",
-        price: "$1.75",
-        priceNote: "per pound",
-        image: "/images/services/wash-fold.jpg",
-        description: "Clothes are washed, dried, folded neatly, and prepared for pickup or delivery.",
-      },
-      {
-        name: "Wash, Dry & Fold",
-        price: "$25",
-        priceNote: "per load",
-        image: "/images/services/wash-dry-fold.jpg",
-        description: "A complete laundry load service for everyday clothing, towels, and personal items.",
-      },
-      {
-        name: "Ironing / Pressing",
-        price: "$3",
-        priceNote: "per item",
-        image: "/images/services/ironing.jpg",
-        description: "Wrinkle removal and pressing for shirts, pants, dresses, uniforms, and business wear.",
-      },
-      {
-        name: "Bedding & Linen Cleaning",
-        price: "$35",
-        priceNote: "starting price",
-        image: "/images/services/linen-cleaning.jpg",
-        description: "Laundry care for sheets, pillowcases, comforters, blankets, towels, and household linens.",
-      },
-      {
-        name: "Pickup & Delivery Laundry",
-        price: "$15",
-        priceNote: "service fee",
-        image: "/images/services/laundry-pickup.jpg",
-        description: "Convenient laundry pickup and drop-off service for busy clients.",
-      },
-      {
-        name: "Same-Day Laundry",
-        price: "+$20",
-        priceNote: "rush fee",
-        image: "/images/services/same-day-laundry.jpg",
-        description: "Fast laundry turnaround for clients who need their clothes cleaned quickly.",
-      },
+      { name: "Wash & Fold", price: "$1.75 / lb" },
+      { name: "Wash, Dry & Fold", price: "$25 / load" },
+      { name: "Ironing / Pressing", price: "$3 / item" },
+      { name: "Bedding & Linen Cleaning", price: "$35+" },
+      { name: "Pickup & Delivery Laundry", price: "$15 fee" },
+      { name: "Same-Day Laundry", price: "+$20 rush" },
     ],
   },
   {
     title: "Specialty Cleaning",
-    description: "Extra cleaning services for specific areas, materials, or larger cleaning needs.",
+    tag: "Detailed Service",
+    image:
+      "https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=1200&q=80",
+    description:
+      "Extra cleaning services for specific areas, materials, or larger cleaning needs.",
     services: [
-      {
-        name: "Carpet Cleaning",
-        price: "$45",
-        priceNote: "per room",
-        image: "/images/services/carpet-cleaning.jpg",
-        description: "Refreshes carpets by targeting dirt, stains, odors, and high-traffic areas.",
-      },
-      {
-        name: "Window Cleaning",
-        price: "$8",
-        priceNote: "per window",
-        image: "/images/services/window-cleaning.jpg",
-        description: "Interior window cleaning for clearer glass, frames, and window sills.",
-      },
-      {
-        name: "Post-Construction Cleaning",
-        price: "$300",
-        priceNote: "starting price",
-        image: "/images/services/post-construction.jpg",
-        description: "Removes dust, debris, residue, and construction mess after renovation or building work.",
-      },
-      {
-        name: "Appliance Cleaning",
-        price: "$30",
-        priceNote: "per appliance",
-        image: "/images/services/appliance-cleaning.jpg",
-        description: "Detailed cleaning for appliances such as fridges, ovens, microwaves, and dishwashers.",
-      },
+      { name: "Carpet Cleaning", price: "$45 / room" },
+      { name: "Window Cleaning", price: "$8 / window" },
+      { name: "Post-Construction Cleaning", price: "$300+" },
+      { name: "Appliance Cleaning", price: "$30 / appliance" },
     ],
   },
   {
     title: "Add-On Services",
-    description: "Optional extras clients can add to their cleaning package.",
+    tag: "Extras",
+    image:
+      "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=1200&q=80",
+    description:
+      "Optional extras clients can add to their cleaning package for a more complete service.",
     services: [
-      {
-        name: "Inside Fridge Cleaning",
-        price: "$25",
-        priceNote: "add-on",
-        image: "/images/services/fridge-cleaning.jpg",
-        description: "Interior refrigerator cleaning including shelves, drawers, and visible spills.",
-      },
-      {
-        name: "Oven Cleaning",
-        price: "$30",
-        priceNote: "add-on",
-        image: "/images/services/oven-cleaning.jpg",
-        description: "Interior oven cleaning to remove buildup, grease, and food residue.",
-      },
-      {
-        name: "Pet Hair Removal",
-        price: "$20",
-        priceNote: "add-on",
-        image: "/images/services/pet-hair-removal.jpg",
-        description: "Extra vacuuming and detail work for pet hair on furniture, floors, and fabrics.",
-      },
-      {
-        name: "Cabinet Cleaning",
-        price: "$35",
-        priceNote: "add-on",
-        image: "/images/services/cabinet-cleaning.jpg",
-        description: "Wiping cabinet doors, handles, and exterior surfaces in kitchens or bathrooms.",
-      },
-      {
-        name: "Eco-Friendly Products",
-        price: "$10",
-        priceNote: "add-on",
-        image: "/images/services/eco-cleaning.jpg",
-        description: "Use of eco-conscious cleaning products upon client request.",
-      },
-      {
-        name: "Extra Bathroom Cleaning",
-        price: "$25",
-        priceNote: "per bathroom",
-        image: "/images/services/bathroom-cleaning.jpg",
-        description: "Additional bathroom cleaning for larger homes or extra service needs.",
-      },
+      { name: "Inside Fridge Cleaning", price: "$25" },
+      { name: "Oven Cleaning", price: "$30" },
+      { name: "Pet Hair Removal", price: "$20" },
+      { name: "Cabinet Cleaning", price: "$35" },
+      { name: "Eco-Friendly Products", price: "$10" },
+      { name: "Extra Bathroom Cleaning", price: "$25 / bathroom" },
+    ],
+  },
+  {
+    title: "Airbnb / Short-Term Rental Cleaning",
+    tag: "Turnover Ready",
+    image:
+      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
+    description:
+      "Fast and reliable cleaning for Airbnb and short-term rentals to keep your space guest-ready.",
+    services: [
+      { name: "Standard Turnover Cleaning", price: "$120+" },
+      { name: "Deep Turnover Cleaning", price: "$180+" },
+      { name: "Linen Replacement Service", price: "$30" },
+      { name: "Restocking Essentials", price: "$25" },
+      { name: "Same-Day Turnover", price: "+$40 rush" },
     ],
   },
 ];
 
 export default function CleaningServicesPricing() {
   return (
-    <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
+    <section className="relative overflow-hidden bg-[#FCFAF8] px-6 py-20 sm:px-8 lg:px-16">
+      <div className="absolute left-1/2 top-0 -z-10 h-72 w-72 -translate-x-1/2 rounded-full bg-stone-200/40 blur-3xl" />
+
       <div className="mx-auto max-w-7xl">
-        <div className="mx-auto mb-12 max-w-3xl text-center">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-teal-600">
-            Our Services
-          </p>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
-            Cleaning & Laundry Service Pricing
+        <div className="mx-auto mb-14 max-w-3xl text-center">
+          <span className="text-[10px] tracking-[0.35em] uppercase text-stone-400 font-semibold block mb-6">
+            Professional Cleaning Services
+          </span>
+
+          <h2 className="text-4xl md:text-5xl font-serif tracking-tight text-[#1A1A1A] leading-[1.1]">
+            Cleaning & Laundry Pricing Made Simple
           </h2>
-          <p className="mt-4 text-base leading-7 text-slate-600">
+
+          <p className="mt-6 text-lg md:text-xl font-light text-stone-500 leading-relaxed">
             Choose from residential cleaning, commercial cleaning, laundry care,
-            specialty services, and add-ons. Prices may vary depending on home size,
-            condition, location, and custom requests.
+            specialty services, Airbnb turnover cleaning, and add-ons.
           </p>
         </div>
 
-        <div className="space-y-16">
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
           {serviceCategories.map((category) => (
-            <div key={category.title}>
-              <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-                <div>
-                  <h3 className="text-2xl font-bold text-slate-950">{category.title}</h3>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                    {category.description}
-                  </p>
+            <article
+              key={category.title}
+              className="group overflow-hidden rounded-sm bg-white shadow-sm border border-stone-200/60 transition duration-300 hover:-translate-y-2 hover:shadow-xl"
+            >
+              <div className="relative h-64 w-full overflow-hidden bg-stone-200">
+                <img
+                  src={category.image}
+                  alt={category.title}
+                  className="h-full w-full object-cover grayscale-[10%] transition duration-500 group-hover:scale-105 group-hover:grayscale-0"
+                  loading="lazy"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A]/80 via-[#1A1A1A]/25 to-transparent" />
+
+                <div className="absolute bottom-5 left-5 right-5">
+                  <span className="mb-3 inline-block text-[9px] font-bold uppercase tracking-[0.25em] text-stone-200">
+                    {category.tag}
+                  </span>
+
+                  <h3 className="text-2xl md:text-3xl font-serif text-white tracking-tight">
+                    {category.title}
+                  </h3>
                 </div>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {category.services.map((service) => (
-                  <article
-                    key={service.name}
-                    className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200 transition hover:-translate-y-1 hover:shadow-lg"
-                  >
-                    <div className="relative h-48 w-full overflow-hidden bg-slate-200">
-                      <Image
-                        src={service.image}
-                        alt={service.name}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      />
+              <div className="p-6 md:p-8">
+                <p className="text-sm font-light text-stone-600 leading-relaxed">
+                  {category.description}
+                </p>
+
+                <div className="mt-6 divide-y divide-stone-100 overflow-hidden border border-stone-100 bg-[#FCFAF8]/80">
+                  {category.services.map((service) => (
+                    <div
+                      key={`${category.title}-${service.name}`}
+                      className="flex items-center justify-between gap-4 px-4 py-4 transition hover:bg-white"
+                    >
+                      <span className="text-sm font-light text-stone-700">
+                        {service.name}
+                      </span>
+
+                      <span className="shrink-0 text-xs font-medium uppercase tracking-wider text-[#1A1A1A] border border-stone-200 bg-white px-3 py-1.5">
+                        {service.price}
+                      </span>
                     </div>
+                  ))}
+                </div>
 
-                    <div className="p-5">
-                      <div className="mb-3 flex items-start justify-between gap-4">
-                        <h4 className="text-lg font-semibold text-slate-950">
-                          {service.name}
-                        </h4>
-                        <div className="text-right">
-                          <p className="text-xl font-bold text-teal-600">{service.price}</p>
-                          <p className="text-xs text-slate-500">{service.priceNote}</p>
-                        </div>
-                      </div>
-
-                      <p className="text-sm leading-6 text-slate-600">
-                        {service.description}
-                      </p>
-
-                      <button className="mt-5 w-full rounded-xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-teal-600">
-                        Request Service
-                      </button>
-                    </div>
-                  </article>
-                ))}
+                <button
+                  type="button"
+                  className="group/btn relative mt-6 w-full overflow-hidden bg-[#1A1A1A] px-5 py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-shadow hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]"
+                >
+                  <span className="relative z-10">Request This Service</span>
+                  <div className="absolute inset-0 bg-stone-700 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                </button>
               </div>
-            </div>
+            </article>
           ))}
         </div>
+
+        <p className="mx-auto mt-12 max-w-3xl text-center text-[11px] uppercase tracking-[0.2em] text-stone-400 font-medium leading-relaxed">
+          Final pricing may vary based on property size, condition, frequency,
+          laundry volume, location, and custom client requests.
+        </p>
       </div>
     </section>
   );

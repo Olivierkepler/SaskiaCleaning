@@ -7,6 +7,7 @@ import Contact from './components/Contact';
 import SectionWrapper from './components/SectionWrapper';
 import CleaningPricingCalculator from './components/CleaningPricingCalculator';
 import { motion } from 'framer-motion';
+import AutoServiceCarousel from './components/AutoServiceCarousel';
 
 export default function Home() {
   return (
@@ -16,13 +17,17 @@ export default function Home() {
       <Hero />
 
       {/* 2. TrustBar: Gentle slide-in reveal */}
-      <SectionWrapper>
+      {/* <SectionWrapper>
         <TrustBar />
+      </SectionWrapper> */}
+
+      <SectionWrapper>
+        <AutoServiceCarousel/>
       </SectionWrapper>
-{/* 
+
       <SectionWrapper>
        <CleaningPricingCalculator/>
-      </SectionWrapper> */}
+      </SectionWrapper>
 
       {/* 3. BentoGrid: 3D Scale Reveal */}
       <SectionWrapper>
