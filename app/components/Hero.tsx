@@ -1,123 +1,240 @@
 "use client";
-import { useRef } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { useState } from "react";
-import { AnimatePresence } from "framer-motion";
+
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import ServiceInquiryForm from "./ServiceInquiryForm";
-import ArchitecturalCarousel from "./ArchitecturalCarousel"
-
-
+import ArchitecturalCarousel from "./ArchitecturalCarousel";
+import CleaningServicesPricing from "./CleaningPriceCalculator";
 
 export default function Hero() {
   const containerRef = useRef(null);
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
+  const [openEstimator, setOpenEstimator] = useState(false);
 
-  // Scroll tracking for the parallax effect
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start end", "end start"]
+    offset: ["start end", "end start"],
   });
 
-  // Parallax: Main image shifts up, smaller image shifts down
   const yLarge = useTransform(scrollYProgress, [0, 1], [0, -100]);
   const ySmall = useTransform(scrollYProgress, [0, 1], [0, 60]);
   const scaleImage = useTransform(scrollYProgress, [0, 0.5], [1.1, 1]);
 
+  useEffect(() => {
+    const isModalOpen = isInquiryOpen || openEstimator;
+
+    document.body.style.overflow = isModalOpen ? "hidden" : "";
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsInquiryOpen(false);
+        setOpenEstimator(false);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isInquiryOpen, openEstimator]);
+
   return (
-    <section ref={containerRef} className="relative min-h-[90vh] flex flex-col justify-center px-6 md:px-16 pt-20 overflow-hidden">
-      <div className="grid lg:grid-cols-12 gap-8 items-center">
-        
+    <section
+      ref={containerRef}
+      className="relative flex min-h-[90vh] flex-col justify-center overflow-hidden px-6 pt-20 md:px-16"
+    >
+      <div className="grid items-start gap-8 lg:grid-cols-12">
         {/* Text Content */}
-        <div className="lg:col-span-6 z-10">
+        <div className="z-10 mt-10 lg:col-span-6">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: [0.19, 1, 0.22, 1] }}
           >
-            <span className="text-[10px] tracking-[0.4em] uppercase text-stone-400 font-semibold mb-4 block">
+            <span className="mb-5 block text-[10px] font-semibold uppercase tracking-[0.4em] text-stone-400">
               Established 2026 — Boston | Massachusetts
             </span>
-            <h1 className="text-2xl md:text-[5.5rem] font-serif leading-[0.85] tracking-tight mb-8">
+
+            <h1 className="mb-8 max-w-3xl font-serif text-5xl leading-[0.88] tracking-tight text-zinc-950 md:text-[4.5rem] lg:text-[4.4rem]">
               A Study in <br />
               <span className="italic text-stone-400">Purity.</span>
             </h1>
-            <p className="text-lg md:text-xl font-light text-stone-500 max-w-md leading-relaxed mb-10">
-              Bespoke residential stewardship for those who value time and tranquility above all else. 
+
+            <p className="mb-8 max-w-xl text-base font-light leading-relaxed text-stone-500 md:text-xl">
+              Bespoke residential and estate cleaning for clients who value
+              discretion, precision, and the quiet luxury of an immaculate home.
             </p>
-            <div className="flex gap-4">
-            <button
-  onClick={() => setIsInquiryOpen(true)}
-  className="group relative bg-[#1A1A1A] text-white px-10 py-4 text-xs uppercase tracking-widest overflow-hidden transition-all"
->
-  <span className="relative z-10">Begin Inquiry</span>
-  <div className="absolute inset-0 bg-stone-700 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-</button>
+
+            <div className="mb-10 grid max-w-xl grid-cols-2 gap-4 border-y border-stone-200 py-6 sm:grid-cols-3">
+              <div>
+                <p className="font-serif text-2xl text-zinc-950">24h</p>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
+                  Response
+                </p>
+              </div>
+
+              <div>
+                <p className="font-serif text-2xl text-zinc-950">100%</p>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
+                  Tailored
+                </p>
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <p className="font-serif text-2xl text-zinc-950">Private</p>
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
+                  Service
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-10 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => setIsInquiryOpen(true)}
+                className="group relative overflow-hidden border border-green-900 bg-green-900 px-8 py-4 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:shadow-[0_18px_45px_rgba(20,83,45,0.18)] sm:px-10"
+              >
+                <span className="relative z-10">Begin Inquiry</span>
+                <span className="absolute inset-0 translate-y-full bg-zinc-950 transition-transform duration-300 ease-out group-hover:translate-y-0" />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setOpenEstimator(true)}
+                className="group relative overflow-hidden border border-zinc-300 bg-white px-8 py-4 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-900 transition-all duration-300 hover:border-blue-900 sm:px-10"
+              >
+                <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
+                  Cost Estimation
+                </span>
+                <span className="absolute inset-0 translate-y-full bg-blue-900 transition-transform duration-300 ease-out group-hover:translate-y-0" />
+              </button>
+            </div>
+
+            <div className="flex max-w-xl flex-col gap-3 text-sm text-stone-500 sm:flex-row sm:items-center sm:gap-6">
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 bg-green-900" />
+                Licensed & insured
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 bg-green-900" />
+                Residential & commercial
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="h-1.5 w-1.5 bg-green-900" />
+                Boston area
+              </div>
             </div>
           </motion.div>
         </div>
 
-        {/* Visual Content - Pro Animated Images */}
-        <div className="lg:col-span-6 relative h-[600px] md:h-[750px] flex items-center">
-          
-          {/* Main Large Image with Reveal & Parallax */}
-          <motion.div 
+        {/* Visual Content */}
+        <div className="relative flex h-[600px] items-center md:h-[750px] lg:col-span-6">
+          <motion.div
             style={{ y: yLarge }}
-            initial={{ clipPath: 'inset(100% 0% 0% 0%)', opacity: 0 }}
-            animate={{ clipPath: 'inset(0% 0% 0% 0%)', opacity: 1 }}
+            initial={{ clipPath: "inset(100% 0% 0% 0%)", opacity: 0 }}
+            animate={{ clipPath: "inset(0% 0% 0% 0%)", opacity: 1 }}
             transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
-            className="absolute right-0 top-12 w-[85%] h-[80%] overflow-hidden rounded-sm shadow-2xl"
+            className="absolute right-0 top-12 h-[80%] w-[85%] overflow-hidden rounded-sm shadow-2xl"
           >
-            <motion.img 
+            <motion.img
               style={{ scale: scaleImage }}
-              src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1974" 
-              className="w-full h-full object-cover grayscale-[15%] hover:grayscale-0 transition-all duration-1000" 
+              src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1974"
+              className="h-full w-full object-cover grayscale-[15%] transition-all duration-1000 hover:grayscale-0"
               alt="Luxury Living"
             />
           </motion.div>
 
-          {/* Floating Secondary Image with Offset Parallax */}
-          <motion.div 
+          <motion.div
             style={{ y: ySmall }}
             initial={{ opacity: 0, x: -40 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.6, duration: 1.2, ease: [0.19, 1, 0.22, 1] }}
-            className="absolute left-0 bottom-20 w-3/5 h-3/5 border-[12px] border-[#FCFAF8] overflow-hidden rounded-sm shadow-2xl hidden md:block z-20"
+            className="absolute bottom-20 left-0 z-20 hidden h-3/5 w-3/5 overflow-hidden rounded-sm border-[12px] border-[#FCFAF8] shadow-2xl md:block"
           >
-            <div className="relative w-full h-full overflow-hidden">
-              {/* <img 
-                src="https://images.unsplash.com/photo-1613545325278-f24b0cae1224?q=80&w=2070" 
-                className="w-full h-full object-cover scale-110 hover:scale-100 transition-transform duration-[2.5s] ease-out" 
-                alt="Meticulous Architectural Detail"
-              /> */}
-              <ArchitecturalCarousel />
-        
-            </div>
+            <ArchitecturalCarousel />
           </motion.div>
 
-          {/* Tech Edge: Minimalist Decorative Graphic */}
-          <motion.div 
+          <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-            className="absolute -right-6 -top-6 w-32 h-32 border border-stone-200 rounded-full border-dashed opacity-40 hidden md:block"
+            className="absolute -right-6 -top-6 hidden h-32 w-32 rounded-full border border-dashed border-stone-200 opacity-40 md:block"
           />
         </div>
       </div>
+
       <AnimatePresence>
-  {isInquiryOpen && (
-    <motion.div
-      onClick={() => setIsInquiryOpen(false)}
-      className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center px-4 py-10 overflow-y-auto"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-    >
-      <div onClick={(e) => e.stopPropagation()}>
-        <ServiceInquiryForm onClose={() => setIsInquiryOpen(false)} />
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
+        {isInquiryOpen && (
+          <motion.div
+            onClick={() => setIsInquiryOpen(false)}
+            className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-black/40 px-4 py-10 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <div onClick={(e) => e.stopPropagation()}>
+              <ServiceInquiryForm onClose={() => setIsInquiryOpen(false)} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {openEstimator && (
+          <motion.div
+            className="fixed inset-0 z-[100]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <button
+              type="button"
+              aria-label="Close cost estimation modal"
+              onClick={() => setOpenEstimator(false)}
+              className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+            />
+
+            <div className="absolute inset-0 flex items-center justify-center p-3 sm:p-6">
+              <motion.div
+                initial={{ opacity: 0, y: 28, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 28, scale: 0.98 }}
+                transition={{ duration: 0.35, ease: [0.19, 1, 0.22, 1] }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden border border-zinc-200 bg-white shadow-[0_40px_120px_rgba(0,0,0,0.28)]"
+              >
+                <div className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white/95 px-5 py-4 backdrop-blur-xl sm:px-6">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">
+                      Saskia Cleaning
+                    </p>
+                    <h2 className="mt-1 font-serif text-xl tracking-tight text-zinc-950 sm:text-2xl">
+                      Cost Estimation
+                    </h2>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setOpenEstimator(false)}
+                    aria-label="Close modal"
+                    className="grid h-10 w-10 place-items-center border border-zinc-300 text-zinc-700 transition hover:border-zinc-950 hover:bg-zinc-950 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <div className="max-h-[calc(92vh-81px)] overflow-y-auto">
+                  <CleaningServicesPricing />
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

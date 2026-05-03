@@ -48,17 +48,32 @@ export default function Navbar() {
               : "border-white/40 bg-white/35 backdrop-blur-xl"
           }`}
         >
-          <a href="#" className="flex items-center gap-4">
-            <div className="relative grid h-11 w-11 place-items-center bg-zinc-950 text-[11px] font-bold tracking-[0.18em] text-white">
-              SC
-              <span className="absolute inset-0 border border-white/10" />
+          {/* Logo */}
+          <a href="#" className="flex items-center gap-3">
+            <div className="relative flex items-center" style={{ height: "40px" }}>
+              <img
+                src="/images/logoSaskia.png"
+                alt="Saskia Cleaning"
+                className="object-contain"
+                style={{
+                  height: "60px",   // Make image taller
+                  width: "auto",
+                  maxHeight: "60px", // Prevent from exceeding this
+                  maxWidth: "none",  // Let width be auto-unconstrained
+                  position: "absolute",
+                  top: "50%",
+                  left: 0,
+                  transform: "translateY(-50%)",
+                  zIndex: 1,
+                  pointerEvents: "none", // Don't block clicks to the link
+                }}
+              />
             </div>
-
-            <div className="leading-none">
-              <p className="font-serif text-[22px] tracking-[-0.035em] text-zinc-950">
+            <div className="leading-tight ml-18 sm:ml-24 md:ml-32 lg:ml-20">
+              <p className="font-serif text-lg tracking-[-0.02em] text-zinc-900">
                 Saskia
               </p>
-              <p className="mt-1.5 text-[9px] font-bold uppercase tracking-[0.38em] text-zinc-400">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.35em] text-zinc-400">
                 Cleaning
               </p>
             </div>

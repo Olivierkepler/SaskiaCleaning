@@ -5,7 +5,7 @@ const slides = [
   { url: "https://images.unsplash.com/photo-1613545325278-f24b0cae1224?q=80&w=2070", title: "Meticulous Architectural Detail" },
   { url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070", title: "Modern Glass Facade" },
   { url: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?q=80&w=2071", title: "Minimalist Interior Structure" },
-  { url: "https://images.unsplash.com/photo-1449844908441-8829872d2607?q=80&w=2070", title: "Urban Residential Design" }
+  { url: "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcQKeGAYdV5UTcPfTq-wgJ1qMmFuyZ41sLL9ZgHTYSOcAYGTrszqvUVPe0NX8WdjzyKQzVM7ub82GAxm6e25e4nll2u8gdbaaA&usqp=CAc", title: "Urban Residential Design" }
 ];
 
 export default function ArchitecturalCarousel() {

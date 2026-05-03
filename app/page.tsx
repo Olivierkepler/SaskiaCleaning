@@ -8,8 +8,10 @@ import SectionWrapper from './components/SectionWrapper';
 import CleaningPricingCalculator from './components/CleaningPricingCalculator';
 import { motion } from 'framer-motion';
 import AutoServiceCarousel from './components/AutoServiceCarousel';
+import CleaningPriceCalculator from './components/CleaningPriceCalculator';
 
 export default function Home() {
+  
   return (
     <main className="relative bg-[#FCFAF8] overflow-x-hidden pt-20 sm:pt-10">
       
@@ -25,9 +27,19 @@ export default function Home() {
         <AutoServiceCarousel/>
       </SectionWrapper>
 
+{/* 
+      <SectionWrapper>
+        <CleaningPriceCalculator/>
+      </SectionWrapper> */}
+
+
+
       <SectionWrapper>
        <CleaningPricingCalculator/>
       </SectionWrapper>
+
+
+
 
       {/* 3. BentoGrid: 3D Scale Reveal */}
       <SectionWrapper>
