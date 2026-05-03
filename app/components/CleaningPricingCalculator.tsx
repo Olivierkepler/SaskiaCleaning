@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+
 const serviceCategories = [
   {
     title: "Residential Cleaning",
@@ -92,70 +95,186 @@ const serviceCategories = [
   },
 ];
 
+type ServiceCategory = (typeof serviceCategories)[number];
+
 export default function CleaningServicesPricing() {
+  const [selectedCategory, setSelectedCategory] =
+    useState<ServiceCategory | null>(null);
+  const [portalReady, setPortalReady] = useState(false);
+
+  useEffect(() => setPortalReady(true), []);
+
+  useEffect(() => {
+    if (!selectedCategory) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    if (!selectedCategory) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedCategory(null);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [selectedCategory]);
+
+  const modal =
+    portalReady &&
+    selectedCategory &&
+    createPortal(
+      <div
+        className="fixed inset-0 z-[90] flex min-h-[100dvh] items-center justify-center bg-[#1A1A1A]/50 p-4 backdrop-blur-sm"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pricing-modal-title"
+        onClick={() => setSelectedCategory(null)}
+      >
+        <div
+          className="relative max-h-[min(90dvh,calc(100dvh-2rem))] w-full max-w-2xl overflow-y-auto border border-stone-200/80 bg-white shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => setSelectedCategory(null)}
+            className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-xl font-light text-zinc-950 shadow-md ring-1 ring-stone-200 transition hover:bg-zinc-950 hover:text-white hover:ring-0"
+            aria-label="Close"
+          >
+            ×
+          </button>
+
+          <div className="relative h-56 w-full shrink-0 overflow-hidden bg-stone-200 sm:h-64">
+            <img
+              src={selectedCategory.image}
+              alt={selectedCategory.title}
+              className="h-full w-full object-cover grayscale-[8%]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/85 via-zinc-950/25 to-transparent" />
+            <div className="absolute bottom-5 left-5 right-14">
+              <span className="mb-2 inline-block text-[9px] font-bold uppercase tracking-[0.28em] text-white/80">
+                {selectedCategory.tag}
+              </span>
+              <h3
+                id="pricing-modal-title"
+                className="font-serif text-2xl tracking-tight text-white sm:text-3xl"
+              >
+                {selectedCategory.title}
+              </h3>
+            </div>
+          </div>
+
+          <div className="p-6 sm:p-8">
+            <p className="text-base font-light leading-relaxed text-stone-600">
+              {selectedCategory.description}
+            </p>
+
+            <div className="mt-6 border border-stone-100 bg-[#FCFAF8]/90 p-5">
+              <h4 className="mb-4 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
+                Starting prices
+              </h4>
+              <ul className="space-y-3">
+                {selectedCategory.services.map((service) => (
+                  <li
+                    key={service.name}
+                    className="flex items-center justify-between gap-4 text-sm font-light text-stone-700"
+                  >
+                    <span>{service.name}</span>
+                    <span className="shrink-0 border border-stone-200 bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-950">
+                      {service.price}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <button
+              type="button"
+              className="group/modal relative mt-6 w-full overflow-hidden border border-zinc-950 bg-zinc-950 px-5 py-4 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:bg-white hover:text-zinc-950"
+            >
+              <span className="relative z-10">Request This Service</span>
+              <span className="absolute inset-0 translate-y-full bg-white transition-transform duration-300 group-hover/modal:translate-y-0" />
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+
   return (
-    <section className="relative overflow-hidden bg-[#FCFAF8] px-6 py-20 sm:px-8 lg:px-16">
-      <div className="absolute left-1/2 top-0 -z-10 h-72 w-72 -translate-x-1/2 rounded-full bg-stone-200/40 blur-3xl" />
+    <section className="relative overflow-hidden bg-[#FCFAF8] px-5 py-20 sm:px-8 lg:px-16 lg:py-28">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 bg-stone-200/40 blur-3xl" />
 
-      <div className="mx-auto max-w-7xl">
-        <div className="mx-auto mb-14 max-w-3xl text-center">
-          <span className="text-[10px] tracking-[0.35em] uppercase text-stone-400 font-semibold block mb-6">
-            Professional Cleaning Services
-          </span>
+      <div className="relative mx-auto max-w-7xl">
+        <div className="mb-14 grid gap-8 lg:mb-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+          <div>
+            <span className="mb-6 block text-[10px] font-bold uppercase tracking-[0.38em] text-stone-400">
+              Professional Cleaning Services
+            </span>
 
-          <h2 className="text-4xl md:text-5xl font-serif tracking-tight text-[#1A1A1A] leading-[1.1]">
-            Cleaning & Laundry Pricing Made Simple
-          </h2>
+            <h2 className="max-w-3xl font-serif text-4xl leading-[1.02] tracking-tight text-zinc-950 sm:text-5xl lg:text-6xl">
+              Cleaning & laundry pricing, refined.
+            </h2>
+          </div>
 
-          <p className="mt-6 text-lg md:text-xl font-light text-stone-500 leading-relaxed">
-            Choose from residential cleaning, commercial cleaning, laundry care,
-            specialty services, Airbnb turnover cleaning, and add-ons.
+          <p className="max-w-2xl text-base font-light leading-8 text-stone-500 sm:text-lg lg:justify-self-end">
+            Explore residential cleaning, commercial service, laundry care,
+            specialty cleaning, Airbnb turnover, and premium add-ons — presented
+            with transparent starting prices.
           </p>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-          {serviceCategories.map((category) => (
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {serviceCategories.map((category, index) => (
             <article
               key={category.title}
-              className="group overflow-hidden rounded-sm bg-white shadow-sm border border-stone-200/60 transition duration-300 hover:-translate-y-2 hover:shadow-xl"
+              className="group border border-stone-200/80 bg-white shadow-[0_18px_60px_rgba(0,0,0,0.04)] transition duration-500 hover:-translate-y-1 hover:border-stone-300 hover:shadow-[0_28px_90px_rgba(0,0,0,0.09)]"
             >
-              <div className="relative h-64 w-full overflow-hidden bg-stone-200">
+              <div className="relative h-72 overflow-hidden bg-stone-200">
                 <img
                   src={category.image}
                   alt={category.title}
-                  className="h-full w-full object-cover grayscale-[10%] transition duration-500 group-hover:scale-105 group-hover:grayscale-0"
+                  className="h-full w-full object-cover grayscale-[12%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0"
                   loading="lazy"
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A]/80 via-[#1A1A1A]/25 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/85 via-zinc-950/25 to-transparent" />
 
-                <div className="absolute bottom-5 left-5 right-5">
-                  <span className="mb-3 inline-block text-[9px] font-bold uppercase tracking-[0.25em] text-stone-200">
+                <div className="absolute left-6 right-6 top-6 flex items-center justify-between">
+                  <span className="border border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.28em] text-white backdrop-blur-md">
                     {category.tag}
                   </span>
 
-                  <h3 className="text-2xl md:text-3xl font-serif text-white tracking-tight">
+                  <span className="font-serif text-2xl text-white/40">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+
+                <div className="absolute bottom-6 left-6 right-6">
+                  <h3 className="font-serif text-3xl leading-tight tracking-tight text-white">
                     {category.title}
                   </h3>
                 </div>
               </div>
 
-              <div className="p-6 md:p-8">
-                <p className="text-sm font-light text-stone-600 leading-relaxed">
+              <div className="p-6 sm:p-7">
+                <p className="min-h-[72px] text-sm font-light leading-7 text-stone-600">
                   {category.description}
                 </p>
 
-                <div className="mt-6 divide-y divide-stone-100 overflow-hidden border border-stone-100 bg-[#FCFAF8]/80">
+                <div className="mt-6 border border-stone-200 bg-[#FCFAF8]">
                   {category.services.map((service) => (
                     <div
                       key={`${category.title}-${service.name}`}
-                      className="flex items-center justify-between gap-4 px-4 py-4 transition hover:bg-white"
+                      className="flex items-center justify-between gap-4 border-b border-stone-200/70 px-4 py-4 last:border-b-0 hover:bg-white"
                     >
-                      <span className="text-sm font-light text-stone-700">
+                      <span className="text-sm font-light leading-5 text-stone-700">
                         {service.name}
                       </span>
 
-                      <span className="shrink-0 text-xs font-medium uppercase tracking-wider text-[#1A1A1A] border border-stone-200 bg-white px-3 py-1.5">
+                      <span className="shrink-0 border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-950">
                         {service.price}
                       </span>
                     </div>
@@ -164,21 +283,26 @@ export default function CleaningServicesPricing() {
 
                 <button
                   type="button"
-                  className="group/btn relative mt-6 w-full overflow-hidden bg-[#1A1A1A] px-5 py-4 text-xs font-semibold uppercase tracking-[0.25em] text-white transition-shadow hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)]"
+                  onClick={() => setSelectedCategory(category)}
+                  className="group/btn relative mt-6 w-full overflow-hidden border border-zinc-950 bg-zinc-950 px-5 py-4 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:bg-white hover:text-zinc-950"
                 >
                   <span className="relative z-10">Request This Service</span>
-                  <div className="absolute inset-0 bg-stone-700 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                  <span className="absolute inset-0 translate-y-full bg-white transition-transform duration-300 group-hover/btn:translate-y-0" />
                 </button>
               </div>
             </article>
           ))}
         </div>
 
-        <p className="mx-auto mt-12 max-w-3xl text-center text-[11px] uppercase tracking-[0.2em] text-stone-400 font-medium leading-relaxed">
-          Final pricing may vary based on property size, condition, frequency,
-          laundry volume, location, and custom client requests.
-        </p>
+        <div className="mx-auto mt-14 max-w-4xl border-y border-stone-200 py-6 text-center">
+          <p className="text-[11px] font-semibold uppercase leading-6 tracking-[0.24em] text-stone-400">
+            Final pricing may vary based on property size, condition, service
+            frequency, laundry volume, location, and custom client requests.
+          </p>
+        </div>
       </div>
+
+      {modal}
     </section>
   );
 }
