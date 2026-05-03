@@ -11,7 +11,7 @@ import AutoServiceCarousel from './components/AutoServiceCarousel';
 
 export default function Home() {
   return (
-    <main className="relative bg-[#FCFAF8] overflow-x-hidden">
+    <main className="relative bg-[#FCFAF8] overflow-x-hidden pt-20">
       
       {/* 1. Hero: Internal entrance animations already set */}
       <Hero />
