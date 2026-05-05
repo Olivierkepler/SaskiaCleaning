@@ -3,21 +3,25 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const slides = [
   {
-    url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=2070",
-    title: "Modern Minimal Architecture"
+    url: "/images/cleaning3.jpg",
+    title: "Clean Interior Living Space"
   },
+  
   {
-    url: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=2070",
+    url: "/images/cleaning1.jpg",
     title: "Luxury Glass Facade Design"
   },
   {
-    url: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070",
+    url: "/images/cleaing2.jpg",
     title: "Clean Interior Living Space"
-  },
-  {
-    url: "https://images.unsplash.com/photo-1501183638710-841dd1904471?q=80&w=2070",
-    title: "Urban Contemporary Housing"
-  }
+  }, 
+  // {
+  //   url: "/images/cleaing.jpg",
+  //   title: "Modern Minimal Architecture"
+  // },
+
+
+  
 ];
 
 export default function ArchitecturalCarousel() {

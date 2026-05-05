@@ -137,12 +137,17 @@ export default function Hero() {
             transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
             className="absolute right-0 top-12 h-[80%] w-[85%] overflow-hidden rounded-sm shadow-2xl"
           >
-            <motion.img
-              style={{ scale: scaleImage }}
-              src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1974"
-              className="h-full w-full object-cover grayscale-[15%] transition-all duration-1000 hover:grayscale-0"
-              alt="Luxury Living"
-            />
+         <motion.video
+  style={{ scale: scaleImage }}
+  src="/videos/cleaning.mov"
+  className="h-full w-full object-cover grayscale-[15%] transition-all duration-1000 hover:grayscale-0"
+  autoPlay
+  muted
+  loop
+  playsInline
+/>
+
+            
           </motion.div>
 
           <motion.div

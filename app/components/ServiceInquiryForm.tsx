@@ -1,668 +1,640 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, ArrowRight, ChevronDown, X } from "lucide-react";
+import { useState, useEffect, ChangeEvent } from "react";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type FormData = {
+  fullName: string;
+  email: string;
+  phone: string;
+  preferredContact: string;
+  serviceType: string;
+  squareFootage: string;
+  bedrooms: string;
+  bathrooms: string;
+  accessNotes: string;
+  productPreference: string;
+  scentProfile: string;
+  priorityAreas: string;
+  allergyConcerns: string;
+  pets: string;
+  strictAvoidances: string;
+};
+
+type FormErrors = Partial<Record<keyof FormData, string>>;
 
 type ServiceInquiryFormProps = {
   onClose?: () => void;
 };
 
-const inputStyles =
-  "w-full border-b border-stone-200 bg-transparent pt-6 pb-2 text-sm outline-none transition-all focus:border-stone-900 placeholder:text-stone-300 font-light";
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const labelStyles =
-  "absolute top-0 left-0 text-[10px] uppercase tracking-[0.2em] text-stone-400 font-medium pointer-events-none";
+const STEPS = ["Identity", "Residence", "Preferences", "Sensitivities", "Review"] as const;
 
-const errorStyles = "mt-2 text-xs text-red-500";
-
-const steps = [
-  "Identity",
-  "Residence",
-  "Preferences",
-  "Sensitivities",
-  "Review",
+const IMAGES: string[] = [
+  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80",
+  "https://images.unsplash.com/photo-1613545325278-f24b0cae1224?auto=format&fit=crop&w=800&q=80",
 ];
 
-const stepImages = [
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c",
-  "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0",
-  "https://images.unsplash.com/photo-1581578731548-c64695cc6952",
-  "https://images.unsplash.com/photo-1505691938895-1758d7feb511",
-  "https://images.unsplash.com/photo-1613545325278-f24b0cae1224",
-];
+const INITIAL_DATA: FormData = {
+  fullName: "", email: "", phone: "", preferredContact: "Email",
+  serviceType: "Recurring Stewardship", squareFootage: "", bedrooms: "", bathrooms: "", accessNotes: "",
+  productPreference: "Eco-Friendly / Non-Toxic", scentProfile: "Neutral / No Scent", priorityAreas: "",
+  allergyConcerns: "No Known Sensitivities", pets: "No Pets", strictAvoidances: "",
+};
+
+// ─── Shared field components ──────────────────────────────────────────────────
+
+function Label({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      display: "block",
+      fontSize: "9px",
+      letterSpacing: "0.22em",
+      textTransform: "uppercase",
+      color: "#A09890",
+      fontWeight: 500,
+      marginBottom: "8px",
+    }}>
+      {children}
+    </span>
+  );
+}
+
+function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return <p style={{ fontSize: "11px", color: "#B03A2E", marginTop: "5px" }}>{msg}</p>;
+}
+
+const baseInputStyle: React.CSSProperties = {
+  width: "100%",
+  background: "transparent",
+  border: "none",
+  borderRadius: 0,
+  outline: "none",
+  fontFamily: "'DM Sans', sans-serif",
+  fontSize: "14px",
+  fontWeight: 300,
+  color: "#1A1A1A",
+  padding: "10px 0",
+  transition: "border-color 0.2s",
+  WebkitAppearance: "none",
+};
+
+type InputProps = {
+  label: string;
+  name: keyof FormData;
+  type?: string;
+  placeholder?: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+};
+
+function Input({ label, name, type = "text", placeholder, value, onChange, error }: InputProps) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div>
+      <Label>{label}</Label>
+      <input
+        name={name}
+        type={type}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          ...baseInputStyle,
+          borderBottom: `1px solid ${error ? "#B03A2E" : focused ? "#1A1A1A" : "#DDD9D5"}`,
+        }}
+      />
+      <FieldError msg={error} />
+    </div>
+  );
+}
+
+type SelectProps = {
+  label: string;
+  name: keyof FormData;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLSelectElement>) => void;
+  options: string[];
+};
+
+function Select({ label, name, value, onChange, options }: SelectProps) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{ position: "relative" }}>
+      <Label>{label}</Label>
+      <select
+        name={name}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        style={{
+          ...baseInputStyle,
+          borderBottom: `1px solid ${focused ? "#1A1A1A" : "#DDD9D5"}`,
+          cursor: "pointer",
+          paddingRight: "20px",
+          appearance: "none",
+          WebkitAppearance: "none",
+        }}
+      >
+        {options.map((o) => <option key={o}>{o}</option>)}
+      </select>
+      <svg
+        width="12" height="12" viewBox="0 0 24 24" fill="none"
+        stroke="#C5BFB9" strokeWidth="1.5"
+        style={{ position: "absolute", right: 2, bottom: 12, pointerEvents: "none" }}
+      >
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </div>
+  );
+}
+
+type TextareaProps = {
+  label: string;
+  name: keyof FormData;
+  placeholder?: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLTextAreaElement>) => void;
+  error?: string;
+};
+
+function Textarea({ label, name, placeholder, value, onChange, error }: TextareaProps) {
+  const [focused, setFocused] = useState(false);
+  return (
+    <div style={{ gridColumn: "1 / -1" }}>
+      <Label>{label}</Label>
+      <textarea
+        name={name}
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
+        rows={3}
+        style={{
+          ...baseInputStyle,
+          borderBottom: `1px solid ${error ? "#B03A2E" : focused ? "#1A1A1A" : "#DDD9D5"}`,
+          resize: "none",
+          lineHeight: 1.65,
+          minHeight: "72px",
+        }}
+      />
+      <FieldError msg={error} />
+    </div>
+  );
+}
+
+function Grid({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+      gap: "28px 32px",
+    }}>
+      {children}
+    </div>
+  );
+}
+
+function Desc({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{ fontSize: "13px", fontWeight: 300, color: "#8A8078", lineHeight: 1.75, marginBottom: "28px" }}>
+      {children}
+    </p>
+  );
+}
+
+// ─── Step content ─────────────────────────────────────────────────────────────
+
+type StepProps = {
+  data: FormData;
+  onChange: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  errors: FormErrors;
+};
+
+function StepIdentity({ data, onChange, errors }: StepProps) {
+  return (
+    <>
+      <Desc>
+        We begin with you. Kindly share your details so your dedicated concierge may communicate with ease, discretion, and according to your preferred method.
+      </Desc>
+      <Grid>
+        <Input label="Full Name" name="fullName" placeholder="Your name" value={data.fullName} onChange={onChange as (e: ChangeEvent<HTMLInputElement>) => void} error={errors.fullName} />
+        <Input label="Email Address" name="email" type="email" placeholder="you@example.com" value={data.email} onChange={onChange as (e: ChangeEvent<HTMLInputElement>) => void} error={errors.email} />
+        <Input label="Phone Number" name="phone" type="tel" placeholder="Preferred contact number" value={data.phone} onChange={onChange as (e: ChangeEvent<HTMLInputElement>) => void} error={errors.phone} />
+        <Select label="Preferred Contact" name="preferredContact" value={data.preferredContact} onChange={onChange as (e: ChangeEvent<HTMLSelectElement>) => void} options={["Email", "Phone", "Text Message"]} />
+      </Grid>
+    </>
+  );
+}
+
+function StepResidence({ data, onChange, errors }: StepProps) {
+  return (
+    <>
+      <Desc>
+        A portrait of your home. Understanding the scale, layout, and access allows us to prepare a service approach that is seamless from arrival to completion.
+      </Desc>
+      <Grid>
+        <Select label="Service Type" name="serviceType" value={data.serviceType} onChange={onChange as (e: ChangeEvent<HTMLSelectElement>) => void} options={["Recurring Stewardship", "Deep Restoration", "Move-In / Move-Out Care", "Special Event Recovery"]} />
+        <Input label="Square Footage" name="squareFootage" placeholder="Approx. sq ft" value={data.squareFootage} onChange={onChange as (e: ChangeEvent<HTMLInputElement>) => void} error={errors.squareFootage} />
+        <Input label="Bedrooms" name="bedrooms" placeholder="Number of bedrooms" value={data.bedrooms} onChange={onChange as (e: ChangeEvent<HTMLInputElement>) => void} error={errors.bedrooms} />
+        <Input label="Bathrooms" name="bathrooms" placeholder="Number of bathrooms" value={data.bathrooms} onChange={onChange as (e: ChangeEvent<HTMLInputElement>) => void} error={errors.bathrooms} />
+        <Textarea label="Access Notes" name="accessNotes" placeholder="Parking, gate code, doorman, elevator, private entrance…" value={data.accessNotes} onChange={onChange as (e: ChangeEvent<HTMLTextAreaElement>) => void} />
+      </Grid>
+    </>
+  );
+}
+
+function StepPreferences({ data, onChange, errors }: StepProps) {
+  return (
+    <>
+      <Desc>
+        The atmosphere you wish to return to. Your preferences guide a space that feels considered, balanced, and distinctly yours.
+      </Desc>
+      <Grid>
+        <Select label="Product Preference" name="productPreference" value={data.productPreference} onChange={onChange as (e: ChangeEvent<HTMLSelectElement>) => void} options={["Eco-Friendly / Non-Toxic", "Hypoallergenic", "Fragrance-Free", "Standard Products", "I Will Provide Products"]} />
+        <Select label="Scent Profile" name="scentProfile" value={data.scentProfile} onChange={onChange as (e: ChangeEvent<HTMLSelectElement>) => void} options={["Neutral / No Scent", "Linen & White Tea", "Warm Amber", "Fresh Citrus", "Custom Profile"]} />
+        <Textarea label="Priority Areas" name="priorityAreas" placeholder="Kitchen, primary suite, marble surfaces, guest areas…" value={data.priorityAreas} onChange={onChange as (e: ChangeEvent<HTMLTextAreaElement>) => void} error={errors.priorityAreas} />
+      </Grid>
+    </>
+  );
+}
+
+function StepSensitivities({ data, onChange }: Omit<StepProps, "errors">) {
+  return (
+    <>
+      <Desc>
+        Care, without compromise. Please share any sensitivities or restrictions so we may safeguard your environment with the utmost attention and respect.
+      </Desc>
+      <Grid>
+        <Select label="Allergy Concerns" name="allergyConcerns" value={data.allergyConcerns} onChange={onChange as (e: ChangeEvent<HTMLSelectElement>) => void} options={["No Known Sensitivities", "Fragrance Sensitivity", "Bleach Sensitivity", "Ammonia Sensitivity", "Multiple Sensitivities"]} />
+        <Select label="Pets in Residence" name="pets" value={data.pets} onChange={onChange as (e: ChangeEvent<HTMLSelectElement>) => void} options={["No Pets", "Dog", "Cat", "Multiple Pets", "Other"]} />
+        <Textarea label="Strict Avoidances" name="strictAvoidances" placeholder="Products, rooms, materials, surfaces, scents, or instructions to strictly avoid…" value={data.strictAvoidances} onChange={onChange as (e: ChangeEvent<HTMLTextAreaElement>) => void} />
+      </Grid>
+    </>
+  );
+}
+
+type ReviewProps = {
+  submitError: string;
+  successMessage: string;
+};
+
+function StepReview({ submitError, successMessage }: ReviewProps) {
+  const items = [
+    "Detailed residence profile received",
+    "Refined service preferences recorded",
+    "Sensitivities and considerations noted",
+    "Concierge review required before confirmation",
+  ];
+  return (
+    <>
+      <Desc>
+        Your request will be thoughtfully reviewed before confirmation. A concierge will follow up with availability, final details, and any necessary considerations.
+      </Desc>
+      <div style={{ display: "flex", flexDirection: "column", gap: "6px", marginBottom: "24px" }}>
+        {items.map((item) => (
+          <div key={item} style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            border: "1px solid #EDEAE6", background: "rgba(255,255,255,0.55)",
+            padding: "14px 18px",
+          }}>
+            <span style={{ fontSize: "13px", fontWeight: 300, color: "#5A5048" }}>{item}</span>
+            <span style={{ fontSize: "9px", letterSpacing: "0.2em", textTransform: "uppercase", color: "#A09890" }}>Included</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ borderLeft: "2px solid #DDD9D5", paddingLeft: "18px" }}>
+        <p style={{ fontSize: "9.5px", letterSpacing: "0.25em", textTransform: "uppercase", color: "#A09890", marginBottom: "8px" }}>
+          Confidentiality
+        </p>
+        <p style={{ fontSize: "13px", fontWeight: 300, color: "#7A7068", lineHeight: 1.7 }}>
+          Discretion is fundamental to our service. All information shared is held in strict confidence and used solely to curate a service experience that reflects the standards of your home.
+        </p>
+      </div>
+      {submitError && <p style={{ fontSize: "13px", color: "#B03A2E", marginTop: "16px" }}>{submitError}</p>}
+      {successMessage && <p style={{ fontSize: "13px", color: "#2A6A3A", marginTop: "16px", fontWeight: 300 }}>{successMessage}</p>}
+    </>
+  );
+}
+
+// ─── Main form ────────────────────────────────────────────────────────────────
 
 export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps) {
   const [step, setStep] = useState(0);
-
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    phone: "",
-    preferredContact: "Email",
-    serviceType: "Recurring Stewardship",
-    squareFootage: "",
-    bedrooms: "",
-    bathrooms: "",
-    accessNotes: "",
-    productPreference: "Eco-Friendly / Non-Toxic",
-    scentProfile: "Neutral / No Scent",
-    priorityAreas: "",
-    allergyConcerns: "No Known Sensitivities",
-    pets: "No Pets",
-    strictAvoidances: "",
-  });
-
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
+  const [errors, setErrors] = useState<FormErrors>({});
   const [submitError, setSubmitError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  useEffect(() => { setImgLoaded(false); }, [step]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-    }));
-
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: "" }));
     setSubmitError("");
     setSuccessMessage("");
   };
 
-  const validateStep = () => {
-    const newErrors: Record<string, string> = {};
-
+  const validate = (): boolean => {
+    const e: FormErrors = {};
     if (step === 0) {
-      if (!formData.fullName.trim()) {
-        newErrors.fullName = "Full name is required.";
-      }
-
-      if (!formData.email.trim()) {
-        newErrors.email = "Email is required.";
-      } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-        newErrors.email = "Enter a valid email address.";
-      }
-
-      if (!formData.phone.trim()) {
-        newErrors.phone = "Phone number is required.";
-      }
+      if (!formData.fullName.trim()) e.fullName = "Full name is required.";
+      if (!formData.email.trim()) e.email = "Email is required.";
+      else if (!/^\S+@\S+\.\S+$/.test(formData.email)) e.email = "Enter a valid email address.";
+      if (!formData.phone.trim()) e.phone = "Phone number is required.";
     }
-
     if (step === 1) {
-      if (!formData.squareFootage.trim()) {
-        newErrors.squareFootage = "Square footage is required.";
-      }
-
-      if (!formData.bedrooms.trim()) {
-        newErrors.bedrooms = "Bedrooms are required.";
-      }
-
-      if (!formData.bathrooms.trim()) {
-        newErrors.bathrooms = "Bathrooms are required.";
-      }
+      if (!formData.squareFootage.trim()) e.squareFootage = "Square footage is required.";
+      if (!formData.bedrooms.trim()) e.bedrooms = "Bedrooms are required.";
+      if (!formData.bathrooms.trim()) e.bathrooms = "Bathrooms are required.";
     }
-
     if (step === 2) {
-      if (!formData.priorityAreas.trim()) {
-        newErrors.priorityAreas = "Please enter at least one priority area.";
-      }
+      if (!formData.priorityAreas.trim()) e.priorityAreas = "Please enter at least one priority area.";
     }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
-  const nextStep = () => {
-    if (!validateStep()) return;
-    setStep((prev) => Math.min(prev + 1, steps.length - 1));
-  };
+  const nextStep = () => { if (validate()) setStep((s) => Math.min(s + 1, STEPS.length - 1)); };
+  const prevStep = () => { setSubmitError(""); setSuccessMessage(""); setStep((s) => Math.max(s - 1, 0)); };
 
-  const prevStep = () => {
-    setSubmitError("");
-    setSuccessMessage("");
-    setStep((prev) => Math.max(prev - 1, 0));
-  };
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-  
-    if (!validateStep()) return;
-  
+  const handleSubmit = async () => {
+    if (!validate()) return;
     setIsSubmitting(true);
     setSubmitError("");
     setSuccessMessage("");
-  
     try {
-      const response = await fetch("/api/service-inquiry", {
+      const res = await fetch("/api/service-inquiry", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
-  
-      if (!response.ok) {
-        throw new Error("Submission failed");
-      }
-  
-      setSuccessMessage(
-        "Your request has been received. A concierge will be in contact shortly to confirm the next steps."
-      );
+      if (!res.ok) throw new Error("Submission failed");
+      setSuccessMessage("Your request has been received. A concierge will be in contact shortly to confirm the next steps.");
     } catch {
-      setSubmitError(
-        "We were unable to complete your request at this time. Please try again, or allow us to assist you directly."
-      );
+      setSubmitError("We were unable to complete your request at this time. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const isLast = step === STEPS.length - 1;
+
+  const stepComponents: React.ReactNode[] = [
+    <StepIdentity data={formData} onChange={handleChange} errors={errors} />,
+    <StepResidence data={formData} onChange={handleChange} errors={errors} />,
+    <StepPreferences data={formData} onChange={handleChange} errors={errors} />,
+    <StepSensitivities data={formData} onChange={handleChange} />,
+    <StepReview submitError={submitError} successMessage={successMessage} />,
+  ];
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.97, y: 18 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.97, y: 18 }}
-      transition={{ duration: 0.45, ease: [0.19, 1, 0.22, 1] }}
-      className="relative w-full max-w-7xl overflow-hidden border border-stone-100 bg-[#FCFAF8] shadow-[0_40px_100px_-20px_rgba(0,0,0,0.18)]"
-    >
-      <div
-        className="absolute left-0 top-0 h-1 bg-stone-900 transition-all duration-700"
-        style={{ width: `${((step + 1) / steps.length) * 100}%` }}
-      />
+    <div style={{
+      fontFamily: "'DM Sans', sans-serif",
+      minHeight: "100vh",
+      background: "#FAFAF8",
+      display: "flex",
+      alignItems: "flex-start",
+      justifyContent: "center",
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
+        * { box-sizing: border-box; }
+        .sif-btn-next:hover { background: #333 !important; }
+        .sif-btn-back:hover { color: #1A1A1A !important; }
+        .sif-step-enter { animation: sifSlideIn 0.32s cubic-bezier(0.19,1,0.22,1) both; }
+        @keyframes sifSlideIn { from { opacity:0; transform:translateX(18px); } to { opacity:1; transform:translateX(0); } }
+        @media (max-width: 799px) { .sif-sidebar { display:none !important; } }
+        @media (min-width: 800px) { .sif-mobile-bar { display:none !important; } .sif-main { padding: 52px 56px !important; min-height: 100vh; } }
+        @media (max-width: 499px) { .sif-step-title { font-size: 34px !important; } .sif-main { padding: 28px 22px 40px !important; } }
+      `}</style>
 
-      <div className="grid md:grid-cols-[0.85fr_1.15fr]">
-        <aside className="hidden md:flex flex-row justify-between border-r border-stone-100 bg-[#F5F1EC] p-10">
-         
+      <div style={{
+        width: "100%",
+        maxWidth: "1080px",
+        background: "#FCFAF8",
+        position: "relative",
+        overflow: "hidden",
+        boxShadow: "0 40px 100px -20px rgba(0,0,0,0.14)",
+      }}>
+        {/* Progress bar */}
+        <div style={{
+          position: "absolute", top: 0, left: 0,
+          height: "2px", background: "#1A1A1A",
+          width: `${((step + 1) / STEPS.length) * 100}%`,
+          transition: "width 0.6s cubic-bezier(0.19,1,0.22,1)",
+          zIndex: 10,
+        }} />
 
-          <div>
-            <span className="text-[9px] tracking-[0.5em] uppercase text-stone-400 font-bold">
-              Private Concierge
-            </span>
+        <div style={{ display: "flex" }}>
 
-            <h2 className="mt-6 font-serif text-5xl leading-none italic tracking-tight">
-              Curated  Care.
-            </h2>
-
-            <p className="mt-6 text-sm font-light leading-relaxed text-stone-500">
-              A confidential introduction to your residence, preferences,
-              sensitivities, and desired atmosphere—prepared with precision,
-              discretion, and quiet intention.
-            </p>
-
-            <div className="mt-10 rounded-md overflow-hidden shadow-md">
-  <AnimatePresence mode="wait">
-    <motion.img
-      key={step}
-      src={`${stepImages[step]}?auto=format&fit=crop&w=700&q=80`}
-      alt={`${steps[step]} luxury residence`}
-      initial={{ opacity: 0, scale: 1.04 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      transition={{ duration: 0.6, ease: [0.19, 1, 0.22, 1] }}
-      className="w-full h-40 object-cover"
-    />
-  </AnimatePresence>
-</div>
-    
-          </div>
-
-
-          <div className="space-y-4 flex flex-col items-start mt-auto">
-            {steps.map((item, index) => (
-              <div key={item} className="flex items-center gap-3">
-                <div
-                  className={`h-2 w-2 rounded-full transition ${
-                    index <= step ? "bg-stone-900" : "bg-stone-300"
-                  }`}
-                />
-                <span
-                  className={`text-[10px] uppercase tracking-[0.25em] text-left ${
-                    index === step ? "text-stone-900" : "text-stone-400"
-                  }`}
-                >
-                  {item}
-                </span>
-              </div>
-            ))}
-          </div>
-    
-          <div className="flex justify-center items-center py-10">
-            <div className="relative w-[75%] h-[65%] aspect-[3/4] overflow-hidden shadow-xl">
-              <AnimatePresence mode="wait">
-                <motion.img
-                  key={step}
-                  src={`${stepImages[step]}?q=80&w=1200`}
-                  initial={{ opacity: 0, scale: 1.05 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.7, ease: [0.19, 1, 0.22, 1] }}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  alt=""
-                />
-              </AnimatePresence>
-            </div>
-          </div>
-        </aside>
-
-        <div className="p-8 md:p-12">
-          <div className="mb-10 flex items-start justify-between gap-6">
+          {/* ── SIDEBAR ── */}
+          <aside className="sif-sidebar" style={{
+            width: "320px",
+            minWidth: "320px",
+            background: "#F5F1EC",
+            padding: "48px 36px",
+            display: "flex",
+            flexDirection: "column",
+          }}>
             <div>
-              <span className="text-[10px] uppercase tracking-[0.35em] text-stone-400 font-semibold">
-                Step {step + 1} of {steps.length}
+              <p style={{ fontSize: "9px", letterSpacing: "0.5em", textTransform: "uppercase", color: "#9B9088", fontWeight: 500 }}>
+                Private Concierge
+              </p>
+              <h2 style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontSize: "46px", fontWeight: 300, fontStyle: "italic",
+                color: "#1A1A1A", lineHeight: 1, marginTop: "18px",
+              }}>
+                Curated Care.
+              </h2>
+              <p style={{ fontSize: "13px", fontWeight: 300, lineHeight: 1.75, color: "#8A8078", marginTop: "14px" }}>
+                A confidential introduction to your residence, preferences, sensitivities, and desired atmosphere—prepared with precision and quiet intention.
+              </p>
+              <div style={{ marginTop: "24px", overflow: "hidden", height: "180px" }}>
+                <img
+                  key={step}
+                  src={IMAGES[step]}
+                  alt=""
+                  onLoad={() => setImgLoaded(true)}
+                  style={{
+                    width: "100%", height: "100%", objectFit: "cover", display: "block",
+                    opacity: imgLoaded ? 1 : 0,
+                    transition: "opacity 0.5s ease",
+                  }}
+                />
+              </div>
+            </div>
+
+            <div style={{ marginTop: "auto", paddingTop: "36px", display: "flex", flexDirection: "column", gap: "13px" }}>
+              {STEPS.map((s, i) => (
+                <div key={s} style={{ display: "flex", alignItems: "center", gap: "11px" }}>
+                  <div style={{
+                    width: "7px", height: "7px", borderRadius: "50%", flexShrink: 0,
+                    background: i <= step ? "#1A1A1A" : "#D5CECA",
+                    transition: "background 0.3s",
+                  }} />
+                  <span style={{
+                    fontSize: "10px", letterSpacing: "0.25em", textTransform: "uppercase",
+                    color: i === step ? "#1A1A1A" : "#B5ADA8",
+                    fontWeight: i === step ? 500 : 400,
+                    transition: "color 0.3s",
+                  }}>
+                    {s}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </aside>
+
+          {/* ── MAIN CONTENT ── */}
+          <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+
+            {/* Mobile top bar */}
+            <div className="sif-mobile-bar" style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "18px 22px 14px",
+              background: "#F5F1EC",
+              borderBottom: "1px solid #EDE8E3",
+            }}>
+              <span style={{
+                fontFamily: "'Cormorant Garamond', serif",
+                fontStyle: "italic", fontSize: "20px", fontWeight: 300, color: "#1A1A1A",
+              }}>
+                Curated Care.
               </span>
-              <h3 className="mt-3 font-serif text-4xl tracking-tight">
-                {steps[step]}
-              </h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                {STEPS.map((_, i) => (
+                  <div key={i} style={{
+                    width: "6px", height: "6px", borderRadius: "50%",
+                    background: i <= step ? "#1A1A1A" : "#D5CECA",
+                    transition: "background 0.3s",
+                  }} />
+                ))}
+              </div>
             </div>
 
-            {onClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 text-stone-400 transition hover:border-stone-900 hover:text-stone-900"
-              >
-                <X size={16} strokeWidth={1.2} />
-              </button>
-            )}
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, x: 24 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -24 }}
-                transition={{ duration: 0.35, ease: [0.19, 1, 0.22, 1] }}
-                className="min-h-[360px]"
-              >
-                {step === 0 && (
-                  <div className="space-y-10">
-                    <p className="text-sm font-light leading-relaxed text-stone-500">
-                      We begin with you. Kindly share your details so your
-                      dedicated concierge may communicate with ease, discretion,
-                      and according to your preferred method.
-                    </p>
-
-                    <div className="grid md:grid-cols-2 gap-x-10 gap-y-10">
-                      <div className="relative">
-                        <label className={labelStyles}>Full Name</label>
-                        <input
-                          name="fullName"
-                          value={formData.fullName}
-                          onChange={handleChange}
-                          className={inputStyles}
-                          placeholder="Your name"
-                        />
-                        {errors.fullName && (
-                          <p className={errorStyles}>{errors.fullName}</p>
-                        )}
-                      </div>
-
-                      <div className="relative">
-                        <label className={labelStyles}>Email Address</label>
-                        <input
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          className={inputStyles}
-                          placeholder="you@example.com"
-                        />
-                        {errors.email && (
-                          <p className={errorStyles}>{errors.email}</p>
-                        )}
-                      </div>
-
-                      <div className="relative">
-                        <label className={labelStyles}>Phone Number</label>
-                        <input
-                          name="phone"
-                          value={formData.phone}
-                          onChange={handleChange}
-                          className={inputStyles}
-                          placeholder="Preferred contact number"
-                        />
-                        {errors.phone && (
-                          <p className={errorStyles}>{errors.phone}</p>
-                        )}
-                      </div>
-
-                      <div className="relative">
-                        <label className={labelStyles}>Preferred Contact</label>
-                        <select
-                          name="preferredContact"
-                          value={formData.preferredContact}
-                          onChange={handleChange}
-                          className={`${inputStyles} appearance-none cursor-pointer`}
-                        >
-                          <option>Email</option>
-                          <option>Phone</option>
-                          <option>Text Message</option>
-                        </select>
-                        <ChevronDown
-                          size={14}
-                          className="pointer-events-none absolute bottom-3 right-0 text-stone-300"
-                        />
-                      </div>
-                    </div>
-                  </div>
+            <div className="sif-main" style={{
+              padding: "36px 28px 44px",
+              display: "flex",
+              flexDirection: "column",
+              flex: 1,
+            }}>
+              {/* Step header */}
+              <div style={{
+                display: "flex", alignItems: "flex-start",
+                justifyContent: "space-between", marginBottom: "28px",
+              }}>
+                <div>
+                  <p style={{ fontSize: "10px", letterSpacing: "0.35em", textTransform: "uppercase", color: "#A09890", fontWeight: 500 }}>
+                    Step {step + 1} of {STEPS.length}
+                  </p>
+                  <h3 className="sif-step-title" style={{
+                    fontFamily: "'Cormorant Garamond', serif",
+                    fontSize: "40px", fontWeight: 400, color: "#1A1A1A",
+                    lineHeight: 1.05, marginTop: "8px",
+                  }}>
+                    {STEPS[step]}
+                  </h3>
+                </div>
+                {onClose && (
+                  <button
+                    onClick={onClose}
+                    type="button"
+                    style={{
+                      width: "38px", height: "38px", borderRadius: "50%",
+                      border: "1px solid #DDD9D5", background: "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", color: "#A09890", flexShrink: 0,
+                      marginTop: "4px",
+                    }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
                 )}
+              </div>
 
-                {step === 1 && (
-                  <div className="space-y-10">
-                    <p className="text-sm font-light leading-relaxed text-stone-500">
-                      A portrait of your home. Understanding the scale, layout,
-                      and access of your residence allows us to prepare a service
-                      approach that is seamless from arrival to completion.
-                    </p>
+              {/* Animated step body */}
+              <div className="sif-step-enter" key={step} style={{ flex: 1 }}>
+                {stepComponents[step]}
+              </div>
 
-                    <div className="grid md:grid-cols-2 gap-x-10 gap-y-10">
-                      <div className="relative">
-                        <label className={labelStyles}>Service Type</label>
-                        <select
-                          name="serviceType"
-                          value={formData.serviceType}
-                          onChange={handleChange}
-                          className={`${inputStyles} appearance-none cursor-pointer`}
-                        >
-                          <option>Recurring Stewardship</option>
-                          <option>Deep Restoration</option>
-                          <option>Move-In / Move-Out Care</option>
-                          <option>Special Event Recovery</option>
-                        </select>
-                        <ChevronDown
-                          size={14}
-                          className="pointer-events-none absolute bottom-3 right-0 text-stone-300"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <label className={labelStyles}>Square Footage</label>
-                        <input
-                          name="squareFootage"
-                          value={formData.squareFootage}
-                          onChange={handleChange}
-                          className={inputStyles}
-                          placeholder="Approx. sq ft"
-                        />
-                        {errors.squareFootage && (
-                          <p className={errorStyles}>{errors.squareFootage}</p>
-                        )}
-                      </div>
-
-                      <div className="relative">
-                        <label className={labelStyles}>Bedrooms</label>
-                        <input
-                          name="bedrooms"
-                          value={formData.bedrooms}
-                          onChange={handleChange}
-                          className={inputStyles}
-                          placeholder="Number of bedrooms"
-                        />
-                        {errors.bedrooms && (
-                          <p className={errorStyles}>{errors.bedrooms}</p>
-                        )}
-                      </div>
-
-                      <div className="relative">
-                        <label className={labelStyles}>Bathrooms</label>
-                        <input
-                          name="bathrooms"
-                          value={formData.bathrooms}
-                          onChange={handleChange}
-                          className={inputStyles}
-                          placeholder="Number of bathrooms"
-                        />
-                        {errors.bathrooms && (
-                          <p className={errorStyles}>{errors.bathrooms}</p>
-                        )}
-                      </div>
-
-                      <div className="relative md:col-span-2">
-                        <label className={labelStyles}>Access Notes</label>
-                        <textarea
-                          name="accessNotes"
-                          value={formData.accessNotes}
-                          onChange={handleChange}
-                          className={`${inputStyles} min-h-24 resize-none`}
-                          placeholder="Parking, gate code, doorman, pets, elevator, private entrance..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {step === 2 && (
-                  <div className="space-y-10">
-                    <p className="text-sm font-light leading-relaxed text-stone-500">
-                      The atmosphere you wish to return to. From product
-                      selections to scent and finishing touches, your preferences
-                      guide a space that feels considered, balanced, and
-                      distinctly yours.
-                    </p>
-
-                    <div className="grid md:grid-cols-2 gap-x-10 gap-y-10">
-                      <div className="relative">
-                        <label className={labelStyles}>Product Preference</label>
-                        <select
-                          name="productPreference"
-                          value={formData.productPreference}
-                          onChange={handleChange}
-                          className={`${inputStyles} appearance-none cursor-pointer`}
-                        >
-                          <option>Eco-Friendly / Non-Toxic</option>
-                          <option>Hypoallergenic</option>
-                          <option>Fragrance-Free</option>
-                          <option>Standard Products</option>
-                          <option>I Will Provide Products</option>
-                        </select>
-                        <ChevronDown
-                          size={14}
-                          className="pointer-events-none absolute bottom-3 right-0 text-stone-300"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <label className={labelStyles}>Scent Profile</label>
-                        <select
-                          name="scentProfile"
-                          value={formData.scentProfile}
-                          onChange={handleChange}
-                          className={`${inputStyles} appearance-none cursor-pointer`}
-                        >
-                          <option>Neutral / No Scent</option>
-                          <option>Linen & White Tea</option>
-                          <option>Warm Amber</option>
-                          <option>Fresh Citrus</option>
-                          <option>Custom Profile</option>
-                        </select>
-                        <ChevronDown
-                          size={14}
-                          className="pointer-events-none absolute bottom-3 right-0 text-stone-300"
-                        />
-                      </div>
-
-                      <div className="relative md:col-span-2">
-                        <label className={labelStyles}>Priority Areas</label>
-                        <textarea
-                          name="priorityAreas"
-                          value={formData.priorityAreas}
-                          onChange={handleChange}
-                          className={`${inputStyles} min-h-24 resize-none`}
-                          placeholder="Kitchen, primary suite, marble surfaces, guest areas, laundry room..."
-                        />
-                        {errors.priorityAreas && (
-                          <p className={errorStyles}>{errors.priorityAreas}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {step === 3 && (
-                  <div className="space-y-10">
-                    <p className="text-sm font-light leading-relaxed text-stone-500">
-                      Care, without compromise. Please share any sensitivities,
-                      conditions, or restrictions so we may safeguard your
-                      environment with the utmost attention and respect.
-                    </p>
-
-                    <div className="grid md:grid-cols-2 gap-x-10 gap-y-10">
-                      <div className="relative">
-                        <label className={labelStyles}>Allergy Concerns</label>
-                        <select
-                          name="allergyConcerns"
-                          value={formData.allergyConcerns}
-                          onChange={handleChange}
-                          className={`${inputStyles} appearance-none cursor-pointer`}
-                        >
-                          <option>No Known Sensitivities</option>
-                          <option>Fragrance Sensitivity</option>
-                          <option>Bleach Sensitivity</option>
-                          <option>Ammonia Sensitivity</option>
-                          <option>Multiple Sensitivities</option>
-                        </select>
-                        <ChevronDown
-                          size={14}
-                          className="pointer-events-none absolute bottom-3 right-0 text-stone-300"
-                        />
-                      </div>
-
-                      <div className="relative">
-                        <label className={labelStyles}>Pets in Residence</label>
-                        <select
-                          name="pets"
-                          value={formData.pets}
-                          onChange={handleChange}
-                          className={`${inputStyles} appearance-none cursor-pointer`}
-                        >
-                          <option>No Pets</option>
-                          <option>Dog</option>
-                          <option>Cat</option>
-                          <option>Multiple Pets</option>
-                          <option>Other</option>
-                        </select>
-                        <ChevronDown
-                          size={14}
-                          className="pointer-events-none absolute bottom-3 right-0 text-stone-300"
-                        />
-                      </div>
-
-                      <div className="relative md:col-span-2">
-                        <label className={labelStyles}>Strict Avoidances</label>
-                        <textarea
-                          name="strictAvoidances"
-                          value={formData.strictAvoidances}
-                          onChange={handleChange}
-                          className={`${inputStyles} min-h-28 resize-none`}
-                          placeholder="Products, rooms, materials, surfaces, scents, or instructions we should strictly avoid..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {step === 4 && (
-                  <div className="space-y-8">
-                    <p className="text-sm font-light leading-relaxed text-stone-500">
-                      Your request will be thoughtfully reviewed before
-                      confirmation. A concierge will follow up with availability,
-                      final details, and any necessary considerations.
-                    </p>
-
-                    <div className="grid gap-4">
-                      {[
-                        "Detailed residence profile received",
-                        "Refined service preferences recorded",
-                        "Sensitivities and considerations noted",
-                        "Concierge review required before confirmation",
-                      ].map((item) => (
-                        <div
-                          key={item}
-                          className="flex items-center justify-between border border-stone-100 bg-white/40 px-5 py-4"
-                        >
-                          <span className="text-sm font-light text-stone-600">
-                            {item}
-                          </span>
-                          <span className="text-[10px] uppercase tracking-widest text-stone-400">
-                            Included
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="border-l border-stone-300 pl-5">
-                      <p className="text-xs uppercase tracking-[0.25em] text-stone-400">
-                        Confidentiality
-                      </p>
-                      <p className="mt-2 text-sm font-light leading-relaxed text-stone-500">
-                        Discretion is fundamental to our service. All information
-                        shared is held in strict confidence and used solely to
-                        curate a service experience that reflects the standards
-                        of your home.
-                      </p>
-                    </div>
-
-                    {submitError && (
-                      <p className="text-sm text-red-500">{submitError}</p>
-                    )}
-
-                    {successMessage && (
-                      <p className="text-sm text-green-600">{successMessage}</p>
-                    )}
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-
-            <div className="mt-12 flex flex-col-reverse gap-4 border-t border-stone-100 pt-8 md:flex-row md:items-center md:justify-between">
-              <button
-                type="button"
-                onClick={prevStep}
-                disabled={step === 0 || isSubmitting}
-                className="flex items-center justify-center gap-3 text-[10px] uppercase tracking-[0.3em] text-stone-400 transition hover:text-stone-900 disabled:opacity-30 disabled:hover:text-stone-400"
-              >
-                <ArrowLeft size={14} />
-                Back
-              </button>
-
-              {step < steps.length - 1 ? (
+              {/* Footer */}
+              <div style={{
+                marginTop: "40px", paddingTop: "28px",
+                borderTop: "1px solid #EDEAE6",
+                display: "flex", alignItems: "center",
+                justifyContent: "space-between", gap: "16px",
+                flexWrap: "wrap",
+              }}>
                 <button
+                  className="sif-btn-back"
                   type="button"
-                  onClick={nextStep}
-                  className="group relative bg-[#1A1A1A] px-10 py-4 text-[10px] font-bold uppercase tracking-[0.35em] text-white overflow-hidden"
+                  onClick={prevStep}
+                  disabled={step === 0 || isSubmitting}
+                  style={{
+                    background: "none", border: "none",
+                    cursor: step === 0 ? "default" : "pointer",
+                    display: "flex", alignItems: "center", gap: "10px",
+                    fontSize: "10px", letterSpacing: "0.3em", textTransform: "uppercase",
+                    color: "#A09890", fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                    padding: 0, opacity: step === 0 ? 0.3 : 1,
+                    transition: "color 0.2s",
+                  }}
                 >
-                  <span className="relative z-10 flex items-center justify-center gap-4 transition-all group-hover:gap-6">
-                    Continue <ArrowRight size={14} />
-                  </span>
-                  <div className="absolute inset-0 translate-y-full bg-stone-800 transition-transform duration-500 group-hover:translate-y-0" />
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="19" y1="12" x2="5" y2="12" />
+                    <polyline points="12 19 5 12 12 5" />
+                  </svg>
+                  Back
                 </button>
-              ) : (
+
                 <button
-                  type="submit"
+                  className="sif-btn-next"
+                  type="button"
+                  onClick={isLast ? handleSubmit : nextStep}
                   disabled={isSubmitting}
-                  className="group relative bg-[#1A1A1A] px-10 py-4 text-[10px] font-bold uppercase tracking-[0.35em] text-white overflow-hidden disabled:opacity-50"
+                  style={{
+                    background: "#1A1A1A", color: "#fff",
+                    border: "none", cursor: "pointer",
+                    padding: "16px 32px",
+                    fontSize: "10px", letterSpacing: "0.35em", textTransform: "uppercase",
+                    fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                    display: "flex", alignItems: "center", gap: "12px",
+                    transition: "background 0.25s",
+                    opacity: isSubmitting ? 0.55 : 1,
+                  }}
                 >
-                  <span className="relative z-10 flex items-center justify-center gap-4 transition-all group-hover:gap-6">
-                    {isSubmitting ? "Submitting..." : "Submit Inquiry"}
-                    <ArrowRight size={14} />
-                  </span>
-                  <div className="absolute inset-0 translate-y-full bg-stone-800 transition-transform duration-500 group-hover:translate-y-0" />
+                  {isLast ? (isSubmitting ? "Submitting…" : "Submit Inquiry") : "Continue"}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
                 </button>
-              )}
+              </div>
             </div>
-          </form>
+          </div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 }
