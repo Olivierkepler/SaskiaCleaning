@@ -2,10 +2,22 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const slides = [
-  { url: "https://images.unsplash.com/photo-1613545325278-f24b0cae1224?q=80&w=2070", title: "Meticulous Architectural Detail" },
-  { url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070", title: "Modern Glass Facade" },
-  { url: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?q=80&w=2071", title: "Minimalist Interior Structure" },
-  { url: "https://encrypted-tbn3.gstatic.com/shopping?q=tbn:ANd9GcQKeGAYdV5UTcPfTq-wgJ1qMmFuyZ41sLL9ZgHTYSOcAYGTrszqvUVPe0NX8WdjzyKQzVM7ub82GAxm6e25e4nll2u8gdbaaA&usqp=CAc", title: "Urban Residential Design" }
+  {
+    url: "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=2070",
+    title: "Modern Minimal Architecture"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1487958449943-2429e8be8625?q=80&w=2070",
+    title: "Luxury Glass Facade Design"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070",
+    title: "Clean Interior Living Space"
+  },
+  {
+    url: "https://images.unsplash.com/photo-1501183638710-841dd1904471?q=80&w=2070",
+    title: "Urban Contemporary Housing"
+  }
 ];
 
 export default function ArchitecturalCarousel() {

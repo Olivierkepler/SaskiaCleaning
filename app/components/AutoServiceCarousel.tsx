@@ -52,7 +52,7 @@ const carouselItems = [
     ],
     startingPrice: "$120+",
   },
-  {
+  {  
     title: "Specialty Cleaning",
     subtitle: "Advanced care for carpets, windows, appliances, and build-outs.",
     image:
@@ -185,14 +185,13 @@ export default function AutoServiceCarousel() {
             </div>
 
             <div className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row sm:gap-3">
-              <a
-              href="/ServiceInquiryForm"
+              <button
                 type="button"
                 className="group/req relative min-h-[48px] w-full overflow-hidden bg-[#1A1A1A] px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white transition-shadow active:bg-stone-800 hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)] sm:min-h-0 sm:flex-1 sm:px-5 sm:py-4 sm:text-xs sm:tracking-[0.25em]"
               >
                 <span className="relative z-10">Request This Service</span>
                 <div className="absolute inset-0 translate-y-full bg-stone-700 transition-transform duration-300 motion-safe:group-hover/req:translate-y-0" />
-              </a>
+              </button>
 
               <button
                 type="button"

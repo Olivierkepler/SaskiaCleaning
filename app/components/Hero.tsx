@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import ServiceInquiryForm from "./ServiceInquiryForm";
 import ArchitecturalCarousel from "./ArchitecturalCarousel";
-import CleaningServicesPricing from "./CleaningPriceCalculator";
+import CostEstimationModal from "./CostEstimationModal";
 
 export default function Hero() {
   const containerRef = useRef(null);
@@ -21,15 +21,12 @@ export default function Hero() {
   const scaleImage = useTransform(scrollYProgress, [0, 0.5], [1.1, 1]);
 
   useEffect(() => {
-    const isModalOpen = isInquiryOpen || openEstimator;
+    if (openEstimator) return; // CostEstimationModal manages overflow when open
 
-    document.body.style.overflow = isModalOpen ? "hidden" : "";
+    document.body.style.overflow = isInquiryOpen ? "hidden" : "";
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsInquiryOpen(false);
-        setOpenEstimator(false);
-      }
+      if (e.key === "Escape") setIsInquiryOpen(false);
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -167,6 +164,7 @@ export default function Hero() {
         </div>
       </div>
 
+      {/* Service Inquiry Modal */}
       <AnimatePresence>
         {isInquiryOpen && (
           <motion.div
@@ -183,58 +181,11 @@ export default function Hero() {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {openEstimator && (
-          <motion.div
-            className="fixed inset-0 z-[100]"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <button
-              type="button"
-              aria-label="Close cost estimation modal"
-              onClick={() => setOpenEstimator(false)}
-              className="absolute inset-0 bg-black/45 backdrop-blur-sm"
-            />
-
-            <div className="absolute inset-0 flex items-center justify-center p-3 sm:p-6">
-              <motion.div
-                initial={{ opacity: 0, y: 28, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 28, scale: 0.98 }}
-                transition={{ duration: 0.35, ease: [0.19, 1, 0.22, 1] }}
-                onClick={(e) => e.stopPropagation()}
-                className="relative max-h-[92vh] w-full max-w-6xl overflow-hidden border border-zinc-200 bg-white shadow-[0_40px_120px_rgba(0,0,0,0.28)]"
-              >
-                <div className="sticky top-0 z-20 flex items-center justify-between border-b border-zinc-200 bg-white/95 px-5 py-4 backdrop-blur-xl sm:px-6">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-stone-400">
-                      Saskia Cleaning
-                    </p>
-                    <h2 className="mt-1 font-serif text-xl tracking-tight text-zinc-950 sm:text-2xl">
-                      Cost Estimation
-                    </h2>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setOpenEstimator(false)}
-                    aria-label="Close modal"
-                    className="grid h-10 w-10 place-items-center border border-zinc-300 text-zinc-700 transition hover:border-zinc-950 hover:bg-zinc-950 hover:text-white"
-                  >
-                    ✕
-                  </button>
-                </div>
-
-                <div className="max-h-[calc(92vh-81px)] overflow-y-auto">
-                  <CleaningServicesPricing />
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Cost Estimation Modal */}
+      <CostEstimationModal
+        isOpen={openEstimator}
+        onClose={() => setOpenEstimator(false)}
+      />
     </section>
   );
 }
