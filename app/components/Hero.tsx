@@ -139,7 +139,7 @@ export default function Hero() {
           >
          <motion.video
   style={{ scale: scaleImage }}
-  src="/videos/cleaning.mov"
+  src="/videos/cleaning2.mp4"
   className="h-full w-full object-cover grayscale-[15%] transition-all duration-1000 hover:grayscale-0"
   autoPlay
   muted

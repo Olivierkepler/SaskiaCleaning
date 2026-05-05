@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, ChangeEvent } from "react";
+import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -32,12 +33,20 @@ type ServiceInquiryFormProps = {
 
 const STEPS = ["Identity", "Residence", "Preferences", "Sensitivities", "Review"] as const;
 
+// const IMAGES: string[] = [
+//   "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
+//   // "/images/familiy.jpg",
+//   "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=80",
+//   "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80",
+//   "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80",
+//   "https://images.unsplash.com/photo-1613545325278-f24b0cae1224?auto=format&fit=crop&w=800&q=80",
+// ];
 const IMAGES: string[] = [
-  "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1505691938895-1758d7feb511?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1613545325278-f24b0cae1224?auto=format&fit=crop&w=800&q=80",
+  "/images/family.jpg",      // fix typo: familiy → family
+  "/images/residence.jpg",
+  "/images/detergante.jpg",
+  "/images/pets.jpg",
+  "/images/cleaning4.jpg",
 ];
 
 const INITIAL_DATA: FormData = {
@@ -468,17 +477,18 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
                 A confidential introduction to your residence, preferences, sensitivities, and desired atmosphere—prepared with precision and quiet intention.
               </p>
               <div style={{ marginTop: "24px", overflow: "hidden", height: "180px" }}>
-                <img
-                  key={step}
-                  src={IMAGES[step]}
-                  alt=""
-                  onLoad={() => setImgLoaded(true)}
-                  style={{
-                    width: "100%", height: "100%", objectFit: "cover", display: "block",
-                    opacity: imgLoaded ? 1 : 0,
-                    transition: "opacity 0.5s ease",
-                  }}
-                />
+           
+              <div style={{ position: "relative", height: "180px", overflow: "hidden" }}>
+<Image
+  key={step}
+  src={IMAGES[step]}
+  alt=""
+  fill
+  style={{ objectFit: "cover" }}
+  onLoad={() => setImgLoaded(true)}
+  className={`transition-opacity duration-500 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+/>
+</div>
               </div>
             </div>
 
