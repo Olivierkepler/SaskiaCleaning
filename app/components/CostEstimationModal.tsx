@@ -15,8 +15,8 @@ const B = {
   green:       "#4EAD3A",
   greenLight:  "#6DC95A",
   greenBorder: "rgba(78,173,58,0.3)",
-  bg:          "#FCFAF8",
-  surface:     "#F7F8FC",
+  bg:      "#FCFAF8",
+  surface: "#F5F1EC",
   border:      "#E4E8F0",
   borderDark:  "#C8D0E2",
   textPrimary: "#0F1C3F",
@@ -90,16 +90,19 @@ export default function CostEstimationModal({ isOpen, onClose }: CostEstimationM
           transition={{ duration:0.3 }}>
 
           {/* Backdrop — white-smoke with subtle blue tint */}
-          <div className="absolute inset-0"
-            style={{ background:"rgba(15,28,63,0.45)", backdropFilter:"blur(4px)" }}
-            onClick={onClose} />
+          <div className="absolute inset-0 z-0 cursor-pointer"
+ style={{ background:"rgba(245,241,236,0.85)", backdropFilter:"blur(6px)" }}
+  onClick={onClose} />
 
           {/* Cursor ambient */}
-          <motion.div className="pointer-events-none absolute inset-0" style={{ background:glowBg }} />
+        <motion.div className="pointer-events-none absolute inset-0 z-0" style={{ background:glowBg }} />
+           {/* Modal positioner */}
 
-          {/* Modal positioner */}
-          <div className="absolute inset-0 flex items-stretch sm:items-center sm:justify-center sm:p-4 lg:p-6">
-            <motion.div
+           <div className="absolute inset-0 z-10 flex items-stretch sm:items-center sm:justify-center sm:p-4 lg:p-6"
+  onClick={onClose}>
+           
+          {/* <div className="absolute inset-0 z-10 flex items-stretch sm:items-center sm:justify-center sm:p-4 lg:p-6">   */}
+             <motion.div
               initial={{ opacity:0, y:28, scale:0.98 }}
               animate={{ opacity:1, y:0,  scale:1    }}
               exit={{    opacity:0, y:28, scale:0.98 }}
@@ -107,7 +110,7 @@ export default function CostEstimationModal({ isOpen, onClose }: CostEstimationM
               onClick={(e) => e.stopPropagation()}
               className="relative flex w-full flex-col overflow-hidden sm:max-h-[94vh] sm:max-w-5xl lg:max-w-6xl"
               style={{
-                background: B.bg,
+                background: "#FCFAF8",
                 boxShadow:`
                   0 0 0 1px ${B.border},
                   0 40px 100px rgba(15,28,63,0.18),
@@ -128,7 +131,7 @@ export default function CostEstimationModal({ isOpen, onClose }: CostEstimationM
                   HEADER
               ══════════════════════════════════════════ */}
               <div className="relative z-20 flex-shrink-0"
-                style={{ borderBottom:`1px solid ${B.border}`, background:B.bg }}>
+                style={{ borderBottom:`1px solid ${B.border}`, background:"#FCFAF8" }}>
 
                 {/* Row 1: brand + live prices + close */}
                 <div className="flex items-center justify-between px-4 py-3 sm:px-6">
@@ -235,7 +238,7 @@ export default function CostEstimationModal({ isOpen, onClose }: CostEstimationM
 
               {/* ── Footer ── */}
               <div className="relative flex-shrink-0 px-4 py-2.5 sm:px-6"
-                style={{ borderTop:`1px solid ${B.border}`, background:B.bg }}>
+                style={{ borderTop:`1px solid ${B.border}`, background:"#FCFAF8" }}>
                 <div className="flex items-center justify-between">
                   <p className="text-[8px] uppercase tracking-[0.35em]" style={{ color:B.textMuted }}>
                     All estimates are non-binding
