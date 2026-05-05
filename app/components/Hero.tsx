@@ -45,88 +45,105 @@ export default function Hero() {
       <div className="grid items-start gap-8 lg:grid-cols-12">
         {/* Text Content */}
         <div className="z-10 mt-10 lg:col-span-6">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 1, ease: [0.19, 1, 0.22, 1] }}
-          >
-            <span className="mb-5 block text-[10px] font-semibold uppercase tracking-[0.4em] text-stone-400">
-              Established 2026 — Boston | Massachusetts
-            </span>
+  <motion.div
+    initial={{ opacity: 0, x: -20 }}
+    animate={{ opacity: 1, x: 0 }}
+    transition={{ duration: 1, ease: [0.19, 1, 0.22, 1] }}
+  >
+    <span className="mb-5 block text-[10px] font-semibold uppercase tracking-[0.4em] text-stone-400">
+      Saskia Cleaning Services — Boston, Massachusetts
+    </span>
 
-            <h1 className="mb-8 max-w-3xl font-serif text-5xl leading-[0.88] tracking-tight text-zinc-950 md:text-[4.5rem] lg:text-[4.4rem]">
-              A Study in <br />
-              <span className="italic text-stone-400">Purity.</span>
-            </h1>
+    <h1 className="mb-8 max-w-3xl font-serif text-5xl leading-[0.88] tracking-tight text-zinc-950 md:text-[4.5rem] lg:text-[4.4rem]">
+      A Clean Home <br />
+      <span className="italic text-stone-400">Changes Everything.</span>
+    </h1>
 
-            <p className="mb-8 max-w-xl text-base font-light leading-relaxed text-stone-500 md:text-xl">
-              Bespoke residential and estate cleaning for clients who value
-              discretion, precision, and the quiet luxury of an immaculate home.
-            </p>
+    <p className="mb-8 max-w-xl text-base font-light leading-relaxed text-stone-500 md:text-xl">
+      Professional deep cleaning and routine maintenance for homes,
+      apartments, and commercial spaces. We deliver detailed, reliable,
+      and high-quality service you can trust.
+    </p>
 
-            <div className="mb-10 grid max-w-xl grid-cols-2 gap-4 border-y border-stone-200 py-6 sm:grid-cols-3">
-              <div>
-                <p className="font-serif text-2xl text-zinc-950">24h</p>
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
-                  Response
-                </p>
-              </div>
+    {/* Stats */}
+    <div className="mb-10 grid max-w-xl grid-cols-2 gap-4 border-y border-stone-200 py-6 sm:grid-cols-3">
+      <div>
+        <p className="font-serif text-2xl text-zinc-950">24h</p>
+        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
+          Response
+        </p>
+      </div>
 
-              <div>
-                <p className="font-serif text-2xl text-zinc-950">100%</p>
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
-                  Tailored
-                </p>
-              </div>
+      <div>
+        <p className="font-serif text-2xl text-zinc-950">Deep</p>
+        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
+          Cleaning
+        </p>
+      </div>
 
-              <div className="col-span-2 sm:col-span-1">
-                <p className="font-serif text-2xl text-zinc-950">Private</p>
-                <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
-                  Service
-                </p>
-              </div>
-            </div>
+      <div className="col-span-2 sm:col-span-1">
+        <p className="font-serif text-2xl text-zinc-950">Reliable</p>
+        <p className="mt-1 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400">
+          Service
+        </p>
+      </div>
+    </div>
 
-            <div className="mb-10 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={() => setIsInquiryOpen(true)}
-                className="group relative overflow-hidden border border-green-900 bg-green-900 px-8 py-4 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:shadow-[0_18px_45px_rgba(20,83,45,0.18)] sm:px-10"
-              >
-                <span className="relative z-10">Begin Inquiry</span>
-                <span className="absolute inset-0 translate-y-full bg-zinc-950 transition-transform duration-300 ease-out group-hover:translate-y-0" />
-              </button>
+    {/* CTA */}
+    <div className="mb-10 flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
+      <button
+        type="button"
+        onClick={() => setIsInquiryOpen(true)}
+        className="group relative overflow-hidden border border-green-900 bg-green-900 px-8 py-4 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:shadow-[0_18px_45px_rgba(20,83,45,0.18)] sm:px-10"
+      >
+        <span className="relative z-10">Book Cleaning</span>
+        <span className="absolute inset-0 translate-y-full bg-zinc-950 transition-transform duration-300 ease-out group-hover:translate-y-0" />
+      </button>
 
-              <button
-                type="button"
-                onClick={() => setOpenEstimator(true)}
-                className="group relative overflow-hidden border border-zinc-300 bg-white px-8 py-4 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-900 transition-all duration-300 hover:border-blue-900 sm:px-10"
-              >
-                <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
-                  Cost Estimation
-                </span>
-                <span className="absolute inset-0 translate-y-full bg-blue-900 transition-transform duration-300 ease-out group-hover:translate-y-0" />
-              </button>
-            </div>
+      <button
+        type="button"
+        onClick={() => setOpenEstimator(true)}
+        className="group relative overflow-hidden border border-zinc-300 bg-white px-8 py-4 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-900 transition-all duration-300 hover:border-blue-900 sm:px-10"
+      >
+        <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
+          Get Estimate
+        </span>
+        <span className="absolute inset-0 translate-y-full bg-blue-900 transition-transform duration-300 ease-out group-hover:translate-y-0" />
+      </button>
+    </div>
 
-            <div className="flex max-w-xl flex-col gap-3 text-sm text-stone-500 sm:flex-row sm:items-center sm:gap-6">
-              <div className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 bg-green-900" />
-                Licensed & insured
-              </div>
+    {/* Contact Info (NEW) */}
+    <div className="mb-6 flex flex-col gap-2 text-sm text-stone-600">
+      <a href="tel:8573528554" className="hover:text-zinc-900 transition">
+        📞 857-352-8554
+      </a>
+      <a
+        href="mailto:cleaningsaskia@gmail.com"
+        className="hover:text-zinc-900 transition"
+      >
+        ✉️ cleaningsaskia@gmail.com
+      </a>
+    </div>
 
-              <div className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 bg-green-900" />
-                Residential & commercial
-              </div>
+    {/* Trust badges */}
+    <div className="flex max-w-xl flex-col gap-3 text-sm text-stone-500 sm:flex-row sm:items-center sm:gap-6">
+      <div className="flex items-center gap-2">
+        <span className="h-1.5 w-1.5 bg-green-900" />
+        Licensed & insured
+      </div>
 
-              <div className="flex items-center gap-2">
-                <span className="h-1.5 w-1.5 bg-green-900" />
-                Boston area
-              </div>
-            </div>
-          </motion.div>
-        </div>
+      <div className="flex items-center gap-2">
+        <span className="h-1.5 w-1.5 bg-green-900" />
+        Residential & commercial
+      </div>
+
+      <div className="flex items-center gap-2">
+        <span className="h-1.5 w-1.5 bg-green-900" />
+        Boston area
+      </div>
+    </div>
+  </motion.div>
+</div>
 
         {/* Visual Content */}
         <div className="relative flex h-[600px] items-center md:h-[750px] lg:col-span-6">
