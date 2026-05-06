@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion"
 import ServiceInquiryForm from "./ServiceInquiryForm";
 import ArchitecturalCarousel from "./ArchitecturalCarousel";
 import CostEstimationModal from "./CostEstimationModal";
+import Image from "next/image";
 
 export default function Hero() {
   const containerRef = useRef(null);
@@ -145,8 +146,13 @@ export default function Hero() {
   </motion.div>
 </div>
 
+
+
         {/* Visual Content */}
         <div className="relative flex h-[600px] items-center md:h-[750px] lg:col-span-6">
+       
+       
+    
           <motion.div
             style={{ y: yLarge }}
             initial={{ clipPath: "inset(100% 0% 0% 0%)", opacity: 0 }}
@@ -163,6 +169,8 @@ export default function Hero() {
   loop
   playsInline
 />
+
+
 
             
           </motion.div>

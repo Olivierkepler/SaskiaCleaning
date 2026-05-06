@@ -45,7 +45,7 @@ const IMAGES: string[] = [
   "/images/family.jpg",      // fix typo: familiy → family
   "/images/residence.jpg",
   "/images/detergante.jpg",
-  "/images/pets.jpg",
+  "/images/kit.png",
   "/images/cleaning4.jpg",
 ];
 

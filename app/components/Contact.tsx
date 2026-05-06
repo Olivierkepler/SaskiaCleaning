@@ -45,7 +45,7 @@ export default function Contact() {
               </div>
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-stone-400">Direct</p>
-                <a href='#' className="text-stone-800 font-light">+1 (617) 555-0128</a>
+                <a href='#' className="text-stone-800 font-light">+1 (857) 352 8554</a>
               </div>
             </div>
           </div>
