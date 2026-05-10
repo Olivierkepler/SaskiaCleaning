@@ -57,7 +57,7 @@ export default function Hero() {
 
     <h1 className="mb-8 max-w-3xl font-serif text-5xl leading-[0.88] tracking-tight text-zinc-950 md:text-[4.5rem] lg:text-[4.4rem]">
       A Clean Home <br />
-      <span className="italic text-stone-400">Changes Everything.</span>
+      <span className="italic text-stone-400">Changes Everything</span>
     </h1>
 
     <p className="mb-8 max-w-xl text-base font-light leading-relaxed text-stone-500 md:text-xl">
