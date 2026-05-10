@@ -18,7 +18,7 @@ export default function Home() {
       
       {/* 1. Hero: Internal entrance animations already set */}
       <Hero />
-<InfoBar />
+
       {/* 2. TrustBar: Gentle slide-in reveal */}
       {/* <SectionWrapper>
         <TrustBar />
