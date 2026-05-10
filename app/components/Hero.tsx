@@ -43,7 +43,9 @@ export default function Hero() {
   return (
     <section
       ref={containerRef}
-      className="relative flex min-h-[90vh] flex-col justify-center overflow-hidden px-6 pt-20 md:px-16"
+      className="relative flex min-h-[90vh] flex-col justify-center overflow-hidden px-6 pt-20 md:px-16
+        bg-[url('/images/maxresdefault.jpg')]
+      "
     >
       {/* Background image with subtle parallax */}
       <motion.div
