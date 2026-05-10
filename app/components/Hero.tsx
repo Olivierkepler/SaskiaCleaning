@@ -41,12 +41,16 @@ export default function Hero() {
   }, [isInquiryOpen, openEstimator]);
 
   return (
-    <section
-      ref={containerRef}
-      className="relative flex min-h-[90vh] flex-col justify-center overflow-hidden px-6 pt-20 md:px-16
-        bg-[url('/images/maxresdefault.jpg')]
-      "
-    >
+  <section
+  ref={containerRef}
+  aria-label="Hero — Saskia Cleaning Services"
+  className="
+    relative isolate flex min-h-[90vh] flex-col justify-center overflow-hidden
+    px-6 pt-20 pb-24 md:px-16 md:pt-28 md:pb-32
+    bg-[url('/images/maxresdefault.jpg')] bg-cover bg-center bg-no-repeat
+    bg-fixed
+  "
+>
       {/* Background image with subtle parallax */}
       <motion.div
         style={{ y: yBackground }}
