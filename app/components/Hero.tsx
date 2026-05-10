@@ -220,17 +220,19 @@ export default function Hero() {
             transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
             className="absolute right-0 top-6 h-[78%] w-[88%] overflow-hidden rounded-sm shadow-2xl sm:top-10 md:top-12 md:h-[80%] md:w-[85%]"
           >
-            <motion.video
-              style={{ scale: scaleImage }}
-              src="/videos/cleaning2.mp4"
-              className="h-full w-full object-cover grayscale-[15%] transition-all duration-1000 hover:grayscale-0"
-              autoPlay
-              muted
-              loop
-              playsInline
-              aria-label="Saskia Cleaning service video"
-            />
-          </motion.div>
+      <motion.div
+  style={{ scale: scaleImage }}
+  className="relative h-full w-full"
+>
+  <Image
+    src="/images/PHOTO-2026-05-06-23-30-38 (1).jpg"
+    alt="Professional cleaning service in action"
+    fill
+    priority
+    sizes="(max-width: 1024px) 90vw, 45vw"
+    className="object-cover grayscale-[15%] transition-all duration-1000 hover:grayscale-0"
+  />
+</motion.div>
 
           {/* Secondary carousel — hidden on small screens to keep things calm */}
           <motion.div
