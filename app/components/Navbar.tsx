@@ -44,7 +44,7 @@ export default function Navbar() {
           aria-label="Main navigation"
           className={`mx-auto flex max-w-7xl items-center justify-between border px-5 py-4 transition-all duration-500 ${
             isScrolled
-              ? "border-zinc-200 bg-white/90 shadow-[0_20px_70px_rgba(0,0,0,0.06)] backdrop-blur-2xl"
+              ? "border-zinc-200 bg-white shadow-[0_20px_70px_rgba(0,0,0,0.06)] backdrop-blur-2xl"
               : "border-white/40 bg-white/35 backdrop-blur-xl"
           }`}
         >
