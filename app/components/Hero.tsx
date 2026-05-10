@@ -68,24 +68,25 @@ export default function Hero() {
       className="
         relative isolate flex flex-col justify-center overflow-hidden
         min-h-[100svh] sm:min-h-[90vh]
-        px-4 pt-16 pb-16
-        sm:px-6 sm:pt-20 sm:pb-20
-        md:px-12 md:pt-24 md:pb-24
-        lg:px-16 lg:pt-28 lg:pb-32
+        px-4  pb-16
+        sm:px-6  sm:pb-20
+        md:px-12  md:pb-24
+        lg:px-16  lg:pb-32
         bg-[url('/images/maxresdefault.jpg')]
         bg-cover bg-center bg-no-repeat
         sm:bg-fixed
       "
     >
       {/* Light gradient overlay — keeps dark text readable on the photo. */}
-      <div
-        aria-hidden="true"
-        className="
-          absolute inset-0 -z-10
-          bg-gradient-to-b from-[#FCFAF8]/95 via-[#FCFAF8]/80 to-[#FCFAF8]/60
-          lg:bg-gradient-to-r lg:from-[#FCFAF8]/95 lg:via-[#FCFAF8]/85 lg:to-[#FCFAF8]/45
-        "
-      />
+   {/* Light gradient overlay — keeps dark text readable on the photo. */}
+<div
+  aria-hidden="true"
+  className="
+    absolute inset-0 -z-10
+    bg-gradient-to-b from-white/95 via-white/80 to-white/60
+    lg:bg-gradient-to-r lg:from-white/95 lg:via-white/85 lg:to-white/45
+  "
+/>
 
       {/* Subtle dotted grain texture */}
       <div
