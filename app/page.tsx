@@ -13,7 +13,7 @@ import CleaningPriceCalculator from './components/CleaningPriceCalculator';
 export default function Home() {
   
   return (
-    <main className="relative bg-[#FCFAF8] overflow-x-hidden pt-20 sm:pt-10">
+    <main className="relative bg-white overflow-x-hidden pt-20 sm:pt-10">
       
       {/* 1. Hero: Internal entrance animations already set */}
       <Hero />
