@@ -8,6 +8,7 @@ import {
   useScroll,
   useTransform,
 } from "framer-motion";
+import Image from "next/image";
 import ServiceInquiryForm from "./ServiceInquiryForm";
 import ArchitecturalCarousel from "./ArchitecturalCarousel";
 import CostEstimationModal from "./CostEstimationModal";
@@ -76,9 +77,7 @@ export default function Hero() {
         sm:bg-fixed
       "
     >
-      {/* Light gradient overlay — keeps dark text readable on the photo.
-          Fades to more transparent on the right so the visual column
-          (video + carousel) still feels connected to the background. */}
+      {/* Light gradient overlay — keeps dark text readable on the photo. */}
       <div
         aria-hidden="true"
         className="
@@ -212,7 +211,7 @@ export default function Hero() {
             h-[380px] sm:h-[480px] md:h-[600px] lg:h-[700px] xl:h-[750px]
           "
         >
-          {/* Primary video */}
+          {/* Primary image */}
           <motion.div
             style={{ y: yLarge }}
             initial={{ clipPath: "inset(100% 0% 0% 0%)", opacity: 0 }}
@@ -220,19 +219,20 @@ export default function Hero() {
             transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
             className="absolute right-0 top-6 h-[78%] w-[88%] overflow-hidden rounded-sm shadow-2xl sm:top-10 md:top-12 md:h-[80%] md:w-[85%]"
           >
-      <motion.div
-  style={{ scale: scaleImage }}
-  className="relative h-full w-full"
->
-  <Image
-    src="/images/PHOTO-2026-05-06-23-30-38 (1).jpg"
-    alt="Professional cleaning service in action"
-    fill
-    priority
-    sizes="(max-width: 1024px) 90vw, 45vw"
-    className="object-cover grayscale-[15%] transition-all duration-1000 hover:grayscale-0"
-  />
-</motion.div>
+            <motion.div
+              style={{ scale: scaleImage }}
+              className="relative h-full w-full"
+            >
+              <Image
+                src="/images/PHOTO-2026-05-06-23-30-38 (1).jpg"
+                alt="Professional cleaning service in action"
+                fill
+                priority
+                sizes="(max-width: 1024px) 90vw, 45vw"
+                className="object-cover grayscale-[15%] transition-all duration-1000 hover:grayscale-0"
+              />
+            </motion.div>
+          </motion.div>
 
           {/* Secondary carousel — hidden on small screens to keep things calm */}
           <motion.div
@@ -253,9 +253,7 @@ export default function Hero() {
 
           {/* Decorative ring */}
           <motion.div
-            animate={
-              prefersReducedMotion ? undefined : { rotate: 360 }
-            }
+            animate={prefersReducedMotion ? undefined : { rotate: 360 }}
             transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
             className="absolute -right-6 -top-6 hidden h-24 w-24 rounded-full border border-dashed border-stone-300/60 opacity-40 md:block lg:h-32 lg:w-32"
             aria-hidden="true"
