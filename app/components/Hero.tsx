@@ -62,7 +62,7 @@ export default function Hero() {
   }, [isInquiryOpen, openEstimator]);
 
   return (
- <section
+<section
   ref={containerRef}
   aria-label="Hero — Saskia Cleaning Services"
   className="
