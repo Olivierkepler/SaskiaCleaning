@@ -25,7 +25,7 @@ export default function Home() {
       <Hero />
   <InfoBar />
   <CommercialCleaningServices
-      imageSrc="/images/restaurant.jpg"
+      imageSrc="/images/kitchen.jpg"
       onCtaClick={() => console.log("Start cleaning!")}
     />
 
