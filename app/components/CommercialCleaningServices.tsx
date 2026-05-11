@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { motion, useReducedMotion, Variants } from "framer-motion";
 import {
   Sparkles,
   Utensils,
@@ -33,95 +34,154 @@ type CommercialCleaningServicesProps = {
 const DEFAULT_SERVICES: Service[] = [
   { id: "office", label: "Office Cleaning", icon: Sparkles },
   { id: "restaurant", label: "Restaurant Cleaning", icon: Utensils },
-  { id: "post-construction", label: "Post Construction Cleaning", icon: Wrench },
+  { id: "post-construction", label: "Post‑Construction Cleaning", icon: Wrench },
   { id: "floor-care", label: "Floor Care & Maintenance", icon: Footprints },
   { id: "building", label: "Building Maintenance", icon: Settings },
-  { id: "deep", label: "Deep Cleaning", icon: Droplets },
+  { id: "deep", label: "Deep Cleaning Services", icon: Droplets },
 ];
 
 const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
   title = "Commercial Cleaning Services",
-  tagline = '"We Keep Your Business Sparkling Clean"',
-  description = "Our experienced and reliable team specializes in commercial cleaning for offices, restaurants, schools, and more delivering spotless results every time.",
+  tagline = "Where Professional Spaces Stay Immaculate",
+  description = "We deliver high‑standard commercial cleaning for offices, restaurants, medical buildings, and facilities that demand consistency, precision, and trust.",
   imageSrc = "/images/kitchen.jpg",
-  imageAlt = "Clean commercial restaurant interior",
+  imageAlt = "Professional commercial cleaning environment",
   services = DEFAULT_SERVICES,
-  ctaLabel = "Start Cleaning",
+  ctaLabel = "Request a Quote",
   onCtaClick,
   onServiceClick,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
+  const ease = [0.19, 1, 0.22, 1] as const;
+
+  const containerVariants: Variants = {
+    hidden: {},
+    show: {
+      transition: {
+        staggerChildren: prefersReducedMotion ? 0 : 0.08,
+        delayChildren: prefersReducedMotion ? 0 : 0.1,
+      },
+    },
+  };
+
+  const itemVariants: Variants = {
+    hidden: prefersReducedMotion
+      ? { opacity: 0 }
+      : { opacity: 0, y: 28 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.75, ease },
+    },
+  };
+
+  const imageVariants: Variants = {
+    hidden: prefersReducedMotion
+      ? { opacity: 0 }
+      : { opacity: 0, x: 48, scale: 0.96 },
+    show: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      transition: { duration: 0.9, ease },
+    },
+  };
+
   return (
-    <section
-      className="w-full bg-white py-12 px-4 sm:px-6 lg:px-12"
-      aria-labelledby="commercial-cleaning-heading"
-    >
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        {/* Left: Text Content */}
-        <div className="order-2 lg:order-1">
-          <h2
-            id="commercial-cleaning-heading"
-            className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight leading-tight text-gray-900"
+    <section className="relative overflow-hidden bg-gradient-to-b from-white to-slate-50 py-16 px-4 sm:px-6 lg:px-12">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-14 items-center">
+        {/* TEXT COLUMN */}
+        <motion.div
+          className="relative z-10"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+        >
+          <motion.span
+            variants={itemVariants}
+            className="inline-block rounded-full border border-blue-200 bg-blue-50 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-blue-700"
+          >
+            Commercial Grade Cleaning
+          </motion.span>
+
+          <motion.h2
+            variants={itemVariants}
+            className="mt-5 font-serif text-4xl sm:text-5xl font-medium leading-tight tracking-tight text-gray-900"
           >
             {title}
-          </h2>
-          <p className="mt-3 font-serif text-lg sm:text-xl font-light italic tracking-tight text-blue-600">
-            {tagline}
-          </p>
-          <p className="mt-4 text-sm sm:text-base font-light leading-relaxed text-gray-600 max-w-xl">
-            {description}
-          </p>
+          </motion.h2>
 
-          {/* Services Grid */}
-          <ul
+          <motion.p
+            variants={itemVariants}
+            className="mt-3 max-w-xl text-lg italic font-light text-blue-600"
+          >
+            {tagline}
+          </motion.p>
+
+          <motion.p
+            variants={itemVariants}
+            className="mt-5 max-w-xl text-base leading-relaxed text-gray-600"
+          >
+            {description}
+          </motion.p>
+
+          {/* SERVICES */}
+          <motion.ul
+            variants={containerVariants}
             role="list"
-            className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5"
+            className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-5"
           >
             {services.map((service) => {
               const Icon = service.icon;
-              const isClickable = Boolean(onServiceClick);
               return (
-                <li key={service.id} className="flex items-center gap-4">
-                  <span
-                    aria-hidden="true"
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50"
+                <motion.li
+                  key={service.id}
+                  variants={itemVariants}
+                  whileHover={
+                    prefersReducedMotion
+                      ? undefined
+                      : { y: -4, boxShadow: "0 20px 30px -12px rgba(0,0,0,.12)" }
+                  }
+                  className="group relative rounded-2xl border border-white/60 bg-white/70 backdrop-blur-md p-5 shadow-sm transition"
+                >
+                  <button
+                    onClick={() => onServiceClick?.(service.id)}
+                    className="flex w-full items-center gap-4 text-left focus:outline-none"
                   >
-                    <Icon className="h-6 w-6 text-blue-600" strokeWidth={1.75} />
-                  </span>
-                  {isClickable ? (
-                    <button
-                      type="button"
-                      onClick={() => onServiceClick?.(service.id)}
-                      className="text-left font-serif text-lg sm:text-xl font-medium tracking-tight leading-tight text-gray-900 underline underline-offset-4 decoration-1 hover:text-blue-600 transition-colors"
-                    >
+                    <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-md">
+                      <Icon className="h-6 w-6" strokeWidth={1.6} />
+                    </span>
+                    <span className="font-serif text-lg font-medium tracking-tight text-gray-900 group-hover:text-blue-700 transition">
                       {service.label}
-                    </button>
-                  ) : (
-                    <a
-                      href={`#${service.id}`}
-                      className="font-serif text-lg sm:text-xl font-medium tracking-tight leading-tight text-gray-900 underline underline-offset-4 decoration-1 hover:text-blue-600 transition-colors"
-                    >
-                      {service.label}
-                    </a>
-                  )}
-                </li>
+                    </span>
+                  </button>
+                </motion.li>
               );
             })}
-          </ul>
+          </motion.ul>
 
           {/* CTA */}
-          <div className="mt-10">
-            <button
-              type="button"
+          <motion.div variants={itemVariants} className="mt-12">
+            <motion.button
               onClick={onCtaClick}
-              className="inline-flex items-center justify-center rounded-md bg-gray-900 px-6 py-3 font-serif text-sm sm:text-base font-medium tracking-tight text-white shadow-sm hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
+              whileHover={prefersReducedMotion ? undefined : { scale: 1.05 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.97 }}
+              className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-gray-900 to-gray-800 px-8 py-4 font-serif text-base font-medium text-white shadow-lg shadow-gray-900/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
             >
               {ctaLabel}
-            </button>
-          </div>
-        </div>
+            </motion.button>
+          </motion.div>
+        </motion.div>
 
-        {/* Right: Image */}
-        <div className="order-1 lg:order-2 relative w-full aspect-[4/3] lg:aspect-[5/4] overflow-hidden rounded-2xl shadow-lg">
+        {/* IMAGE */}
+        <motion.div
+          variants={imageVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-80px" }}
+          className="relative aspect-[5/4] overflow-hidden rounded-3xl shadow-2xl"
+        >
           <Image
             src={imageSrc}
             alt={imageAlt}
@@ -130,7 +190,8 @@ const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
             className="object-cover"
             priority
           />
-        </div>
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/40 via-black/10 to-transparent" />
+        </motion.div>
       </div>
     </section>
   );
