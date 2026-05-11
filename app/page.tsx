@@ -29,11 +29,13 @@ export default function Home() {
       onCtaClick={() => console.log("Start cleaning!")}
     />
 
- <CommercialCleaningPlans
+<CommercialCleaningPlans
   backgroundImageSrc="/images/kitchen.jpg"
-  onContactClick={() => router.push("/contact")}
+  onContactClick={() => {
+    document.getElementById("contact")?.scrollIntoView({ behavior: "smooth" });
+  }}
   onPlanClick={(id) => console.log("Selected plan:", id)}
-/>    
+/>   
       {/* 2. TrustBar: Gentle slide-in reveal */}
       {/* <SectionWrapper>
         <TrustBar />
