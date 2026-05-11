@@ -10,6 +10,26 @@ import { motion } from 'framer-motion';
 import AutoServiceCarousel from './components/AutoServiceCarousel';
 import CleaningPriceCalculator from './components/CleaningPriceCalculator';
 import InfoBar from "./components/InfoBar";
+import ServicesSection from "./components/ServicesSection";
+
+const COMMERCIAL_SERVICES = [
+  { icon: "office", title: "Office Cleaning", href: "#office" },
+  { icon: "restaurant", title: "Restaurant Cleaning", href: "#restaurant" },
+  { icon: "construction", title: "Post-Construction Cleaning", href: "#construction" },
+  { icon: "floor", title: "Floor Care & Maintenance", href: "#floor" },
+  { icon: "building", title: "Building Maintenance", href: "#building" },
+  { icon: "deep", title: "Deep Cleaning", href: "#deep" },
+] as const;
+
+const RESIDENTIAL_SERVICES = [
+  { icon: "home", title: "Routine House Cleaning", href: "#routine" },
+  { icon: "deep", title: "Deep Cleaning", href: "#residential-deep" },
+  { icon: "moving", title: "Move-In / Move-Out", href: "#move" },
+  { icon: "sparkle", title: "Post-Event Recovery", href: "#post-event" },
+] as const;
+
+
+
 export default function Home() {
   
   return (
@@ -18,6 +38,37 @@ export default function Home() {
       {/* 1. Hero: Internal entrance animations already set */}
       <Hero />
   <InfoBar />
+
+{/* First section — image on right */}
+      <ServicesSection
+        eyebrow="What We Do"
+        title="Commercial Cleaning"
+        titleAccent="Services"
+        tagline="“We keep your business sparkling clean.”"
+        description="Our experienced and reliable team specializes in commercial cleaning for offices, restaurants, schools, and more — delivering spotless results every time."
+        services={COMMERCIAL_SERVICES}
+        imageSrc="/images/commercial-hero.jpg"
+        imageAlt="Pristine restaurant interior"
+        ctaLabel="Start Cleaning"
+        onCtaClick={() => console.log("open commercial inquiry")}
+      />
+
+      {/* Second section — image on left, no badge */}
+      <ServicesSection
+        eyebrow="For Your Home"
+        title="Residential Cleaning"
+        titleAccent="At Its Finest"
+        tagline="“A clean home changes everything.”"
+        description="Thoughtful, detailed care for homes and apartments across the Boston area — from weekly maintenance to deep restorative cleans."
+        services={RESIDENTIAL_SERVICES}
+        imageSrc="/images/residential-hero.jpg"
+        imageAlt="Beautifully kept living room"
+        layout="image-left"
+        ctaLabel="Book Your Clean"
+        badgeTitle="Bonded & Insured"
+        badgeSubtitle="Background-Checked Team"
+      />
+     
       {/* 2. TrustBar: Gentle slide-in reveal */}
       {/* <SectionWrapper>
         <TrustBar />
