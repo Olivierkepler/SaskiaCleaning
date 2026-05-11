@@ -62,21 +62,21 @@ export default function Hero() {
   }, [isInquiryOpen, openEstimator]);
 
   return (
-  <section
-      ref={containerRef}
-      aria-label="Hero — Saskia Cleaning Services"
-      className="
-        relative isolate flex flex-col justify-center overflow-hidden
-        min-h-[100svh] sm:min-h-[90vh]
-        px-4 pt-16 pb-16
-        sm:px-6 sm:pt-20 sm:pb-20
-        md:px-12 md:pt-24 md:pb-24
-        lg:px-16 lg:pt-28 lg:pb-32
-        bg-[url('/images/maxresdefault.jpg')]
-        bg-cover bg-center bg-no-repeat
-        sm:bg-fixed
-      "
-    >
+ <section
+  ref={containerRef}
+  aria-label="Hero — Saskia Cleaning Services"
+  className="
+    relative isolate flex flex-col justify-center overflow-hidden
+    min-h-[85svh] sm:min-h-[75vh]
+    px-4 pt-12 pb-12
+    sm:px-6 sm:pt-16 sm:pb-16
+    md:px-12 md:pt-20 md:pb-20
+    lg:px-16 lg:pt-24 lg:pb-24
+    bg-[url('/images/maxresdefault.jpg')]
+    bg-cover bg-center bg-no-repeat
+    sm:bg-fixed
+  "
+>
       {/* Light gradient overlay — keeps dark text readable on the photo. */}
    {/* Light gradient overlay — keeps dark text readable on the photo. */}
 <div
