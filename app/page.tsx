@@ -1,16 +1,23 @@
- "use client";
-import Hero from './components/Hero';
-import BentoGrid from './components/BentoGrid';
-import { TrustBar } from './components/TrustBar';
-import { Services } from './components/Services';
-import Contact from './components/Contact';
-import SectionWrapper from './components/SectionWrapper';
-import CleaningPricingCalculator from './components/CleaningPricingCalculator';
-import { motion } from 'framer-motion';
-import AutoServiceCarousel from './components/AutoServiceCarousel';
-import CleaningPriceCalculator from './components/CleaningPriceCalculator';
+"use client";
+
+import { motion } from "framer-motion";
+
+import Hero from "./components/Hero";
 import InfoBar from "./components/InfoBar";
-import ServicesSection, { type ServiceItem } from "./components/ServicesSection";
+import ServicesSection from "./components/ServicesSection";
+import type { ServiceItem } from "./components/ServicesSection";
+import BentoGrid from "./components/BentoGrid";
+import { Services } from "./components/Services";
+import Contact from "./components/Contact";
+import SectionWrapper from "./components/SectionWrapper";
+import CleaningPricingCalculator from "./components/CleaningPricingCalculator";
+import AutoServiceCarousel from "./components/AutoServiceCarousel";
+
+// Unused for now — uncomment imports when re-enabling these sections:
+// import { TrustBar } from './components/TrustBar';
+// import CleaningPriceCalculator from './components/CleaningPriceCalculator';
+
+/* ─── Service Data ─────────────────────────────────────────────── */
 
 const COMMERCIAL_SERVICES: ServiceItem[] = [
   { icon: "office", title: "Office Cleaning", href: "#office" },
@@ -28,17 +35,18 @@ const RESIDENTIAL_SERVICES: ServiceItem[] = [
   { icon: "sparkle", title: "Post-Event Recovery", href: "#post-event" },
 ];
 
+/* ─── Page ─────────────────────────────────────────────────────── */
 
 export default function Home() {
-  
   return (
-    <main className="relative bg-white overflow-x-hidden ">
-      
-      {/* 1. Hero: Internal entrance animations already set */}
+    <main className="relative bg-white overflow-x-hidden">
+      {/* 1. Hero */}
       <Hero />
-  <InfoBar />
 
-{/* First section — image on right */}
+      {/* 2. Info bar */}
+      <InfoBar />
+
+      {/* 3. Commercial services — image on right */}
       <ServicesSection
         eyebrow="What We Do"
         title="Commercial Cleaning"
@@ -52,7 +60,7 @@ export default function Home() {
         onCtaClick={() => console.log("open commercial inquiry")}
       />
 
-      {/* Second section — image on left, no badge */}
+      {/* 4. Residential services — image on left */}
       <ServicesSection
         eyebrow="For Your Home"
         title="Residential Cleaning"
@@ -67,68 +75,78 @@ export default function Home() {
         badgeTitle="Bonded & Insured"
         badgeSubtitle="Background-Checked Team"
       />
-     
-      {/* 2. TrustBar: Gentle slide-in reveal */}
-      {/* <SectionWrapper>
-        <TrustBar />
-      </SectionWrapper> */}
+
+      {/* 5. Auto service carousel */}
       <SectionWrapper>
-        <AutoServiceCarousel/>
+        <AutoServiceCarousel />
       </SectionWrapper>
-{/* 
+
+      {/* 6. Pricing calculator */}
       <SectionWrapper>
-        <CleaningPriceCalculator/>
-      </SectionWrapper> */}
-      <SectionWrapper>
-       <CleaningPricingCalculator/>
+        <CleaningPricingCalculator />
       </SectionWrapper>
-      {/* 3. BentoGrid: 3D Scale Reveal */}
+
+      {/* 7. Bento grid */}
       <SectionWrapper>
         <BentoGrid />
       </SectionWrapper>
-      {/* 4. Services: Subtle Parallax drift */}
+
+      {/* 8. Services */}
       <SectionWrapper>
         <Services />
       </SectionWrapper>
-      {/* 5. Custom CTA with Magnet Effect */}
+
+      {/* 9. "Ready for Restoration" CTA */}
       <SectionWrapper>
-        <section className="py-60 px-6 text-center flex flex-col items-center">
-          <motion.h2 
+        <section className="flex flex-col items-center px-6 py-60 text-center">
+          <motion.h2
             initial={{ letterSpacing: "0em" }}
             whileInView={{ letterSpacing: "0.05em" }}
             transition={{ duration: 1.5 }}
-            className="text-5xl md:text-9xl font-serif mb-16 text-[#1A1A1A] leading-none"
+            className="mb-16 font-serif text-5xl leading-none text-[#1A1A1A] md:text-9xl"
           >
-            Ready for <br /> 
-            <span className="italic text-stone-300 font-light tracking-tighter">Restoration?</span>
+            Ready for <br />
+            <span className="italic font-light tracking-tighter text-stone-300">
+              Restoration?
+            </span>
           </motion.h2>
-          
-          <motion.button 
+
+          <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="group relative px-20 py-8 bg-[#1A1A1A] text-white overflow-hidden rounded-full transition-shadow hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)]"
+            className="
+              group relative overflow-hidden rounded-full bg-[#1A1A1A]
+              px-20 py-8 text-white
+              transition-shadow hover:shadow-[0_20px_50px_rgba(0,0,0,0.2)]
+            "
           >
-            <span className="relative z-10 font-bold uppercase tracking-[0.4em] text-[10px]">
+            <span className="relative z-10 text-[10px] font-bold uppercase tracking-[0.4em]">
               Secure a Consultation
             </span>
-            <motion.div 
-              className="absolute inset-0 bg-stone-700 opacity-0 group-hover:opacity-100 transition-opacity"
+            <motion.div
+              className="absolute inset-0 bg-stone-700 opacity-0 transition-opacity group-hover:opacity-100"
               initial={false}
               whileHover={{ scale: 1.5 }}
             />
           </motion.button>
         </section>
       </SectionWrapper>
-      {/* 6. Contact Form */}
+
+      {/* 10. Contact form */}
       <SectionWrapper>
         <Contact />
       </SectionWrapper>
-      {/* 7. Footer - Final Polish */}
-      <footer className="py-20 px-8 border-t border-stone-100">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+
+      {/* 11. Footer */}
+      <footer className="border-t border-stone-100 px-8 py-20">
+        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex flex-col items-center md:items-start">
-            <span className="font-serif italic text-2xl tracking-tighter">Saskia</span>
-            <span className="text-[9px] uppercase tracking-[0.5em] text-stone-400">Stewardship Group</span>
+            <span className="font-serif text-2xl italic tracking-tighter">
+              Saskia
+            </span>
+            <span className="text-[9px] uppercase tracking-[0.5em] text-stone-400">
+              Stewardship Group
+            </span>
           </div>
           <div className="text-[10px] uppercase tracking-widest text-stone-300">
             Boston • 2026 • Massachusetts
