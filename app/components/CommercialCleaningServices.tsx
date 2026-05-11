@@ -60,14 +60,14 @@ const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
         <div className="order-2 lg:order-1">
           <h2
             id="commercial-cleaning-heading"
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 leading-tight"
+            className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight leading-tight text-gray-900"
           >
             {title}
           </h2>
-          <p className="mt-3 text-blue-600 italic text-base sm:text-lg">
+          <p className="mt-3 font-serif text-lg sm:text-xl font-light italic tracking-tight text-blue-600">
             {tagline}
           </p>
-          <p className="mt-4 text-gray-600 text-sm sm:text-base max-w-xl leading-relaxed">
+          <p className="mt-4 text-sm sm:text-base font-light leading-relaxed text-gray-600 max-w-xl">
             {description}
           </p>
 
@@ -91,14 +91,14 @@ const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
                     <button
                       type="button"
                       onClick={() => onServiceClick?.(service.id)}
-                      className="text-left text-gray-800 font-medium underline underline-offset-4 decoration-1 hover:text-blue-600 transition-colors"
+                      className="text-left font-serif text-lg sm:text-xl font-medium tracking-tight leading-tight text-gray-900 underline underline-offset-4 decoration-1 hover:text-blue-600 transition-colors"
                     >
                       {service.label}
                     </button>
                   ) : (
                     <a
                       href={`#${service.id}`}
-                      className="text-gray-800 font-medium underline underline-offset-4 decoration-1 hover:text-blue-600 transition-colors"
+                      className="font-serif text-lg sm:text-xl font-medium tracking-tight leading-tight text-gray-900 underline underline-offset-4 decoration-1 hover:text-blue-600 transition-colors"
                     >
                       {service.label}
                     </a>
@@ -113,7 +113,7 @@ const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
             <button
               type="button"
               onClick={onCtaClick}
-              className="inline-flex items-center justify-center rounded-md bg-gray-900 px-6 py-3 text-sm font-semibold text-white shadow-sm hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
+              className="inline-flex items-center justify-center rounded-md bg-gray-900 px-6 py-3 font-serif text-sm sm:text-base font-medium tracking-tight text-white shadow-sm hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors"
             >
               {ctaLabel}
             </button>
