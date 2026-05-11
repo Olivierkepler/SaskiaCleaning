@@ -18,6 +18,7 @@ export default function Hero() {
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [openEstimator, setOpenEstimator] = useState(false);
 
+  // Respect users who prefer reduced motion
   const prefersReducedMotion = useReducedMotion();
 
   const { scrollYProgress } = useScroll({
@@ -25,25 +26,26 @@ export default function Hero() {
     offset: ["start end", "end start"],
   });
 
+  // Disable parallax / heavy motion if user prefers reduced motion
   const yLarge = useTransform(
     scrollYProgress,
     [0, 1],
-    prefersReducedMotion ? [0, 0] : [0, -80]
+    prefersReducedMotion ? [0, 0] : [0, -100]
   );
   const ySmall = useTransform(
     scrollYProgress,
     [0, 1],
-    prefersReducedMotion ? [0, 0] : [0, 50]
+    prefersReducedMotion ? [0, 0] : [0, 60]
   );
   const scaleImage = useTransform(
     scrollYProgress,
     [0, 0.5],
-    prefersReducedMotion ? [1, 1] : [1.08, 1]
+    prefersReducedMotion ? [1, 1] : [1.1, 1]
   );
 
   // Body scroll lock for the inquiry modal
   useEffect(() => {
-    if (openEstimator) return;
+    if (openEstimator) return; // CostEstimationModal handles its own overflow
 
     document.body.style.overflow = isInquiryOpen ? "hidden" : "";
 
@@ -60,30 +62,31 @@ export default function Hero() {
   }, [isInquiryOpen, openEstimator]);
 
   return (
-    <section
-      ref={containerRef}
-      aria-label="Hero — Saskia Cleaning Services"
-      className="
-        relative isolate flex flex-col justify-center overflow-hidden
-        min-h-[72svh] sm:min-h-[68vh] lg:min-h-[70vh]
-        px-4 pt-10 pb-10
-        sm:px-6 sm:pt-14 sm:pb-14
-        md:px-12 md:pt-16 md:pb-16
-        lg:px-16 lg:pt-20 lg:pb-20
-        bg-[url('/images/maxresdefault.jpg')]
-        bg-cover bg-center bg-no-repeat
-        sm:bg-fixed
-      "
-    >
-      {/* Light gradient overlay */}
-      <div
-        aria-hidden="true"
-        className="
-          absolute inset-0 -z-10
-          bg-gradient-to-b from-white/95 via-white/82 to-white/60
-          lg:bg-gradient-to-r lg:from-white/95 lg:via-white/85 lg:to-white/45
-        "
-      />
+<section
+  ref={containerRef}
+  aria-label="Hero — Saskia Cleaning Services"
+  className="
+    relative isolate flex flex-col justify-center overflow-hidden
+    min-h-[85svh] sm:min-h-[75vh]
+    px-4 pt-12 pb-12
+    sm:px-6 sm:pt-16 sm:pb-16
+    md:px-12 md:pt-20 md:pb-20
+    lg:px-16 lg:pt-24 lg:pb-24
+    bg-[url('/images/maxresdefault.jpg')]
+    bg-cover bg-center bg-no-repeat
+    sm:bg-fixed
+  "
+>
+      {/* Light gradient overlay — keeps dark text readable on the photo. */}
+   {/* Light gradient overlay — keeps dark text readable on the photo. */}
+<div
+  aria-hidden="true"
+  className="
+    absolute inset-0 -z-10
+    bg-gradient-to-b from-white/95 via-white/80 to-white/60
+    lg:bg-gradient-to-r lg:from-white/95 lg:via-white/85 lg:to-white/45
+  "
+/>
 
       {/* Subtle dotted grain texture */}
       <div
@@ -97,59 +100,60 @@ export default function Hero() {
       />
 
       {/* Content grid */}
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-8 md:gap-10 lg:grid-cols-12 lg:gap-10">
-        {/* ─── Text Column ─────────────────────────────── */}
-        <div className="z-10 lg:col-span-6">
+      <div className="mx-auto grid w-full max-w-7xl items-start gap-10 md:gap-12 lg:grid-cols-12 lg:gap-8">
+        {/* ─── Text Column ────────────────────────────── */}
+        <div className="z-10 lg:col-span-6 lg:mt-10">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 1, ease: [0.19, 1, 0.22, 1] }}
           >
             {/* Eyebrow */}
-            <span className="mb-3 block text-[9px] font-semibold uppercase tracking-[0.35em] text-stone-500 sm:mb-4 sm:text-[10px] sm:tracking-[0.4em]">
+            <span className="mb-4 block text-[9px] font-semibold uppercase tracking-[0.35em] text-stone-500 sm:mb-5 sm:text-[10px] sm:tracking-[0.4em]">
               Saskia Cleaning Services — Boston, Massachusetts
             </span>
 
             {/* Headline */}
-            <h1
-              className="
-                mb-4 max-w-3xl font-serif tracking-tight text-zinc-950
-                text-3xl leading-[0.95]
-                sm:text-4xl sm:leading-[0.9] sm:mb-5
-                md:text-5xl md:leading-[0.88]
-                lg:text-[3.4rem]
-                xl:text-[4rem]
-              "
-            >
-              A Clean Home <br />
-              <span className="italic text-stone-400">Changes Everything</span>
-            </h1>
-
+      {/* Headline */}
+<h1
+  className="
+    mb-6 max-w-3xl font-serif tracking-tight text-zinc-950
+    text-3xl leading-[0.95]
+    sm:text-4xl sm:leading-[0.9]
+    md:text-5xl md:leading-[0.88]
+    lg:text-[3.4rem]
+    xl:text-[4rem]
+    sm:mb-8
+  "
+>
+  A Clean Home <br />
+  <span className="italic text-stone-400">Changes Everything</span>
+</h1>
             {/* Lead paragraph */}
-            <p className="mb-6 max-w-xl text-sm font-light leading-relaxed text-stone-600 sm:text-base md:text-lg lg:text-lg">
+            <p className="mb-8 max-w-xl text-sm font-light leading-relaxed text-stone-600 sm:text-base md:text-lg lg:text-xl">
               Professional deep cleaning and routine maintenance for homes,
               apartments, and commercial spaces. We deliver detailed, reliable,
               and high-quality service you can trust.
             </p>
 
             {/* Stats */}
-            <dl className="mb-6 grid max-w-xl grid-cols-3 gap-3 border-y border-stone-200/80 py-4 sm:gap-4 sm:py-5 md:mb-8">
+            <dl className="mb-8 grid max-w-xl grid-cols-3 gap-3 border-y border-stone-200/80 py-5 sm:gap-4 sm:py-6 md:mb-10">
               <Stat label="Response" value="24h" />
               <Stat label="Cleaning" value="Deep" />
               <Stat label="Service" value="Reliable" />
             </dl>
 
             {/* CTAs */}
-            <div className="mb-6 flex w-full flex-col gap-3 sm:flex-row sm:items-center md:mb-8">
+            <div className="mb-8 flex w-full flex-col gap-3 sm:flex-row sm:items-center md:mb-10">
               <button
                 type="button"
                 onClick={() => setIsInquiryOpen(true)}
                 className="
                   group relative w-full overflow-hidden border border-green-900 bg-green-900
-                  px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-white
+                  px-6 py-3.5 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-white
                   transition-all duration-300 hover:shadow-[0_18px_45px_rgba(20,83,45,0.18)]
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2
-                  sm:w-auto sm:px-8 md:px-10 md:py-3.5
+                  sm:w-auto sm:px-8 md:px-10 md:py-4
                 "
               >
                 <span className="relative z-10">Book Cleaning</span>
@@ -161,10 +165,10 @@ export default function Hero() {
                 onClick={() => setOpenEstimator(true)}
                 className="
                   group relative w-full overflow-hidden border border-zinc-300 bg-white
-                  px-6 py-3 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-900
+                  px-6 py-3.5 text-center text-[11px] font-bold uppercase tracking-[0.22em] text-zinc-900
                   transition-all duration-300 hover:border-blue-900
                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-900 focus-visible:ring-offset-2
-                  sm:w-auto sm:px-8 md:px-10 md:py-3.5
+                  sm:w-auto sm:px-8 md:px-10 md:py-4
                 "
               >
                 <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
@@ -174,8 +178,8 @@ export default function Hero() {
               </button>
             </div>
 
-            {/* Contact */}
-            <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:gap-5">
+            {/* ─── Contact (modernized) ───────────────── */}
+            <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:gap-4">
               <ContactLink
                 href="tel:8573528554"
                 label="857-352-8554"
@@ -190,7 +194,7 @@ export default function Hero() {
               />
             </div>
 
-            {/* Trust badges */}
+            {/* ─── Trust badges (modernized) ───────────── */}
             <ul className="flex max-w-xl flex-wrap gap-2">
               <TrustBadge icon="shield">Licensed &amp; Insured</TrustBadge>
               <TrustBadge icon="building">
@@ -205,7 +209,7 @@ export default function Hero() {
         <div
           className="
             relative flex items-center lg:col-span-6
-            h-[320px] sm:h-[400px] md:h-[480px] lg:h-[540px] xl:h-[580px]
+            h-[380px] sm:h-[480px] md:h-[600px] lg:h-[700px] xl:h-[750px]
           "
         >
           {/* Primary image */}
@@ -214,7 +218,7 @@ export default function Hero() {
             initial={{ clipPath: "inset(100% 0% 0% 0%)", opacity: 0 }}
             animate={{ clipPath: "inset(0% 0% 0% 0%)", opacity: 1 }}
             transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
-            className="absolute right-0 top-4 h-[78%] w-[88%] overflow-hidden rounded-sm shadow-2xl sm:top-6 md:top-8 md:h-[80%] md:w-[85%]"
+            className="absolute right-0 top-6 h-[78%] w-[88%] overflow-hidden rounded-sm shadow-2xl sm:top-10 md:top-12 md:h-[80%] md:w-[85%]"
           >
             <motion.div
               style={{ scale: scaleImage }}
@@ -231,7 +235,7 @@ export default function Hero() {
             </motion.div>
           </motion.div>
 
-          {/* Secondary carousel */}
+          {/* Secondary carousel — hidden on small screens to keep things calm */}
           <motion.div
             style={{ y: ySmall }}
             initial={{ opacity: 0, x: -40 }}
@@ -239,10 +243,10 @@ export default function Hero() {
             viewport={{ once: true, margin: "-100px" }}
             transition={{ delay: 0.6, duration: 1.2, ease: [0.19, 1, 0.22, 1] }}
             className="
-              absolute bottom-6 left-0 z-20 hidden overflow-hidden rounded-sm
-              border-[8px] border-[#FCFAF8] shadow-2xl
-              md:block md:h-3/5 md:w-3/5 md:bottom-10
-              lg:bottom-12 lg:border-[10px]
+              absolute bottom-10 left-0 z-20 hidden overflow-hidden rounded-sm
+              border-[10px] border-[#FCFAF8] shadow-2xl
+              md:block md:h-3/5 md:w-3/5 md:bottom-16
+              lg:bottom-20 lg:border-[12px]
             "
           >
             <ArchitecturalCarousel />
@@ -252,7 +256,7 @@ export default function Hero() {
           <motion.div
             animate={prefersReducedMotion ? undefined : { rotate: 360 }}
             transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-            className="absolute -right-6 -top-6 hidden h-20 w-20 rounded-full border border-dashed border-stone-300/60 opacity-40 md:block lg:h-28 lg:w-28"
+            className="absolute -right-6 -top-6 hidden h-24 w-24 rounded-full border border-dashed border-stone-300/60 opacity-40 md:block lg:h-32 lg:w-32"
             aria-hidden="true"
           />
         </div>
@@ -288,7 +292,7 @@ export default function Hero() {
 }
 
 /* ────────────────────────────────────────────────────────
-   Small presentational helpers
+   Small presentational helpers — keep markup readable.
    ──────────────────────────────────────────────────────── */
 
 function Stat({ label, value }: { label: string; value: string }) {
@@ -319,7 +323,7 @@ function ContactLink({
   icon: ContactIconType;
 }) {
   return (
-    
+    <a
       href={href}
       aria-label={ariaLabel}
       className="
@@ -434,6 +438,7 @@ function TrustIconPath({ type }: { type: TrustIconType }) {
       </>
     );
   }
+  // map
   return (
     <>
       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
