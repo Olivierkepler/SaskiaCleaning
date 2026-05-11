@@ -11,7 +11,7 @@ import AutoServiceCarousel from './components/AutoServiceCarousel';
 import CleaningPriceCalculator from './components/CleaningPriceCalculator';
 import InfoBar from "./components/InfoBar";
 import CommercialCleaningServices from "./components/CommercialCleaningServices";
-
+import CommercialCleaningPlans from "./components/CommercialCleaningPlans";
 
 
 
@@ -29,7 +29,11 @@ export default function Home() {
       onCtaClick={() => console.log("Start cleaning!")}
     />
 
-     
+ <CommercialCleaningPlans
+  backgroundImageSrc="/images/kitchen.jpg"
+  onContactClick={() => router.push("/contact")}
+  onPlanClick={(id) => console.log("Selected plan:", id)}
+/>    
       {/* 2. TrustBar: Gentle slide-in reveal */}
       {/* <SectionWrapper>
         <TrustBar />
