@@ -4,7 +4,7 @@ import { motion, useReducedMotion } from "framer-motion";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
-type InfoIconType = "clock" | "pin" | "envelope";
+type InfoIconType = "phone" | "envelope" | "globe";
 
 type InfoItemData = {
   icon: InfoIconType;
@@ -18,23 +18,25 @@ type InfoItemData = {
 
 const ITEMS: InfoItemData[] = [
   {
-    icon: "clock",
-    title: "Opening Hours",
-    lines: ["24/7 Availability", "for Contracted Clients"],
-  },
-  {
-    icon: "pin",
-    title: "We Are Located at",
-    lines: ["950 Watertown St, Suite 06", "West Newton, MA 02465"],
-    href: "https://maps.google.com/?q=950+Watertown+St+Suite+06+West+Newton+MA+02465",
-    ariaLabel: "Open location in Google Maps",
+    icon: "phone",
+    title: "Call Us",
+    lines: ["857-352-8554", "Mon – Sat, 8am – 6pm"],
+    href: "tel:8573528554",
+    ariaLabel: "Call Saskia Cleaning at 857-352-8554",
   },
   {
     icon: "envelope",
-    title: "Get A Quote",
-    lines: ["info@primecleaninginc.com"],
-    href: "mailto:info@primecleaninginc.com",
-    ariaLabel: "Email info@primecleaninginc.com",
+    title: "Email Us",
+    lines: ["cleaningsaskia@gmail.com", "Replies within 24 hours"],
+    href: "mailto:cleaningsaskia@gmail.com",
+    ariaLabel: "Email cleaningsaskia@gmail.com",
+  },
+  {
+    icon: "globe",
+    title: "Visit Our Site",
+    lines: ["SaskiaServices.com", "Book online anytime"],
+    href: "https://saskiaservices.com/",
+    ariaLabel: "Visit SaskiaServices.com",
   },
 ];
 
@@ -45,10 +47,10 @@ export default function InfoBar() {
 
   return (
     <section
-      aria-label="Business information"
+      aria-label="Contact Saskia Cleaning"
       className="
         relative overflow-hidden
-        bg-gradient-to-r from-[#0F4FB8] via-[#1A6FE0] to-[#0F4FB8]
+        bg-gradient-to-r from-[#0E3D22] via-[#14532D] to-[#0E3D22]
         text-white
       "
     >
@@ -127,7 +129,9 @@ function InfoItem({ icon, title, lines, href, ariaLabel }: InfoItemData) {
         </h3>
         <div className="text-sm font-light leading-relaxed text-white/85">
           {lines.map((line, i) => (
-            <p key={i}>{line}</p>
+            <p key={i} className={i === 0 ? "font-normal text-white" : undefined}>
+              {line}
+            </p>
           ))}
         </div>
 
@@ -158,7 +162,7 @@ function InfoItem({ icon, title, lines, href, ariaLabel }: InfoItemData) {
         block rounded-sm
         focus-visible:outline-none
         focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2
-        focus-visible:ring-offset-[#1A6FE0]
+        focus-visible:ring-offset-[#14532D]
       "
     >
       {content}
@@ -180,33 +184,32 @@ function InfoIcon({ type }: { type: InfoIconType }) {
     strokeLinejoin: "round" as const,
   };
 
-  if (type === "clock") {
+  if (type === "phone") {
     return (
       <svg {...common} className="text-white">
-        <circle cx="12" cy="13" r="8" />
-        <path d="M12 9v4l2.5 1.5" />
-        <path d="M9 3h6" />
-        <path d="M12 3v2" />
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
       </svg>
     );
   }
 
-  if (type === "pin") {
+  if (type === "envelope") {
     return (
       <svg {...common} className="text-white">
-        <path d="M4 11 L12 4 L20 11 V20 H4 Z" />
-        <circle cx="12" cy="13" r="2" />
+        <rect x="3" y="6" width="18" height="13" rx="1" />
+        <path d="M3 7 L12 14 L21 7" />
+        <circle cx="12" cy="11" r="2.4" />
+        <path d="M10.8 11 L11.7 11.9 L13.2 10.3" />
       </svg>
     );
   }
 
-  // envelope (Get a Quote / contact)
+  // globe (website)
   return (
     <svg {...common} className="text-white">
-      <rect x="3" y="6" width="18" height="13" rx="1" />
-      <path d="M3 7 L12 14 L21 7" />
-      <circle cx="12" cy="11" r="2.4" />
-      <path d="M10.8 11 L11.7 11.9 L13.2 10.3" />
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3a14 14 0 0 1 0 18" />
+      <path d="M12 3a14 14 0 0 0 0 18" />
     </svg>
   );
 }
