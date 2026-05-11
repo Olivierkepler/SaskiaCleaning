@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 import AutoServiceCarousel from './components/AutoServiceCarousel';
 import CleaningPriceCalculator from './components/CleaningPriceCalculator';
 import InfoBar from "./components/InfoBar";
-
+import CommercialCleaningServices from "./components/CommercialCleaningServices";
 
 
 
@@ -24,7 +24,10 @@ export default function Home() {
       {/* 1. Hero: Internal entrance animations already set */}
       <Hero />
   <InfoBar />
-
+  <CommercialCleaningServices
+      imageSrc="/images/restaurant.jpg"
+      onCtaClick={() => console.log("Start cleaning!")}
+    />
 
      
       {/* 2. TrustBar: Gentle slide-in reveal */}
