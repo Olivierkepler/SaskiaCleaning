@@ -171,7 +171,7 @@ export default function CommercialServices({ onCtaClick }: CommercialServicesPro
             "
           />
 
-          {/* Floating stat card */}
+          {/* Floating credentials card — Licensed & Insured */}
           <motion.div
             initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -182,14 +182,34 @@ export default function CommercialServices({ onCtaClick }: CommercialServicesPro
               sm:flex sm:items-center sm:gap-4 sm:left-6 md:-bottom-8
             "
           >
-            <span className="font-serif text-3xl text-green-900 md:text-4xl">
-              500+
+            {/* Shield-check icon in green circle */}
+            <span
+              aria-hidden="true"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-green-900 text-white"
+            >
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
             </span>
-            <span className="text-[10px] font-semibold uppercase leading-tight tracking-[0.2em] text-stone-500">
-              Businesses
-              <br />
-              Served
-            </span>
+
+            <div className="flex flex-col leading-tight">
+              <span className="font-serif text-lg text-zinc-950 md:text-xl">
+                Licensed &amp; Insured
+              </span>
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-stone-500">
+                Trusted Boston Provider
+              </span>
+            </div>
           </motion.div>
         </motion.div>
       </div>
