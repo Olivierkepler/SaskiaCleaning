@@ -10,24 +10,23 @@ import { motion } from 'framer-motion';
 import AutoServiceCarousel from './components/AutoServiceCarousel';
 import CleaningPriceCalculator from './components/CleaningPriceCalculator';
 import InfoBar from "./components/InfoBar";
-import ServicesSection from "./components/ServicesSection";
+import ServicesSection, { type ServiceItem } from "./components/ServicesSection";
 
-const COMMERCIAL_SERVICES = [
+const COMMERCIAL_SERVICES: ServiceItem[] = [
   { icon: "office", title: "Office Cleaning", href: "#office" },
   { icon: "restaurant", title: "Restaurant Cleaning", href: "#restaurant" },
   { icon: "construction", title: "Post-Construction Cleaning", href: "#construction" },
   { icon: "floor", title: "Floor Care & Maintenance", href: "#floor" },
   { icon: "building", title: "Building Maintenance", href: "#building" },
   { icon: "deep", title: "Deep Cleaning", href: "#deep" },
-] as const;
+];
 
-const RESIDENTIAL_SERVICES = [
+const RESIDENTIAL_SERVICES: ServiceItem[] = [
   { icon: "home", title: "Routine House Cleaning", href: "#routine" },
   { icon: "deep", title: "Deep Cleaning", href: "#residential-deep" },
   { icon: "moving", title: "Move-In / Move-Out", href: "#move" },
   { icon: "sparkle", title: "Post-Event Recovery", href: "#post-event" },
-] as const;
-
+];
 
 
 export default function Home() {
