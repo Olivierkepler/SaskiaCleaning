@@ -39,7 +39,7 @@ const contactLinks = [
 
 const trustBadges = [
   { icon: "shield" as const, label: "Licensed & Insured" },
-  { icon: "building" as const, label: "Homes & Businesses" },
+  { icon: "building" as const, label: "Trusted Local Service" },
   { icon: "map" as const, label: "Boston Area" },
   { icon: "sparkle" as const, label: "Detail-Focused" },
 ];
@@ -97,37 +97,59 @@ export default function Hero() {
     <section
       ref={containerRef}
       aria-labelledby={titleId}
-      className="relative isolate overflow-hidden bg-[#f8f6f1]"
+      className="relative isolate overflow-hidden bg-[#f6f4ee]"
     >
       <Background />
 
-      <div className="mx-auto grid min-h-[86svh] w-full max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-18 md:px-10 lg:grid-cols-12 lg:px-16 lg:py-18">
+      <div
+        className="
+          mx-auto grid min-h-[90svh] w-full max-w-7xl items-center gap-14
+          px-5 py-20
+          sm:px-6
+          md:px-10
+          lg:grid-cols-12 lg:px-16 lg:py-24
+        "
+      >
         <motion.div
           initial={prefersReducedMotion ? false : { opacity: 0, y: 22 }}
           animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
           className="relative z-10 lg:col-span-6"
         >
-<h1
-  id={titleId}
-  className="
-    max-w-2xl
-    font-serif
-    text-[clamp(1.9rem,4.2vw,3.5rem)]
-    leading-[1]
-    tracking-[-0.03em]
-    text-zinc-950
-  "
->
-  A Clean Home
-  <span className="mt-1 block italic text-green-900/70">
-    Changes Everything.
-  </span>
-</h1>
-<p className="mt-5 max-w-md text-[14px] font-normal leading-6 tracking-[-0.01em] text-stone-600 sm:text-[15px]">
-  Premium cleaning services for homes and businesses, delivered with care and attention to detail.
-</p>
-          <dl className="mt-9 grid max-w-2xl grid-cols-3 overflow-hidden rounded-2xl border border-stone-200 bg-white/65 shadow-sm backdrop-blur-md">
+          <h1
+            id={titleId}
+            className="
+              max-w-2xl font-serif
+              text-[clamp(2.1rem,4.5vw,4rem)]
+              leading-[0.96] tracking-[-0.045em]
+              text-zinc-950
+            "
+          >
+            A Clean Home
+            <span className="mt-2 block italic text-green-950/65">
+              Changes Everything.
+            </span>
+          </h1>
+
+          <p
+            className="
+              mt-6 max-w-lg
+              text-[15px] font-normal leading-7 tracking-[-0.012em]
+              text-stone-600
+              sm:text-[16px]
+            "
+          >
+            Premium cleaning services for homes and businesses, delivered with
+            care and attention to detail.
+          </p>
+
+          <dl
+            className="
+              mt-9 grid max-w-2xl grid-cols-3 overflow-hidden
+              rounded-[1.75rem] border border-stone-200
+              bg-white/72 shadow-sm backdrop-blur-md
+            "
+          >
             {stats.map((stat) => (
               <Stat key={stat.label} {...stat} />
             ))}
@@ -164,17 +186,33 @@ export default function Hero() {
             initial={
               prefersReducedMotion
                 ? false
-                : { clipPath: "inset(10% 10% 10% 10%)", opacity: 0, scale: 0.98 }
+                : {
+                    clipPath: "inset(10% 10% 10% 10%)",
+                    opacity: 0,
+                    scale: 0.98,
+                  }
             }
             animate={
               prefersReducedMotion
                 ? undefined
-                : { clipPath: "inset(0% 0% 0% 0%)", opacity: 1, scale: 1 }
+                : {
+                    clipPath: "inset(0% 0% 0% 0%)",
+                    opacity: 1,
+                    scale: 1,
+                  }
             }
             transition={{ duration: 1.1, ease: [0.19, 1, 0.22, 1] }}
-            className="absolute right-0 top-0 h-[82%] w-full overflow-hidden rounded-[2rem] border border-white/70 bg-white shadow-[0_30px_90px_rgba(15,23,42,0.20)] sm:w-[88%]"
+            className="
+              absolute right-0 top-0 h-[82%] w-full overflow-hidden
+              rounded-[2.5rem] border border-white/70 bg-white
+              shadow-[0_40px_120px_rgba(15,23,42,0.18)]
+              sm:w-[88%]
+            "
           >
-            <motion.div style={{ scale: scaleImage }} className="relative h-full w-full">
+            <motion.div
+              style={{ scale: scaleImage }}
+              className="relative h-full w-full"
+            >
               <Image
                 src="/images/PHOTO-2026-05-06-23-30-38 (1).jpg"
                 alt="A freshly cleaned home interior by Saskia Cleaning Services"
@@ -184,87 +222,65 @@ export default function Hero() {
                 className="object-cover"
               />
             </motion.div>
+
             <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent" />
           </motion.div>
 
-      <motion.div
-  style={{ y: ySmall }}
-  initial={
-    prefersReducedMotion
-      ? false
-      : {
-          opacity: 0,
-          x: -38,
-          scale: 0.96,
-        }
-  }
-  whileInView={
-    prefersReducedMotion
-      ? undefined
-      : {
-          opacity: 1,
-          x: 0,
-          scale: 1,
-        }
-  }
-  viewport={{
-    once: true,
-    margin: "-120px",
-  }}
-  transition={{
-    delay: 0.35,
-    duration: 0.9,
-    ease: [0.19, 1, 0.22, 1],
-  }}
-  className="
-    absolute left-0 top-[48%]
-    z-20 hidden
-    
-    h-[44%] w-[56%]
-    -translate-y-1/2
-    
-    overflow-hidden
-    rounded-[2rem]
+          <motion.div
+            style={{ y: ySmall }}
+            initial={
+              prefersReducedMotion
+                ? false
+                : {
+                    opacity: 0,
+                    x: -38,
+                    scale: 0.96,
+                  }
+            }
+            whileInView={
+              prefersReducedMotion
+                ? undefined
+                : {
+                    opacity: 1,
+                    x: 0,
+                    scale: 1,
+                  }
+            }
+            viewport={{ once: true, margin: "-120px" }}
+            transition={{
+              delay: 0.35,
+              duration: 0.9,
+              ease: [0.19, 1, 0.22, 1],
+            }}
+            className="
+              absolute left-0 top-[44%] z-20 hidden
+              h-[44%] w-[56%] -translate-y-1/2
+              overflow-hidden rounded-[2rem]
+              bg-white/70 backdrop-blur-xl
+              shadow-[0_10px_40px_rgba(0,0,0,0.08),0_30px_80px_rgba(15,23,42,0.16)]
+              ring-1 ring-white/40
+              md:block
+            "
+          >
+            <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-br from-white/10 via-transparent to-black/5" />
+            <div className="absolute inset-x-0 top-0 z-10 h-px bg-white/70" />
 
-    bg-white/70
-    backdrop-blur-xl
+            <ArchitecturalCarousel />
+          </motion.div>
 
-    shadow-[0_10px_40px_rgba(0,0,0,0.08),0_30px_80px_rgba(15,23,42,0.16)]
-
-    ring-1 ring-white/40
-
-    md:block
-  "
->
-  {/* soft luxury gradient */}
-  <div
-    className="
-      pointer-events-none
-      absolute inset-0 z-10
-      bg-gradient-to-br
-      from-white/10
-      via-transparent
-      to-black/5
-    "
-  />
-
-  {/* subtle top shine */}
-  <div
-    className="
-      absolute inset-x-0 top-0
-      z-10 h-px
-      bg-white/70
-    "
-  />
-
-  <ArchitecturalCarousel />
-</motion.div>
-
-          <div className="absolute bottom-6 right-4 z-30 rounded-2xl border border-white/70 bg-white/85 px-5 py-4 shadow-xl backdrop-blur-md sm:right-8">
+          <div
+            className="
+              absolute bottom-8 right-6 z-30
+              rounded-2xl border border-white/70 bg-white/85
+              px-5 py-4 shadow-xl backdrop-blur-md
+            "
+          >
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-stone-500">
               Trusted Local Service
             </p>
-            <p className="mt-1 font-serif text-2xl text-zinc-950">Boston</p>
+            <p className="mt-1 font-serif text-[1.65rem] text-zinc-950">
+              Boston
+            </p>
           </div>
 
           <motion.div
@@ -310,7 +326,8 @@ function Background() {
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 opacity-[0.32]"
         style={{
-          backgroundImage: "radial-gradient(rgba(0,0,0,0.09) 1px, transparent 1px)",
+          backgroundImage:
+            "radial-gradient(rgba(0,0,0,0.09) 1px, transparent 1px)",
           backgroundSize: "4px 4px",
         }}
       />
@@ -329,7 +346,16 @@ function PrimaryButton({
     <button
       type="button"
       onClick={onClick}
-      className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full bg-green-950 px-7 py-3.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_18px_45px_rgba(20,83,45,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(20,83,45,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2 sm:w-auto sm:px-9"
+      className="
+        group relative inline-flex w-full items-center justify-center
+        overflow-hidden rounded-full bg-green-950
+        px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.18em]
+        text-white shadow-[0_18px_45px_rgba(20,83,45,0.22)]
+        transition duration-300
+        hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(20,83,45,0.28)]
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2
+        sm:w-auto sm:px-9
+      "
     >
       <span className="absolute inset-0 translate-y-full bg-zinc-950 transition-transform duration-300 ease-out group-hover:translate-y-0" />
       <span className="relative z-10">{children}</span>
@@ -348,7 +374,16 @@ function SecondaryButton({
     <button
       type="button"
       onClick={onClick}
-      className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full border border-stone-300 bg-white/80 px-7 py-3.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-950 shadow-sm backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:border-green-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2 sm:w-auto sm:px-9"
+      className="
+        group relative inline-flex w-full items-center justify-center
+        overflow-hidden rounded-full border border-stone-300 bg-white/80
+        px-8 py-4 text-[11px] font-semibold uppercase tracking-[0.18em]
+        text-zinc-950 shadow-sm backdrop-blur-md
+        transition duration-300
+        hover:-translate-y-0.5 hover:border-green-950
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2
+        sm:w-auto sm:px-9
+      "
     >
       <span className="absolute inset-0 translate-y-full bg-green-950 transition-transform duration-300 ease-out group-hover:translate-y-0" />
       <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
@@ -386,9 +421,21 @@ function ContactLink({
     <a
       href={href}
       aria-label={ariaLabel}
-      className="group inline-flex items-center gap-3 text-[14px] font-normal tracking-[-0.01em] text-stone-700 transition hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2"
+      className="
+        group inline-flex items-center gap-3
+        text-[14px] font-normal tracking-[-0.01em] text-stone-700
+        transition hover:text-zinc-950
+        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2
+      "
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-300 bg-white/80 shadow-sm backdrop-blur-md transition group-hover:-translate-y-0.5 group-hover:border-green-950 group-hover:bg-green-950 group-hover:text-white">
+      <span
+        className="
+          flex h-10 w-10 items-center justify-center rounded-full
+          border border-stone-300 bg-white/80 shadow-sm backdrop-blur-md
+          transition
+          group-hover:-translate-y-0.5 group-hover:border-green-950 group-hover:bg-green-950 group-hover:text-white
+        "
+      >
         <ContactIcon type={icon} />
       </span>
       <span className="tracking-wide">{label}</span>
@@ -399,14 +446,34 @@ function ContactLink({
 function ContactIcon({ type }: { type: ContactIconType }) {
   if (type === "phone") {
     return (
-      <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <svg
+        aria-hidden="true"
+        width="15"
+        height="15"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
       </svg>
     );
   }
 
   return (
-    <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      aria-hidden="true"
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
       <polyline points="22,6 12,13 2,6" />
     </svg>
@@ -421,8 +488,28 @@ function TrustBadge({
   icon: TrustIconType;
 }) {
   return (
-    <li className="inline-flex items-center gap-2 rounded-full border border-stone-300/80 bg-white/70 px-3 py-1.5 text-[11px] font-medium tracking-[-0.01em] text-stone-700 shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:border-green-900/40 hover:bg-white hover:text-zinc-950">
-      <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="text-green-900">
+    <li
+      className="
+        inline-flex items-center gap-2 rounded-full
+        border border-stone-300/80 bg-white/70
+        px-3 py-1.5 text-[11px] font-medium tracking-[-0.01em]
+        text-stone-700 shadow-sm backdrop-blur-md
+        transition
+        hover:-translate-y-0.5 hover:border-green-900/40 hover:bg-white hover:text-zinc-950
+      "
+    >
+      <svg
+        aria-hidden="true"
+        width="13"
+        height="13"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="text-green-900"
+      >
         <TrustIconPath type={icon} />
       </svg>
       {children}
@@ -476,18 +563,38 @@ function ModalOverlay({
       aria-modal="true"
       aria-label={label}
       onMouseDown={onClose}
-      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-zinc-950/55 px-4 py-10 backdrop-blur-sm"
+      className="
+        fixed inset-0 z-[9999]
+        flex items-start justify-center
+        overflow-y-auto
+        bg-zinc-950/60 backdrop-blur-md
+        px-4 pt-[7vh] pb-16
+      "
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
     >
       <motion.div
         onMouseDown={(event) => event.stopPropagation()}
-        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+        initial={{ opacity: 0, y: 30, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 18, scale: 0.98 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
+        exit={{ opacity: 0, y: 20, scale: 0.98 }}
+        transition={{
+          duration: 0.35,
+          ease: [0.19, 1, 0.22, 1],
+        }}
+        className="relative w-full max-w-2xl"
       >
+        <div
+          aria-hidden="true"
+          className="
+            absolute inset-0 -z-10
+            scale-95 rounded-[2rem]
+            bg-white/10 opacity-40 blur-2xl
+          "
+        />
+
         {children}
       </motion.div>
     </motion.div>
