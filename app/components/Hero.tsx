@@ -194,16 +194,43 @@ export default function Hero() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent" />
           </motion.div>
 
-          <motion.div
-            style={{ y: ySmall }}
-            initial={prefersReducedMotion ? false : { opacity: 0, x: -38 }}
-            whileInView={prefersReducedMotion ? undefined : { opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: "-120px" }}
-            transition={{ delay: 0.35, duration: 0.85, ease: [0.19, 1, 0.22, 1] }}
-            className="absolute bottom-0 left-0 z-20 hidden h-[46%] w-[58%] overflow-hidden rounded-[1.5rem] border-[10px] border-[#f8f6f1] bg-white shadow-[0_25px_80px_rgba(15,23,42,0.20)] md:block lg:border-[12px]"
-          >
-            <ArchitecturalCarousel />
-          </motion.div>
+        <motion.div
+  style={{ y: ySmall }}
+  initial={prefersReducedMotion ? false : { opacity: 0, x: -38, scale: 0.96 }}
+  whileInView={
+    prefersReducedMotion
+      ? undefined
+      : { opacity: 1, x: 0, scale: 1 }
+  }
+  viewport={{ once: true, margin: "-120px" }}
+  transition={{
+    delay: 0.35,
+    duration: 0.9,
+    ease: [0.19, 1, 0.22, 1],
+  }}
+  className="
+    absolute bottom-2 left-0 z-20 hidden
+    h-[44%] w-[56%]
+    overflow-hidden rounded-[2rem]
+    
+    bg-white/70
+    backdrop-blur-xl
+    
+    shadow-[0_10px_40px_rgba(0,0,0,0.08),0_30px_80px_rgba(15,23,42,0.16)]
+    
+    ring-1 ring-white/40
+    
+    md:block
+  "
+>
+  {/* soft luxury gradient */}
+  <div className="absolute inset-0 z-10 bg-gradient-to-br from-white/10 via-transparent to-black/5 pointer-events-none" />
+
+  {/* subtle top shine */}
+  <div className="absolute inset-x-0 top-0 h-px bg-white/70 z-10" />
+
+  <ArchitecturalCarousel />
+</motion.div>
 
           <div className="absolute bottom-6 right-4 z-30 rounded-2xl border border-white/70 bg-white/85 px-5 py-4 shadow-xl backdrop-blur-md sm:right-8">
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-stone-500">
