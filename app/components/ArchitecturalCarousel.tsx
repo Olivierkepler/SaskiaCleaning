@@ -13,21 +13,21 @@ type ShowcaseSlide = {
 const slides: ShowcaseSlide[] = [
   {
     imageSrc: "/images/saskia2.JPG",
-    title: "Freshly Detailed Spaces",
-    subtitle: "Residential cleaning with a polished, professional finish.",
-    objectPosition: "center center",
+    title: " ",
+    subtitle: " ",
+    objectPosition: " ",
   },
   {
     imageSrc: "/images/saskia1.JPG",
-    title: "Premium Cleaning Care",
-    subtitle: "Reliable service for homes, apartments, and businesses.",
-    objectPosition: "center center",
+    title: " ",
+    subtitle: " ",
+    objectPosition: " ",
   },
   {
     imageSrc: "/images/saskia4.JPG",
-    title: "Clean That Feels New",
-    subtitle: "Thoughtful, detail-focused cleaning for everyday comfort.",
-    objectPosition: "center center",
+    title: " ",
+    subtitle: " ",
+    objectPosition: " ",
   },
 ];
 
