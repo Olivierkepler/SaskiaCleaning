@@ -564,7 +564,7 @@ function ModalOverlay({
       aria-label={label}
       onMouseDown={onClose}
       className="
-        fixed inset-0 z-[9999]
+        fixed inset-0 z-[99999]
         flex items-start justify-center
         overflow-y-auto
         bg-zinc-950/60 backdrop-blur-md
@@ -584,7 +584,10 @@ function ModalOverlay({
           duration: 0.35,
           ease: [0.19, 1, 0.22, 1],
         }}
-        className="relative w-full max-w-2xl"
+        className="
+          relative z-[99999]
+          w-full max-w-2xl
+        "
       >
         <div
           aria-hidden="true"
