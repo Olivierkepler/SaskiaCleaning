@@ -234,9 +234,7 @@ type StepProps = {
 function StepIdentity({ data, onChange, errors }: StepProps) {
   return (
     <>
-      <Desc>
-        We begin with you. Kindly share your details so your dedicated concierge may communicate with ease, discretion, and according to your preferred method.
-      </Desc>
+
       <Grid>
         <Input label="Full Name" name="fullName" placeholder="Your name" value={data.fullName} onChange={onChange as (e: ChangeEvent<HTMLInputElement>) => void} error={errors.fullName} />
         <Input label="Email Address" name="email" type="email" placeholder="you@example.com" value={data.email} onChange={onChange as (e: ChangeEvent<HTMLInputElement>) => void} error={errors.email} />
