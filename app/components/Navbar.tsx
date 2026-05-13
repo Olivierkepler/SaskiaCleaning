@@ -10,7 +10,11 @@ const navLinks = [
   { label: "Contact", href: "#contact" },
 ];
 
-export default function Navbar() {
+export default function Navbar({
+  hideNavbar = false,
+}: {
+  hideNavbar?: boolean;
+}) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -21,6 +25,12 @@ export default function Navbar() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    if (hideNavbar) {
+      setIsOpen(false);
+    }
+  }, [hideNavbar]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -39,7 +49,18 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-50 px-3 pt-3 sm:px-5 lg:px-8">
+      <header
+        className={`
+          fixed inset-x-0 top-0 z-50
+          px-3 pt-3 sm:px-5 lg:px-8
+          transition-all duration-300
+          ${
+            hideNavbar
+              ? "pointer-events-none invisible -translate-y-4 opacity-0"
+              : "visible translate-y-0 opacity-100"
+          }
+        `}
+      >
         <nav
           aria-label="Main navigation"
           className={`mx-auto flex max-w-7xl items-center justify-between border px-5 py-4 transition-all duration-500 ${
@@ -48,7 +69,6 @@ export default function Navbar() {
               : "border-white/40 bg-white/35 backdrop-blur-xl"
           }`}
         >
-          {/* Logo */}
           <a href="#" className="flex items-center gap-3">
             <div className="relative flex items-center" style={{ height: "40px" }}>
               <img
@@ -56,19 +76,20 @@ export default function Navbar() {
                 alt="Saskia Cleaning"
                 className="object-contain"
                 style={{
-                  height: "60px",   // Make image taller
+                  height: "60px",
                   width: "auto",
-                  maxHeight: "60px", // Prevent from exceeding this
-                  maxWidth: "none",  // Let width be auto-unconstrained
+                  maxHeight: "60px",
+                  maxWidth: "none",
                   position: "absolute",
                   top: "50%",
                   left: 0,
                   transform: "translateY(-50%)",
                   zIndex: 1,
-                  pointerEvents: "none", // Don't block clicks to the link
+                  pointerEvents: "none",
                 }}
               />
             </div>
+
             <div className="leading-tight ml-18 sm:ml-24 md:ml-32 lg:ml-20">
               <p className="font-serif text-lg tracking-[-0.02em] text-zinc-900">
                 Saskia
@@ -125,102 +146,106 @@ export default function Navbar() {
         </nav>
       </header>
 
-      <div
-        onClick={() => setIsOpen(false)}
-        className={`fixed inset-0 z-[60] bg-zinc-950/50 backdrop-blur-sm transition-all duration-500 lg:hidden ${
-          isOpen ? "visible opacity-100" : "invisible opacity-0"
-        }`}
-      />
+      {!hideNavbar && (
+        <>
+          <div
+            onClick={() => setIsOpen(false)}
+            className={`fixed inset-0 z-[60] bg-zinc-950/50 backdrop-blur-sm transition-all duration-500 lg:hidden ${
+              isOpen ? "visible opacity-100" : "invisible opacity-0"
+            }`}
+          />
 
-      <aside
-        id="mobile-sidenav"
-        className={`fixed right-0 top-0 z-[70] h-dvh w-[88%] max-w-[440px] border-l border-zinc-200 bg-[#fbfaf8] shadow-[-40px_0_100px_rgba(0,0,0,0.22)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        }`}
-        aria-hidden={!isOpen}
-      >
-        <div className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-6">
-            <div>
-              <p className="font-serif text-3xl tracking-[-0.04em] text-zinc-950">
-                Saskia
-              </p>
-              <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.42em] text-zinc-400">
-                Cleaning
-              </p>
-            </div>
+          <aside
+            id="mobile-sidenav"
+            className={`fixed right-0 top-0 z-[70] h-dvh w-[88%] max-w-[440px] border-l border-zinc-200 bg-[#fbfaf8] shadow-[-40px_0_100px_rgba(0,0,0,0.22)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden ${
+              isOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+            aria-hidden={!isOpen}
+          >
+            <div className="flex h-full flex-col">
+              <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-6">
+                <div>
+                  <p className="font-serif text-3xl tracking-[-0.04em] text-zinc-950">
+                    Saskia
+                  </p>
+                  <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.42em] text-zinc-400">
+                    Cleaning
+                  </p>
+                </div>
 
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close navigation menu"
-              className="grid h-11 w-11 place-items-center border border-zinc-300 text-zinc-950 transition duration-300 hover:border-zinc-950 hover:bg-zinc-950 hover:text-white"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          <div className="flex flex-1 flex-col justify-between px-6 py-8">
-            <nav className="space-y-1" aria-label="Mobile navigation">
-              {navLinks.map((link, index) => (
-                <a
-                  key={link.label}
-                  href={link.href}
+                <button
+                  type="button"
                   onClick={() => setIsOpen(false)}
-                  className="group flex items-center justify-between border-b border-zinc-200 py-5 text-[13px] font-bold uppercase tracking-[0.22em] text-zinc-600 transition duration-300 hover:border-zinc-950 hover:text-zinc-950"
+                  aria-label="Close navigation menu"
+                  className="grid h-11 w-11 place-items-center border border-zinc-300 text-zinc-950 transition duration-300 hover:border-zinc-950 hover:bg-zinc-950 hover:text-white"
                 >
-                  <span className="flex items-center">
-                    <span className="mr-5 text-[10px] font-bold text-zinc-300">
-                      0{index + 1}
-                    </span>
-                    {link.label}
-                  </span>
-
-                  <ArrowUpRight
-                    size={16}
-                    className="translate-y-1 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100"
-                  />
-                </a>
-              ))}
-            </nav>
-
-            <div>
-              <div className="mb-6 border-l border-zinc-950 pl-4">
-                <p className="text-xs leading-6 text-zinc-500">
-                  Premium residential and commercial cleaning delivered with
-                  precision, discretion, and uncompromising standards.
-                </p>
+                  <X size={20} />
+                </button>
               </div>
 
-              <div className="grid gap-3">
-                <a
-                  href="#quote"
-                  onClick={() => setIsOpen(false)}
-                  className="group flex items-center justify-center gap-2 border border-zinc-950 bg-zinc-950 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white transition duration-300 hover:bg-transparent hover:text-zinc-950"
-                >
-                  Request Quote
-                  <ArrowUpRight
-                    size={15}
-                    className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-                  />
-                </a>
+              <div className="flex flex-1 flex-col justify-between px-6 py-8">
+                <nav className="space-y-1" aria-label="Mobile navigation">
+                  {navLinks.map((link, index) => (
+                    <a
+                      key={link.label}
+                      href={link.href}
+                      onClick={() => setIsOpen(false)}
+                      className="group flex items-center justify-between border-b border-zinc-200 py-5 text-[13px] font-bold uppercase tracking-[0.22em] text-zinc-600 transition duration-300 hover:border-zinc-950 hover:text-zinc-950"
+                    >
+                      <span className="flex items-center">
+                        <span className="mr-5 text-[10px] font-bold text-zinc-300">
+                          0{index + 1}
+                        </span>
+                        {link.label}
+                      </span>
 
-                <a
-                  href="tel:+10000000000"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center justify-center border border-zinc-300 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-600 transition duration-300 hover:border-zinc-950 hover:text-zinc-950"
-                >
-                  Call Now
-                </a>
+                      <ArrowUpRight
+                        size={16}
+                        className="translate-y-1 opacity-0 transition duration-300 group-hover:translate-y-0 group-hover:opacity-100"
+                      />
+                    </a>
+                  ))}
+                </nav>
+
+                <div>
+                  <div className="mb-6 border-l border-zinc-950 pl-4">
+                    <p className="text-xs leading-6 text-zinc-500">
+                      Premium residential and commercial cleaning delivered with
+                      precision, discretion, and uncompromising standards.
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3">
+                    <a
+                      href="#quote"
+                      onClick={() => setIsOpen(false)}
+                      className="group flex items-center justify-center gap-2 border border-zinc-950 bg-zinc-950 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white transition duration-300 hover:bg-transparent hover:text-zinc-950"
+                    >
+                      Request Quote
+                      <ArrowUpRight
+                        size={15}
+                        className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                      />
+                    </a>
+
+                    <a
+                      href="tel:+10000000000"
+                      onClick={() => setIsOpen(false)}
+                      className="flex items-center justify-center border border-zinc-300 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-600 transition duration-300 hover:border-zinc-950 hover:text-zinc-950"
+                    >
+                      Call Now
+                    </a>
+                  </div>
+
+                  <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-300">
+                    Saskia Cleaning © 2026
+                  </p>
+                </div>
               </div>
-
-              <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-300">
-                Saskia Cleaning © 2026
-              </p>
             </div>
-          </div>
-        </div>
-      </aside>
+          </aside>
+        </>
+      )}
     </>
   );
 }
