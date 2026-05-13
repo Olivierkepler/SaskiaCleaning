@@ -108,13 +108,13 @@ export default function Hero() {
           transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
           className="relative z-10 lg:col-span-6"
         >
-          <p className="mb-5 inline-flex rounded-full border border-stone-300/80 bg-white/70 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.28em] text-stone-600 shadow-sm backdrop-blur-md sm:text-[11px]">
+          <p className="mb-4 inline-flex rounded-full border border-stone-300/80 bg-white/70 px-4 py-2 text-[9px] font-semibold uppercase tracking-[0.22em] text-stone-500 shadow-sm backdrop-blur-md sm:text-[10px]">
             Saskia Cleaning Services · Boston, MA
           </p>
 
           <h1
             id={titleId}
-            className="max-w-4xl font-serif text-[clamp(2.7rem,8vw,5.8rem)] leading-[0.86] tracking-[-0.055em] text-zinc-950"
+            className="max-w-3xl font-serif text-[clamp(2.3rem,5.8vw,4.6rem)] leading-[0.95] tracking-[-0.04em] text-zinc-950 sm:leading-[0.92]"
           >
             A Clean Home
             <span className="mt-2 block italic text-green-900/70">
@@ -122,7 +122,7 @@ export default function Hero() {
             </span>
           </h1>
 
-          <p className="mt-7 max-w-2xl text-base font-light leading-8 text-stone-650 sm:text-lg lg:text-xl">
+          <p className="mt-6 max-w-xl text-[15px] font-normal leading-7 tracking-[-0.01em] text-stone-600 sm:text-base lg:text-[17px] lg:leading-8">
             Premium deep cleaning and routine maintenance for homes, apartments,
             and commercial spaces — delivered with care, consistency, and the
             kind of detail that makes a space feel brand new.
@@ -268,7 +268,7 @@ function PrimaryButton({
     <button
       type="button"
       onClick={onClick}
-      className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full bg-green-950 px-7 py-4 text-[11px] font-bold uppercase tracking-[0.24em] text-white shadow-[0_18px_45px_rgba(20,83,45,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(20,83,45,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2 sm:w-auto sm:px-9"
+      className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full bg-green-950 px-7 py-3.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_18px_45px_rgba(20,83,45,0.22)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_rgba(20,83,45,0.28)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2 sm:w-auto sm:px-9"
     >
       <span className="absolute inset-0 translate-y-full bg-zinc-950 transition-transform duration-300 ease-out group-hover:translate-y-0" />
       <span className="relative z-10">{children}</span>
@@ -287,7 +287,7 @@ function SecondaryButton({
     <button
       type="button"
       onClick={onClick}
-      className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full border border-stone-300 bg-white/80 px-7 py-4 text-[11px] font-bold uppercase tracking-[0.24em] text-zinc-950 shadow-sm backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:border-green-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2 sm:w-auto sm:px-9"
+      className="group relative inline-flex w-full items-center justify-center overflow-hidden rounded-full border border-stone-300 bg-white/80 px-7 py-3.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-950 shadow-sm backdrop-blur-md transition duration-300 hover:-translate-y-0.5 hover:border-green-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2 sm:w-auto sm:px-9"
     >
       <span className="absolute inset-0 translate-y-full bg-green-950 transition-transform duration-300 ease-out group-hover:translate-y-0" />
       <span className="relative z-10 transition-colors duration-300 group-hover:text-white">
@@ -300,10 +300,10 @@ function SecondaryButton({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="border-r border-stone-200 px-4 py-5 last:border-r-0 sm:px-6">
-      <dt className="text-[10px] font-bold uppercase tracking-[0.22em] text-stone-500">
+      <dt className="text-[9px] font-semibold uppercase tracking-[0.18em] text-stone-500">
         {label}
       </dt>
-      <dd className="mt-2 font-serif text-2xl leading-none text-zinc-950 sm:text-3xl">
+      <dd className="mt-1.5 font-serif text-xl leading-none text-zinc-950 sm:text-2xl">
         {value}
       </dd>
     </div>
@@ -325,7 +325,7 @@ function ContactLink({
     <a
       href={href}
       aria-label={ariaLabel}
-      className="group inline-flex items-center gap-3 text-sm font-medium text-stone-700 transition hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2"
+      className="group inline-flex items-center gap-3 text-[14px] font-normal tracking-[-0.01em] text-stone-700 transition hover:text-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2"
     >
       <span className="flex h-10 w-10 items-center justify-center rounded-full border border-stone-300 bg-white/80 shadow-sm backdrop-blur-md transition group-hover:-translate-y-0.5 group-hover:border-green-950 group-hover:bg-green-950 group-hover:text-white">
         <ContactIcon type={icon} />
@@ -360,7 +360,7 @@ function TrustBadge({
   icon: TrustIconType;
 }) {
   return (
-    <li className="inline-flex items-center gap-2 rounded-full border border-stone-300/80 bg-white/70 px-3.5 py-2 text-xs font-semibold text-stone-700 shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:border-green-900/40 hover:bg-white hover:text-zinc-950">
+    <li className="inline-flex items-center gap-2 rounded-full border border-stone-300/80 bg-white/70 px-3 py-1.5 text-[11px] font-medium tracking-[-0.01em] text-stone-700 shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 hover:border-green-900/40 hover:bg-white hover:text-zinc-950">
       <svg aria-hidden="true" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="text-green-900">
         <TrustIconPath type={icon} />
       </svg>
