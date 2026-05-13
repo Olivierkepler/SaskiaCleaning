@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const slides = [
   {
-    url: "/images/cleaning3.jpg",
+    url: "/images/saskia1.JPG",
     title: "Clean Interior Living Space"
   },
   
