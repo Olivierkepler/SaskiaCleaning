@@ -101,16 +101,13 @@ export default function Hero() {
     >
       <Background />
 
-      <div className="mx-auto grid min-h-[86svh] w-full max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 md:px-10 lg:grid-cols-12 lg:px-16 lg:py-24">
+      <div className="mx-auto grid min-h-[86svh] w-full max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-18 md:px-10 lg:grid-cols-12 lg:px-16 lg:py-18">
         <motion.div
           initial={prefersReducedMotion ? false : { opacity: 0, y: 22 }}
           animate={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
           className="relative z-10 lg:col-span-6"
         >
-          <p className="mb-4 inline-flex rounded-full border border-stone-300/80 bg-white/70 px-4 py-2 text-[9px] font-semibold uppercase tracking-[0.22em] text-stone-500 shadow-sm backdrop-blur-md sm:text-[10px]">
-            Saskia Cleaning Services · Boston, MA
-          </p>
 <h1
   id={titleId}
   className="
@@ -127,13 +124,9 @@ export default function Hero() {
     Changes Everything.
   </span>
 </h1>
-
-          <p className="mt-6 max-w-xl text-[15px] font-normal leading-7 tracking-[-0.01em] text-stone-600 sm:text-base lg:text-[17px] lg:leading-8">
-            Premium deep cleaning and routine maintenance for homes, apartments,
-            and commercial spaces — delivered with care, consistency, and the
-            kind of detail that makes a space feel brand new.
-          </p>
-
+<p className="mt-5 max-w-md text-[14px] font-normal leading-6 tracking-[-0.01em] text-stone-600 sm:text-[15px]">
+  Premium cleaning services for homes and businesses, delivered with care and attention to detail.
+</p>
           <dl className="mt-9 grid max-w-2xl grid-cols-3 overflow-hidden rounded-2xl border border-stone-200 bg-white/65 shadow-sm backdrop-blur-md">
             {stats.map((stat) => (
               <Stat key={stat.label} {...stat} />
