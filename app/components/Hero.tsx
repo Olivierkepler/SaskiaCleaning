@@ -111,16 +111,22 @@ export default function Hero() {
           <p className="mb-4 inline-flex rounded-full border border-stone-300/80 bg-white/70 px-4 py-2 text-[9px] font-semibold uppercase tracking-[0.22em] text-stone-500 shadow-sm backdrop-blur-md sm:text-[10px]">
             Saskia Cleaning Services · Boston, MA
           </p>
-
-          <h1
-            id={titleId}
-            className="max-w-3xl font-serif text-[clamp(2.3rem,5.8vw,4.6rem)] leading-[0.95] tracking-[-0.04em] text-zinc-950 sm:leading-[0.92]"
-          >
-            A Clean Home
-            <span className="mt-2 block italic text-green-900/70">
-              Changes Everything.
-            </span>
-          </h1>
+<h1
+  id={titleId}
+  className="
+    max-w-2xl
+    font-serif
+    text-[clamp(1.9rem,4.2vw,3.5rem)]
+    leading-[1]
+    tracking-[-0.03em]
+    text-zinc-950
+  "
+>
+  A Clean Home
+  <span className="mt-1 block italic text-green-900/70">
+    Changes Everything.
+  </span>
+</h1>
 
           <p className="mt-6 max-w-xl text-[15px] font-normal leading-7 tracking-[-0.01em] text-stone-600 sm:text-base lg:text-[17px] lg:leading-8">
             Premium deep cleaning and routine maintenance for homes, apartments,
