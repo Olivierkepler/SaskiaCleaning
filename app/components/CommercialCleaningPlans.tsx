@@ -1,266 +1,162 @@
 "use client";
 
-import React from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowUpRight, Building2, LucideIcon, Sparkles, Wind } from "lucide-react";
+import React from "react";import { motion, useReducedMotion, Variants } from "framer-motion";import { Wind, Sparkles, Building2, LucideIcon } from "lucide-react";
 
-type Plan = {
-  id: string;
-  name: string;
-  description: string;
-  icon: LucideIcon;
-  featured?: boolean;
-  ctaLabel?: string;
-};
+/* ─── Types ─────────────────────────────────────────────────────────────── */
 
-type CommercialCleaningPlansProps = {
-  title?: string;
-  description?: string[];
-  contactLabel?: string;
-  onContactClick?: () => void;
-  plans?: Plan[];
-  onPlanClick?: (planId: string) => void;
-  backgroundImageSrc?: string;
-};
+type Plan = {id: string;name: string;description: string;icon: LucideIcon;featured?: boolean;ctaLabel?: string;};
 
-const DEFAULT_PLANS: Plan[] = [
-  {
-    id: "basic",
-    name: "Basic",
-    icon: Wind,
-    description:
-      "Essential upkeep for smaller spaces, high-traffic areas, restrooms, and shared environments.",
-    ctaLabel: "Request Quote",
-  },
-  {
-    id: "advance",
-    name: "Advanced",
-    icon: Sparkles,
-    featured: true,
-    description:
-      "A deeper level of care with enhanced sanitation, detailed surfaces, floor attention, and flexible scheduling.",
-    ctaLabel: "Request Quote",
-  },
-  {
-    id: "premium",
-    name: "Premium",
-    icon: Building2,
-    description:
-      "Complete facility care for spaces that require polished standards, specialty services, and ongoing support.",
-    ctaLabel: "Request Quote",
-  },
-];
+type CommercialCleaningPlansProps = {title?: string;description?: string[];contactLabel?: string;onContactClick?: () => void;plans?: Plan[];onPlanClick?: (planId: string) => void;backgroundImageSrc?: string;};
 
-export default function CommercialCleaningPlans({
-  title = "Commercial Cleaning Plans",
-  description = [
-    "Flexible service packages designed for offices, facilities, and commercial spaces that need consistent professional care.",
-    "Every plan can be tailored to your schedule, square footage, and cleaning priorities.",
-  ],
-  contactLabel = "Talk To Us",
-  onContactClick,
-  plans = DEFAULT_PLANS,
-  onPlanClick,
-  backgroundImageSrc = "/images/kitchen.jpg",
-}: CommercialCleaningPlansProps) {
-  const prefersReducedMotion = useReducedMotion();
-  const ease = [0.19, 1, 0.22, 1] as const;
+/* ─── Default Data ──────────────────────────────────────────────────────── */
 
-  const fadeUp: Variants = {
-    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 26 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.75, ease },
-    },
-  };
+const DEFAULT_PLANS: Plan[] = [{id: "basic",name: "Basic",icon: Wind,description:"Ideal for smaller facilities or regular maintenance cleanings. Includes essential cleaning for high-traffic areas, restrooms, and common spaces to maintain a consistent professional appearance.",ctaLabel: "Get A Quote",},{id: "advance",name: "Advance",icon: Sparkles,featured: true,description:"Recommended for medium to large facilities requiring deeper care and detailed attention. Includes everything from the Basic Plan plus advanced services such as deep floor cleaning, detailed surface sanitation, and flexible scheduling.",ctaLabel: "Get A Quote",},{id: "premium",name: "Premium",icon: Building2,description:"Our most complete plan, designed for facilities that demand top-tier cleaning standards and specialized services. Includes detailed maintenance, floor polishing, high-surface cleaning, and full facility management support.",ctaLabel: "Get A Quote",},];
 
-  const stagger: Variants = {
-    hidden: {},
-    show: {
-      transition: {
-        staggerChildren: prefersReducedMotion ? 0 : 0.14,
-        delayChildren: prefersReducedMotion ? 0 : 0.12,
-      },
-    },
-  };
+/* ─── Component ─────────────────────────────────────────────────────────── */
 
-  return (
-    <section
-      aria-labelledby="commercial-plans-heading"
-      className="relative isolate overflow-hidden bg-[#f6f4ee] py-20 sm:py-24 lg:py-28"
+const CommercialCleaningPlans: React.FC = ({title = "Commercial Cleaning Service Plans",description = ["Choose the plan that best fits your company's needs — from basic maintenance to complete facility care.","All plans are fully customizable based on your space, schedule, and cleaning priorities.",],contactLabel = "Contact Us",onContactClick,plans = DEFAULT_PLANS,onPlanClick,backgroundImageSrc = "/images/kitchen.jpg",}) => {const prefersReducedMotion = useReducedMotion();const ease = [0.19, 1, 0.22, 1] as const;
+
+const heroVariants: Variants = {hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -24 },show: { opacity: 1, y: 0, transition: { duration: 0.8, ease } },};
+
+const containerVariants: Variants = {hidden: {},show: {transition: {staggerChildren: prefersReducedMotion ? 0 : 0.15,delayChildren: prefersReducedMotion ? 0 : 0.2,},},};
+
+const cardVariants: Variants = {hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 40 },show: {opacity: 1,y: 0,transition: { duration: 0.7, ease },},};
+
+const titleVariants: Variants = {hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 16 },show: { opacity: 1, y: 0, transition: { duration: 0.7, ease } },};
+
+return ({/* Fixed background image — stays in place while content scrolls over it /}<divaria-hidden="true"className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"style={{ backgroundImage: url(${backgroundImageSrc}) }}/>{/ Dark overlay on the fixed image /}{/ Bottom fade so the cards sit on a lighter surface as you scroll past */}
+
+  <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 pb-16 sm:pb-20">
+    {/* Hero Card */}
+    <motion.div
+      variants={heroVariants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "-80px" }}
+      className="relative rounded-2xl bg-blue-600 px-6 sm:px-10 lg:px-14 py-8 sm:py-10 shadow-xl"
     >
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-30 bg-cover bg-center bg-no-repeat opacity-20"
-        style={{ backgroundImage: `url(${backgroundImageSrc})` }}
-      />
-
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 -z-20 bg-[linear-gradient(180deg,rgba(246,244,238,0.92)_0%,rgba(246,244,238,0.82)_45%,rgba(246,244,238,1)_100%)]"
-      />
-
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.24]"
-        style={{
-          backgroundImage:
-            "radial-gradient(rgba(0,0,0,0.1) 1px, transparent 1px)",
-          backgroundSize: "4px 4px",
-        }}
-      />
-
-      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-16">
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-90px" }}
-          className="relative overflow-hidden rounded-[2rem] bg-green-950 px-6 py-8 shadow-[0_30px_90px_rgba(15,23,42,0.18)] sm:px-10 sm:py-10 lg:px-12"
-        >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(255,255,255,0.16),transparent_34%)]" />
-
-          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/55">
-                Service Options
-              </p>
-
-              <h2
-                id="commercial-plans-heading"
-                className="font-serif text-[clamp(2rem,4vw,4rem)] leading-[0.95] tracking-[-0.045em] text-white"
-              >
-                {title}
-              </h2>
-
-              <div className="mt-5 max-w-2xl space-y-2 text-[15px] font-light leading-7 text-white/75 sm:text-base">
-                {description.map((line) => (
-                  <p key={line}>{line}</p>
-                ))}
-              </div>
-            </div>
-
-            <motion.button
-              type="button"
-              onClick={onContactClick}
-              whileHover={prefersReducedMotion ? undefined : { y: -2 }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-              className="group inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-7 py-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-green-950 shadow-lg transition hover:bg-[#f6f4ee] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-green-950 sm:w-auto"
-            >
-              {contactLabel}
-              <ArrowUpRight
-                size={15}
-                className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-              />
-            </motion.button>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div className="max-w-2xl">
+          <h2
+            id="plans-heading"
+            className="font-serif text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight leading-tight text-white"
+          >
+            {title}
+          </h2>
+          <div className="mt-4 space-y-2 text-sm sm:text-base font-light leading-relaxed text-white/90">
+            {description.map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
           </div>
-        </motion.div>
-
-        <div className="mt-16 flex flex-col items-start justify-between gap-4 sm:mt-20 md:flex-row md:items-end">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-green-950/55">
-              Compare Plans
-            </p>
-            <h3 className="mt-3 font-serif text-[clamp(2rem,4vw,3.5rem)] leading-none tracking-[-0.045em] text-zinc-950">
-              Choose Your Level of Care
-            </h3>
-          </div>
-
-          <p className="max-w-md text-sm leading-6 text-stone-600">
-            Start with a plan, then customize the details around your facility,
-            schedule, and cleaning standards.
-          </p>
         </div>
 
-        <motion.div
-          variants={stagger}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-90px" }}
-          className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-3 lg:gap-6"
-        >
-          {plans.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              variants={fadeUp}
-              reduced={prefersReducedMotion ?? false}
-              onClick={onPlanClick}
-            />
-          ))}
-        </motion.div>
-      </div>
-    </section>
-  );
-}
+        <div className="flex items-center gap-6 shrink-0">
+          {/* Decorative sparkle icon */}
+          <motion.div
+            aria-hidden="true"
+            className="hidden md:block text-white/90"
+            animate={
+              prefersReducedMotion
+                ? undefined
+                : { rotate: [0, 8, -8, 0], scale: [1, 1.05, 1] }
+            }
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+          >
+            <Sparkles className="h-16 w-16" strokeWidth={1.5} />
+          </motion.div>
 
-type PlanCardProps = {
-  plan: Plan;
-  onClick?: (planId: string) => void;
-  variants: Variants;
-  reduced: boolean;
-};
-
-function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
-  const Icon = plan.icon;
-
-  return (
-    <motion.article
-      variants={variants}
-      whileHover={reduced ? undefined : { y: -8 }}
-      transition={{ type: "spring", stiffness: 260, damping: 22 }}
-      className={`
-        group relative flex min-h-[430px] flex-col overflow-hidden rounded-[2rem]
-        border bg-white/82 p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)]
-        backdrop-blur-md transition duration-300
-        ${
-          plan.featured
-            ? "border-green-950/20 ring-1 ring-green-950/10"
-            : "border-white/70"
-        }
-      `}
-    >
-      {plan.featured && (
-        <div className="absolute right-5 top-5 rounded-full bg-green-950 px-3 py-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-white">
-          Popular
+          <motion.button
+            type="button"
+            onClick={onContactClick}
+            whileHover={
+              prefersReducedMotion ? undefined : { scale: 1.04 }
+            }
+            whileTap={
+              prefersReducedMotion ? undefined : { scale: 0.97 }
+            }
+            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            className="inline-flex items-center justify-center rounded-md bg-white px-6 py-3 font-serif text-sm sm:text-base font-medium tracking-tight text-gray-900 shadow-sm hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-blue-600"
+          >
+            {contactLabel}
+          </motion.button>
         </div>
-      )}
-
-      <div className="flex h-13 w-13 items-center justify-center rounded-2xl bg-green-950/8 text-green-950">
-        <Icon size={24} strokeWidth={1.7} />
       </div>
+    </motion.div>
 
-      <div className="mt-8">
-        <h4 className="font-serif text-3xl leading-none tracking-[-0.04em] text-zinc-950">
-          {plan.name}
-        </h4>
+    {/* "Plans" section label */}
+    <motion.h3
+      variants={titleVariants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "-80px" }}
+      className="mt-16 sm:mt-20 text-center font-serif text-3xl sm:text-4xl font-medium tracking-tight text-gray-900 drop-shadow-sm"
+    >
+      Plans
+    </motion.h3>
 
-        <p className="mt-5 text-[15px] font-light leading-7 text-stone-600">
-          {plan.description}
-        </p>
-      </div>
-
-      <button
-        type="button"
-        onClick={() => onClick?.(plan.id)}
-        className={`
-          mt-auto inline-flex items-center justify-center gap-2 rounded-full
-          px-6 py-3.5 text-[10px] font-semibold uppercase tracking-[0.18em]
-          transition duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-900 focus-visible:ring-offset-2
-          ${
-            plan.featured
-              ? "bg-green-950 text-white hover:bg-zinc-950"
-              : "border border-stone-300 bg-white text-zinc-950 hover:border-green-950"
-          }
-        `}
-      >
-        {plan.ctaLabel ?? "Request Quote"}
-        <ArrowUpRight
-          size={14}
-          className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+    {/* Plan Cards */}
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      whileInView="show"
+      viewport={{ once: true, margin: "-80px" }}
+      className="mt-10 sm:mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8"
+    >
+      {plans.map((plan) => (
+        <PlanCard
+          key={plan.id}
+          plan={plan}
+          onClick={onPlanClick}
+          variants={cardVariants}
+          reduced={prefersReducedMotion ?? false}
         />
-      </button>
-    </motion.article>
-  );
-}
+      ))}
+    </motion.div>
+  </div>
+</section>
+
+);};
+
+/* ─── PlanCard ──────────────────────────────────────────────────────────── */
+
+type PlanCardProps = {plan: Plan;onClick?: (planId: string) => void;variants: Variants;reduced: boolean;};
+
+const PlanCard: React.FC = ({plan,onClick,variants,reduced,}) => {const Icon = plan.icon;const headerBg = plan.featured ? "bg-blue-600" : "bg-gray-900";const ctaClasses = plan.featured? "bg-gray-900 text-white hover": "bg-white text-gray-900 border border-gray-300 hover";
+
+return (<motion.articlevariants={variants}whileHover={reduced ? undefined : { y: -6 }}transition={{ type: "spring", stiffness: 300, damping: 22 }}className="flex flex-col rounded-2xl overflow-hidden bg-white shadow-lg">{/* Header */}<div className={${headerBg} px-6 py-5 text-center}>{plan.name}
+
+  {/* Body */}
+  <div className="flex flex-col items-center flex-1 px-6 py-8 sm:px-8 sm:py-10 text-center">
+    <motion.span
+      aria-hidden="true"
+      className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50"
+      whileHover={reduced ? undefined : { scale: 1.08, rotate: -4 }}
+      transition={{ type: "spring", stiffness: 300, damping: 18 }}
+    >
+      <Icon className="h-8 w-8 text-blue-600" strokeWidth={1.75} />
+    </motion.span>
+
+    <p className="mt-6 text-sm sm:text-base font-light leading-relaxed text-gray-600 flex-1">
+      {plan.description}
+    </p>
+
+    <motion.button
+      type="button"
+      onClick={() => onClick?.(plan.id)}
+      whileHover={reduced ? undefined : { scale: 1.04 }}
+      whileTap={reduced ? undefined : { scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 400, damping: 18 }}
+      className={`mt-8 inline-flex items-center justify-center rounded-md px-6 py-3 font-serif text-sm sm:text-base font-medium tracking-tight shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors ${ctaClasses}`}
+    >
+      {plan.ctaLabel ?? "Get A Quote"}
+    </motion.button>
+  </div>
+</motion.article>
+
+);};
+
+export default CommercialCleaningPlans;
