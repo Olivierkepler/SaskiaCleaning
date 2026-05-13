@@ -199,7 +199,7 @@ export default function CommercialCleaningPlans({
             mt-16 text-center font-serif
             text-[clamp(1.7rem,3vw,2.8rem)]
             leading-[1] tracking-[-0.04em]
-            text-zinc-950 sm:mt-20
+            text-white sm:mt-20
           "
         >
           Plans
