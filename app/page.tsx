@@ -12,6 +12,7 @@ import CleaningPriceCalculator from './components/CleaningPriceCalculator';
 import InfoBar from "./components/InfoBar";
 import CommercialCleaningServices from "./components/CommercialCleaningServices";
 import CommercialCleaningPlans from "./components/CommercialCleaningPlans";
+import Navbar from './components/Navbar';
 
 
 
@@ -20,7 +21,8 @@ export default function Home() {
   
   return (
     <main className="relative bg-white overflow-x-hidden ">
-      
+  
+      < Navbar/>
       {/* 1. Hero: Internal entrance animations already set */}
       <Hero />
   <InfoBar />
