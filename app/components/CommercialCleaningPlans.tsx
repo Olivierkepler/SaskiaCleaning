@@ -2,7 +2,13 @@
 
 import React from "react";
 import { motion, useReducedMotion, type Variants } from "framer-motion";
-import { Wind, Sparkles, Building2, type LucideIcon } from "lucide-react";
+import {
+  ArrowUpRight,
+  Building2,
+  Sparkles,
+  Wind,
+  type LucideIcon,
+} from "lucide-react";
 
 type Plan = {
   id: string;
@@ -29,7 +35,7 @@ const DEFAULT_PLANS: Plan[] = [
     name: "Basic",
     icon: Wind,
     description:
-      "Ideal for smaller facilities or regular maintenance cleanings. Includes essential care for high-traffic areas, restrooms, and shared spaces to keep your business looking polished.",
+      "Essential care for smaller spaces, high-traffic areas, restrooms, and shared environments.",
     ctaLabel: "Get A Quote",
   },
   {
@@ -38,7 +44,7 @@ const DEFAULT_PLANS: Plan[] = [
     icon: Sparkles,
     featured: true,
     description:
-      "Recommended for medium to large facilities that need deeper care. Includes the Basic Plan plus detailed sanitation, floor attention, surface detailing, and flexible scheduling.",
+      "Detailed sanitation, floor attention, surface care, and flexible scheduling for larger spaces.",
     ctaLabel: "Get A Quote",
   },
   {
@@ -46,7 +52,7 @@ const DEFAULT_PLANS: Plan[] = [
     name: "Premium",
     icon: Building2,
     description:
-      "Our most complete plan for facilities that require elevated standards. Includes detailed maintenance, floor polishing, high-surface cleaning, and full facility support.",
+      "Complete facility care with polished standards, specialty services, and ongoing support.",
     ctaLabel: "Get A Quote",
   },
 ];
@@ -66,40 +72,22 @@ export default function CommercialCleaningPlans({
   const prefersReducedMotion = useReducedMotion();
   const ease = [0.19, 1, 0.22, 1] as const;
 
-  const heroVariants: Variants = {
-    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: -24 },
+  const fadeUp: Variants = {
+    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 28 },
     show: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease },
+      transition: { duration: 0.75, ease },
     },
   };
 
-  const containerVariants: Variants = {
+  const stagger: Variants = {
     hidden: {},
     show: {
       transition: {
-        staggerChildren: prefersReducedMotion ? 0 : 0.15,
-        delayChildren: prefersReducedMotion ? 0 : 0.2,
+        staggerChildren: prefersReducedMotion ? 0 : 0.14,
+        delayChildren: prefersReducedMotion ? 0 : 0.15,
       },
-    },
-  };
-
-  const cardVariants: Variants = {
-    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 40 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.7, ease },
-    },
-  };
-
-  const titleVariants: Variants = {
-    hidden: prefersReducedMotion ? { opacity: 0 } : { opacity: 0, y: 16 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.7, ease },
     },
   };
 
@@ -123,46 +111,36 @@ export default function CommercialCleaningPlans({
 
       <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8">
         <motion.div
-          variants={heroVariants}
+          variants={fadeUp}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-80px" }}
           className="
             relative overflow-hidden rounded-[2rem]
-            bg-green-950
-            px-6 py-8
+            bg-green-950 px-6 py-8
             shadow-[0_30px_90px_rgba(15,23,42,0.18)]
-            sm:px-10 sm:py-10
-            lg:px-14 lg:py-12
+            sm:px-10 sm:py-10 lg:px-14 lg:py-12
           "
         >
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
-              <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.24em] text-white/60">
+              <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/60">
                 Commercial Services
               </p>
 
               <h2
                 id="plans-heading"
                 className="
-                  font-serif
-                  text-[clamp(2rem,4vw,4rem)]
-                  leading-[0.96]
-                  tracking-[-0.045em]
+                  max-w-2xl font-serif
+                  text-[clamp(1.75rem,3.4vw,3.2rem)]
+                  leading-[1] tracking-[-0.04em]
                   text-white
                 "
               >
                 {title}
               </h2>
 
-              <div
-                className="
-                  mt-5 space-y-3
-                  text-[15px] font-light leading-7 tracking-[-0.01em]
-                  text-white/85
-                  sm:text-base
-                "
-              >
+              <div className="mt-5 max-w-xl space-y-2.5 text-[14px] font-normal leading-6 tracking-[-0.01em] text-white/80 sm:text-[15px]">
                 {description.map((line, i) => (
                   <p key={i}>{line}</p>
                 ))}
@@ -192,52 +170,43 @@ export default function CommercialCleaningPlans({
                 onClick={onContactClick}
                 whileHover={prefersReducedMotion ? undefined : { y: -2 }}
                 whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 400,
-                  damping: 18,
-                }}
+                transition={{ type: "spring", stiffness: 400, damping: 18 }}
                 className="
-                  inline-flex items-center justify-center rounded-full
-                  bg-white
-                  px-7 py-3.5
-                  text-[11px] font-semibold uppercase tracking-[0.18em]
-                  text-green-950
-                  shadow-lg transition
-                  hover:bg-stone-50
-                  focus:outline-none
-                  focus-visible:ring-2
-                  focus-visible:ring-white
-                  focus-visible:ring-offset-2
-                  focus-visible:ring-offset-green-950
+                  group inline-flex items-center justify-center gap-2 rounded-full
+                  bg-white px-7 py-3.5
+                  text-[10px] font-semibold uppercase tracking-[0.16em]
+                  text-green-950 shadow-lg transition hover:bg-stone-50
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-white
+                  focus-visible:ring-offset-2 focus-visible:ring-offset-green-950
                 "
               >
                 {contactLabel}
+                <ArrowUpRight
+                  size={13}
+                  className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
               </motion.button>
             </div>
           </div>
         </motion.div>
 
         <motion.h3
-          variants={titleVariants}
+          variants={fadeUp}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-80px" }}
           className="
-            mt-16 text-center
-            font-serif
-            text-[clamp(2rem,4vw,3.5rem)]
-            leading-none
-            tracking-[-0.045em]
-            text-zinc-950
-            sm:mt-20
+            mt-16 text-center font-serif
+            text-[clamp(1.7rem,3vw,2.8rem)]
+            leading-[1] tracking-[-0.04em]
+            text-zinc-950 sm:mt-20
           "
         >
           Plans
         </motion.h3>
 
         <motion.div
-          variants={containerVariants}
+          variants={stagger}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-80px" }}
@@ -247,9 +216,9 @@ export default function CommercialCleaningPlans({
             <PlanCard
               key={plan.id}
               plan={plan}
-              onClick={onPlanClick}
-              variants={cardVariants}
+              variants={fadeUp}
               reduced={prefersReducedMotion ?? false}
+              onClick={onPlanClick}
             />
           ))}
         </motion.div>
@@ -277,53 +246,41 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
   return (
     <motion.article
       variants={variants}
-      whileHover={reduced ? undefined : { y: -6 }}
-      transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 22,
-      }}
+      whileHover={reduced ? undefined : { y: -8, scale: 1.015 }}
+      transition={{ type: "spring", stiffness: 300, damping: 22 }}
       className="
-        flex flex-col overflow-hidden rounded-[1.75rem]
-        bg-white
-        shadow-[0_20px_60px_rgba(15,23,42,0.08)]
+        group relative flex flex-col overflow-hidden rounded-[1.75rem]
+        bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]
         transition duration-300
       "
     >
-      <div className={`${headerBg} px-6 py-5 text-center`}>
-        <h4
-          className="
-            font-serif
-            text-2xl leading-none tracking-[-0.04em]
-            text-white
-            sm:text-[2rem]
-          "
-        >
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute inset-0
+          bg-[radial-gradient(circle_at_50%_0%,rgba(20,83,45,0.12),transparent_55%)]
+          opacity-0 transition-opacity duration-500
+          group-hover:opacity-100
+        "
+      />
+
+      <div className={`${headerBg} relative px-6 py-5 text-center`}>
+        <h4 className="font-serif text-[1.55rem] leading-none tracking-[-0.035em] text-white sm:text-[1.8rem]">
           {plan.name}
         </h4>
       </div>
 
-      <div className="flex flex-1 flex-col items-center px-6 py-8 text-center sm:px-8 sm:py-10">
+      <div className="relative flex flex-1 flex-col items-center px-6 py-8 text-center sm:px-8 sm:py-10">
         <motion.span
           aria-hidden="true"
           className="flex h-16 w-16 items-center justify-center rounded-full bg-green-950/8"
-          whileHover={reduced ? undefined : { scale: 1.08, rotate: -4 }}
-          transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 18,
-          }}
+          whileHover={reduced ? undefined : { scale: 1.1, rotate: -6 }}
+          transition={{ type: "spring", stiffness: 300, damping: 18 }}
         >
           <Icon className="h-8 w-8 text-green-950" strokeWidth={1.75} />
         </motion.span>
 
-        <p
-          className="
-            mt-6 flex-1
-            text-[15px] font-light leading-7 tracking-[-0.01em]
-            text-stone-600
-          "
-        >
+        <p className="mt-5 flex-1 text-[14px] font-normal leading-6 tracking-[-0.01em] text-stone-600">
           {plan.description}
         </p>
 
@@ -332,24 +289,22 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
           onClick={() => onClick?.(plan.id)}
           whileHover={reduced ? undefined : { scale: 1.03 }}
           whileTap={reduced ? undefined : { scale: 0.98 }}
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 18,
-          }}
+          transition={{ type: "spring", stiffness: 400, damping: 18 }}
           className={`
-            mt-8 inline-flex items-center justify-center rounded-full
+            group mt-8 inline-flex items-center justify-center gap-2 rounded-full
             px-6 py-3.5
-            text-[10px] font-semibold uppercase tracking-[0.18em]
+            text-[10px] font-semibold uppercase tracking-[0.16em]
             shadow-sm transition-all
-            focus:outline-none
-            focus-visible:ring-2
-            focus-visible:ring-green-900
-            focus-visible:ring-offset-2
+            focus:outline-none focus-visible:ring-2
+            focus-visible:ring-green-900 focus-visible:ring-offset-2
             ${ctaClasses}
           `}
         >
           {plan.ctaLabel ?? "Get A Quote"}
+          <ArrowUpRight
+            size={13}
+            className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+          />
         </motion.button>
       </div>
     </motion.article>
