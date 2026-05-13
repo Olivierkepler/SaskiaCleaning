@@ -3,20 +3,20 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const slides = [
   {
-    url: "/images/saskia1.JPG",
+    url: "/images/saskia2.JPG",
     title: "Clean Interior Living Space"
   },
   
   {
-    url: "/images/cleaning1.jpg",
+    url: "/images/saskia1.JPG",
     title: "Luxury Glass Facade Design"
   },
   {
-    url: "/images/cleaing2.jpg",
+    url: "/images/saskia4.JPG",
     title: "Clean Interior Living Space"
   }, 
   // {
-  //   url: "/images/cleaing.jpg",
+  //   url: "/images/saskia5.JPGg",
   //   title: "Modern Minimal Architecture"
   // },
 
