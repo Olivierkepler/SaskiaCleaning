@@ -106,7 +106,7 @@ export default function CommercialCleaningPlans({
   return (
     <section
       aria-labelledby="plans-heading"
-      className="relative w-full overflow-hidden bg-gray-50"
+      className="relative w-full overflow-hidden bg-[#f6f4ee]"
     >
       <div
         aria-hidden="true"
@@ -114,11 +114,11 @@ export default function CommercialCleaningPlans({
         style={{ backgroundImage: `url(${backgroundImageSrc})` }}
       />
 
-      <div aria-hidden="true" className="absolute inset-0 bg-black/40" />
+      <div aria-hidden="true" className="absolute inset-0 bg-black/45" />
 
       <div
         aria-hidden="true"
-        className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-b from-transparent via-gray-50/80 to-gray-50"
+        className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-b from-transparent via-[#f6f4ee]/85 to-[#f6f4ee]"
       />
 
       <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8">
@@ -129,7 +129,7 @@ export default function CommercialCleaningPlans({
           viewport={{ once: true, margin: "-80px" }}
           className="
             relative overflow-hidden rounded-[2rem]
-            bg-blue-600
+            bg-green-950
             px-6 py-8
             shadow-[0_30px_90px_rgba(15,23,42,0.18)]
             sm:px-10 sm:py-10
@@ -202,14 +202,14 @@ export default function CommercialCleaningPlans({
                   bg-white
                   px-7 py-3.5
                   text-[11px] font-semibold uppercase tracking-[0.18em]
-                  text-gray-900
+                  text-green-950
                   shadow-lg transition
-                  hover:bg-gray-100
+                  hover:bg-stone-50
                   focus:outline-none
                   focus-visible:ring-2
                   focus-visible:ring-white
                   focus-visible:ring-offset-2
-                  focus-visible:ring-offset-blue-600
+                  focus-visible:ring-offset-green-950
                 "
               >
                 {contactLabel}
@@ -229,7 +229,7 @@ export default function CommercialCleaningPlans({
             text-[clamp(2rem,4vw,3.5rem)]
             leading-none
             tracking-[-0.045em]
-            text-gray-900
+            text-zinc-950
             sm:mt-20
           "
         >
@@ -268,11 +268,11 @@ type PlanCardProps = {
 function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
   const Icon = plan.icon;
 
-  const headerBg = plan.featured ? "bg-blue-600" : "bg-gray-900";
+  const headerBg = plan.featured ? "bg-green-950" : "bg-zinc-950";
 
   const ctaClasses = plan.featured
-    ? "bg-gray-900 text-white hover:bg-gray-800"
-    : "bg-white text-gray-900 border border-gray-300 hover:bg-gray-50";
+    ? "bg-green-950 text-white hover:bg-zinc-950"
+    : "bg-white text-zinc-950 border border-stone-300 hover:bg-stone-50";
 
   return (
     <motion.article
@@ -306,7 +306,7 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
       <div className="flex flex-1 flex-col items-center px-6 py-8 text-center sm:px-8 sm:py-10">
         <motion.span
           aria-hidden="true"
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-50"
+          className="flex h-16 w-16 items-center justify-center rounded-full bg-green-950/8"
           whileHover={reduced ? undefined : { scale: 1.08, rotate: -4 }}
           transition={{
             type: "spring",
@@ -314,14 +314,14 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
             damping: 18,
           }}
         >
-          <Icon className="h-8 w-8 text-blue-600" strokeWidth={1.75} />
+          <Icon className="h-8 w-8 text-green-950" strokeWidth={1.75} />
         </motion.span>
 
         <p
           className="
             mt-6 flex-1
             text-[15px] font-light leading-7 tracking-[-0.01em]
-            text-gray-600
+            text-stone-600
           "
         >
           {plan.description}
@@ -344,7 +344,7 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
             shadow-sm transition-all
             focus:outline-none
             focus-visible:ring-2
-            focus-visible:ring-blue-500
+            focus-visible:ring-green-900
             focus-visible:ring-offset-2
             ${ctaClasses}
           `}
