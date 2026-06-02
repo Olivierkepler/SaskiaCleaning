@@ -47,7 +47,11 @@ export default function Hero() {
                 href="sms:9125721231"
                 className="inline-flex items-center justify-center rounded-full border-2 border-white/90 px-8 py-4 text-lg font-extrabold text-white backdrop-blur-sm transition duration-300 hover:bg-white/10 hover:scale-[1.03] active:scale-[0.98]"
               >
-                💬 Text us: (912) 572-1231
+                💬 Text us: (857)-352-8554
+
+               
+
+
               </a>
             </div>
 

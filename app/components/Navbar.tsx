@@ -72,25 +72,23 @@ export default function Navbar({
               className="relative flex items-center"
               style={{ height: "40px", width: "90px" }}
             >
-              <img
-                src="/images/whitelogo.png"
-                alt="Saskia Cleaning"
-                className={`object-contain transition-all duration-300 ${
-                  isScrolled ? "brightness-0" : "brightness-100"
-                }`}
-                style={{
-                  height: "60px",
-                  width: "auto",
-                  maxHeight: "60px",
-                  maxWidth: "none",
-                  position: "absolute",
-                  top: "50%",
-                  left: 0,
-                  transform: "translateY(-50%)",
-                  zIndex: 1,
-                  pointerEvents: "none",
-                }}
-              />
+            <img
+  src={isScrolled ? "/images/logoSaskia.png" : "/images/whitelogo.png"}
+  alt="Saskia Cleaning"
+  className="object-contain transition-all duration-300"
+  style={{
+    height: "60px",
+    width: "auto",
+    maxHeight: "60px",
+    maxWidth: "none",
+    position: "absolute",
+    top: "50%",
+    left: 0,
+    transform: "translateY(-50%)",
+    zIndex: 1,
+    pointerEvents: "none",
+  }}
+/>
             </div>
 
             <div className="leading-tight">
