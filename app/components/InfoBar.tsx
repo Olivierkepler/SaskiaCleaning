@@ -84,7 +84,7 @@ export default function InfoBar() {
         It resets and staggers the children EVERY time it enters from the top or bottom screen boundary.
       */}
       <motion.div 
-        className="relative mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 md:grid-cols-3 lg:px-8"
+        className="relative mx-auto grid max-w-9xl grid-cols-1 gap-6 px-6 md:grid-cols-3 lg:px-28"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"

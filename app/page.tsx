@@ -56,19 +56,30 @@ export default function Home() {
       <SectionWrapper>
         <CleaningPriceCalculator/>
       </SectionWrapper> */}
+
+
       <SectionWrapper>
        <CleaningPricingCalculator/>
       </SectionWrapper>
+
+
+      
       {/* 3. BentoGrid: 3D Scale Reveal */}
-      <SectionWrapper>
+      {/* <SectionWrapper>
         <BentoGrid />
-      </SectionWrapper>
+      </SectionWrapper> */}
+
+
+
       {/* 4. Services: Subtle Parallax drift */}
-      <SectionWrapper>
+      {/* <SectionWrapper>
         <Services />
-      </SectionWrapper>
+      </SectionWrapper> */}
+
+
+
       {/* 5. Custom CTA with Magnet Effect */}
-      <SectionWrapper>
+      {/* <SectionWrapper>
         <section className="py-60 px-6 text-center flex flex-col items-center">
           <motion.h2 
             initial={{ letterSpacing: "0em" }}
@@ -95,7 +106,9 @@ export default function Home() {
             />
           </motion.button>
         </section>
-      </SectionWrapper>
+      </SectionWrapper> */}
+
+
       {/* 6. Contact Form */}
       <SectionWrapper>
         <Contact />

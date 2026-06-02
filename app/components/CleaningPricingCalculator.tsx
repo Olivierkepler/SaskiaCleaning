@@ -203,106 +203,215 @@ export default function CleaningServicesPricing() {
       document.body
     );
 
-  return (
-    <section className="relative overflow-hidden bg-[#FCFAF8] px-5 py-20 sm:px-8 lg:px-16 lg:py-28">
-      <div className="pointer-events-none absolute left-1/2 top-0 h-96 w-96 -translate-x-1/2 bg-stone-200/40 blur-3xl" />
+return (
+  <section className="relative overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
+    
+    {/* Ambient glow */}
+    <div className="pointer-events-none absolute left-1/2 top-0 h-[32rem] w-[70rem] -translate-x-1/2 rounded-full bg-sky-100/50 blur-3xl" />
 
-      <div className="relative mx-auto max-w-7xl">
-        <div className="mb-14 grid gap-8 lg:mb-20 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
-          <div>
-            <span className="mb-6 block text-[10px] font-bold uppercase tracking-[0.38em] text-stone-400">
-              Professional Cleaning Services
-            </span>
+    <div className="relative mx-auto max-w-7xl px-6 lg:px-10">
+      
+      {/* Header */}
+      <div className="mx-auto mb-20 max-w-4xl text-center">
+        <div className="mb-5 flex items-center justify-center gap-3">
+          <span className="h-px w-6 bg-sky-300" />
 
-            <h2 className="max-w-3xl font-serif text-4xl leading-[1.02] tracking-tight text-zinc-950 sm:text-5xl lg:text-6xl">
-              Cleaning & laundry pricing, refined.
-            </h2>
-          </div>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.26em] text-sky-500">
+            Saskia Cleaning Services
+          </span>
 
-          <p className="max-w-2xl text-base font-light leading-8 text-stone-500 sm:text-lg lg:justify-self-end">
-            Explore residential cleaning, commercial service, laundry care,
-            specialty cleaning, Airbnb turnover, and premium add-ons — presented
-            with transparent starting prices.
-          </p>
+          <span className="h-px w-6 bg-sky-300" />
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {serviceCategories.map((category, index) => (
-            <article
-              key={category.title}
-              className="group border border-stone-200/80 bg-white shadow-[0_18px_60px_rgba(0,0,0,0.04)] transition duration-500 hover:-translate-y-1 hover:border-stone-300 hover:shadow-[0_28px_90px_rgba(0,0,0,0.09)]"
-            >
-              <div className="relative h-72 overflow-hidden bg-stone-200">
-                <img
-                  src={category.image}
-                  alt={category.title}
-                  className="h-full w-full object-cover grayscale-[12%] transition duration-700 group-hover:scale-105 group-hover:grayscale-0"
-                  loading="lazy"
-                />
+        <h2
+          className="
+            font-[family-name:var(--font-cormorant)]
+            text-[clamp(2.8rem,5vw,5.4rem)]
+            font-semibold
+            leading-[0.9]
+            tracking-[-0.055em]
+            text-slate-950
+          "
+        >
+          Cleaning & laundry pricing,
+          <span className="ml-3 font-light italic text-slate-400">
+            refined.
+          </span>
+        </h2>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/85 via-zinc-950/25 to-transparent" />
-
-                <div className="absolute left-6 right-6 top-6 flex items-center justify-between">
-                  <span className="border border-white/25 bg-white/10 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.28em] text-white backdrop-blur-md">
-                    {category.tag}
-                  </span>
-
-                  <span className="font-serif text-2xl text-white/40">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                </div>
-
-                <div className="absolute bottom-6 left-6 right-6">
-                  <h3 className="font-serif text-3xl leading-tight tracking-tight text-white">
-                    {category.title}
-                  </h3>
-                </div>
-              </div>
-
-              <div className="p-6 sm:p-7">
-                <p className="min-h-[72px] text-sm font-light leading-7 text-stone-600">
-                  {category.description}
-                </p>
-
-                <div className="mt-6 border border-stone-200 bg-[#FCFAF8]">
-                  {category.services.map((service) => (
-                    <div
-                      key={`${category.title}-${service.name}`}
-                      className="flex items-center justify-between gap-4 border-b border-stone-200/70 px-4 py-4 last:border-b-0 hover:bg-white"
-                    >
-                      <span className="text-sm font-light leading-5 text-stone-700">
-                        {service.name}
-                      </span>
-
-                      <span className="shrink-0 border border-stone-200 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-zinc-950">
-                        {service.price}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedCategory(category)}
-                  className="group/btn relative mt-6 w-full overflow-hidden border border-zinc-950 bg-zinc-950 px-5 py-4 text-[11px] font-bold uppercase tracking-[0.22em] text-white transition-all duration-300 hover:bg-white hover:text-zinc-950"
-                >
-                  <span className="relative z-10">Request This Service</span>
-                  <span className="absolute inset-0 translate-y-full bg-white transition-transform duration-300 group-hover/btn:translate-y-0" />
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-
-        <div className="mx-auto mt-14 max-w-4xl border-y border-stone-200 py-6 text-center">
-          <p className="text-[11px] font-semibold uppercase leading-6 tracking-[0.24em] text-stone-400">
-            Final pricing may vary based on property size, condition, service
-            frequency, laundry volume, location, and custom client requests.
-          </p>
-        </div>
+        <p className="mx-auto mt-7 max-w-2xl text-[15px] leading-8 text-slate-500 sm:text-lg">
+          Explore residential cleaning, commercial service, laundry care,
+          Airbnb turnover, and premium add-ons — all presented with
+          transparent starting prices and elevated service standards.
+        </p>
       </div>
 
-      {modal}
-    </section>
-  );
+      {/* Cards */}
+      <div className="grid gap-7 md:grid-cols-2 xl:grid-cols-3">
+        {serviceCategories.map((category, index) => (
+          <article
+            key={category.title}
+            className="
+              group relative overflow-hidden rounded-[2rem]
+              bg-white ring-1 ring-slate-200/70
+              shadow-[0_18px_60px_rgba(15,23,42,0.06)]
+              transition duration-500
+              hover:-translate-y-2
+              hover:ring-sky-200
+              hover:shadow-[0_28px_90px_rgba(14,165,233,0.16)]
+            "
+          >
+            {/* Image */}
+            <div className="relative h-72 overflow-hidden">
+              <img
+                src={category.image}
+                alt={category.title}
+                loading="lazy"
+                className="
+                  h-full w-full object-cover grayscale-[8%]
+                  transition duration-700
+                  group-hover:scale-[1.05]
+                  group-hover:grayscale-0
+                "
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
+
+              {/* Top badges */}
+              <div className="absolute left-6 right-6 top-6 flex items-center justify-between">
+                <span
+                  className="
+                    rounded-full border border-white/20
+                    bg-white/10 px-3 py-1.5
+                    text-[9px] font-semibold uppercase
+                    tracking-[0.22em] text-white
+                    backdrop-blur-md
+                  "
+                >
+                  {category.tag}
+                </span>
+
+                <span className="font-[family-name:var(--font-cormorant)] text-3xl text-white/35">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+              </div>
+
+              {/* Title */}
+              <div className="absolute bottom-6 left-6 right-6">
+                <div className="mb-4 h-[2px] w-10 bg-sky-400 transition-all duration-300 group-hover:w-16" />
+
+                <h3
+                  className="
+                    font-[family-name:var(--font-cormorant)]
+                    text-[2rem]
+                    font-semibold
+                    leading-[0.95]
+                    tracking-[-0.045em]
+                    text-white
+                  "
+                >
+                  {category.title}
+                </h3>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 sm:p-7">
+              <p className="min-h-[78px] text-[15px] leading-7 text-slate-600">
+                {category.description}
+              </p>
+
+              {/* Pricing List */}
+              <div
+                className="
+                  mt-7 overflow-hidden rounded-[1.4rem]
+                  bg-slate-50 ring-1 ring-slate-100
+                "
+              >
+                {category.services.map((service, idx) => (
+                  <div
+                    key={`${category.title}-${service.name}`}
+                    className={`
+                      flex items-center justify-between gap-4 px-5 py-4
+                      transition duration-300 hover:bg-white
+                      ${
+                        idx !== category.services.length - 1
+                          ? "border-b border-slate-100"
+                          : ""
+                      }
+                    `}
+                  >
+                    <span className="text-sm leading-6 text-slate-700">
+                      {service.name}
+                    </span>
+
+                    <span
+                      className="
+                        shrink-0 rounded-full border border-slate-200
+                        bg-white px-3 py-1.5
+                        text-[10px] font-semibold uppercase
+                        tracking-[0.14em] text-slate-950
+                      "
+                    >
+                      {service.price}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* CTA */}
+              <button
+                type="button"
+                onClick={() => setSelectedCategory(category)}
+                className="
+                  group/btn mt-7 inline-flex w-full items-center
+                  justify-center gap-2 rounded-full
+                  bg-sky-500 px-6 py-4
+                  text-[10px] font-semibold uppercase
+                  tracking-[0.18em] text-white
+                  shadow-[0_12px_32px_rgba(14,165,233,0.24)]
+                  transition duration-300
+                  hover:bg-slate-950
+                "
+              >
+                Request This Service
+
+                <svg
+                  width="13"
+                  height="13"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="
+                    transition-transform duration-300
+                    group-hover/btn:-translate-y-0.5
+                    group-hover/btn:translate-x-0.5
+                  "
+                >
+                  <line x1="7" y1="17" x2="17" y2="7" />
+                  <polyline points="7 7 17 7 17 17" />
+                </svg>
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* Footer note */}
+      <div className="mx-auto mt-16 max-w-5xl text-center">
+        <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
+          Final pricing may vary based on property size, condition,
+          service frequency, laundry volume, location, and custom requests.
+        </p>
+      </div>
+    </div>
+
+    {modal}
+  </section>
+);
+
+
 }

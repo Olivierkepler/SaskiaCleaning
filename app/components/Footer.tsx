@@ -1,105 +1,112 @@
 export default function Footer() {
   return (
-    <footer className="bg-[#F7F6F3] border-t border-zinc-200 px-8 pt-24 pb-12">
-      <div className="max-w-7xl mx-auto">
+    <footer className="relative overflow-hidden bg-white px-6 pt-24 pb-10 sm:px-8 lg:px-16 lg:pt-28">
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[28rem] w-[70rem] -translate-x-1/2 rounded-full bg-sky-100/50 blur-3xl" />
 
-        {/* Top */}
-        <div className="grid md:grid-cols-12 gap-16 mb-24">
+      <div className="relative mx-auto max-w-7xl">
+        <div className="mb-20 grid gap-14 lg:grid-cols-12">
+          <div className="max-w-md lg:col-span-5">
+            {/* <div className="mb-5 flex items-center gap-3">
+              <span className="h-px w-6 bg-sky-300" />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-sky-500">
+                Saskia Cleaning Services
+              </p>
+            </div> */}
 
-          {/* Brand */}
-          <div className="md:col-span-5 max-w-md">
-            <p className="text-[10px] uppercase tracking-[0.45em] text-stone-400 mb-6">
-              Saskia Cleaning Services
-            </p>
-
-            <h3 className="font-serif text-[30px] leading-[1.15] text-zinc-900 mb-6">
-              A consistent standard, <br /> delivered with care.
+            <h3 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.2rem,4vw,3.5rem)] font-semibold leading-[0.95] tracking-[-0.05em] text-slate-950">
+              A consistent standard,{" "}
+              <span className="font-light italic text-slate-400">
+                delivered with care.
+              </span>
             </h3>
 
-            <p className="text-sm text-stone-500 leading-relaxed font-light">
+            <p className="mt-6 text-[15px] leading-8 text-slate-500">
               Deep cleaning and routine maintenance for residential and
               commercial spaces. Every visit is handled with precision,
               reliability, and respect for your environment.
             </p>
           </div>
 
-          {/* Right Columns */}
-          <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-14">
-
-            {/* Contact */}
-            <div className="flex flex-col gap-4">
-              <span className="text-[10px] uppercase tracking-[0.35em] text-zinc-900 font-medium">
-                Contact
-              </span>
-
-              <a
-                href="tel:8573528554"
-                className="text-sm text-stone-500 hover:text-zinc-900 transition"
-              >
-                857 352 8554
-              </a>
-
-              <a
-                href="mailto:cleaningsaskia@gmail.com"
-                className="text-sm text-stone-500 hover:text-zinc-900 transition"
-              >
+          <div className="grid gap-10 sm:grid-cols-3 lg:col-span-7">
+            <FooterColumn title="Contact">
+              <FooterLink href="tel:+18573528554">857 352 8554</FooterLink>
+              <FooterLink href="mailto:cleaningsaskia@gmail.com">
                 cleaningsaskia@gmail.com
-              </a>
-
-              <a
+              </FooterLink>
+              <FooterLink
                 href="https://saskiaservices.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-stone-500 hover:text-zinc-900 transition"
               >
                 SaskiaServices.com
-              </a>
-            </div>
+              </FooterLink>
+            </FooterColumn>
 
-            {/* Services */}
-            <div className="flex flex-col gap-4">
-              <span className="text-[10px] uppercase tracking-[0.35em] text-zinc-900 font-medium">
-                Services
-              </span>
+            <FooterColumn title="Services">
+              <FooterText>Deep Cleaning</FooterText>
+              <FooterText>Recurring Service</FooterText>
+              <FooterText>Move In / Move Out</FooterText>
+              <FooterText>Commercial Cleaning</FooterText>
+            </FooterColumn>
 
-              <span className="text-sm text-stone-500">Deep Cleaning</span>
-              <span className="text-sm text-stone-500">Recurring Service</span>
-              <span className="text-sm text-stone-500">Move In / Move Out</span>
-              <span className="text-sm text-stone-500">Commercial Cleaning</span>
-            </div>
-
-            {/* Area */}
-            <div className="flex flex-col gap-4">
-              <span className="text-[10px] uppercase tracking-[0.35em] text-zinc-900 font-medium">
-                Area
-              </span>
-
-              <span className="text-sm text-stone-500">Boston</span>
-              <span className="text-sm text-stone-500">Massachusetts</span>
-              <span className="text-sm text-stone-500">United States</span>
-            </div>
-
+            <FooterColumn title="Area">
+              <FooterText>Boston</FooterText>
+              <FooterText>Massachusetts</FooterText>
+              <FooterText>United States</FooterText>
+            </FooterColumn>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-zinc-200 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-
-          <p className="text-[10px] uppercase tracking-[0.45em] text-stone-400">
+        <div className="flex flex-col items-center justify-between gap-6 border-t border-slate-200 pt-8 md:flex-row">
+          <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-slate-400">
             © 2026 Saskia Cleaning Services
           </p>
 
-          <div className="flex gap-8">
-            <span className="text-[10px] uppercase tracking-[0.3em] text-stone-400">
+          <div className="flex flex-wrap justify-center gap-6">
+            <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
               Licensed & Insured
             </span>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-stone-400">
+            <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
               Boston Area
             </span>
           </div>
-
         </div>
       </div>
     </footer>
   );
+}
+
+function FooterColumn({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-4">
+      <span className="mb-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-950">
+        {title}
+      </span>
+      {children}
+    </div>
+  );
+}
+
+function FooterLink({
+  children,
+  ...props
+}: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+  return (
+    <a
+      {...props}
+      className="text-sm leading-6 text-slate-500 transition hover:text-sky-500"
+    >
+      {children}
+    </a>
+  );
+}
+
+function FooterText({ children }: { children: React.ReactNode }) {
+  return <span className="text-sm leading-6 text-slate-500">{children}</span>;
 }
