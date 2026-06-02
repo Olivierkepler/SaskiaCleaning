@@ -10,6 +10,25 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom Animations for Tailwind v4 */
+  --animate-fadeInUp: fadeInUp 0.8s ease-out forwards;
+  --animate-scaleIn: scaleIn 1.5s ease-out forwards;
+  --animate-float: float 6s ease-in-out infinite;
+
+  /* Custom Keyframes */
+  @keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scaleIn {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
