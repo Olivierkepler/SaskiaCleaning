@@ -116,13 +116,13 @@ export default function Home() {
       {/* 7. Footer - Final Polish */}
       <footer className="py-20 px-8 border-t border-stone-100">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex flex-col items-center md:items-start">
+          {/* <div className="flex flex-col items-center md:items-start">
             <span className="font-serif italic text-2xl tracking-tighter">Saskia</span>
             <span className="text-[9px] uppercase tracking-[0.5em] text-stone-400">Stewardship Group</span>
           </div>
           <div className="text-[10px] uppercase tracking-widest text-stone-300">
             Boston • 2026 • Massachusetts
-          </div>
+          </div> */}
         </div>
       </footer>
     </main>

@@ -17,14 +17,14 @@ export default function Contact() {
           className="flex flex-col justify-between"
         >
           <div>
-            <div className="mb-5 flex items-center gap-3">
+            {/* <div className="mb-5 flex items-center gap-3">
               <span className="h-px w-6 bg-sky-300" />
               <span className="text-[10px] font-semibold uppercase tracking-[0.26em] text-sky-500">
                 Inquiry
               </span>
-            </div>
+            </div> */}
 
-            <h2 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.8rem,5vw,5.4rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950">
+            <h2 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.8rem,3.5vw,5.4rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950">
               Begin your{" "}
               <span className="font-light italic text-slate-400">
                 consultation.

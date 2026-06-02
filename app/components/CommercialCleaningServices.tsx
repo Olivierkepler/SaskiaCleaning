@@ -40,23 +40,20 @@ const DEFAULT_SERVICES: Service[] = [
   { id: "deep", label: "Deep Cleaning", icon: Droplets },
 ];
 
-const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
+export default function CommercialCleaningServices({
   title = "Commercial Cleaning Services",
-  tagline = '"We Keep Your Business Sparkling Clean"',
-  description = "Our experienced and reliable team specializes in commercial cleaning for offices, restaurants, schools, and more delivering spotless results every time.",
+  tagline = "We Keep Your Business Sparkling Clean",
+  description = "Our experienced and reliable team specializes in commercial cleaning for offices, restaurants, schools, and more — delivering spotless results every time.",
   imageSrc = "/images/kitchen.jpg",
   imageAlt = "Clean commercial restaurant interior",
   services = DEFAULT_SERVICES,
   ctaLabel = "Start Cleaning",
   onCtaClick,
   onServiceClick,
-}) => {
+}: CommercialCleaningServicesProps) {
   const prefersReducedMotion = useReducedMotion();
-
-  // Fine-tuned elegant easing curve (Expo-out)
   const ease = [0.16, 1, 0.3, 1] as const;
 
-  // Master layout orchestrator for the entire section view
   const sectionVariants: Variants = {
     hidden: {},
     show: {
@@ -66,42 +63,17 @@ const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
     },
   };
 
-  // Base typography items fade & lift
-  const typographyVariants: Variants = {
-    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 20 },
+  const fadeUp: Variants = {
+    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 28 },
     show: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.8, ease },
+      transition: { duration: 0.85, ease },
     },
   };
 
-  // Services list wrapper to delay stagger child line items smoothly
-  const listContainerVariants: Variants = {
-    hidden: {},
-    show: {
-      transition: {
-        staggerChildren: prefersReducedMotion ? 0 : 0.06,
-      },
-    },
-  };
-
-  // Individual list items fade & lift with spring alignment
-  const listItemVariants: Variants = {
-    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 16 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { type: "spring", stiffness: 100, damping: 15 },
-    },
-  };
-
-  // Modern reveal container for the image
-  const imageContainerVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      x: prefersReducedMotion ? 0 : 30,
-    },
+  const imageVariants: Variants = {
+    hidden: { opacity: 0, x: prefersReducedMotion ? 0 : 40 },
     show: {
       opacity: 1,
       x: 0,
@@ -111,81 +83,76 @@ const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
 
   return (
     <motion.section
-      className="w-full bg-white py-16 px-4 sm:px-6 lg:px-12 overflow-hidden"
+      className="relative overflow-hidden bg-white px-6 py-24 sm:py-28 lg:px-12 lg:py-32"
       aria-labelledby="commercial-cleaning-heading"
       variants={sectionVariants}
       initial="hidden"
       whileInView="show"
-      // UPDATED VIEWPORT SETTINGS 👇
-      viewport={{ 
-        once: false,       // Allows multi-directional animations (up & down)
-        amount: 0.2,       // Fires when 20% of the block cuts into view
-        margin: "-100px"   // Safe screen-edge padding to prevent jittering on rapid scrolling
+      viewport={{
+        once: false,
+        amount: 0.2,
+        margin: "-80px",
       }}
     >
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-        
-        {/* Left: Text Content */}
+      <div className="pointer-events-none absolute left-1/2 top-0 h-[30rem] w-[70rem] -translate-x-1/2 rounded-full bg-sky-100/50 blur-3xl" />
+
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-14 lg:grid-cols-2 lg:gap-20">
         <div className="order-2 lg:order-1">
+         
+
           <motion.h2
             id="commercial-cleaning-heading"
-            className="font-serif text-3xl sm:text-4xl lg:text-5xl font-medium tracking-tight leading-tight text-gray-900"
-            variants={typographyVariants}
+            className="font-[family-name:var(--font-cormorant)] text-[clamp(2.7rem,3.5vw,5.2rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950"
+            variants={fadeUp}
           >
             {title}
           </motion.h2>
-          
+
           <motion.p
-            className="mt-3 font-serif text-lg sm:text-xl font-light italic tracking-tight text-blue-600"
-            variants={typographyVariants}
+            className="mt-5 font-[family-name:var(--font-cormorant)] text-2xl font-light italic tracking-[-0.03em] text-slate-400 sm:text-3xl"
+            variants={fadeUp}
           >
-            {tagline}
+            “{tagline}”
           </motion.p>
-          
+
           <motion.p
-            className="mt-4 text-sm sm:text-base font-light leading-relaxed text-gray-600 max-w-xl"
-            variants={typographyVariants}
+            className="mt-6 max-w-xl text-[15px] leading-8 text-slate-500 sm:text-lg"
+            variants={fadeUp}
           >
             {description}
           </motion.p>
 
-          {/* Services Grid with its own cascade on scroll */}
           <motion.ul
             role="list"
-            className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5"
-            variants={listContainerVariants}
+            className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2"
+            variants={sectionVariants}
           >
             {services.map((service) => {
               const Icon = service.icon;
               const isClickable = Boolean(onServiceClick);
+
               return (
                 <motion.li
                   key={service.id}
-                  className="flex items-center gap-4 group"
-                  variants={listItemVariants}
+                  variants={fadeUp}
+                  className="group flex items-center gap-4"
                 >
-                  <motion.span
-                    aria-hidden="true"
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-blue-50 transition-colors duration-300 group-hover:bg-blue-100"
-                    whileHover={prefersReducedMotion ? undefined : { scale: 1.1, rotate: -5 }}
-                    whileTap={prefersReducedMotion ? undefined : { scale: 0.95 }}
-                    transition={{ type: "spring", stiffness: 400, damping: 15 }}
-                  >
-                    <Icon className="h-5 w-5 text-blue-600 transition-transform duration-300 group-hover:scale-105" strokeWidth={1.75} />
-                  </motion.span>
-                  
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-sky-500/10 text-sky-500 transition duration-300 group-hover:bg-sky-500 group-hover:text-white">
+                    <Icon className="h-5 w-5" strokeWidth={1.75} />
+                  </span>
+
                   {isClickable ? (
                     <button
                       type="button"
                       onClick={() => onServiceClick?.(service.id)}
-                      className="text-left font-serif text-lg sm:text-xl font-medium tracking-tight leading-tight text-gray-900 underline underline-offset-4 decoration-1 hover:text-blue-600 transition-colors duration-300"
+                      className="text-left font-[family-name:var(--font-cormorant)] text-xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 transition hover:text-sky-500"
                     >
                       {service.label}
                     </button>
                   ) : (
                     <a
                       href={`#${service.id}`}
-                      className="font-serif text-lg sm:text-xl font-medium tracking-tight leading-tight text-gray-900 underline underline-offset-4 decoration-1 hover:text-blue-600 transition-colors duration-300"
+                      className="font-[family-name:var(--font-cormorant)] text-xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 transition hover:text-sky-500"
                     >
                       {service.label}
                     </a>
@@ -195,31 +162,28 @@ const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
             })}
           </motion.ul>
 
-          {/* CTA Button Entry */}
-          <motion.div className="mt-10" variants={typographyVariants}>
+          <motion.div className="mt-10" variants={fadeUp}>
             <motion.button
               type="button"
               onClick={onCtaClick}
-              whileHover={prefersReducedMotion ? undefined : { scale: 1.03, y: -2 }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.98, y: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              className="inline-flex items-center justify-center rounded-md bg-gray-900 px-6 py-3 font-serif text-sm sm:text-base font-medium tracking-tight text-white shadow-sm hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors duration-300"
+              whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.02 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+              className="rounded-full bg-sky-500 px-7 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(14,165,233,0.24)] transition hover:bg-slate-950"
             >
               {ctaLabel}
             </motion.button>
           </motion.div>
         </div>
 
-        {/* Right: Image Component with subtle Parallax Entrance */}
         <motion.div
-          className="order-1 lg:order-2 relative w-full aspect-[4/3] lg:aspect-[5/4] overflow-hidden rounded-2xl shadow-lg"
-          variants={imageContainerVariants}
+          className="order-1 relative aspect-[4/3] w-full overflow-hidden rounded-[2rem] shadow-[0_28px_90px_rgba(15,23,42,0.12)] ring-1 ring-slate-200/70 lg:order-2 lg:aspect-[5/4]"
+          variants={imageVariants}
         >
-          <motion.div 
-            className="w-full h-full relative"
+          <motion.div
+            className="relative h-full w-full"
             variants={{
-              hidden: { scale: prefersReducedMotion ? 1 : 1.12 },
-              show: { scale: 1, transition: { duration: 1.2, ease } }
+              hidden: { scale: prefersReducedMotion ? 1 : 1.08 },
+              show: { scale: 1, transition: { duration: 1.2, ease } },
             }}
           >
             <Image
@@ -232,10 +196,7 @@ const CommercialCleaningServices: React.FC<CommercialCleaningServicesProps> = ({
             />
           </motion.div>
         </motion.div>
-
       </div>
     </motion.section>
   );
-};
-
-export default CommercialCleaningServices;
+}

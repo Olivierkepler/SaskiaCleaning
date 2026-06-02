@@ -73,9 +73,10 @@ export default function CommercialServices({ onCtaClick }: CommercialServicesPro
           <h2
             className="
               mb-3 font-serif tracking-tight text-zinc-950
-              text-3xl leading-[1] sm:text-4xl md:text-5xl lg:text-[3.25rem]
+              text-[clamp(2rem,2.6vw,2.2rem)] leading-[1]
             "
           >
+     
             Commercial Cleaning <br />
             <span className="italic text-stone-400">Services</span>
           </h2>
