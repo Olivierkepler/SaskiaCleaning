@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useReducedMotion } from "framer-motion";
+import { motion, useReducedMotion, Variants } from "framer-motion";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -42,6 +42,35 @@ const ITEMS: InfoItemData[] = [
 export default function InfoBar() {
   const prefersReducedMotion = useReducedMotion();
 
+  // Parent container variant to coordinate the staggered scroll animation
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15, // Time gap between each card's entrance animation
+      },
+    },
+  };
+
+  // Individual card variant for the scroll entrance
+  const cardEntranceVariants: Variants = {
+    hidden: { 
+      opacity: 0, 
+      y: prefersReducedMotion ? 0 : 40 
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 100,
+        damping: 15,
+        duration: 0.8
+      }
+    },
+  };
+
   return (
     <section
       aria-label="Contact Information"
@@ -64,48 +93,58 @@ export default function InfoBar() {
         }}
       />
 
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 md:grid-cols-3 lg:px-8">
-        {ITEMS.map((item, i) => (
+      {/* This wrapper hooks into the scroll viewport. 
+        It triggers children staggering as soon as 15% of the section is visible.
+      */}
+      <motion.div 
+        className="relative mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 md:grid-cols-3 lg:px-8"
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ 
+          once: true,      // Set to false if you want it to re-animate every single time you scroll up/down
+          amount: 0.15     // Triggers when 15% of the element enters the viewport
+        }}
+      >
+        {ITEMS.map((item) => (
           <motion.div
             key={item.title}
-            initial={
-              prefersReducedMotion
-                ? { opacity: 0 }
-                : { opacity: 0, y: 20 }
-            }
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{
-              duration: 0.6,
-              delay: i * 0.12,
-            }}
+            variants={cardEntranceVariants} 
+            className="h-full"
           >
-            <InfoItem {...item} />
+            <InfoItem {...item} prefersReducedMotion={!!prefersReducedMotion} />
           </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }
 
 /* ─── Item ───────────────────────────────────────────────────────────────── */
 
-function InfoItem({ icon, title, lines, href }: InfoItemData) {
+function InfoItem({ icon, title, lines, href, prefersReducedMotion }: InfoItemData & { prefersReducedMotion: boolean }) {
   const content = (
-    <div
+    <motion.div
+      whileHover={prefersReducedMotion ? {} : "hover"}
       className="
         group relative h-full overflow-hidden
         rounded-3xl border border-slate-200
         bg-white/90 p-8
         shadow-[0_10px_40px_rgba(15,23,42,0.06)]
         backdrop-blur-sm
-        transition-all duration-500
-        hover:-translate-y-1
-        hover:border-blue-200
-        hover:shadow-[0_18px_60px_rgba(37,99,235,0.12)]
+        cursor-pointer
       "
+      style={{ transition: "border-color 0.4s, box-shadow 0.4s" }}
+      variants={{
+        hover: {
+          y: -6,
+          borderColor: "rgb(191, 219, 254)",
+          boxShadow: "0 18px 60px rgba(37, 99, 235, 0.12)"
+        }
+      }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      {/* glow */}
+      {/* Glow */}
       <div
         className="
           absolute inset-0 opacity-0 transition-opacity duration-500
@@ -115,22 +154,25 @@ function InfoItem({ icon, title, lines, href }: InfoItemData) {
       />
 
       <div className="relative flex items-start gap-5">
-        {/* icon */}
-        <div
+        
+        {/* Animated Icon Container */}
+        <motion.div
+          variants={{
+            hover: { scale: 1.1, rotate: icon === "phone" ? -10 : 0 }
+          }}
+          transition={{ type: "spring", stiffness: 400, damping: 15 }}
           className="
             flex h-16 w-16 shrink-0 items-center justify-center
             rounded-2xl
             bg-gradient-to-br from-blue-600 to-sky-400
             text-white
             shadow-lg shadow-blue-500/20
-            transition-transform duration-500
-            group-hover:scale-110
           "
         >
           <InfoIcon type={icon} />
-        </div>
+        </motion.div>
 
-        {/* text */}
+        {/* Text */}
         <div>
           <h3 className="text-xl font-bold tracking-tight text-slate-900">
             {title}
@@ -140,24 +182,26 @@ function InfoItem({ icon, title, lines, href }: InfoItemData) {
             <p className="font-medium text-slate-800">
               {lines[0]}
             </p>
-
             <p className="text-slate-500">
               {lines[1]}
             </p>
           </div>
 
-          {/* accent line */}
-          <div
+          {/* Animated Accent Line */}
+          <motion.div
+            variants={{
+              hover: { width: "80px" }
+            }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
             className="
               mt-5 h-[2px] w-10
               bg-gradient-to-r from-blue-500 to-sky-400
-              transition-all duration-500
-              group-hover:w-20
             "
           />
         </div>
+
       </div>
-    </div>
+    </motion.div>
   );
 
   if (!href) return content;
@@ -167,7 +211,7 @@ function InfoItem({ icon, title, lines, href }: InfoItemData) {
       href={href}
       target={href.startsWith("http") ? "_blank" : undefined}
       rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-      className="block"
+      className="block h-full"
     >
       {content}
     </a>

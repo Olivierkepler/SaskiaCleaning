@@ -27,9 +27,7 @@ export default function Navbar({
   }, []);
 
   useEffect(() => {
-    if (hideNavbar) {
-      setIsOpen(false);
-    }
+    if (hideNavbar) setIsOpen(false);
   }, [hideNavbar]);
 
   useEffect(() => {
@@ -66,15 +64,20 @@ export default function Navbar({
           className={`mx-auto flex max-w-7xl items-center justify-between border px-5 py-4 transition-all duration-500 ${
             isScrolled
               ? "border-zinc-200 bg-white shadow-[0_20px_70px_rgba(0,0,0,0.06)] backdrop-blur-2xl"
-              : "border-white/40 bg-white/35 backdrop-blur-xl"
+              : "border-transparent bg-transparent"
           }`}
         >
           <a href="#" className="flex items-center gap-3">
-            <div className="relative flex items-center" style={{ height: "40px" }}>
+            <div
+              className="relative flex items-center"
+              style={{ height: "40px", width: "90px" }}
+            >
               <img
-                src="/images/logoSaskia.png"
+                src="/images/whitelogo.png"
                 alt="Saskia Cleaning"
-                className="object-contain"
+                className={`object-contain transition-all duration-300 ${
+                  isScrolled ? "brightness-0" : "brightness-100"
+                }`}
                 style={{
                   height: "60px",
                   width: "auto",
@@ -90,11 +93,19 @@ export default function Navbar({
               />
             </div>
 
-            <div className="leading-tight ml-18 sm:ml-24 md:ml-32 lg:ml-20">
-              <p className="font-serif text-lg tracking-[-0.02em] text-zinc-900">
+            <div className="leading-tight">
+              <p
+                className={`font-serif text-lg tracking-[-0.02em] transition-colors duration-300 ${
+                  isScrolled ? "text-zinc-900" : "text-white"
+                }`}
+              >
                 Saskia
               </p>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.35em] text-zinc-400">
+              <p
+                className={`text-[9px] font-semibold uppercase tracking-[0.35em] transition-colors duration-300 ${
+                  isScrolled ? "text-zinc-400" : "text-white/70"
+                }`}
+              >
                 Cleaning
               </p>
             </div>
@@ -105,10 +116,18 @@ export default function Navbar({
               <a
                 key={link.label}
                 href={link.href}
-                className="group relative text-[10px] font-bold uppercase tracking-[0.22em] text-zinc-500 transition duration-300 hover:text-zinc-950"
+                className={`group relative text-[10px] font-bold uppercase tracking-[0.22em] transition duration-300 ${
+                  isScrolled
+                    ? "text-zinc-500 hover:text-zinc-950"
+                    : "text-white hover:text-white/80"
+                }`}
               >
                 {link.label}
-                <span className="absolute -bottom-2 left-0 h-px w-full origin-left scale-x-0 bg-zinc-950 transition-transform duration-300 group-hover:scale-x-100" />
+                <span
+                  className={`absolute -bottom-2 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${
+                    isScrolled ? "bg-zinc-950" : "bg-white"
+                  }`}
+                />
               </a>
             ))}
           </div>
@@ -116,14 +135,22 @@ export default function Navbar({
           <div className="hidden items-center gap-3 md:flex">
             <a
               href="tel:+10000000000"
-              className="hidden border border-zinc-200 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-zinc-500 transition hover:border-zinc-950 hover:text-zinc-950 xl:block"
+              className={`hidden border px-5 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition xl:block ${
+                isScrolled
+                  ? "border-zinc-200 text-zinc-500 hover:border-zinc-950 hover:text-zinc-950"
+                  : "border-white/50 text-white hover:border-white hover:bg-white hover:text-zinc-950"
+              }`}
             >
               Call Now
             </a>
 
             <a
               href="#quote"
-              className="group flex items-center gap-2 border border-zinc-950 bg-zinc-950 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-white transition duration-300 hover:bg-white hover:text-zinc-950"
+              className={`group flex items-center gap-2 border px-6 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition duration-300 ${
+                isScrolled
+                  ? "border-zinc-950 bg-zinc-950 text-white hover:bg-white hover:text-zinc-950"
+                  : "border-white bg-white text-zinc-950 hover:bg-transparent hover:text-white"
+              }`}
             >
               Request Quote
               <ArrowUpRight
@@ -139,7 +166,11 @@ export default function Navbar({
             aria-label="Open navigation menu"
             aria-expanded={isOpen}
             aria-controls="mobile-sidenav"
-            className="grid h-11 w-11 place-items-center border border-zinc-950 bg-zinc-950 text-white transition duration-300 hover:bg-white hover:text-zinc-950 lg:hidden"
+            className={`grid h-11 w-11 place-items-center border transition duration-300 lg:hidden ${
+              isScrolled
+                ? "border-zinc-950 bg-zinc-950 text-white hover:bg-white hover:text-zinc-950"
+                : "border-white bg-white text-zinc-950 hover:bg-transparent hover:text-white"
+            }`}
           >
             <Menu size={20} />
           </button>
