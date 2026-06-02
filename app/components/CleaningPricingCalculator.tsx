@@ -401,12 +401,12 @@ return (
       </div>
 
       {/* Footer note */}
-      <div className="mx-auto mt-16 max-w-5xl text-center">
+      {/* <div className="mx-auto mt-16 max-w-5xl text-center">
         <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
           Final pricing may vary based on property size, condition,
           service frequency, laundry volume, location, and custom requests.
         </p>
-      </div>
+      </div> */}
     </div>
 
     {modal}
