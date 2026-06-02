@@ -13,7 +13,7 @@ import InfoBar from "./components/InfoBar";
 import CommercialCleaningServices from "./components/CommercialCleaningServices";
 import CommercialCleaningPlans from "./components/CommercialCleaningPlans";
 import Navbar from './components/Navbar';
-
+import Hero2 from './components/Hero2';
 
 
 
@@ -24,7 +24,7 @@ export default function Home() {
   
       < Navbar/>
       {/* 1. Hero: Internal entrance animations already set */}
-      <Hero />
+      <Hero2 />
   <InfoBar />
   <CommercialCleaningServices
       imageSrc="/images/kitchen.jpg"

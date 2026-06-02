@@ -14,7 +14,7 @@ type InfoItemData = {
   ariaLabel?: string;
 };
 
-/* ─── Data (edit these in one place) ─────────────────────────────────────── */
+/* ─── Data ───────────────────────────────────────────────────────────────── */
 
 const ITEMS: InfoItemData[] = [
   {
@@ -22,21 +22,18 @@ const ITEMS: InfoItemData[] = [
     title: "Call Us",
     lines: ["857-352-8554", "Mon – Sat, 8am – 6pm"],
     href: "tel:8573528554",
-    ariaLabel: "Call Saskia Cleaning at 857-352-8554",
   },
   {
     icon: "envelope",
     title: "Email Us",
     lines: ["cleaningsaskia@gmail.com", "Replies within 24 hours"],
     href: "mailto:cleaningsaskia@gmail.com",
-    ariaLabel: "Email cleaningsaskia@gmail.com",
   },
   {
     icon: "globe",
     title: "Visit Our Site",
     lines: ["SaskiaServices.com", "Book online anytime"],
     href: "https://saskiaservices.com/",
-    ariaLabel: "Visit SaskiaServices.com",
   },
 ];
 
@@ -47,105 +44,118 @@ export default function InfoBar() {
 
   return (
     <section
-      aria-label="Contact Saskia Cleaning"
-      className="
-        relative overflow-hidden
-        bg-gradient-to-r from-[#0E3D22] via-[#14532D] to-[#0E3D22]
-        text-white
-      "
+      aria-label="Contact Information"
+      className="relative overflow-hidden bg-white py-20"
     >
-      {/* Subtle dotted grain to match the hero's texture */}
+      {/* subtle background glow */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-15"
+        className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_60%)]"
+      />
+
+      {/* subtle texture */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 opacity-[0.03]"
         style={{
           backgroundImage:
-            "radial-gradient(rgba(255,255,255,0.7) 1px, transparent 1px)",
-          backgroundSize: "4px 4px",
+            "radial-gradient(rgb(15 23 42) 0.8px, transparent 0.8px)",
+          backgroundSize: "6px 6px",
         }}
       />
 
-      {/* Soft top highlight to lift the bar off the hero above it */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-white/20"
-      />
-
-      <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-8 px-6 py-10 sm:gap-10 sm:px-8 sm:py-12 md:grid-cols-3 md:gap-6 md:py-14 lg:px-16">
+      <div className="relative mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 md:grid-cols-3 lg:px-8">
         {ITEMS.map((item, i) => (
           <motion.div
             key={item.title}
             initial={
               prefersReducedMotion
                 ? { opacity: 0 }
-                : { opacity: 0, y: 16 }
+                : { opacity: 0, y: 20 }
             }
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-80px" }}
+            viewport={{ once: true }}
             transition={{
-              duration: 0.7,
+              duration: 0.6,
               delay: i * 0.12,
-              ease: [0.19, 1, 0.22, 1],
             }}
           >
             <InfoItem {...item} />
           </motion.div>
         ))}
       </div>
-
-      {/* Soft bottom highlight */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10"
-      />
     </section>
   );
 }
 
-/* ─── InfoItem ───────────────────────────────────────────────────────────── */
+/* ─── Item ───────────────────────────────────────────────────────────────── */
 
-function InfoItem({ icon, title, lines, href, ariaLabel }: InfoItemData) {
+function InfoItem({ icon, title, lines, href }: InfoItemData) {
   const content = (
-    <div className="group flex items-start gap-5">
-      {/* Icon — outlined circle */}
-      <span
-        aria-hidden="true"
+    <div
+      className="
+        group relative h-full overflow-hidden
+        rounded-3xl border border-slate-200
+        bg-white/90 p-8
+        shadow-[0_10px_40px_rgba(15,23,42,0.06)]
+        backdrop-blur-sm
+        transition-all duration-500
+        hover:-translate-y-1
+        hover:border-blue-200
+        hover:shadow-[0_18px_60px_rgba(37,99,235,0.12)]
+      "
+    >
+      {/* glow */}
+      <div
         className="
-          relative flex h-14 w-14 shrink-0 items-center justify-center
-          rounded-full border border-white/60
-          transition-all duration-500
-          group-hover:border-white group-hover:bg-white/10
-          group-hover:scale-105
-          sm:h-16 sm:w-16
+          absolute inset-0 opacity-0 transition-opacity duration-500
+          group-hover:opacity-100
+          bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_55%)]
         "
-      >
-        <InfoIcon type={icon} />
-      </span>
+      />
 
-      {/* Text */}
-      <div className="flex flex-col gap-1.5">
-        <h3 className="font-serif text-lg font-medium leading-tight tracking-tight text-white sm:text-xl">
-          {title}
-        </h3>
-        <div className="text-sm font-light leading-relaxed text-white/85">
-          {lines.map((line, i) => (
-            <p key={i} className={i === 0 ? "font-normal text-white" : undefined}>
-              {line}
-            </p>
-          ))}
+      <div className="relative flex items-start gap-5">
+        {/* icon */}
+        <div
+          className="
+            flex h-16 w-16 shrink-0 items-center justify-center
+            rounded-2xl
+            bg-gradient-to-br from-blue-600 to-sky-400
+            text-white
+            shadow-lg shadow-blue-500/20
+            transition-transform duration-500
+            group-hover:scale-110
+          "
+        >
+          <InfoIcon type={icon} />
         </div>
 
-        {/* Underline accent — only present when the item is a link */}
-        {href && (
-          <span
-            aria-hidden="true"
+        {/* text */}
+        <div>
+          <h3 className="text-xl font-bold tracking-tight text-slate-900">
+            {title}
+          </h3>
+
+          <div className="mt-2 space-y-1 text-[15px] leading-relaxed">
+            <p className="font-medium text-slate-800">
+              {lines[0]}
+            </p>
+
+            <p className="text-slate-500">
+              {lines[1]}
+            </p>
+          </div>
+
+          {/* accent line */}
+          <div
             className="
-              mt-2 h-px w-8 bg-white/40
+              mt-5 h-[2px] w-10
+              bg-gradient-to-r from-blue-500 to-sky-400
               transition-all duration-500
-              group-hover:w-16 group-hover:bg-white
+              group-hover:w-20
             "
           />
-        )}
+        </div>
       </div>
     </div>
   );
@@ -155,15 +165,9 @@ function InfoItem({ icon, title, lines, href, ariaLabel }: InfoItemData) {
   return (
     <a
       href={href}
-      aria-label={ariaLabel}
       target={href.startsWith("http") ? "_blank" : undefined}
       rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
-      className="
-        block rounded-sm
-        focus-visible:outline-none
-        focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2
-        focus-visible:ring-offset-[#14532D]
-      "
+      className="block"
     >
       {content}
     </a>
@@ -174,19 +178,19 @@ function InfoItem({ icon, title, lines, href, ariaLabel }: InfoItemData) {
 
 function InfoIcon({ type }: { type: InfoIconType }) {
   const common = {
-    width: 26,
-    height: 26,
+    width: 24,
+    height: 24,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor" as const,
-    strokeWidth: 1.6,
+    strokeWidth: 1.8,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
   };
 
   if (type === "phone") {
     return (
-      <svg {...common} className="text-white">
+      <svg {...common}>
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
       </svg>
     );
@@ -194,22 +198,19 @@ function InfoIcon({ type }: { type: InfoIconType }) {
 
   if (type === "envelope") {
     return (
-      <svg {...common} className="text-white">
-        <rect x="3" y="6" width="18" height="13" rx="1" />
-        <path d="M3 7 L12 14 L21 7" />
-        <circle cx="12" cy="11" r="2.4" />
-        <path d="M10.8 11 L11.7 11.9 L13.2 10.3" />
+      <svg {...common}>
+        <rect x="3" y="6" width="18" height="13" rx="2" />
+        <path d="M3 7l9 6 9-6" />
       </svg>
     );
   }
 
-  // globe (website)
   return (
-    <svg {...common} className="text-white">
+    <svg {...common}>
       <circle cx="12" cy="12" r="9" />
       <path d="M3 12h18" />
-      <path d="M12 3a14 14 0 0 1 0 18" />
-      <path d="M12 3a14 14 0 0 0 0 18" />
+      <path d="M12 3a15 15 0 0 1 0 18" />
+      <path d="M12 3a15 15 0 0 0 0 18" />
     </svg>
   );
 }
