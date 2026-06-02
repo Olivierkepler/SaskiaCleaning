@@ -19,7 +19,7 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-r from-[#172b45]/95 via-[#29496b]/75 to-[#7fb6e7]/55" />
 
       {/* Main Content */}
-      <div className="relative z-10 mx-auto flex min-h-[600px] max-w-7xl items-center px-6 py-20 lg:px-10">
+      <div className="relative z-10 mx-auto flex min-h-[600px] max-w-full items-center px-6 py-20 lg:px-40">
         <div className="grid w-full items-center gap-12 lg:grid-cols-2">
           
           {/* Left Content */}

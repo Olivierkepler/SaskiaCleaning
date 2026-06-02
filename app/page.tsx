@@ -26,10 +26,13 @@ export default function Home() {
       {/* 1. Hero: Internal entrance animations already set */}
       <Hero2 />
   <InfoBar />
-  <CommercialCleaningServices
-      imageSrc="/images/kitchen.jpg"
-      onCtaClick={() => console.log("Start cleaning!")}
-    />
+
+  <SectionWrapper>
+        <AutoServiceCarousel/>
+      </SectionWrapper>
+
+
+
 
 <CommercialCleaningPlans
   backgroundImageSrc="/images/kitchen.jpg"
@@ -42,9 +45,13 @@ export default function Home() {
       {/* <SectionWrapper>
         <TrustBar />
       </SectionWrapper> */}
-      <SectionWrapper>
-        <AutoServiceCarousel/>
-      </SectionWrapper>
+    
+
+    <CommercialCleaningServices
+      imageSrc="/images/kitchen.jpg"
+      onCtaClick={() => console.log("Start cleaning!")}
+    />
+
 {/* 
       <SectionWrapper>
         <CleaningPriceCalculator/>

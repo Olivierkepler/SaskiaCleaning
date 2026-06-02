@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-const carouselItems = [
+const services = [
   {
     title: "Residential Cleaning",
     subtitle: "Premium home care for apartments, houses, and move-outs.",
@@ -38,7 +38,7 @@ const carouselItems = [
       "Pickup and delivery available for busy clients.",
       "Perfect for homes, rentals, Airbnb hosts, and professionals.",
     ],
-    startingPrice: "$1.75 / lb",
+    startingPrice: "$1.75/lb",
   },
   {
     title: "Airbnb Cleaning",
@@ -52,13 +52,13 @@ const carouselItems = [
     ],
     startingPrice: "$120+",
   },
-  {  
+  {
     title: "Specialty Cleaning",
     subtitle: "Advanced care for carpets, windows, appliances, and build-outs.",
     image:
       "https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=900&q=80",
     details: [
-      "Carpet cleaning, window cleaning, appliance cleaning, and post-construction cleaning.",
+      "Carpet cleaning, window cleaning, appliance cleaning, and post-construction.",
       "Great for seasonal refreshes or specific problem areas.",
       "Pricing depends on room count, surface type, and job size.",
     ],
@@ -78,249 +78,569 @@ const carouselItems = [
   },
 ];
 
-type CarouselItem = (typeof carouselItems)[number];
+type Service = (typeof services)[number];
 
-export default function AutoServiceCarousel() {
-  const repeatedItems = [...carouselItems, ...carouselItems];
-  const [selectedService, setSelectedService] = useState<CarouselItem | null>(
-    null
+const COUNT = services.length;
+const CARD_WIDTH = 380;
+const GAP = 28;
+const STRIDE = CARD_WIDTH + GAP;
+const AUTO_DELAY = 4000;
+const RESUME_AFTER = 6000;
+
+function IconArrowUpRight({ size = 11 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="7" y1="17" x2="17" y2="7" />
+      <polyline points="7 7 17 7 17 17" />
+    </svg>
   );
-  const [portalReady, setPortalReady] = useState(false);
+}
 
-  useEffect(() => setPortalReady(true), []);
+function IconClose({ size = 17 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
 
+function IconChevron({ dir }: { dir: "left" | "right" }) {
+  return (
+    <svg
+      width={17}
+      height={17}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {dir === "left" ? (
+        <polyline points="15 18 9 12 15 6" />
+      ) : (
+        <polyline points="9 18 15 12 9 6" />
+      )}
+    </svg>
+  );
+}
+
+function ProgressDot({
+  active,
+  isPlaying,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  isPlaying: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={active}
+      aria-label={label}
+      onClick={onClick}
+      className="relative flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+      style={{
+        width: active ? 34 : 10,
+        height: 16,
+        transition: "width 300ms ease",
+      }}
+    >
+      {active ? (
+        <svg viewBox="0 0 34 16" width="34" height="16">
+          <rect x="0" y="4" width="34" height="8" rx="4" fill="#e2e8f0" />
+          <rect
+            x="0"
+            y="4"
+            width="34"
+            height="8"
+            rx="4"
+            fill="#0ea5e9"
+            style={{
+              clipPath: "inset(0 0 0 0 round 4px)",
+              transformOrigin: "left center",
+              animation: isPlaying
+                ? `pill-fill ${AUTO_DELAY}ms linear forwards`
+                : "none",
+            }}
+          />
+        </svg>
+      ) : (
+        <svg viewBox="0 0 10 10" width="10" height="10">
+          <circle cx="5" cy="5" r="4" fill="#e2e8f0" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
+function NavButton({
+  dir,
+  onClick,
+}: {
+  dir: "left" | "right";
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={dir === "left" ? "Previous service" : "Next service"}
+      className="
+        grid h-11 w-11 shrink-0 place-items-center rounded-full
+        bg-white text-slate-700 ring-1 ring-slate-200
+        shadow-[0_8px_30px_rgba(15,23,42,0.08)]
+        transition duration-300 hover:bg-slate-950 hover:text-white
+        hover:ring-slate-950 focus-visible:outline-none
+        focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2
+        active:scale-95
+      "
+    >
+      <IconChevron dir={dir} />
+    </button>
+  );
+}
+
+function ServiceCard({
+  service,
+  index,
+  active,
+  onClick,
+}: {
+  service: Service;
+  index: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`View details for ${service.title}`}
+      className={`
+        group relative w-[380px] shrink-0 overflow-hidden rounded-[2rem]
+        bg-white text-left ring-1 transition duration-500
+        ease-[cubic-bezier(0.22,1,0.36,1)]
+        hover:-translate-y-2 hover:ring-sky-200
+        hover:shadow-[0_30px_90px_rgba(14,165,233,0.18)]
+        focus-visible:outline-none focus-visible:ring-2
+        focus-visible:ring-sky-500 focus-visible:ring-offset-2
+        focus-visible:ring-offset-white active:scale-[0.99]
+        motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100
+        ${
+          active
+            ? "ring-sky-300/70 shadow-[0_28px_80px_rgba(14,165,233,0.16)]"
+            : "ring-slate-200/70 shadow-[0_18px_55px_rgba(15,23,42,0.07)]"
+        }
+      `}
+    >
+      <div className="relative overflow-hidden">
+        <img
+          src={service.image}
+          alt=""
+          loading={index < 3 ? "eager" : "lazy"}
+          className="
+            h-60 w-full object-cover grayscale-[5%]
+            transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
+            group-hover:scale-[1.045] group-hover:grayscale-0
+            motion-reduce:transition-none motion-reduce:group-hover:scale-100
+          "
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/5 to-transparent" />
+
+        <span className="absolute bottom-4 left-5 rounded-full bg-white/15 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-md ring-1 ring-white/20">
+          From {service.startingPrice}
+        </span>
+      </div>
+
+      <div className="p-6">
+        <div
+          className="mb-4 h-[2px] bg-sky-400 transition-all duration-300 group-hover:w-14"
+          style={{ width: active ? 56 : 32 }}
+        />
+
+        <h3 className="font-[family-name:var(--font-cormorant)] text-[1.85rem] font-semibold leading-[0.98] tracking-[-0.05em] text-slate-950">
+          {service.title}
+        </h3>
+
+        <p className="mt-3 line-clamp-2 text-[14px] leading-7 text-slate-600">
+          {service.subtitle}
+        </p>
+
+        <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Details
+          </span>
+
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-950 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition duration-300 group-hover:bg-sky-500">
+            View
+            <IconArrowUpRight />
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function ServiceModal({
+  service,
+  onClose,
+}: {
+  service: Service;
+  onClose: () => void;
+}) {
   useEffect(() => {
-    if (!selectedService) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     return () => {
       document.body.style.overflow = prev;
     };
-  }, [selectedService]);
+  }, []);
 
   useEffect(() => {
-    if (!selectedService) return;
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedService(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
     };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [selectedService]);
 
-  const modal =
-    portalReady &&
-    selectedService &&
-    createPortal(
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      className="
+        fixed inset-0 z-[90] flex min-h-dvh items-end justify-center
+        bg-slate-950/60 p-0 backdrop-blur-md sm:items-center sm:p-6
+      "
+      style={{
+        paddingTop: "max(0.75rem, env(safe-area-inset-top))",
+        paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="service-modal-title"
+      onClick={onClose}
+    >
       <div
-        className="fixed inset-0 z-[90] flex min-h-dvh items-end justify-center bg-[#1A1A1A]/55 p-0 backdrop-blur-[6px] sm:items-center sm:p-4 md:p-6"
-        style={{
-          paddingTop: "max(0.75rem, env(safe-area-inset-top))",
-          paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
-          paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
-          paddingRight: "max(0.75rem, env(safe-area-inset-right))",
-        }}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="carousel-service-modal-title"
-        onClick={() => setSelectedService(null)}
+        className="
+          relative flex max-h-[90dvh] w-full max-w-[580px]
+          flex-col overflow-hidden rounded-t-[2rem] bg-white
+          shadow-[0_-24px_90px_rgba(15,23,42,0.24)]
+          ring-1 ring-white/70 sm:rounded-[2rem]
+        "
+        onClick={(e) => e.stopPropagation()}
       >
-        <div
-          className="relative flex max-h-[calc(100dvh-1rem)] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-stone-200/90 bg-white shadow-[0_-24px_80px_rgba(0,0,0,0.18)] sm:max-h-[min(92dvh,44rem)] sm:rounded-sm sm:shadow-2xl"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <button
-            type="button"
-            onClick={() => setSelectedService(null)}
-            className="absolute right-3 top-3 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-white/95 text-2xl font-light leading-none text-[#1A1A1A] shadow-md ring-1 ring-stone-200/80 transition hover:bg-[#1A1A1A] hover:text-white hover:ring-0 sm:right-4 sm:top-4 sm:min-h-10 sm:min-w-10 sm:text-xl"
-            aria-label="Close modal"
-          >
-            ×
-          </button>
+        <div className="relative h-[235px] shrink-0 overflow-hidden sm:h-[285px]">
+          <img
+            src={service.image}
+            alt=""
+            className="h-full w-full object-cover"
+          />
 
-          <div className="relative h-44 w-full shrink-0 overflow-hidden sm:h-56 md:h-64 lg:h-[19rem]">
-            <img
-              src={selectedService.image}
-              alt=""
-              sizes="(max-width:640px) 100vw, 42rem"
-              className="h-full w-full object-cover grayscale-[8%]"
-            />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A]/85 via-[#1A1A1A]/28 to-transparent" />
-
-            <div className="absolute bottom-4 left-4 right-16 sm:bottom-6 sm:left-6 sm:right-20">
-              <p className="mb-2 text-[9px] font-bold uppercase tracking-[0.28em] text-stone-200 sm:mb-3 sm:tracking-[0.25em]">
-                Starting at {selectedService.startingPrice}
-              </p>
-
-              <h3
-                id="carousel-service-modal-title"
-                className="font-serif text-2xl leading-[1.05] tracking-tight text-white sm:text-3xl md:text-4xl"
-              >
-                {selectedService.title}
-              </h3>
-            </div>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 md:p-8">
-            <p className="text-[15px] font-light leading-relaxed text-stone-600 sm:text-base">
-              {selectedService.subtitle}
+          <div className="absolute bottom-6 left-6 right-16 sm:bottom-8 sm:left-8">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-200">
+              Starting at {service.startingPrice}
             </p>
 
-            <div className="mt-5 border border-stone-100 bg-[#FCFAF8]/90 p-4 sm:mt-6 sm:p-5">
-              <h4 className="mb-3 text-[10px] font-semibold uppercase tracking-[0.25em] text-stone-400 sm:mb-4">
-                Service Includes
-              </h4>
+            <h2
+              id="service-modal-title"
+              className="
+                font-[family-name:var(--font-cormorant)]
+                text-[clamp(2.25rem,6vw,3.35rem)]
+                font-semibold leading-[0.9]
+                tracking-[-0.055em] text-white
+              "
+            >
+              {service.title}
+            </h2>
+          </div>
 
-              <ul className="space-y-2.5 sm:space-y-3">
-                {selectedService.details.map((detail) => (
-                  <li
-                    key={detail}
-                    className="flex gap-3 text-[13px] font-light leading-relaxed text-stone-600 sm:text-sm"
-                  >
-                    <span className="mt-[0.4rem] h-1.5 w-1.5 shrink-0 rounded-full bg-stone-400 sm:mt-1.5" />
-                    <span>{detail}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="
+              absolute right-4 top-4 grid h-10 w-10 place-items-center
+              rounded-full bg-white/95 text-slate-950 shadow-lg
+              ring-1 ring-white/60 backdrop-blur-sm transition
+              hover:bg-slate-950 hover:text-white
+            "
+          >
+            <IconClose />
+          </button>
+        </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row sm:gap-3">
-              <button
-                type="button"
-                className="group/req relative min-h-[48px] w-full overflow-hidden bg-[#1A1A1A] px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white transition-shadow active:bg-stone-800 hover:shadow-[0_12px_40px_rgba(0,0,0,0.15)] sm:min-h-0 sm:flex-1 sm:px-5 sm:py-4 sm:text-xs sm:tracking-[0.25em]"
-              >
-                <span className="relative z-10">Request This Service</span>
-                <div className="absolute inset-0 translate-y-full bg-stone-700 transition-transform duration-300 motion-safe:group-hover/req:translate-y-0" />
-              </button>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 sm:p-8">
+          <p className="text-[15px] leading-7 text-slate-600">
+            {service.subtitle}
+          </p>
 
-              <button
-                type="button"
-                onClick={() => setSelectedService(null)}
-                className="min-h-[48px] w-full border border-stone-200 bg-white px-4 py-3.5 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1A1A1A] transition hover:bg-stone-50 active:bg-stone-100 sm:min-h-0 sm:flex-1 sm:px-5 sm:py-4 sm:text-xs sm:tracking-[0.2em]"
-              >
-                Keep Browsing
-              </button>
-            </div>
+          <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5 ring-1 ring-slate-100 sm:p-6">
+            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
+              Service Includes
+            </p>
+
+            <ul className="flex flex-col gap-3">
+              {service.details.map((detail) => (
+                <li
+                  key={detail}
+                  className="flex gap-3 text-sm leading-7 text-slate-600"
+                >
+                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
+                  <span>{detail}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              className="
+                min-h-[48px] flex-1 rounded-full bg-sky-500
+                px-5 text-[10px] font-semibold uppercase tracking-[0.16em]
+                text-white shadow-[0_10px_30px_rgba(14,165,233,0.25)]
+                transition hover:bg-slate-950
+              "
+            >
+              Request This Service
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="
+                min-h-[48px] flex-1 rounded-full border border-slate-200
+                px-5 text-[10px] font-semibold uppercase tracking-[0.14em]
+                text-slate-600 transition hover:border-slate-950 hover:text-slate-950
+              "
+            >
+              Keep Browsing
+            </button>
           </div>
         </div>
-      </div>,
-      document.body
-    );
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+export default function ServiceCarousel() {
+  const [selected, setSelected] = useState<Service | null>(null);
+  const [portalReady, setPortalReady] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+
+  const activeRef = useRef(activeIndex);
+  const playingRef = useRef(isPlaying);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dotKey = useRef(0);
+
+  useEffect(() => {
+    setPortalReady(true);
+  }, []);
+
+  useEffect(() => {
+    activeRef.current = activeIndex;
+  }, [activeIndex]);
+
+  useEffect(() => {
+    playingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  const scrollTo = useCallback((index: number) => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    track.scrollTo({
+      left: index * STRIDE,
+      behavior: "smooth",
+    });
+  }, []);
+
+  const goTo = useCallback(
+    (raw: number, userInitiated = false) => {
+      const index = ((raw % COUNT) + COUNT) % COUNT;
+
+      setActiveIndex(index);
+      activeRef.current = index;
+      dotKey.current += 1;
+      scrollTo(index);
+
+      if (userInitiated) {
+        setIsPlaying(false);
+        playingRef.current = false;
+
+        if (resumeTimer.current) clearTimeout(resumeTimer.current);
+
+        resumeTimer.current = setTimeout(() => {
+          setIsPlaying(true);
+          playingRef.current = true;
+        }, RESUME_AFTER);
+      }
+    },
+    [scrollTo]
+  );
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (!playingRef.current) return;
+      goTo(activeRef.current + 1);
+    }, AUTO_DELAY);
+
+    return () => clearInterval(id);
+  }, [goTo]);
+
+  useEffect(() => {
+    setIsPlaying(!selected);
+  }, [selected]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    const onScroll = () => {
+      const idx = Math.round(track.scrollLeft / STRIDE);
+      const clamped = Math.max(0, Math.min(COUNT - 1, idx));
+
+      if (clamped !== activeRef.current) {
+        setActiveIndex(clamped);
+        activeRef.current = clamped;
+        dotKey.current += 1;
+      }
+    };
+
+    track.addEventListener("scroll", onScroll, { passive: true });
+    return () => track.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (resumeTimer.current) clearTimeout(resumeTimer.current);
+    };
+  }, []);
 
   return (
-    <section className="relative overflow-hidden bg-[#FCFAF8] px-4 py-14 sm:px-6 sm:py-20 lg:px-16 lg:py-24">
-      <div className="pointer-events-none absolute left-1/2 top-0 -z-10 h-64 w-64 -translate-x-1/2 rounded-full bg-stone-200/35 blur-3xl sm:h-80 sm:w-80 sm:bg-stone-200/40" />
+    <section className="relative w-screen overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
+  
+      <div className="relative w-full">
+        <header className="mx-auto mb-16 max-w-4xl px-6 text-center">
+          {/* <div className="mb-5 flex items-center justify-center gap-3">
+            <span className="h-px w-6 bg-sky-400/60" />
+            <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-sky-500">
+              Saskia Cleaning Services
+            </span>
+            <span className="h-px w-6 bg-sky-400/60" />
+          </div> */}
 
-      <div className="relative mx-auto max-w-7xl">
-        <header className="mx-auto mb-10 max-w-3xl text-center sm:mb-14 lg:mb-16 lg:max-w-4xl">
-          <span className="mb-4 block text-[9px] font-semibold uppercase tracking-[0.32em] text-stone-400 sm:mb-5 sm:text-[10px] sm:tracking-[0.35em]">
-            Intelligent Cleaning Network
-          </span>
-          <h2 className="font-serif text-[1.65rem] leading-[1.08] tracking-tight text-[#1A1A1A] sm:text-4xl md:text-5xl lg:text-6xl">
-            Elevated cleaning for modern living
+          <h2 className="font-['Poppins', sans-serif] text-[clamp(2.8rem,3.5vw,5rem)]  leading-[0.9] tracking-[-0.04em] text-slate-950">
+            Elevated cleaning for{" "}
+            <em className="font-light italic text-slate-400">
+              modern living
+            </em>
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-[15px] font-light leading-relaxed text-stone-500 sm:mt-5 sm:text-lg md:text-xl">
+
+          <p className="mx-auto mt-6 max-w-xl text-[15px] font-light leading-[1.75] text-slate-500 sm:text-base">
             Seamless cleaning, laundry, and property care — precise, reliable,
             and tailored to your space.
           </p>
         </header>
 
-        <div className="relative -mx-1 overflow-hidden sm:mx-0">
-          <div className="pointer-events-none absolute left-0 top-0 z-20 h-full w-10 bg-gradient-to-r from-[#FCFAF8] to-transparent sm:w-16 md:w-24 lg:w-32" />
-          <div className="pointer-events-none absolute right-0 top-0 z-20 h-full w-10 bg-gradient-to-l from-[#FCFAF8] to-transparent sm:w-16 md:w-24 lg:w-32" />
-
-          <div className="flex w-max animate-service-scroll gap-4 motion-reduce:animate-none sm:gap-5 md:gap-6 lg:gap-8">
-            {repeatedItems.map((item, index) => (
-              <button
-                key={`${item.title}-${index}`}
-                type="button"
-                onClick={() => setSelectedService(item)}
-                className="group relative w-[min(17.25rem,calc(100vw-2.25rem))] shrink-0 overflow-hidden rounded-sm border border-stone-200/70 bg-white text-left shadow-[0_12px_40px_rgba(0,0,0,0.05)] ring-[#1A1A1A]/0 transition duration-500 hover:-translate-y-1 hover:border-stone-300/90 hover:shadow-[0_22px_70px_rgba(0,0,0,0.09)] hover:ring-2 hover:ring-[#1A1A1A]/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1A1A1A]/25 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FCFAF8] active:scale-[0.992] sm:w-[18.75rem] md:w-[21rem] lg:w-[22.5rem] motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100"
-              >
-                <div className="relative aspect-[5/3] w-full overflow-hidden sm:h-52 md:h-56 lg:h-60 lg:aspect-auto">
-                  <img
-                    src={item.image}
-                    alt=""
-                    sizes="(max-width:640px) min(calc(100vw - 2.25rem), 276px), (max-width:768px) 300px, (max-width:1024px) 336px, 360px"
-                    className="h-full w-full object-cover grayscale-[10%] transition duration-700 ease-out group-hover:scale-[1.03] group-hover:grayscale-0 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
-                    loading="lazy"
-                  />
-
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#1A1A1A]/40 via-transparent to-transparent" />
-                </div>
-
-                <div className="p-4 sm:p-5 md:p-6">
-                  <div className="mb-3 h-px w-10 bg-stone-300 sm:mb-4 sm:w-12" />
-
-                  <h3 className="font-serif text-lg leading-snug tracking-tight text-[#1A1A1A] sm:text-xl">
-                    {item.title}
-                  </h3>
-
-                  <p className="mt-2 line-clamp-3 text-[13px] font-light leading-relaxed text-stone-600 sm:mt-3 sm:line-clamp-none sm:text-sm">
-                    {item.subtitle}
-                  </p>
-
-                  <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-stone-100 pt-4 sm:mt-6 sm:pt-5">
-                    <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-stone-400 sm:text-[10px] sm:tracking-[0.2em]">
-                      From {item.startingPrice}
-                    </span>
-
-                    <span className="inline-flex min-h-9 items-center border border-[#1A1A1A] bg-[#1A1A1A] px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-white transition group-hover:bg-stone-800 sm:text-[10px] sm:tracking-[0.2em]">
-                      View Details
-                    </span>
-                  </div>
-                </div>
-              </button>
+        <div className="relative w-full">
+       
+          <div
+            ref={trackRef}
+            onMouseEnter={() => setIsPlaying(false)}
+            onMouseLeave={() => {
+              if (!selected) setIsPlaying(true);
+            }}
+            className="
+              flex w-full gap-7 overflow-x-auto overscroll-x-contain
+              scroll-smooth py-8
+              [scroll-snap-type:x_mandatory]
+              [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+            "
+            style={{
+              paddingLeft: `max(2rem, calc((100vw - (${CARD_WIDTH * 3 + GAP * 2}px)) / 2))`,
+              paddingRight: `max(2rem, calc((100vw - (${CARD_WIDTH * 3 + GAP * 2}px)) / 2))`,
+            }}
+          >
+            {services.map((service, i) => (
+              <div key={service.title} className="[scroll-snap-align:center]">
+                <ServiceCard
+                  service={service}
+                  index={i}
+                  active={i === activeIndex}
+                  onClick={() => setSelected(service)}
+                />
+              </div>
             ))}
           </div>
         </div>
 
-        <p className="mx-auto mt-8 max-w-md px-2 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-stone-400 sm:mt-10 sm:max-w-none sm:text-[11px] sm:tracking-[0.2em]">
-          Select a service for details — marquee pauses on hover
-        </p>
+        <div className="mt-8 flex items-center justify-center gap-4 px-4">
+          <NavButton dir="left" onClick={() => goTo(activeIndex - 1, true)} />
 
-        <div
-          className="mt-6 flex flex-wrap items-center justify-center gap-2 px-2 sm:mt-8 sm:gap-2.5"
-          aria-hidden="true"
-        >
-          {carouselItems.map((item, index) => (
-            <span
-              key={item.title}
-              className={`h-2 rounded-full transition-all sm:h-2.5 ${
-                index === 0 ? "w-7 bg-[#1A1A1A] sm:w-8" : "w-2 bg-stone-300 sm:w-2.5"
-              }`}
-            />
-          ))}
+          <div
+            className="flex items-center gap-2.5"
+            role="tablist"
+            aria-label="Carousel navigation"
+          >
+            {services.map((s, i) => (
+              <ProgressDot
+                key={`${i}-${dotKey.current}`}
+                active={i === activeIndex}
+                isPlaying={isPlaying && i === activeIndex}
+                onClick={() => goTo(i, true)}
+                label={`Go to ${s.title}`}
+              />
+            ))}
+          </div>
+
+          <NavButton dir="right" onClick={() => goTo(activeIndex + 1, true)} />
         </div>
+
+        <p className="mt-5 text-center text-[9px] font-medium uppercase tracking-[0.2em] text-slate-300">
+          Auto-advancing · hover to pause
+        </p>
       </div>
 
-      {modal}
+      {portalReady && selected && (
+        <ServiceModal service={selected} onClose={() => setSelected(null)} />
+      )}
 
-      <style jsx>{`
-        @keyframes service-scroll {
-          from {
-            transform: translateX(0);
-          }
-          to {
-            transform: translateX(-50%);
-          }
-        }
-
-        .animate-service-scroll {
-          animation: service-scroll 36s linear infinite;
-        }
-
-        @media (hover: hover) {
-          .animate-service-scroll:hover {
-            animation-play-state: paused;
-          }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .animate-service-scroll {
-            animation: none;
-            transform: translateX(0);
-          }
+      <style>{`
+        @keyframes pill-fill {
+          from { clip-path: inset(0 100% 0 0 round 4px); }
+          to { clip-path: inset(0 0% 0 0 round 4px); }
         }
       `}</style>
     </section>
