@@ -125,9 +125,9 @@ export default function Hero() {
               text-zinc-950
             "
           >
-            A Clean Home
+            A Clean Home 
             <span className="mt-2 block italic text-green-950/65">
-              Changes Everything.
+              Changes Everything!
             </span>
           </h1>
 
