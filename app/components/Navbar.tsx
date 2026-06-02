@@ -61,47 +61,48 @@ export default function Navbar({
       >
         <nav
           aria-label="Main navigation"
-          className={`mx-auto flex max-w-7xl items-center justify-between border px-5 py-4 transition-all duration-500 ${
+          className={`mx-auto flex max-w-7xl items-center justify-between px-6 py-5 transition-all duration-500 ${
             isScrolled
-              ? "border-zinc-200 bg-white shadow-[0_20px_70px_rgba(0,0,0,0.06)] backdrop-blur-2xl"
-              : "border-transparent bg-transparent"
+              ? "rounded-2xl border border-slate-200 bg-white shadow-[0_20px_70px_rgba(0,0,0,0.06)] backdrop-blur-2xl"
+              : "bg-transparent"
           }`}
         >
-          <a href="#" className="flex items-center gap-3">
+          <a href="#" className="flex items-center gap-4">
             <div
               className="relative flex items-center"
-              style={{ height: "40px", width: "90px" }}
+              style={{ height: "42px", width: "92px" }}
             >
-            <img
-  src={isScrolled ? "/images/logoSaskia.png" : "/images/whitelogo.png"}
-  alt="Saskia Cleaning"
-  className="object-contain transition-all duration-300"
-  style={{
-    height: "60px",
-    width: "auto",
-    maxHeight: "60px",
-    maxWidth: "none",
-    position: "absolute",
-    top: "50%",
-    left: 0,
-    transform: "translateY(-50%)",
-    zIndex: 1,
-    pointerEvents: "none",
-  }}
-/>
+              <img
+                src={isScrolled ? "/images/logoSaskia.png" : "/images/whitelogo.png"}
+                alt="Saskia Cleaning"
+                className="object-contain transition-all duration-300"
+                style={{
+                  height: "62px",
+                  width: "auto",
+                  maxHeight: "62px",
+                  maxWidth: "none",
+                  position: "absolute",
+                  top: "50%",
+                  left: 0,
+                  transform: "translateY(-50%)",
+                  zIndex: 1,
+                  pointerEvents: "none",
+                }}
+              />
             </div>
 
-            <div className="leading-tight">
+            <div className="leading-none">
               <p
-                className={`font-serif text-lg tracking-[-0.02em] transition-colors duration-300 ${
-                  isScrolled ? "text-zinc-900" : "text-white"
+                className={`font-[family-name:var(--font-cormorant)] text-[1.65rem] font-semibold tracking-[-0.04em] transition-colors duration-300 ${
+                  isScrolled ? "text-slate-900" : "text-white"
                 }`}
               >
                 Saskia
               </p>
+
               <p
-                className={`text-[9px] font-semibold uppercase tracking-[0.35em] transition-colors duration-300 ${
-                  isScrolled ? "text-zinc-400" : "text-white/70"
+                className={`mt-1 text-[0.62rem] font-medium uppercase tracking-[0.38em] transition-colors duration-300 ${
+                  isScrolled ? "text-slate-500" : "text-white/70"
                 }`}
               >
                 Cleaning
@@ -114,16 +115,17 @@ export default function Navbar({
               <a
                 key={link.label}
                 href={link.href}
-                className={`group relative text-[10px] font-bold uppercase tracking-[0.22em] transition duration-300 ${
+                className={`group relative text-[11px] font-semibold uppercase tracking-[0.16em] transition duration-300 ${
                   isScrolled
-                    ? "text-zinc-500 hover:text-zinc-950"
+                    ? "text-slate-600 hover:text-slate-950"
                     : "text-white hover:text-white/80"
                 }`}
               >
                 {link.label}
+
                 <span
                   className={`absolute -bottom-2 left-0 h-px w-full origin-left scale-x-0 transition-transform duration-300 group-hover:scale-x-100 ${
-                    isScrolled ? "bg-zinc-950" : "bg-white"
+                    isScrolled ? "bg-slate-950" : "bg-white"
                   }`}
                 />
               </a>
@@ -132,11 +134,11 @@ export default function Navbar({
 
           <div className="hidden items-center gap-3 md:flex">
             <a
-              href="tel:+10000000000"
-              className={`hidden border px-5 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition xl:block ${
+              href="tel:+18573528554"
+              className={`hidden rounded-full border px-6 py-3 text-[11px] font-medium uppercase tracking-[0.14em] transition xl:block ${
                 isScrolled
-                  ? "border-zinc-200 text-zinc-500 hover:border-zinc-950 hover:text-zinc-950"
-                  : "border-white/50 text-white hover:border-white hover:bg-white hover:text-zinc-950"
+                  ? "border-slate-200 text-slate-600 hover:border-slate-950 hover:text-slate-950"
+                  : "border-white/40 text-white hover:border-white hover:bg-white hover:text-slate-950"
               }`}
             >
               Call Now
@@ -144,10 +146,10 @@ export default function Navbar({
 
             <a
               href="#quote"
-              className={`group flex items-center gap-2 border px-6 py-3 text-[10px] font-bold uppercase tracking-[0.18em] transition duration-300 ${
+              className={`group flex items-center gap-2 rounded-full border px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition duration-300 ${
                 isScrolled
-                  ? "border-zinc-950 bg-zinc-950 text-white hover:bg-white hover:text-zinc-950"
-                  : "border-white bg-white text-zinc-950 hover:bg-transparent hover:text-white"
+                  ? "border-slate-950 bg-slate-950 text-white hover:bg-white hover:text-slate-950"
+                  : "border-white bg-white text-slate-950 hover:bg-transparent hover:text-white"
               }`}
             >
               Request Quote
@@ -164,10 +166,10 @@ export default function Navbar({
             aria-label="Open navigation menu"
             aria-expanded={isOpen}
             aria-controls="mobile-sidenav"
-            className={`grid h-11 w-11 place-items-center border transition duration-300 lg:hidden ${
+            className={`grid h-11 w-11 place-items-center rounded-full border transition duration-300 lg:hidden ${
               isScrolled
-                ? "border-zinc-950 bg-zinc-950 text-white hover:bg-white hover:text-zinc-950"
-                : "border-white bg-white text-zinc-950 hover:bg-transparent hover:text-white"
+                ? "border-slate-950 bg-slate-950 text-white hover:bg-white hover:text-slate-950"
+                : "border-white bg-white text-slate-950 hover:bg-transparent hover:text-white"
             }`}
           >
             <Menu size={20} />
@@ -179,25 +181,26 @@ export default function Navbar({
         <>
           <div
             onClick={() => setIsOpen(false)}
-            className={`fixed inset-0 z-[60] bg-zinc-950/50 backdrop-blur-sm transition-all duration-500 lg:hidden ${
+            className={`fixed inset-0 z-[60] bg-slate-950/50 backdrop-blur-sm transition-all duration-500 lg:hidden ${
               isOpen ? "visible opacity-100" : "invisible opacity-0"
             }`}
           />
 
           <aside
             id="mobile-sidenav"
-            className={`fixed right-0 top-0 z-[70] h-dvh w-[88%] max-w-[440px] border-l border-zinc-200 bg-[#fbfaf8] shadow-[-40px_0_100px_rgba(0,0,0,0.22)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden ${
+            className={`fixed right-0 top-0 z-[70] h-dvh w-[88%] max-w-[440px] bg-white shadow-[-40px_0_100px_rgba(0,0,0,0.18)] transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] lg:hidden ${
               isOpen ? "translate-x-0" : "translate-x-full"
             }`}
             aria-hidden={!isOpen}
           >
             <div className="flex h-full flex-col">
-              <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-6">
+              <div className="flex items-center justify-between border-b border-slate-100 px-6 py-6">
                 <div>
-                  <p className="font-serif text-3xl tracking-[-0.04em] text-zinc-950">
+                  <p className="font-[family-name:var(--font-cormorant)] text-4xl font-semibold tracking-[-0.05em] text-slate-950">
                     Saskia
                   </p>
-                  <p className="mt-2 text-[9px] font-bold uppercase tracking-[0.42em] text-zinc-400">
+
+                  <p className="mt-2 text-[0.65rem] font-medium uppercase tracking-[0.4em] text-slate-400">
                     Cleaning
                   </p>
                 </div>
@@ -206,7 +209,7 @@ export default function Navbar({
                   type="button"
                   onClick={() => setIsOpen(false)}
                   aria-label="Close navigation menu"
-                  className="grid h-11 w-11 place-items-center border border-zinc-300 text-zinc-950 transition duration-300 hover:border-zinc-950 hover:bg-zinc-950 hover:text-white"
+                  className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 text-slate-950 transition duration-300 hover:border-slate-950 hover:bg-slate-950 hover:text-white"
                 >
                   <X size={20} />
                 </button>
@@ -219,10 +222,10 @@ export default function Navbar({
                       key={link.label}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
-                      className="group flex items-center justify-between border-b border-zinc-200 py-5 text-[13px] font-bold uppercase tracking-[0.22em] text-zinc-600 transition duration-300 hover:border-zinc-950 hover:text-zinc-950"
+                      className="group flex items-center justify-between border-b border-slate-100 py-5 text-[13px] font-semibold uppercase tracking-[0.18em] text-slate-600 transition duration-300 hover:border-slate-950 hover:text-slate-950"
                     >
                       <span className="flex items-center">
-                        <span className="mr-5 text-[10px] font-bold text-zinc-300">
+                        <span className="mr-5 text-[10px] font-semibold text-slate-300">
                           0{index + 1}
                         </span>
                         {link.label}
@@ -237,10 +240,10 @@ export default function Navbar({
                 </nav>
 
                 <div>
-                  <div className="mb-6 border-l border-zinc-950 pl-4">
-                    <p className="text-xs leading-6 text-zinc-500">
+                  <div className="mb-6 border-l border-slate-950 pl-4">
+                    <p className="text-sm leading-6 text-slate-500">
                       Premium residential and commercial cleaning delivered with
-                      precision, discretion, and uncompromising standards.
+                      care, consistency, and uncompromising attention to detail.
                     </p>
                   </div>
 
@@ -248,7 +251,7 @@ export default function Navbar({
                     <a
                       href="#quote"
                       onClick={() => setIsOpen(false)}
-                      className="group flex items-center justify-center gap-2 border border-zinc-950 bg-zinc-950 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-white transition duration-300 hover:bg-transparent hover:text-zinc-950"
+                      className="group flex items-center justify-center gap-2 rounded-full border border-slate-950 bg-slate-950 px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition duration-300 hover:bg-transparent hover:text-slate-950"
                     >
                       Request Quote
                       <ArrowUpRight
@@ -258,15 +261,15 @@ export default function Navbar({
                     </a>
 
                     <a
-                      href="tel:+10000000000"
+                      href="tel:+18573528554"
                       onClick={() => setIsOpen(false)}
-                      className="flex items-center justify-center border border-zinc-300 px-6 py-4 text-[11px] font-bold uppercase tracking-[0.18em] text-zinc-600 transition duration-300 hover:border-zinc-950 hover:text-zinc-950"
+                      className="flex items-center justify-center rounded-full border border-slate-200 px-6 py-4 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-600 transition duration-300 hover:border-slate-950 hover:text-slate-950"
                     >
                       Call Now
                     </a>
                   </div>
 
-                  <p className="mt-8 text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-300">
+                  <p className="mt-8 text-[10px] font-medium uppercase tracking-[0.28em] text-slate-300">
                     Saskia Cleaning © 2026
                   </p>
                 </div>

@@ -48,7 +48,7 @@ export default function InfoBar() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.15, // Time gap between each card's entrance animation
+        staggerChildren: prefersReducedMotion ? 0 : 0.15, // Time gap between each card's entrance animation
       },
     },
   };
@@ -74,36 +74,25 @@ export default function InfoBar() {
   return (
     <section
       aria-label="Contact Information"
-      className="relative overflow-hidden bg-white py-20"
+      className="relative overflow-hidden bg-white py-20 "
     >
-      {/* subtle background glow */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(37,99,235,0.06),transparent_60%)]"
-      />
+  
 
-      {/* subtle texture */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage:
-            "radial-gradient(rgb(15 23 42) 0.8px, transparent 0.8px)",
-          backgroundSize: "6px 6px",
-        }}
-      />
+    
 
       {/* This wrapper hooks into the scroll viewport. 
-        It triggers children staggering as soon as 15% of the section is visible.
+        It resets and staggers the children EVERY time it enters from the top or bottom screen boundary.
       */}
       <motion.div 
         className="relative mx-auto grid max-w-7xl grid-cols-1 gap-6 px-6 md:grid-cols-3 lg:px-8"
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
+        // UPDATED VIEWPORT SETTINGS 👇
         viewport={{ 
-          once: true,      // Set to false if you want it to re-animate every single time you scroll up/down
-          amount: 0.15     // Triggers when 15% of the element enters the viewport
+          once: false,      // Allows multi-directional animations (up & down)
+          amount: 0.15,     // Triggers when 15% of the element enters the viewport
+          margin: "-60px"   // Screen margin buffer preventing jittering near view cutoffs
         }}
       >
         {ITEMS.map((item) => (
@@ -128,9 +117,9 @@ function InfoItem({ icon, title, lines, href, prefersReducedMotion }: InfoItemDa
       whileHover={prefersReducedMotion ? {} : "hover"}
       className="
         group relative h-full overflow-hidden
-        rounded-3xl border border-slate-200
+        rounded-3xl 
         bg-white/90 p-8
-        shadow-[0_10px_40px_rgba(15,23,42,0.06)]
+    
         backdrop-blur-sm
         cursor-pointer
       "
