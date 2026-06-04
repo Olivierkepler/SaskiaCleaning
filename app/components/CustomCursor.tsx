@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const INTERACTIVE_SELECTOR =
-  "button, a, input, textarea, select, label, summary, [role='button'], [tabindex]:not([tabindex='-1'])";
+  "button, a, input, textarea, select, label, summary, [role='button'], [tabindex]:not([tabindex='-1']), [data-cursor-pointer]";
 
 export default function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);

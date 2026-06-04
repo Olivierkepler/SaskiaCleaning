@@ -262,7 +262,7 @@ function SF({
   last?: boolean; active?: boolean; onClick?: () => void; placeholder?: boolean;
 }) {
   return (
-    <div
+    <div  data-cursor-pointer="pointer"
       onClick={onClick}
       style={{
         flex, display: "flex", alignItems: "center", alignSelf: "stretch", gap: 14,
@@ -285,11 +285,11 @@ function SF({
         }}
         aria-hidden="true"
       />
-      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 1, minWidth: 0 }}>
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 1, minWidth: 0, }}>
         <span style={{ fontSize: 11, fontWeight: 900, color: active ? K.blue : K.hint, textTransform: "uppercase", letterSpacing: "0.14em", lineHeight: 1, display: "block" }}>
           {label}
         </span>
-        <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", color: placeholder ? K.hint : K.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1, display: "block" }}>
+        <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", color: placeholder ? K.text : K.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1, display: "block" }}>
           {value}
         </span>
       </div>
@@ -418,19 +418,30 @@ const sec:        React.CSSProperties = { fontSize: 10, fontWeight: 800, color: 
 const chipsRow:   React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 6 };
 
 // ── Service panels ─────────────────────────────────────────────────────────────
-function StandardPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => void }) {
+function StandardPanel({
+    onPrice,
+    frequency,
+    onFrequencyChange,
+  }: {
+    onPrice: (p: ReturnType<typeof calc>) => void;
+    frequency: string;
+    onFrequencyChange: (frequency: string) => void;
+  }) {
   const [bedIdx,  setBedIdx]  = useState(2);
   const [bathIdx, setBathIdx] = useState(0);
-  const [freqIdx, setFreqIdx] = useState(1);
-  const [addons,  setAddons]  = useState<Set<number>>(new Set([1]));
-
-  const BEDS  = ["Studio","1 bed","2 bed","3 bed","4+ bed"];
   const FREQS = [
     { label: "One-time",  discount: 0  },
     { label: "Bi-weekly", discount: 10 },
     { label: "Weekly",    discount: 15 },
     { label: "Monthly",   discount: 5  },
   ];
+  const freqIdx = Math.max(
+    0,
+    FREQS.findIndex((item) => item.label === frequency)
+  );
+  const [addons,  setAddons]  = useState<Set<number>>(new Set([1]));
+
+  const BEDS  = ["Studio","1 bed","2 bed","3 bed","4+ bed"];
   const ADDONS = [
     { label: "Inside fridge", price: 15 },
     { label: "Inside oven",   price: 20 },
@@ -444,13 +455,20 @@ function StandardPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => v
   useEffect(() => {
     const b = BED_BASE[bedIdx] + (BATH_VALS[bathIdx] - 1) * 18 + addonTotal;
     onPrice(calc(Math.round(b * (1 - FREQS[freqIdx].discount / 100))));
-  }, [bedIdx, bathIdx, freqIdx, addonTotal]);
+  }, [bedIdx, bathIdx, freqIdx, addonTotal, onPrice]);
 
   return (
     <div style={twoCol}>
       <div><p style={sec}>Bedrooms</p><div style={chipsRow}>{BEDS.map((b, i) => <Chip key={b} label={b} selected={bedIdx === i} onClick={() => setBedIdx(i)} />)}</div></div>
       <div><p style={sec}>Bathrooms</p><div style={chipsRow}>{[1, 1.5, 2, 2.5, 3].map((b, i) => <Chip key={b} label={String(b)} selected={bathIdx === i} onClick={() => setBathIdx(i)} />)}</div></div>
-      <div><p style={sec}>Frequency</p><div style={chipsRow}>{FREQS.map((f, i) => <Chip key={f.label} label={f.label} selected={freqIdx === i} onClick={() => setFreqIdx(i)} />)}</div></div>
+      <div><p style={sec}>Frequency</p><div style={chipsRow}>{FREQS.map((f, i) => 
+        
+        <Chip
+        key={f.label}
+        label={f.label}
+        selected={frequency === f.label}
+        onClick={() => onFrequencyChange(f.label)}
+      />)}</div></div>
       <div><p style={sec}>Add-ons</p><div style={addonsGrid}>{ADDONS.map((a, i) => <Addon key={a.label} label={a.label} selected={addons.has(i)} onClick={() => toggle(i)} />)}</div></div>
     </div>
   );
@@ -565,7 +583,56 @@ const SERVICES = [
   { icon: "ti-box",      label: "Move-out",   image: "/images/Designer(6).png",    headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,        bookLabel: "Book move-out clean" },
   { icon: "ti-building", label: "Commercial", image: "/images/Designer(7).png",  headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,      bookLabel: "Get a quote"         },
 ];
-
+function FrequencyDropdown({
+    open,
+    selected,
+    onSelect,
+  }: {
+    open: boolean;
+    selected: string;
+    onSelect: (frequency: string) => void;
+  }) {
+    const options = ["One-time", "Weekly", "Bi-weekly", "Monthly"];
+  
+    return (
+      <Dropdown open={open} minWidth={220}>
+        <div style={{ padding: 6 }}>
+          {options.map((option) => {
+            const active = option === selected;
+  
+            return (
+              <button
+                key={option}
+                type="button"
+                onClick={() => onSelect(option)}
+                style={{
+                  width: "100%",
+                  padding: "11px 12px",
+                  border: "none",
+                  borderRadius: 8,
+                  background: active ? K.blueLight : "transparent",
+                  color: active ? K.blue : K.text,
+                  cursor: "pointer",
+                  textAlign: "left",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  transition: "background .12s",
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) e.currentTarget.style.background = K.blueFaint;
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) e.currentTarget.style.background = "transparent";
+                }}
+              >
+                {option}
+              </button>
+            );
+          })}
+        </div>
+      </Dropdown>
+    );
+  }
 // ── Root ──────────────────────────────────────────────────────────────────────
 export default function CleaningEstimator() {
   const [serviceIdx, setServiceIdx] = useState(0);
@@ -581,23 +648,66 @@ export default function CleaningEstimator() {
   const svc     = SERVICES[serviceIdx];
   const rootRef = useRef<HTMLElement>(null);
 
+  const [frequency, setFrequency] = useState("Bi-weekly");
+const [frequencyOpen, setFrequencyOpen] = useState(false);
+
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (!rootRef.current?.contains(e.target as Node)) {
-        setLocOpen(false); setDateOpen(false);
+        setLocOpen(false);
+        setDateOpen(false);
+        setFrequencyOpen(false);   
       }
     }
     document.addEventListener("mousedown", handle);
     return () => document.removeEventListener("mousedown", handle);
   }, []);
 
-  function handleLocField()  { setDateOpen(false); setLocOpen(v => !v); }
-  function handleDateField() { setLocOpen(false);  setDateOpen(v => !v); }
-  function handleCitySelect(city: string, state: StateKey) { setLocCity(city); setLocState(state); setLocOpen(false); }
-  function handleDateSelect(d: Date) { setDate(d); setDateOpen(false); }
+  function handleLocField() {
+    setDateOpen(false);
+    setFrequencyOpen(false);
+    setLocOpen((value) => !value);
+  }
+  function handleDateField() {
+    setLocOpen(false);
+    setFrequencyOpen(false);
+    setDateOpen((value) => !value);
+  }
+  function handleCitySelect(city: string, state: StateKey) {
+    setLocCity(city);
+    setLocState(state);
+    setLocOpen(false);
+    setDateOpen(false);
+    setFrequencyOpen(false);
+  }
+  
+  
+  function handleDateSelect(d: Date) {
+    setDate(d);
+    setLocOpen(false);
+    setDateOpen(false);
+    setFrequencyOpen(false);
+  }
 
+
+function handleFrequencyField() {
+    setLocOpen(false);
+    setDateOpen(false);
+    setFrequencyOpen((value) => !value);
+  }
+  function handleFrequencySelect(value: string) {
+    setFrequency(value);
+    setLocOpen(false);
+    setDateOpen(false);
+    setFrequencyOpen(false);
+  }
   const panels = [
-    <StandardPanel   key="std"  onPrice={setPrices} />,
+    <StandardPanel
+    key="std"
+    onPrice={setPrices}
+    frequency={frequency}
+    onFrequencyChange={setFrequency}
+  /> ,
     <DeepCleanPanel  key="deep" onPrice={setPrices} />,
     <MoveOutPanel    key="mo"   onPrice={setPrices} />,
     <CommercialPanel key="com"  onPrice={setPrices} />,
@@ -766,8 +876,24 @@ export default function CleaningEstimator() {
                 <CalendarDropdown open={dateOpen} selected={date} onSelect={handleDateSelect} />
               </div>
   
-              <SF icon={svc.icon} label="Service" value={svc.label} flex={1.1} />
-              <SF icon="ti-repeat" label="Frequency" value="Bi-weekly" flex={1} last />
+              {/* <SF icon={svc.icon} label="Service" value={svc.label} flex={1.1} /> */}
+              <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "stretch" }}>
+  <SF
+    icon="ti-repeat"
+    label="Frequency"
+    value={frequency}
+    active={frequencyOpen}
+    onClick={handleFrequencyField}
+    flex={1}
+    last
+  />
+
+  <FrequencyDropdown
+    open={frequencyOpen}
+    selected={frequency}
+    onSelect={handleFrequencySelect}
+  />
+</div>
             </div>
   
             {/* Active Panel */}
