@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import SocialCorner from "./components/SocialCorner";
+import WhatsAppFloat from "./components/WhatsAppFloat";
 import "./globals.css";
 
   {/* import Navbar from './components/Navbar'; */}
@@ -38,6 +39,7 @@ export default function RootLayout({
         {children}
         <Footer/>
         {/* <SocialCorner/> */}
+        <WhatsAppFloat/>
         </body>
     </html>
   );
