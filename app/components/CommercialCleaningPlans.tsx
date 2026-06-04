@@ -8,6 +8,7 @@ import {
   Wind,
   type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 
 type Plan = {
   id: string;
@@ -16,6 +17,7 @@ type Plan = {
   icon: LucideIcon;
   featured?: boolean;
   ctaLabel?: string;
+  imageSrc?: string;
 };
 
 type CommercialCleaningPlansProps = {
@@ -33,6 +35,7 @@ const DEFAULT_PLANS: Plan[] = [
     id: "basic",
     name: "Basic",
     icon: Wind,
+    imageSrc: "/images/Designer(1).png",
     description:
       "Essential care for smaller spaces, high-traffic areas, restrooms, and shared environments.",
     ctaLabel: "Get A Quote",
@@ -42,6 +45,7 @@ const DEFAULT_PLANS: Plan[] = [
     name: "Advance",
     icon: Sparkles,
     featured: true,
+    imageSrc: "/images/Designer(2).png",
     description:
       "Detailed sanitation, floor attention, surface care, and flexible scheduling for larger spaces.",
     ctaLabel: "Get A Quote",
@@ -50,6 +54,7 @@ const DEFAULT_PLANS: Plan[] = [
     id: "premium",
     name: "Premium",
     icon: Building2,
+    imageSrc: "/images/whitelogo2.png",
     description:
       "Complete facility care with polished standards, specialty services, and ongoing support.",
     ctaLabel: "Get A Quote",
@@ -61,7 +66,7 @@ const ease = [0.16, 1, 0.3, 1] as const;
 export default function CommercialCleaningPlans({
   title = "Commercial Cleaning Service Plans",
   description = [
-    "Choose the plan that best fits your company’s needs — from routine maintenance to complete facility care.",
+    "Choose the plan that best fits your company's needs — from routine maintenance to complete facility care.",
     "Every plan can be customized around your space, schedule, and cleaning priorities.",
   ],
   contactLabel = "Contact Us",
@@ -143,96 +148,71 @@ export default function CommercialCleaningPlans({
       <div aria-hidden="true" className="absolute inset-0 bg-slate-950/55" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8">
-      <motion.div
-  variants={fadeUpVariants}
-  className="
-    rounded-[1.75rem]
-    bg-white
-    px-5 py-6
-    sm:px-8 sm:py-7
-    shadow-[0_12px_40px_rgba(15,23,42,0.06)]
-    ring-1 ring-slate-200/50
-  "
->
-  <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-    
-    <div className="max-w-xl">
-      <h2
-        id="plans-heading"
-        className="
-          font-[family-name:var(--font-cormorant)]
-          text-[clamp(1.5rem,2vw,2.2rem)]
-          font-semibold
-          leading-[0.95]
-          tracking-[-0.03em]
-          text-slate-950
-        "
-      >
-        {title}
-      </h2>
+        <motion.div
+          variants={fadeUpVariants}
+          className="
+            rounded-[1.75rem]
+            bg-white
+            px-5 py-6
+            sm:px-8 sm:py-7
+            shadow-[0_12px_40px_rgba(15,23,42,0.06)]
+            ring-1 ring-slate-200/50
+          "
+        >
+          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+            <div className="max-w-xl">
+              <h2
+                id="plans-heading"
+                className="
+                  font-[family-name:var(--font-cormorant)]
+                  text-[clamp(1.5rem,2vw,2.2rem)]
+                  font-semibold
+                  leading-[0.95]
+                  tracking-[-0.03em]
+                  text-slate-950
+                "
+              >
+                {title}
+              </h2>
 
-      <div className="mt-3 space-y-1.5 text-sm leading-6 text-slate-600">
-        {description.map((line) => (
-          <p key={line}>{line}</p>
-        ))}
-      </div>
-    </div>
+              <div className="mt-3 space-y-1.5 text-sm leading-6 text-slate-600">
+                {description.map((line) => (
+                  <p key={line}>{line}</p>
+                ))}
+              </div>
+            </div>
 
-    <motion.button
-      type="button"
-      onClick={onContactClick}
-      whileHover={
-        prefersReducedMotion
-          ? undefined
-          : { y: -2 }
-      }
-      whileTap={
-        prefersReducedMotion
-          ? undefined
-          : { scale: 0.98 }
-      }
-      className="
-        inline-flex items-center gap-2
-        rounded-full
-        bg-sky-500
-        cursor-pointer
-        px-5 py-3
-        text-[11px]
-        font-medium
-        uppercase
-        tracking-[0.12em]
-        text-white
-        transition
-        hover:bg-sky-500
-      "
-    >
-      {contactLabel}
+            <motion.button
+              type="button"
+              onClick={onContactClick}
+              whileHover={prefersReducedMotion ? undefined : { y: -2 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+              className="
+                inline-flex items-center gap-2
+                rounded-full
+                bg-sky-500
+                cursor-pointer
+                px-5 py-3
+                text-[11px]
+                font-medium
+                uppercase
+                tracking-[0.12em]
+                text-white
+                transition
+                hover:bg-sky-600
+              "
+            >
+              {contactLabel}
+              <ArrowUpRight
+                size={12}
+                className="transition-transform duration-300 group-hover:translate-x-0.5"
+              />
+            </motion.button>
+          </div>
+        </motion.div>
 
-      <ArrowUpRight
-        size={12}
-        className="transition-transform duration-300 group-hover:translate-x-0.5"
-      />
-    </motion.button>
-  </div>
-</motion.div>
+        <br />
 
-<motion.h3
-  variants={fadeUpVariants}
-  className="
-    mt-16 text-center
-    font-[family-name:var(--font-cormorant)]
-    text-[clamp(2.5rem,4vw,4.5rem)]
-    font-medium
-    leading-[0.88]
-    tracking-[-0.05em]
-    text-white
-    sm:mt-20
-  "
->
- {/* Plans */}
-</motion.h3>
-
-<br />
         <motion.div
           variants={gridVariants}
           className="mt-10 grid grid-cols-1 gap-6 sm:mt-12 md:grid-cols-3 lg:gap-8"
@@ -319,6 +299,7 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
         "
       />
 
+      {/* Card header */}
       <div className={`${headerClasses} relative px-6 py-5 text-center`}>
         <h4
           className="
@@ -332,19 +313,28 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
         </h4>
       </div>
 
+      {/* Card body */}
       <div className="relative flex flex-1 flex-col items-center px-6 py-8 text-center sm:px-8 sm:py-10">
-        <motion.span
-          aria-hidden="true"
-          className="flex h-16 w-16 items-center justify-center rounded-full bg-sky-500/10"
-          whileHover={reduced ? undefined : { scale: 1.12, rotate: -8 }}
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 15,
-          }}
+
+        {/* Image or icon fallback */}
+        <motion.div
+          className="relative h-40 w-full overflow-hidden rounded-2xl"
+          whileHover={reduced ? undefined : { scale: 1.03 }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
-          <Icon className="h-8 w-8 text-sky-500" strokeWidth={1.75} />
-        </motion.span>
+          {plan.imageSrc ? (
+            <Image
+              src={plan.imageSrc}
+              alt={plan.name}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-sky-500/10">
+              <Icon className="h-8 w-8 text-sky-500" strokeWidth={1.75} />
+            </div>
+          )}
+        </motion.div>
 
         <p className="mt-5 flex-1 text-[15px] leading-7 tracking-[-0.01em] text-slate-600">
           {plan.description}
