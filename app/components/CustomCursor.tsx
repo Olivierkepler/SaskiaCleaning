@@ -5,9 +5,11 @@ import { useEffect, useRef, useState } from "react";
 export default function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isChatbotInteractiveRef = useRef(false);
 
   const [isMoving, setIsMoving] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [isChatbotInteractive, setIsChatbotInteractive] = useState(false);
 
   useEffect(() => {
     // Disable on touch devices
@@ -25,6 +27,17 @@ export default function CustomCursor() {
       rafId = requestAnimationFrame(() => {
         cursor.style.transform = `translate3d(${clientX}px, ${clientY}px, 0)`;
       });
+
+      if (e.target instanceof Element) {
+        const overChatbotInteractive = !!e.target.closest(
+          "[data-chatbot] button, [data-chatbot] a, [data-chatbot] [role='button']"
+        );
+
+        if (overChatbotInteractive !== isChatbotInteractiveRef.current) {
+          isChatbotInteractiveRef.current = overChatbotInteractive;
+          setIsChatbotInteractive(overChatbotInteractive);
+        }
+      }
 
       setVisible(true);
       setIsMoving(true);
@@ -70,14 +83,20 @@ export default function CustomCursor() {
         <div
           className="flex items-center justify-center transition-all duration-150"
           style={{
-            fontSize: isMoving ? "40px" : "36px",
-            filter: `
+            fontSize: isChatbotInteractive ? "44px" : isMoving ? "40px" : "36px",
+            transform: isChatbotInteractive ? "scale(1.12)" : "scale(1)",
+            filter: isChatbotInteractive
+              ? `
+              drop-shadow(0 6px 14px rgba(0,0,0,0.3))
+              drop-shadow(0 0 22px rgba(56,189,248,0.55))
+            `
+              : `
               drop-shadow(0 4px 10px rgba(0,0,0,0.25))
               drop-shadow(0 0 14px rgba(56,189,248,0.35))
             `,
           }}
         >
-          {isMoving ? "🫧" : "🧽"}
+          {isChatbotInteractive ? "👆" : isMoving ? "🫧" : "🧽"}
         </div>
       </div>
     </>

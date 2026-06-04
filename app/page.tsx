@@ -18,6 +18,7 @@ import CommercialCleaningPlans from "./components/CommercialCleaningPlans";
 import Navbar from "./components/Navbar";
 import Hero2 from "./components/Hero2";
 import SocialCorner from "./components/SocialCorner";
+import ChatBot from "./components/ChatBot";
 
 export default function Home() {
   const socialSectionRef = useRef<HTMLDivElement | null>(null);
@@ -30,7 +31,7 @@ export default function Home() {
   return (
     <main className="relative overflow-x-hidden bg-white">
       <Navbar />
-
+      <ChatBot />
       <Hero2 />
 
       <div ref={socialSectionRef} className="relative">
@@ -65,6 +66,7 @@ export default function Home() {
       <SectionWrapper>
         <Contact />
       </SectionWrapper>
+      
 
       <footer className="border-t border-stone-100 px-8 py-20">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row" />
