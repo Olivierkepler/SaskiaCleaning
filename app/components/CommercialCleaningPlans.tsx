@@ -54,7 +54,7 @@ const DEFAULT_PLANS: Plan[] = [
     id: "premium",
     name: "Premium",
     icon: Building2,
-    imageSrc: "/images/whitelogo2.png",
+    imageSrc: "/images/Designer(3).png",
     description:
       "Complete facility care with polished standards, specialty services, and ongoing support.",
     ctaLabel: "Get A Quote",
@@ -323,12 +323,20 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           {plan.imageSrc ? (
-            <Image
-              src={plan.imageSrc}
-              alt={plan.name}
-              fill
-              className="object-cover"
-            />
+            <div className="flex items-center justify-center w-full h-full">
+              <Image
+                src={plan.imageSrc}
+                alt={plan.name}
+                width={150}
+                height={150}
+                className="object-contain"
+                style={{
+                  maxWidth: "150px",
+                  maxHeight: "150px",
+                }}
+              />
+            </div>
+      
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-sky-500/10">
               <Icon className="h-8 w-8 text-sky-500" strokeWidth={1.75} />
