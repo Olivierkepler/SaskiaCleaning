@@ -6,10 +6,12 @@ export default function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isChatbotInteractiveRef = useRef(false);
+  const isOverNativeCursorRef = useRef(false);
 
   const [isMoving, setIsMoving] = useState(false);
   const [visible, setVisible] = useState(false);
   const [isChatbotInteractive, setIsChatbotInteractive] = useState(false);
+  const [isOverNativeCursor, setIsOverNativeCursor] = useState(false);
 
   useEffect(() => {
     // Disable on touch devices
@@ -29,6 +31,13 @@ export default function CustomCursor() {
       });
 
       if (e.target instanceof Element) {
+        const overNativeCursor = !!e.target.closest("[data-native-cursor]");
+
+        if (overNativeCursor !== isOverNativeCursorRef.current) {
+          isOverNativeCursorRef.current = overNativeCursor;
+          setIsOverNativeCursor(overNativeCursor);
+        }
+
         const overChatbotInteractive = !!e.target.closest(
           "[data-chatbot] button, [data-chatbot] a, [data-chatbot] [role='button']"
         );
@@ -70,14 +79,22 @@ export default function CustomCursor() {
         html, body, * {
           cursor: none !important;
         }
+        [data-native-cursor],
+        [data-native-cursor] * {
+          cursor: auto !important;
+        }
+        [data-native-cursor] a,
+        [data-native-cursor] button {
+          cursor: pointer !important;
+        }
       `}</style>
 
       <div
         ref={cursorRef}
-        className="fixed top-0 left-0 z-[99999] pointer-events-none select-none transition-opacity duration-200"
+        className="fixed top-0 left-0 z-[99999] pointer-events-none select-none"
         style={{
           transform: "translate3d(-100px, -100px, 0)",
-          opacity: visible ? 1 : 0,
+          opacity: visible && !isOverNativeCursor ? 1 : 0,
         }}
       >
         <div

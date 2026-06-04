@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Footer() {
   return (
     <footer className="relative overflow-hidden bg-white px-6 pt-40 pb-10 sm:px-8 lg:px-16 lg:pt-44">
@@ -100,24 +102,32 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="flex flex-col items-center justify-between gap-6 border-t border-slate-200 pt-8 md:flex-row">
-          
-          <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-slate-400">
-            © 2026 Saskia Cleaning Services
-          </p>
+      {/* Bottom */}
+<div className="flex flex-col items-center justify-between gap-6 border-t border-slate-200 pt-8 md:flex-row">
+  <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-slate-400">
+    © 2026 Saskia Cleaning Services
+  </p>
 
-          <div className="flex flex-wrap justify-center gap-6">
-            
-            {/* <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
-              Licensed & Insured
-            </span> */}
+  <div className="flex flex-wrap items-center justify-center gap-6">
+    <Link
+      href="/privacy-policy"
+      className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
+    >
+      Privacy Policy
+    </Link>
 
-            <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
-              Boston Area
-            </span>
+    <Link
+      href="/terms-and-conditions"
+      className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
+    >
+      Terms & Conditions
+    </Link>
 
-          </div>
-        </div>
+    <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
+      Boston Area
+    </span>
+  </div>
+</div>
       </div>
     </footer>
   );

@@ -19,6 +19,7 @@ import Navbar from "./components/Navbar";
 import Hero2 from "./components/Hero2";
 import SocialCorner from "./components/SocialCorner";
 import ChatBot from "./components/ChatBot";
+import CustomCursor from "./components/CustomCursor";
 
 export default function Home() {
   const socialSectionRef = useRef<HTMLDivElement | null>(null);
@@ -30,6 +31,7 @@ export default function Home() {
 
   return (
     <main className="relative overflow-x-hidden bg-white">
+      <CustomCursor />
       <Navbar />
       <ChatBot />
       <Hero2 />
