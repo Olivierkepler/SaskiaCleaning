@@ -719,14 +719,12 @@ function handleFrequencyField() {
   >
       <div
      
-        style={{
-          maxWidth: 1280,
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: "1.65fr 1fr",
-          gap: 28,
-          alignItems: "stretch",
-        }}
+     className="grid grid-cols-1 gap-7 lg:grid-cols-[1.65fr_1fr]"
+style={{
+  maxWidth: 1280,
+  margin: "0 auto",
+  alignItems: "stretch",
+}}
       >
         {/* Left Column */}
         <div style={{ minWidth: 0 }}>
@@ -985,19 +983,15 @@ function handleFrequencyField() {
   
         {/* Right Image Card */}
         <div
-          style={{
-            minHeight: 440,
-            background: K.white,
-            // border: `1px solid ${K.borderLight}`,
-            // borderRadius: 22,
-            overflow: "hidden",
-            position: "relative",
-            display: "flex",
-          
-            flexDirection: "column",
-            // boxShadow: "0 1px 2px rgba(12,26,46,.04), 0 20px 60px rgba(12,26,46,.08)",
-          }}
-        >
+  className="hidden lg:flex"
+  style={{
+    minHeight: 440,
+    background: K.white,
+    overflow: "hidden",
+    position: "relative",
+    flexDirection: "column",
+  }}
+>
           {/* <div style={{ padding: "32px 32px 24px" }}>
             <AnimatePresence mode="wait">
               <motion.div
