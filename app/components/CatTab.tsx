@@ -604,15 +604,18 @@ export default function CleaningEstimator() {
   ];
 
   return (
-    <section
-      id="quote"
-      ref={rootRef}
-      style={{
-        background: K.white,
-        // padding: "56px 24px 72px",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
+    <motion.section
+    id="quote"
+    ref={rootRef}
+    initial={{ opacity: 0, y: 70 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true, amount: 0.25 }}
+    transition={{ duration: 0.7, ease: "easeOut" }}
+    style={{
+      background: K.white,
+      fontFamily: "Inter, sans-serif",
+    }}
+  >
       <div
      
         style={{
@@ -953,6 +956,6 @@ export default function CleaningEstimator() {
           </div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
