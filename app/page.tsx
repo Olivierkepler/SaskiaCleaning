@@ -20,6 +20,7 @@ import Hero2 from "./components/Hero2";
 import SocialCorner from "./components/SocialCorner";
 import ChatBot from "./components/ChatBot";
 import CustomCursor from "./components/CustomCursor";
+import CatTab from "./components/CatTab";
 
 export default function Home() {
   const socialSectionRef = useRef<HTMLDivElement | null>(null);
@@ -39,7 +40,13 @@ export default function Home() {
       <div ref={socialSectionRef} className="relative">
         {showSocialCorner && <SocialCorner />}
 
-        <InfoBar />
+<div className="bg-white">
+  <CatTab />
+</div>
+
+
+
+        {/* <InfoBar /> */}
 
         <SectionWrapper>
           <AutoServiceCarousel />
