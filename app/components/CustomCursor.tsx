@@ -2,15 +2,18 @@
 
 import { useEffect, useRef, useState } from "react";
 
+const INTERACTIVE_SELECTOR =
+  "button, a, input, textarea, select, label, summary, [role='button'], [tabindex]:not([tabindex='-1'])";
+
 export default function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const isChatbotInteractiveRef = useRef(false);
+  const isInteractiveRef = useRef(false);
   const isOverNativeCursorRef = useRef(false);
 
   const [isMoving, setIsMoving] = useState(false);
   const [visible, setVisible] = useState(false);
-  const [isChatbotInteractive, setIsChatbotInteractive] = useState(false);
+  const [isInteractive, setIsInteractive] = useState(false);
   const [isOverNativeCursor, setIsOverNativeCursor] = useState(false);
 
   useEffect(() => {
@@ -38,13 +41,11 @@ export default function CustomCursor() {
           setIsOverNativeCursor(overNativeCursor);
         }
 
-        const overChatbotInteractive = !!e.target.closest(
-          "[data-chatbot] button, [data-chatbot] a, [data-chatbot] [role='button']"
-        );
+        const overInteractive = !!e.target.closest(INTERACTIVE_SELECTOR);
 
-        if (overChatbotInteractive !== isChatbotInteractiveRef.current) {
-          isChatbotInteractiveRef.current = overChatbotInteractive;
-          setIsChatbotInteractive(overChatbotInteractive);
+        if (overInteractive !== isInteractiveRef.current) {
+          isInteractiveRef.current = overInteractive;
+          setIsInteractive(overInteractive);
         }
       }
 
@@ -100,9 +101,9 @@ export default function CustomCursor() {
         <div
           className="flex items-center justify-center transition-all duration-150"
           style={{
-            fontSize: isChatbotInteractive ? "44px" : isMoving ? "40px" : "36px",
-            transform: isChatbotInteractive ? "scale(1.12)" : "scale(1)",
-            filter: isChatbotInteractive
+            fontSize: isInteractive ? "44px" : isMoving ? "40px" : "36px",
+            transform: isInteractive ? "scale(1.12)" : "scale(1)",
+            filter: isInteractive
               ? `
               drop-shadow(0 6px 14px rgba(0,0,0,0.3))
               drop-shadow(0 0 22px rgba(56,189,248,0.55))
@@ -113,7 +114,7 @@ export default function CustomCursor() {
             `,
           }}
         >
-          {isChatbotInteractive ? "👆" : isMoving ? "🫧" : "🧽"}
+          {isInteractive ? "👆" : isMoving ? "🫧" : "🧽"}
         </div>
       </div>
     </>

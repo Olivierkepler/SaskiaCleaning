@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="relative overflow-hidden bg-white px-6 pt-40 pb-10 sm:px-8 lg:px-16 lg:pt-44">
+    <footer data-native-cursor className="relative overflow-hidden bg-white px-6 pt-40 pb-10 sm:px-8 lg:px-16 lg:pt-44">
       
       {/* TOP CURVE */}
       <div className="absolute top-0 left-0 z-[2] w-full overflow-hidden leading-[0]">
