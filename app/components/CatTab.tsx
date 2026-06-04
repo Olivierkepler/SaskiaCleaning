@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { MASSACHUSETTS_LOCATIONS } from "@/app/data/massachusettsLocations";
+import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
 
 const K = {
   blue:         "#38BDF8",
@@ -25,29 +27,10 @@ const K = {
   green:        "#15803D",
   greenBg:      "#F0FDF4",
 };
-
 const LOCATIONS = {
-  MA: [
-    { city: "Boston",           sub: "Suffolk County"    },
-    { city: "Cambridge",        sub: "Middlesex County"  },
-    { city: "Somerville",       sub: "Middlesex County"  },
-    { city: "Brookline",        sub: "Norfolk County"    },
-    { city: "Newton",           sub: "Middlesex County"  },
-    { city: "Quincy",           sub: "Norfolk County"    },
-    { city: "Worcester",        sub: "Worcester County"  },
-    { city: "Springfield",      sub: "Hampden County"    },
-  ],
-  RI: [
-    { city: "Providence",       sub: "Providence County" },
-    { city: "Cranston",         sub: "Providence County" },
-    { city: "Warwick",          sub: "Kent County"       },
-    { city: "Pawtucket",        sub: "Providence County" },
-    { city: "East Providence",  sub: "Providence County" },
-    { city: "Newport",          sub: "Newport County"    },
-    { city: "North Providence", sub: "Providence County" },
-    { city: "Johnston",         sub: "Providence County" },
-  ],
-} as const;
+    MA: MASSACHUSETTS_LOCATIONS,
+    RI: RHODE_ISLAND_LOCATIONS,
+  } as const;
 
 type StateKey = keyof typeof LOCATIONS;
 
@@ -91,7 +74,7 @@ function Dropdown({ open, children, minWidth = 260 }: { open: boolean; children:
             borderLeft:   `1.5px solid ${K.border}`,
             borderRadius: 12,
             boxShadow: "0 8px 32px rgba(14,165,233,0.1)",
-            zIndex: 200, minWidth, overflow: "hidden",
+            zIndex: 99999, minWidth, overflow: "hidden",
           }}
         >
           {children}
@@ -132,7 +115,14 @@ function LocationDropdown({
         ))}
       </div>
 
-      <div style={{ padding: 6 }}>
+      <div
+  style={{
+    padding: 6,
+    maxHeight: 320,
+    overflowY: "auto",
+    overflowX: "hidden",
+  }}
+>
         {LOCATIONS[state].map((loc) => {
           const active = loc.city === city;
           return (
@@ -831,7 +821,7 @@ function handleFrequencyField() {
               borderRadius: "0 18px 18px 18px",
               position: "relative",
               zIndex: 1,
-              overflow: "hidden",
+              overflow: "visible",
               boxShadow: "0 1px 2px rgba(12,26,46,.04), 0 20px 60px rgba(12,26,46,.08)",
             }}
           >
@@ -847,7 +837,7 @@ function handleFrequencyField() {
                 zIndex: 50,
               }}
             >
-              <div style={{ flex: 1.33, position: "relative", display: "flex", alignItems: "stretch" }}>
+              <div style={{ flex: 1.33, position: "relative", display: "flex", alignItems: "stretch", zIndex: locOpen ? 99999 : undefined }}>
                 <SF
                   icon="ti-map-pin"
                   label="Location"
