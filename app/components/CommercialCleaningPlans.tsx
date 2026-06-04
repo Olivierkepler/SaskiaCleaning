@@ -366,6 +366,7 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
             shadow-sm transition-all duration-300
             focus:outline-none focus-visible:ring-2
             focus-visible:ring-slate-900 focus-visible:ring-offset-2
+            cursor-pointer
             ${ctaClasses}
           `}
         >

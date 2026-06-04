@@ -44,11 +44,28 @@ const trustBadges = [
   { icon: "sparkle" as const, label: "Detail-Focused" },
 ];
 
+const heroImages = [
+  "/images/PHOTO-2026-05-06-23-30-38%20(1).jpg",
+  "/images/maxresdefault.jpg",
+  "/images/maxresdefaul.jpg",
+] as const;
+
 export default function Hero() {
+  
   const containerRef = useRef<HTMLElement | null>(null);
   const titleId = useId();
   const [isInquiryOpen, setIsInquiryOpen] = useState(false);
   const [isEstimatorOpen, setIsEstimatorOpen] = useState(false);
+  const [activeImage, setActiveImage] = useState(0);
+  const [failedImages, setFailedImages] = useState<string[]>([]);
+
+  const visibleHeroImages = heroImages.filter(
+    (src) => !failedImages.includes(src)
+  );
+  const slideCount = Math.max(visibleHeroImages.length, 1);
+  const currentSlideIndex = activeImage % slideCount;
+  const currentHeroImage =
+    visibleHeroImages[currentSlideIndex] ?? heroImages[0];
 
   const prefersReducedMotion = useReducedMotion();
 
@@ -84,7 +101,7 @@ export default function Hero() {
       setIsInquiryOpen(false);
       setIsEstimatorOpen(false);
     };
-
+   
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
@@ -93,6 +110,23 @@ export default function Hero() {
     };
   }, [isInquiryOpen, isEstimatorOpen]);
 
+  useEffect(() => {
+    if (activeImage >= slideCount) {
+      setActiveImage(0);
+    }
+  }, [activeImage, slideCount]);
+
+  useEffect(() => {
+    if (prefersReducedMotion || visibleHeroImages.length <= 1) {
+      return;
+    }
+
+    const interval = window.setInterval(() => {
+      setActiveImage((prev) => (prev + 1) % visibleHeroImages.length);
+    }, 5000);
+
+    return () => window.clearInterval(interval);
+  }, [activeImage, prefersReducedMotion, visibleHeroImages.length]);
   return (
     <section
       ref={containerRef}
@@ -213,17 +247,57 @@ export default function Hero() {
               style={{ scale: scaleImage }}
               className="relative h-full w-full"
             >
-              <Image
-                src="/images/PHOTO-2026-05-06-23-30-38 (1).jpg"
-                alt="A freshly cleaned home interior by Saskia Cleaning Services"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 48vw"
-                className="object-cover"
-              />
+              <AnimatePresence initial={false}>
+                <motion.div
+                  key={currentHeroImage}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 1.2 }}
+                  className="absolute inset-0"
+                >
+                  <Image
+                    src={currentHeroImage}
+                    alt="Saskia Cleaning Services"
+                    fill
+                    priority={currentSlideIndex === 0}
+                    sizes="(max-width: 1024px) 100vw, 48vw"
+                    className="object-cover"
+                    onError={() => {
+                      setFailedImages((prev) =>
+                        prev.includes(currentHeroImage)
+                          ? prev
+                          : [...prev, currentHeroImage]
+                      );
+                    }}
+                  />
+                </motion.div>
+              </AnimatePresence>
             </motion.div>
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/5 to-transparent" />
+
+            <div
+              className="absolute bottom-4 left-0 right-0 z-20 flex justify-center gap-2.5"
+              role="tablist"
+              aria-label="Hero image carousel"
+            >
+              {visibleHeroImages.map((src, index) => (
+                <button
+                  key={src}
+                  type="button"
+                  role="tab"
+                  aria-label={`Show hero image ${index + 1} of ${visibleHeroImages.length}`}
+                  aria-selected={currentSlideIndex === index}
+                  onClick={() => setActiveImage(index)}
+                  className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                    currentSlideIndex === index
+                      ? "scale-110 bg-white shadow-sm"
+                      : "bg-white/45 hover:bg-white/70"
+                  }`}
+                />
+              ))}
+            </div>
           </motion.div>
 
           <motion.div

@@ -24,7 +24,7 @@ export default function SectionWrapper({ children }: { children: React.ReactNode
         y,
         perspective: "1000px" 
       }}
-      className="w-full"
+      className="relative w-full"
     >
       {children}
     </motion.div>
