@@ -779,7 +779,7 @@ function handleFrequencyField() {
                       width: 44,
                       height: 44,
                       borderRadius: 13,
-                      background: active ? K.blue : "#DDE8F0",
+                      background: active ? "#38BDF8" : "#DDE8F0",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
