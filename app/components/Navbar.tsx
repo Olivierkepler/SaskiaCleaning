@@ -17,6 +17,7 @@ export default function Navbar({
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 16);
@@ -34,7 +35,10 @@ export default function Navbar({
     document.body.style.overflow = isOpen ? "hidden" : "";
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
+      if (e.key === "Escape") {
+        setIsOpen(false);
+        setIsInfoOpen(false);
+      }
     };
 
     window.addEventListener("keydown", onKeyDown);
@@ -94,7 +98,7 @@ export default function Navbar({
             <div className="leading-none">
               <p
                 className={`font-[family-name:var(--font-cormorant)] text-[1.65rem] font-semibold tracking-[-0.04em] transition-colors duration-300 ${
-                  isScrolled ? "text-slate-900" : "text-white"
+                  isScrolled ? "text-sky-500" : "text-white"
                 }`}
               >
                 Saskia
@@ -115,9 +119,9 @@ export default function Navbar({
               <a
                 key={link.label}
                 href={link.href}
-                className={`group relative text-[11px] font-semibold uppercase tracking-[0.16em] transition duration-300 ${
+                className={`group cursor-pointer relative text-[11px] font-semibold uppercase tracking-[0.16em] transition duration-300 ${
                   isScrolled
-                    ? "text-slate-600 hover:text-slate-950"
+                    ? "text-sky-500 hover:text-sky-500"
                     : "text-white hover:text-white/80"
                 }`}
               >
@@ -133,6 +137,33 @@ export default function Navbar({
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
+            <div className="relative">
+              <button
+                type="button"
+                aria-label="More information"
+                aria-expanded={isInfoOpen}
+                aria-controls="info-popover-desktop"
+                onClick={() => setIsInfoOpen((open) => !open)}
+                className={`rounded-full border px-4 py-3 text-[11px] font-medium uppercase tracking-[0.14em] transition ${
+                  isScrolled
+                    ? "border-slate-200 text-slate-600 hover:border-slate-950 hover:text-slate-950"
+                    : "border-white/40 text-white hover:border-white hover:bg-white hover:text-slate-950"
+                }`}
+              >
+                Info
+              </button>
+
+              {isInfoOpen && (
+                <div
+                  id="info-popover-desktop"
+                  role="status"
+                  className="absolute top-full right-0 z-50 mt-2 w-56 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs leading-5 text-slate-600 shadow-lg"
+                >
+                  More information coming soon.
+                </div>
+              )}
+            </div>
+
             <a
               href="tel:+18573528554"
               className={`hidden rounded-full border px-6 py-3 text-[11px] font-medium uppercase tracking-[0.14em] transition xl:block ${
@@ -146,9 +177,9 @@ export default function Navbar({
 
             <a
               href="#quote"
-              className={`group flex items-center gap-2 rounded-full border px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition duration-300 ${
+              className={`group cursor-pointer flex items-center gap-2 rounded-full border px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition duration-300 ${
                 isScrolled
-                  ? "border-slate-950 bg-slate-950 text-white hover:bg-white hover:text-slate-950"
+                  ? "border-sky-500 bg-sky-500 text-white hover:bg-white hover:text-sky-500"
                   : "border-white bg-white text-slate-950 hover:bg-transparent hover:text-white"
               }`}
             >
@@ -166,9 +197,9 @@ export default function Navbar({
             aria-label="Open navigation menu"
             aria-expanded={isOpen}
             aria-controls="mobile-sidenav"
-            className={`grid h-11 w-11 place-items-center rounded-full border transition duration-300 lg:hidden ${
+            className={`grid cursor-pointer h-11 w-11 place-items-center rounded-full border transition duration-300 lg:hidden ${
               isScrolled
-                ? "border-slate-950 bg-slate-950 text-white hover:bg-white hover:text-slate-950"
+                ? "border-sky-500 bg-sky-500 text-white hover:bg-white hover:text-sky-500"
                 : "border-white bg-white text-slate-950 hover:bg-transparent hover:text-white"
             }`}
           >
@@ -248,6 +279,27 @@ export default function Navbar({
                   </div>
 
                   <div className="grid gap-3">
+                    <button
+                      type="button"
+                      aria-label="More information"
+                      aria-expanded={isInfoOpen}
+                      aria-controls="info-popover-mobile"
+                      onClick={() => setIsInfoOpen((open) => !open)}
+                      className="flex items-center justify-center rounded-full border border-slate-200 px-6 py-4 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-600 transition duration-300 hover:border-slate-950 hover:text-slate-950"
+                    >
+                      Info
+                    </button>
+
+                    {isInfoOpen && (
+                      <p
+                        id="info-popover-mobile"
+                        role="status"
+                        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600"
+                      >
+                        More information coming soon.
+                      </p>
+                    )}
+
                     <a
                       href="#quote"
                       onClick={() => setIsOpen(false)}

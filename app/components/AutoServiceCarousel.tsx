@@ -90,6 +90,7 @@ const RESUME_AFTER = 6000;
 function IconArrowUpRight({ size = 11 }: { size?: number }) {
   return (
     <svg
+      aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 24 24"
@@ -108,6 +109,7 @@ function IconArrowUpRight({ size = 11 }: { size?: number }) {
 function IconClose({ size = 17 }: { size?: number }) {
   return (
     <svg
+      aria-hidden="true"
       width={size}
       height={size}
       viewBox="0 0 24 24"
@@ -126,6 +128,7 @@ function IconClose({ size = 17 }: { size?: number }) {
 function IconChevron({ dir }: { dir: "left" | "right" }) {
   return (
     <svg
+      aria-hidden="true"
       width={17}
       height={17}
       viewBox="0 0 24 24"
@@ -162,7 +165,7 @@ function ProgressDot({
       aria-selected={active}
       aria-label={label}
       onClick={onClick}
-      className="relative flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+      className="relative flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
       style={{
         width: active ? 34 : 10,
         height: 16,
@@ -170,7 +173,7 @@ function ProgressDot({
       }}
     >
       {active ? (
-        <svg viewBox="0 0 34 16" width="34" height="16">
+        <svg aria-hidden="true" viewBox="0 0 34 16" width="34" height="16">
           <rect x="0" y="4" width="34" height="8" rx="4" fill="#e2e8f0" />
           <rect
             x="0"
@@ -189,7 +192,7 @@ function ProgressDot({
           />
         </svg>
       ) : (
-        <svg viewBox="0 0 10 10" width="10" height="10">
+        <svg aria-hidden="true" viewBox="0 0 10 10" width="10" height="10">
           <circle cx="5" cy="5" r="4" fill="#e2e8f0" />
         </svg>
       )}
@@ -241,7 +244,7 @@ function ServiceCard({
       onClick={onClick}
       aria-label={`View details for ${service.title}`}
       className={`
-        group relative w-[380px] shrink-0 overflow-hidden rounded-[2rem]
+        group relative w-[min(380px,calc(100vw-3rem))] shrink-0 overflow-hidden rounded-[2rem]
         bg-white text-left ring-1 transition duration-500
         ease-[cubic-bezier(0.22,1,0.36,1)]
         hover:-translate-y-2 hover:ring-sky-200
@@ -260,7 +263,7 @@ function ServiceCard({
       <div className="relative overflow-hidden">
         <img
           src={service.image}
-          alt=""
+          alt={`${service.title} service`}
           loading={index < 3 ? "eager" : "lazy"}
           className="
             h-60 w-full object-cover grayscale-[5%]
@@ -314,21 +317,21 @@ function ServiceModal({
   onClose: () => void;
 }) {
   useEffect(() => {
-    const prev = document.body.style.overflow;
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow = prev;
+      document.body.style.overflow = previousOverflow;
     };
   }, []);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
     };
 
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
   return createPortal(
@@ -344,6 +347,7 @@ function ServiceModal({
       role="dialog"
       aria-modal="true"
       aria-labelledby="service-modal-title"
+      aria-describedby="service-modal-description"
       onClick={onClose}
     >
       <div
@@ -353,12 +357,13 @@ function ServiceModal({
           shadow-[0_-24px_90px_rgba(15,23,42,0.24)]
           ring-1 ring-white/70 sm:rounded-[2rem]
         "
-        onClick={(e) => e.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
       >
         <div className="relative h-[235px] shrink-0 overflow-hidden sm:h-[285px]">
           <img
             src={service.image}
             alt=""
+            aria-hidden="true"
             className="h-full w-full object-cover"
           />
 
@@ -385,12 +390,13 @@ function ServiceModal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label="Close service details"
             className="
               absolute right-4 top-4 grid h-10 w-10 place-items-center
               rounded-full bg-white/95 text-slate-950 shadow-lg
               ring-1 ring-white/60 backdrop-blur-sm transition
-              hover:bg-slate-950 hover:text-white
+              hover:bg-slate-950 hover:text-white focus-visible:outline-none
+              focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2
             "
           >
             <IconClose />
@@ -398,7 +404,10 @@ function ServiceModal({
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 sm:p-8">
-          <p className="text-[15px] leading-7 text-slate-600">
+          <p
+            id="service-modal-description"
+            className="text-[15px] leading-7 text-slate-600"
+          >
             {service.subtitle}
           </p>
 
@@ -413,7 +422,10 @@ function ServiceModal({
                   key={detail}
                   className="flex gap-3 text-sm leading-7 text-slate-600"
                 >
-                  <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500" />
+                  <span
+                    aria-hidden="true"
+                    className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500"
+                  />
                   <span>{detail}</span>
                 </li>
               ))}
@@ -427,7 +439,8 @@ function ServiceModal({
                 min-h-[48px] flex-1 rounded-full bg-sky-500
                 px-5 text-[10px] font-semibold uppercase tracking-[0.16em]
                 text-white shadow-[0_10px_30px_rgba(14,165,233,0.25)]
-                transition hover:bg-slate-950
+                transition hover:bg-slate-950 focus-visible:outline-none
+                focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2
               "
             >
               Request This Service
@@ -440,6 +453,8 @@ function ServiceModal({
                 min-h-[48px] flex-1 rounded-full border border-slate-200
                 px-5 text-[10px] font-semibold uppercase tracking-[0.14em]
                 text-slate-600 transition hover:border-slate-950 hover:text-slate-950
+                focus-visible:outline-none focus-visible:ring-2
+                focus-visible:ring-sky-500 focus-visible:ring-offset-2
               "
             >
               Keep Browsing
@@ -464,17 +479,27 @@ export default function ServiceCarousel() {
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dotKey = useRef(0);
 
-  useEffect(() => {
-    setPortalReady(true);
+  const clearResumeTimer = useCallback(() => {
+    if (resumeTimer.current) {
+      clearTimeout(resumeTimer.current);
+      resumeTimer.current = null;
+    }
   }, []);
 
-  useEffect(() => {
-    activeRef.current = activeIndex;
-  }, [activeIndex]);
+  const setAutoplay = useCallback((value: boolean) => {
+    setIsPlaying(value);
+    playingRef.current = value;
+  }, []);
 
-  useEffect(() => {
-    playingRef.current = isPlaying;
-  }, [isPlaying]);
+  const pauseThenResume = useCallback(() => {
+    setAutoplay(false);
+    clearResumeTimer();
+
+    resumeTimer.current = setTimeout(() => {
+      setAutoplay(true);
+      resumeTimer.current = null;
+    }, RESUME_AFTER);
+  }, [clearResumeTimer, setAutoplay]);
 
   const scrollTo = useCallback((index: number) => {
     const track = trackRef.current;
@@ -487,8 +512,8 @@ export default function ServiceCarousel() {
   }, []);
 
   const goTo = useCallback(
-    (raw: number, userInitiated = false) => {
-      const index = ((raw % COUNT) + COUNT) % COUNT;
+    (rawIndex: number, userInitiated = false) => {
+      const index = ((rawIndex % COUNT) + COUNT) % COUNT;
 
       setActiveIndex(index);
       activeRef.current = index;
@@ -496,76 +521,72 @@ export default function ServiceCarousel() {
       scrollTo(index);
 
       if (userInitiated) {
-        setIsPlaying(false);
-        playingRef.current = false;
-
-        if (resumeTimer.current) clearTimeout(resumeTimer.current);
-
-        resumeTimer.current = setTimeout(() => {
-          setIsPlaying(true);
-          playingRef.current = true;
-        }, RESUME_AFTER);
+        pauseThenResume();
       }
     },
-    [scrollTo]
+    [pauseThenResume, scrollTo]
   );
 
   useEffect(() => {
-    const id = setInterval(() => {
+    setPortalReady(true);
+  }, []);
+
+  useEffect(() => {
+    activeRef.current = activeIndex;
+  }, [activeIndex]);
+
+  useEffect(() => {
+    playingRef.current = isPlaying;
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (selected) {
+      clearResumeTimer();
+      setAutoplay(false);
+    } else {
+      setAutoplay(true);
+    }
+  }, [clearResumeTimer, selected, setAutoplay]);
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
       if (!playingRef.current) return;
       goTo(activeRef.current + 1);
     }, AUTO_DELAY);
 
-    return () => clearInterval(id);
+    return () => clearInterval(intervalId);
   }, [goTo]);
-
-  useEffect(() => {
-    setIsPlaying(!selected);
-  }, [selected]);
 
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
 
-    const onScroll = () => {
-      const idx = Math.round(track.scrollLeft / STRIDE);
-      const clamped = Math.max(0, Math.min(COUNT - 1, idx));
+    const handleScroll = () => {
+      const index = Math.round(track.scrollLeft / STRIDE);
+      const clampedIndex = Math.max(0, Math.min(COUNT - 1, index));
 
-      if (clamped !== activeRef.current) {
-        setActiveIndex(clamped);
-        activeRef.current = clamped;
+      if (clampedIndex !== activeRef.current) {
+        setActiveIndex(clampedIndex);
+        activeRef.current = clampedIndex;
         dotKey.current += 1;
       }
     };
 
-    track.addEventListener("scroll", onScroll, { passive: true });
-    return () => track.removeEventListener("scroll", onScroll);
+    track.addEventListener("scroll", handleScroll, { passive: true });
+    return () => track.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
-    return () => {
-      if (resumeTimer.current) clearTimeout(resumeTimer.current);
-    };
-  }, []);
+    return () => clearResumeTimer();
+  }, [clearResumeTimer]);
 
   return (
     <section className="relative w-screen overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
-  
       <div className="relative w-full">
         <header className="mx-auto mb-16 max-w-4xl px-6 text-center">
-          {/* <div className="mb-5 flex items-center justify-center gap-3">
-            <span className="h-px w-6 bg-sky-400/60" />
-            <span className="text-[10px] font-medium uppercase tracking-[0.22em] text-sky-500">
-              Saskia Cleaning Services
-            </span>
-            <span className="h-px w-6 bg-sky-400/60" />
-          </div> */}
-
-          <h2 className="font-['Poppins', sans-serif] text-[clamp(2.8rem,3.5vw,5rem)]  leading-[0.9] tracking-[-0.04em] text-slate-950">
+          <h2 className="font-['Poppins',sans-serif] text-[clamp(2.8rem,3.5vw,5rem)] leading-[0.9] tracking-[-0.04em] text-slate-950">
             Elevated cleaning for{" "}
-            <em className="font-light italic text-slate-400">
-              modern living
-            </em>
+            <em className="font-light italic text-sky-500">modern living</em>
           </h2>
 
           <p className="mx-auto mt-6 max-w-xl text-[15px] font-light leading-[1.75] text-slate-500 sm:text-base">
@@ -575,13 +596,13 @@ export default function ServiceCarousel() {
         </header>
 
         <div className="relative w-full">
-       
           <div
             ref={trackRef}
-            onMouseEnter={() => setIsPlaying(false)}
+            onMouseEnter={() => setAutoplay(false)}
             onMouseLeave={() => {
-              if (!selected) setIsPlaying(true);
+              if (!selected) setAutoplay(true);
             }}
+            aria-label="Cleaning services carousel"
             className="
               flex w-full gap-7 overflow-x-auto overscroll-x-contain
               scroll-smooth py-8
@@ -589,16 +610,16 @@ export default function ServiceCarousel() {
               [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
             "
             style={{
-              paddingLeft: `max(2rem, calc((100vw - (${CARD_WIDTH * 3 + GAP * 2}px)) / 2))`,
-              paddingRight: `max(2rem, calc((100vw - (${CARD_WIDTH * 3 + GAP * 2}px)) / 2))`,
+              paddingLeft: `max(1.5rem, calc((100vw - (${CARD_WIDTH * 3 + GAP * 2}px)) / 2))`,
+              paddingRight: `max(1.5rem, calc((100vw - (${CARD_WIDTH * 3 + GAP * 2}px)) / 2))`,
             }}
           >
-            {services.map((service, i) => (
+            {services.map((service, index) => (
               <div key={service.title} className="[scroll-snap-align:center]">
                 <ServiceCard
                   service={service}
-                  index={i}
-                  active={i === activeIndex}
+                  index={index}
+                  active={index === activeIndex}
                   onClick={() => setSelected(service)}
                 />
               </div>
@@ -614,13 +635,13 @@ export default function ServiceCarousel() {
             role="tablist"
             aria-label="Carousel navigation"
           >
-            {services.map((s, i) => (
+            {services.map((service, index) => (
               <ProgressDot
-                key={`${i}-${dotKey.current}`}
-                active={i === activeIndex}
-                isPlaying={isPlaying && i === activeIndex}
-                onClick={() => goTo(i, true)}
-                label={`Go to ${s.title}`}
+                key={`${index}-${dotKey.current}`}
+                active={index === activeIndex}
+                isPlaying={isPlaying && index === activeIndex}
+                onClick={() => goTo(index, true)}
+                label={`Go to ${service.title}`}
               />
             ))}
           </div>
@@ -639,8 +660,13 @@ export default function ServiceCarousel() {
 
       <style>{`
         @keyframes pill-fill {
-          from { clip-path: inset(0 100% 0 0 round 4px); }
-          to { clip-path: inset(0 0% 0 0 round 4px); }
+          from {
+            clip-path: inset(0 100% 0 0 round 4px);
+          }
+
+          to {
+            clip-path: inset(0 0% 0 0 round 4px);
+          }
         }
       `}</style>
     </section>
