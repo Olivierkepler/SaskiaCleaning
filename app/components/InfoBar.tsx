@@ -73,6 +73,7 @@ export default function InfoBar() {
 
   return (
     <section
+    
       aria-label="Contact Information"
       className="relative overflow-hidden bg-white py-20 "
     >

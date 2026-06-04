@@ -36,6 +36,7 @@ export default function Home() {
       <Navbar />
       <ChatBot />
       <Hero2 />
+      <InfoBar />
 
       <div ref={socialSectionRef} className="relative">
         {showSocialCorner && <SocialCorner />}
@@ -46,11 +47,13 @@ export default function Home() {
 
 
 
-        {/* <InfoBar /> */}
+      
 
         <SectionWrapper>
           <AutoServiceCarousel />
         </SectionWrapper>
+
+      
       </div>
 
       <CommercialCleaningPlans

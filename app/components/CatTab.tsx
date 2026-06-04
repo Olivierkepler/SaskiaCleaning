@@ -265,20 +265,31 @@ function SF({
     <div
       onClick={onClick}
       style={{
-        flex, display: "flex", alignItems: "center", gap: 10,
-        padding: "0 18px", height: "100%", minWidth: 0,
+        flex, display: "flex", alignItems: "center", alignSelf: "stretch", gap: 14,
+        padding: "0 28px", height: "100%", minWidth: 0,
         borderRight: last ? "none" : `1px solid ${K.border}`,
         cursor: "pointer", position: "relative",
         background: active ? K.blueLight : "transparent",
         transition: "background .12s",
       }}
     >
-      <i className={`ti ${icon}`} style={{ fontSize: 18, color: active ? K.blue : K.hint, flexShrink: 0 }} aria-hidden="true" />
-      <div style={{ display: "flex", flexDirection: "column", gap: 1, minWidth: 0 }}>
-        <span style={{ fontSize: 9, fontWeight: 800, color: active ? K.blue : K.hint, textTransform: "uppercase", letterSpacing: "0.1em" }}>
+      <i
+        className={`ti ${icon}`}
+        style={{
+          fontSize: 18,
+          color: active ? K.blue : K.hint,
+          flexShrink: 0,
+          display: "inline-flex",
+          alignItems: "center",
+          lineHeight: 1,
+        }}
+        aria-hidden="true"
+      />
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 1, minWidth: 0 }}>
+        <span style={{ fontSize: 11, fontWeight: 900, color: active ? K.blue : K.hint, textTransform: "uppercase", letterSpacing: "0.14em", lineHeight: 1, display: "block" }}>
           {label}
         </span>
-        <span style={{ fontSize: 14, fontWeight: 600, color: placeholder ? K.hint : K.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", color: placeholder ? K.hint : K.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1, display: "block" }}>
           {value}
         </span>
       </div>
@@ -593,189 +604,355 @@ export default function CleaningEstimator() {
   ];
 
   return (
-    <section ref={rootRef} style={{ background: K.white, padding: "48px 24px 64px", fontFamily: "Inter, sans-serif" }}>
-
-      {/* Headline */}
-    
-
-    <div className="flex flex-row justify-between items-stretch gap-6 pl-20 ">
-
-        <div className="w-2/3">
-  {/* Category tabs — fixed: borderTop/Left/Right + borderBottom instead of border + borderBottom */}
-  <div style={{ display: "flex", gap: 6, marginBottom: -1 }}>
-        {SERVICES.map((s, i) => (
-          <button
-            key={s.label}
-            onClick={() => setServiceIdx(i)}
-            style={{
-              display: "flex", flexDirection: "column", alignItems: "center",
-              gap: 5, padding: "10px 18px 13px", cursor: "pointer", outline: "none",
-              borderTop:    `1.5px solid ${serviceIdx === i ? K.border : "transparent"}`,
-              borderLeft:   `1.5px solid ${serviceIdx === i ? K.border : "transparent"}`,
-              borderRight:  `1.5px solid ${serviceIdx === i ? K.border : "transparent"}`,
-              borderBottom: "none",
-              borderRadius: "10px 10px 0 0",
-              background: serviceIdx === i ? K.white : "transparent",
-              position: "relative", zIndex: serviceIdx === i ? 2 : 1,
-              marginBottom: serviceIdx === i ? -1 : 0,
-            }}
-          >
-            <div style={{ width: 40, height: 40, borderRadius: 9, background: serviceIdx === i ? K.blue : "#DDE8F0", display: "flex", alignItems: "center", justifyContent: "center", transition: "background .12s" }}>
-              <i className={`ti ${s.icon}`} style={{ fontSize: 19, color: serviceIdx === i ? "#fff" : K.muted }} aria-hidden="true" />
-            </div>
-            <span style={{ fontSize: 11, fontWeight: 700, color: serviceIdx === i ? K.text : K.muted, whiteSpace: "nowrap" }}>
-              {s.label}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {/* Card */}
-      <div style={{
+    <section
+      id="quote"
+      ref={rootRef}
+      style={{
         background: K.white,
-        borderTop:    `1.5px solid ${K.border}`,
-        borderRight:  `1.5px solid ${K.border}`,
-        borderBottom: `1.5px solid ${K.border}`,
-        borderLeft:   `1.5px solid ${K.border}`,
-        borderRadius: "0 12px 12px 12px",
-        position: "relative", zIndex: 1,
-      }}>
-
-        {/* Search bar */}
-        <div style={{
-          display: "flex", height: 60,
-          borderBottom: `1.5px solid ${K.border}`,
-          borderRadius: "0 12px 0 0",
-          overflow: "visible", position: "relative", zIndex: 50,
-        // Add border radius to the top right corner
-   
-
-        }}>
-          {/* Location */}
-          <div style={{ flex: 1.33, position: "relative" }}>
-            <SF icon="ti-map-pin" label="Location" value={`${locCity}, ${locState}`} active={locOpen} onClick={handleLocField} />
-            <LocationDropdown open={locOpen} state={locState} city={locCity} onStateChange={setLocState} onCitySelect={handleCitySelect} />
-          </div>
-
-          {/* Date */}
-          <div style={{ flex: 1, position: "relative", borderLeft: `1px solid ${K.border}` }}>
-            <SF icon="ti-calendar" label="Date" value={date ? formatDate(date) : "Select date"} active={dateOpen} onClick={handleDateField} placeholder={!date} />
-            <CalendarDropdown open={dateOpen} selected={date} onSelect={handleDateSelect} />
-          </div>
-
-          <SF icon={svc.icon}  label="Service"   value={svc.label} flex={1.1} />
-          <SF icon="ti-repeat" label="Frequency" value="Bi-weekly" flex={1} last />
-
-          {/* <button
+        // padding: "56px 24px 72px",
+        fontFamily: "Inter, sans-serif",
+      }}
+    >
+      <div
+     
+        style={{
+          maxWidth: 1380,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "1.65fr 1fr",
+          gap: 28,
+          alignItems: "stretch",
+        }}
+      >
+        {/* Left Column */}
+        <div style={{ minWidth: 0 }}>
+          {/* Tabs */}
+          <div
             style={{
-              background: K.blue, color: "#fff",
-              borderTopRightRadius: 12,
-              borderTop: "none", borderRight: "none", borderBottom: "none", borderLeft: "none",
-              padding: "0 26px", fontSize: 14, fontWeight: 800,
-              cursor: "pointer", letterSpacing: -0.2, flexShrink: 0, transition: "background .15s",
+              display: "flex",
+              gap: 8,
+              marginBottom: -1,
+              overflowX: "auto",
+              paddingBottom: 1,
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = K.blueHover)}
-            onMouseLeave={(e) => (e.currentTarget.style.background = K.blue)}
           >
-            Search
-          </button> */}
-        </div>
+            {SERVICES.map((s, i) => {
+              const active = serviceIdx === i;
+  
+              return (
+                <button
+                  key={s.label}
+                  onClick={() => setServiceIdx(i)}
+                  style={{
+                    minWidth: 108,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 7,
+                    padding: "12px 18px 14px 12px",
 
-        {/* Active panel */}
-        <div style={{ padding: 20, background: K.surface }}>
-          <AnimatePresence mode="wait">
-            <motion.div key={serviceIdx} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.2 }}>
-              {panels[serviceIdx]}
-            </motion.div>
-          </AnimatePresence>
-        </div>
+                    
+                    cursor: "pointer",
+                    outline: "none",
 
-        {/* Price strip */}
-        <div style={{
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-          padding: "14px 20px", borderTop: `1px solid ${K.borderLight}`, background: K.white,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <span style={{ fontSize: 10, fontWeight: 800, color: K.hint, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              Estimate range
-            </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <PricePill label="Low"  value={prices.low}  />
-              <div style={{ width: 1, height: 26, background: K.border }} />
-              <PricePill label="Mid"  value={prices.mid}  accent />
-              <div style={{ width: 1, height: 26, background: K.border }} />
-              <PricePill label="High" value={prices.high} />
+
+                    borderTop: `1.5px solid ${active ? K.border : "transparent"}`,
+                    borderLeft: `1.5px solid ${active ? K.border : "transparent"}`,
+                    borderRight: `1.5px solid ${active ? K.border : "transparent"}`,
+
+
+                    borderBottom: "none",
+                    borderRadius: "14px 14px 0 0",
+                    background: active ? K.white : "#FAFCFD",
+                    position: "relative",
+                    zIndex: active ? 2 : 1,
+                    marginBottom: active ? -1 : 0,
+                    boxShadow: active ? "0 -2px 16px rgba(12,26,46,0.04)" : "none",
+                    transition: "all .18s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 44,
+                      height: 44,
+                      borderRadius: 13,
+                      background: active ? K.blue : "#DDE8F0",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      boxShadow: active
+                        ? "0 10px 22px rgba(56,189,248,0.28)"
+                        : "none",
+                    }}
+                  >
+                    <i
+                      className={`ti ${s.icon}`}
+                      style={{
+                        fontSize: 20,
+                        color: active ? "#fff" : K.muted,
+                      }}
+                      aria-hidden="true"
+                    />
+                  </div>
+  
+                  <span
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: active ? K.text : K.muted,
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {s.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+  
+          {/* Main Card */}
+          <div
+            style={{
+              background: K.white,
+              border: `1.5px solid ${K.border}`,
+              borderRadius: "0 18px 18px 18px",
+              position: "relative",
+              zIndex: 1,
+              overflow: "hidden",
+              boxShadow: "0 1px 2px rgba(12,26,46,.04), 0 20px 60px rgba(12,26,46,.08)",
+            }}
+          >
+            {/* Search Bar */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "stretch",
+                height: 88,
+                borderBottom: `1.5px solid ${K.border}`,
+                background: K.white,
+                position: "relative",
+                zIndex: 50,
+              }}
+            >
+              <div style={{ flex: 1.33, position: "relative", display: "flex", alignItems: "stretch" }}>
+                <SF
+                  icon="ti-map-pin"
+                  label="Location"
+                  value={`${locCity}, ${locState}`}
+                  active={locOpen}
+                  onClick={handleLocField}
+                />
+                <LocationDropdown
+                  open={locOpen}
+                  state={locState}
+                  city={locCity}
+                  onStateChange={setLocState}
+                  onCitySelect={handleCitySelect}
+                />
+              </div>
+  
+              <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "stretch" }}>
+                <SF
+                  icon="ti-calendar"
+                  label="Date"
+                  value={date ? formatDate(date) : "Select date"}
+                  active={dateOpen}
+                  onClick={handleDateField}
+                  placeholder={!date}
+                />
+                <CalendarDropdown open={dateOpen} selected={date} onSelect={handleDateSelect} />
+              </div>
+  
+              <SF icon={svc.icon} label="Service" value={svc.label} flex={1.1} />
+              <SF icon="ti-repeat" label="Frequency" value="Bi-weekly" flex={1} last />
+            </div>
+  
+            {/* Active Panel */}
+            <div style={{ padding: 24, background: K.surface }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={serviceIdx}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.22 }}
+                >
+                  {panels[serviceIdx]}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+  
+            {/* Price Strip */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 20,
+                padding: "18px 24px",
+                borderTop: `1px solid ${K.borderLight}`,
+                background: K.white,
+                flexWrap: "wrap",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <span
+                  style={{
+                    fontSize: 10,
+                    fontWeight: 900,
+                    color: K.hint,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.1em",
+                  }}
+                >
+                  Estimate range
+                </span>
+  
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <PricePill label="Low" value={prices.low} />
+                  <div style={{ width: 1, height: 28, background: K.border }} />
+                  <PricePill label="Mid" value={prices.mid} accent />
+                  <div style={{ width: 1, height: 28, background: K.border }} />
+                  <PricePill label="High" value={prices.high} />
+                </div>
+              </div>
+  
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    background: K.greenBg,
+                    borderRadius: 999,
+                    padding: "6px 12px",
+                  }}
+                >
+                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: K.green }} />
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontWeight: 800,
+                      color: K.green,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.06em",
+                    }}
+                  >
+                    Licensed & insured
+                  </span>
+                </div>
+  
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    background: K.blue,
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: 12,
+                    padding: "14px 28px",
+                    fontSize: 14,
+                    fontWeight: 900,
+                    cursor: "pointer",
+                    boxShadow: "0 10px 24px rgba(56,189,248,.25)",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = K.blueHover)}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = K.blue)}
+                >
+                  {svc.bookLabel}
+                </motion.button>
+              </div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 5, background: K.greenBg, borderRadius: 6, padding: "4px 10px" }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: K.green }} />
-              <span style={{ fontSize: 10, fontWeight: 700, color: K.green, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Licensed & insured
+        </div>
+  
+        {/* Right Image Card */}
+        <div
+          style={{
+            minHeight: 440,
+            background: K.white,
+            // border: `1px solid ${K.borderLight}`,
+            // borderRadius: 22,
+            overflow: "hidden",
+            position: "relative",
+            display: "flex",
+          
+            flexDirection: "column",
+            // boxShadow: "0 1px 2px rgba(12,26,46,.04), 0 20px 60px rgba(12,26,46,.08)",
+          }}
+        >
+          {/* <div style={{ padding: "32px 32px 24px" }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={serviceIdx}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.25 }}
+              >
+                <h2
+                  style={{
+                    fontSize: 38,
+                    lineHeight: 1.05,
+                    fontWeight: 900,
+                    color: K.text,
+                    letterSpacing: "-0.05em",
+                    margin: 0,
+                  }}
+                >
+                  {svc.headline}
+                </h2>
+              </motion.div>
+            </AnimatePresence>
+          </div> */}
+
+          <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={svc.image}
+                initial={{ opacity: 0, scale: 1.03 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                style={{ height: "100%" }}
+                className="flex justify-center items-center"
+              >
+                <img
+                  src={svc.image}
+                  alt={svc.label}
+                  className="w-[400px] h-[300px]"
+                  style={{
+                    width: "[400px]",
+                    height: "[300px]",
+                   
+
+                  }}
+                />
+              </motion.div>
+            </AnimatePresence>
+
+            <div
+              style={{
+                position: "absolute",
+                left: 20,
+                bottom: 20,
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "8px 16px",
+                borderRadius: 999,
+                background: K.blueLight,
+                color: K.blue,
+              }}
+            >
+              <i className={`ti ${svc.icon}`} style={{ fontSize: 16 }} aria-hidden="true" />
+              <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: "-0.02em" }}>
+                {svc.label}
               </span>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              style={{
-                background: K.blue, color: "#fff",
-                borderTop: "none", borderRight: "none", borderBottom: "none", borderLeft: "none",
-                borderRadius: 8, padding: "10px 22px", fontSize: 14, fontWeight: 800,
-                cursor: "pointer", letterSpacing: -0.2,
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = K.blueHover)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = K.blue)}
-            >
-              {svc.bookLabel}
-            </motion.button>
           </div>
         </div>
-
-        {/* Compare bar */}
-        <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 20px 14px", borderTop: `1px solid ${K.borderLight}` }}>
-          <div style={{
-            width: 16, height: 16, borderRadius: 4,
-            background: K.blue,
-            borderTop:    `1.5px solid ${K.blue}`,
-            borderRight:  `1.5px solid ${K.blue}`,
-            borderBottom: `1.5px solid ${K.blue}`,
-            borderLeft:   `1.5px solid ${K.blue}`,
-            display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-          }}>
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-          <span style={{ fontSize: 12, color: K.muted, fontWeight: 500 }}>Compare vs.</span>
-          {["Handy","Amazon Home","TaskRabbit"].map((s, i) => (
-            <span key={s} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-              {i > 0 && <span style={{ color: K.hint, fontSize: 12 }}>·</span>}
-              <span style={{ fontSize: 12, fontWeight: 700, color: K.textSub, textDecoration: "underline", cursor: "pointer" }}>{s}</span>
-            </span>
-          ))}
-        </div>
-
       </div>
-        </div>
-        <div className="w-1/3">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={svc.image}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-              className="h-full"
-            >
-              <img
-                src={svc.image}
-                alt={svc.label}
-                className="h-full w-full rounded-xl object-cover"
-              />
-            </motion.div>
-          </AnimatePresence>
-        </div>
-        
-    </div>
     </section>
   );
 }
