@@ -619,7 +619,7 @@ export default function CleaningEstimator() {
       <div
      
         style={{
-          maxWidth: 1380,
+          maxWidth: 1280,
           margin: "0 auto",
           display: "grid",
           gridTemplateColumns: "1.65fr 1fr",

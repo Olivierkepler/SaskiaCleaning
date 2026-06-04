@@ -41,7 +41,7 @@ export default function Home() {
       <div ref={socialSectionRef} className="relative">
         {showSocialCorner && <SocialCorner />}
 
-<div className="bg-white">
+<div className="bg-white px-20">
   <CatTab />
 </div>
 
