@@ -581,7 +581,7 @@ export default function ServiceCarousel() {
   }, [clearResumeTimer]);
 
   return (
-    <section className="relative w-screen overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
+    <section className="relative w-screen  overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
       <div className="relative w-full">
         <header className="mx-auto mb-16 max-w-4xl px-6 text-center">
           <h2 className="font-['Poppins',sans-serif] text-[clamp(2.8rem,3.5vw,5rem)] leading-[0.9] tracking-[-0.04em] text-slate-950">
