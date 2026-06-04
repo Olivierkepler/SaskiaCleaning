@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { MASSACHUSETTS_LOCATIONS } from "@/app/data/massachusettsLocations";
 import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
@@ -568,10 +569,10 @@ function CommercialPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) =>
 
 // ── Service config ─────────────────────────────────────────────────────────────
 const SERVICES = [
-  { icon: "ti-home",     label: "Standard",  image: "/images/Designer(2).png",     headline: <>Find the right cleaner<br />from Boston's best<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book now"            },
-  { icon: "ti-sparkles", label: "Deep clean", image: "/images/Designer(5).png",  headline: <>Book a deep clean<br />that actually goes deep<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book deep clean"     },
-  { icon: "ti-box",      label: "Move-out",   image: "/images/Designer(6).png",    headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,        bookLabel: "Book move-out clean" },
-  { icon: "ti-building", label: "Commercial", image: "/images/Designer(7).png",  headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,      bookLabel: "Get a quote"         },
+  { image: "/images/Designer(2).png", label: "Standard",  photo: "/images/Designer(2).png", headline: <>Find the right cleaner<br />from Boston's best<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book now"            },
+  { image: "/images/Designer(5).png",        label: "Deep clean", photo: "/images/Designer(5).png", headline: <>Book a deep clean<br />that actually goes deep<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book deep clean"     },
+  { image: "/images/Designer(6).png",          label: "Move-out",   photo: "/images/Designer(6).png", headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,        bookLabel: "Book move-out clean" },
+  { image: "/images/Designer(7).png",        label: "Commercial", photo: "/images/Designer(7).png", headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,      bookLabel: "Get a quote"         },
 ];
 function FrequencyDropdown({
     open,
@@ -779,22 +780,19 @@ function handleFrequencyField() {
                       width: 44,
                       height: 44,
                       borderRadius: 13,
-                      background: active ? "#38BDF8" : "#DDE8F0",
+                    
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      boxShadow: active
-                        ? "0 10px 22px rgba(56,189,248,0.28)"
-                        : "none",
+                     
                     }}
                   >
-                    <i
-                      className={`ti ${s.icon}`}
-                      style={{
-                        fontSize: 20,
-                        color: active ? "#fff" : K.muted,
-                      }}
-                      aria-hidden="true"
+                    <Image
+                      src={s.image}
+                      alt={s.label}
+                      width={34}
+                      height={34}
+                      style={{ objectFit: "contain" }}
                     />
                   </div>
   
@@ -1028,7 +1026,7 @@ function handleFrequencyField() {
           <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
             <AnimatePresence mode="wait">
               <motion.div
-                key={svc.image}
+                key={svc.photo}
                 initial={{ opacity: 0, scale: 1.03 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
@@ -1037,7 +1035,7 @@ function handleFrequencyField() {
                 className="flex justify-center items-center"
               >
                 <img
-                  src={svc.image}
+                  src={svc.photo}
                   alt={svc.label}
                   className="w-[400px] h-[300px]"
                   style={{
@@ -1064,7 +1062,7 @@ function handleFrequencyField() {
                 color: K.blue,
               }}
             >
-              <i className={`ti ${svc.icon}`} style={{ fontSize: 16 }} aria-hidden="true" />
+              <Image src={svc.image} alt={svc.label} width={16} height={16} style={{ objectFit: "contain" }} />
               <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: "-0.02em" }}>
                 {svc.label}
               </span>
