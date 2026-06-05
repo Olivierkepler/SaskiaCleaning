@@ -253,12 +253,13 @@ function SF({
   last?: boolean; active?: boolean; onClick?: () => void; placeholder?: boolean;
 }) {
   return (
-    <div  data-cursor-pointer="pointer"
+    <div
+      data-cursor-pointer="pointer"
       onClick={onClick}
+      className={`w-full min-h-[88px] px-4 sm:min-h-0 sm:h-full sm:px-7 ${last ? "" : "sm:border-r sm:border-solid sm:border-[#CBD5E1]"}`}
       style={{
         flex, display: "flex", alignItems: "center", alignSelf: "stretch", gap: 14,
-        padding: "0 28px", height: "100%", minWidth: 0,
-        borderRight: last ? "none" : `1px solid ${K.border}`,
+        minWidth: 0,
         cursor: "pointer", position: "relative",
         background: active ? K.blueLight : "transparent",
         transition: "background .12s",
@@ -280,7 +281,7 @@ function SF({
         <span style={{ fontSize: 11, fontWeight: 900, color: active ? K.blue : K.hint, textTransform: "uppercase", letterSpacing: "0.14em", lineHeight: 1, display: "block" }}>
           {label}
         </span>
-        <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", color: placeholder ? K.text : K.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1, display: "block" }}>
+        <span className="whitespace-normal sm:truncate sm:whitespace-nowrap" style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", color: placeholder ? K.text : K.text, lineHeight: 1, display: "block" }}>
           {value}
         </span>
       </div>
@@ -640,7 +641,10 @@ export default function CleaningEstimator() {
   const rootRef = useRef<HTMLElement>(null);
 
   const [frequency, setFrequency] = useState("Bi-weekly");
-const [frequencyOpen, setFrequencyOpen] = useState(false);
+  const [frequencyOpen, setFrequencyOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+
+  const mobileSearchSummary = `${locCity}, ${locState} · ${date ? formatDate(date) : "Select date"} · ${frequency}`;
 
   useEffect(() => {
     function handle(e: MouseEvent) {
@@ -730,84 +734,70 @@ style={{
         <div style={{ minWidth: 0 }}>
           {/* Tabs */}
           <div
-            style={{
-              display: "flex",
-              gap: 8,
-              marginBottom: -1,
-              overflowX: "auto",
-              paddingBottom: 1,
-            }}
-          >
-            {SERVICES.map((s, i) => {
-              const active = serviceIdx === i;
-  
-              return (
-                <button
-                  key={s.label}
-                  onClick={() => setServiceIdx(i)}
-                  style={{
-                    minWidth: 108,
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    gap: 7,
-                    padding: "12px 18px 14px 12px",
+  className="
+    -mb-px grid grid-cols-2 gap-2
+    sm:flex sm:overflow-x-auto sm:pb-px
+    lg:gap-2
+  "
+>
+  {SERVICES.map((s, i) => {
+    const active = serviceIdx === i;
 
-                    
-                    cursor: "pointer",
-                    outline: "none",
+    return (
+      <button
+        key={s.label}
+        type="button"
+        onClick={() => setServiceIdx(i)}
+        className="
+          flex min-w-0 items-center gap-3 rounded-2xl
+          px-3 py-3 text-left transition-all duration-200
+          sm:min-w-[112px] sm:flex-col sm:items-center sm:gap-2
+          sm:rounded-b-none sm:rounded-t-[14px] sm:px-4 sm:py-3
+        "
+        style={{
+          cursor: "pointer",
+          outline: "none",
+          borderTop: `1.5px solid ${active ? K.border : "transparent"}`,
+          borderLeft: `1.5px solid ${active ? K.border : "transparent"}`,
+          borderRight: `1.5px solid ${active ? K.border : "transparent"}`,
+          borderBottom: "none",
+          background: active ? K.white : "#FAFCFD",
+          position: "relative",
+          zIndex: active ? 2 : 1,
+          marginBottom: active ? -1 : 0,
+          boxShadow: active ? "0 -2px 16px rgba(12,26,46,0.04)" : "none",
+        }}
+      >
+        <div
+          className="
+            grid h-10 w-10 shrink-0 place-items-center rounded-xl
+            sm:h-11 sm:w-11 sm:rounded-[13px]
+          "
+        >
+          <Image
+            src={s.image}
+            alt={s.label}
+            width={34}
+            height={34}
+            style={{ objectFit: "contain" }}
+          />
+        </div>
 
-
-                    borderTop: `1.5px solid ${active ? K.border : "transparent"}`,
-                    borderLeft: `1.5px solid ${active ? K.border : "transparent"}`,
-                    borderRight: `1.5px solid ${active ? K.border : "transparent"}`,
-
-
-                    borderBottom: "none",
-                    borderRadius: "14px 14px 0 0",
-                    background: active ? K.white : "#FAFCFD",
-                    position: "relative",
-                    zIndex: active ? 2 : 1,
-                    marginBottom: active ? -1 : 0,
-                    boxShadow: active ? "0 -2px 16px rgba(12,26,46,0.04)" : "none",
-                    transition: "all .18s ease",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 44,
-                      height: 44,
-                      borderRadius: 13,
-                    
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                     
-                    }}
-                  >
-                    <Image
-                      src={s.image}
-                      alt={s.label}
-                      width={34}
-                      height={34}
-                      style={{ objectFit: "contain" }}
-                    />
-                  </div>
-  
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 800,
-                      color: active ? K.text : K.muted,
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {s.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        <span
+          className="
+            truncate text-[12px] font-extrabold
+            sm:whitespace-nowrap
+          "
+          style={{
+            color: active ? K.text : K.muted,
+          }}
+        >
+          {s.label}
+        </span>
+      </button>
+    );
+  })}
+</div>
   
           {/* Main Card */}
           <div
@@ -824,16 +814,47 @@ style={{
             {/* Search Bar */}
             <div
               style={{
-                display: "flex",
-                alignItems: "stretch",
-                height: 88,
                 borderBottom: `1.5px solid ${K.border}`,
                 background: K.white,
-                position: "relative",
-                zIndex: 50,
               }}
             >
-              <div style={{ flex: 1.33, position: "relative", display: "flex", alignItems: "stretch", zIndex: locOpen ? 99999 : undefined }}>
+              <button
+                type="button"
+                className="flex w-full items-center justify-between gap-3 px-4 py-4 sm:hidden"
+                onClick={() => setMobileSearchOpen((value) => !value)}
+                style={{
+                  cursor: "pointer",
+                  border: "none",
+                  background: "transparent",
+                  textAlign: "left",
+                }}
+              >
+                <span
+                  className="whitespace-normal"
+                  style={{
+                    fontSize: 18,
+                    fontWeight: 800,
+                    letterSpacing: "-0.03em",
+                    color: K.text,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {mobileSearchSummary}
+                </span>
+                <i
+                  className={`ti ${mobileSearchOpen ? "ti-chevron-up" : "ti-chevron-down"}`}
+                  style={{ fontSize: 18, color: K.hint, flexShrink: 0 }}
+                  aria-hidden="true"
+                />
+              </button>
+
+              <div
+                className={`relative z-50 flex-col ${mobileSearchOpen ? "flex" : "hidden"} sm:flex sm:h-[88px] sm:flex-row sm:items-stretch`}
+              >
+              <div
+                className="relative flex w-full min-h-[88px] items-stretch border-b border-solid border-[#CBD5E1] sm:min-h-0 sm:flex-[1.33] sm:border-b-0"
+                style={{ zIndex: locOpen ? 99999 : undefined }}
+              >
                 <SF
                   icon="ti-map-pin"
                   label="Location"
@@ -849,8 +870,8 @@ style={{
                   onCitySelect={handleCitySelect}
                 />
               </div>
-  
-              <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "stretch" }}>
+
+              <div className="relative flex w-full min-h-[88px] items-stretch border-b border-solid border-[#CBD5E1] sm:min-h-0 sm:flex-1 sm:border-b-0">
                 <SF
                   icon="ti-calendar"
                   label="Date"
@@ -861,25 +882,26 @@ style={{
                 />
                 <CalendarDropdown open={dateOpen} selected={date} onSelect={handleDateSelect} />
               </div>
-  
-              {/* <SF icon={svc.icon} label="Service" value={svc.label} flex={1.1} /> */}
-              <div style={{ flex: 1, position: "relative", display: "flex", alignItems: "stretch" }}>
-  <SF
-    icon="ti-repeat"
-    label="Frequency"
-    value={frequency}
-    active={frequencyOpen}
-    onClick={handleFrequencyField}
-    flex={1}
-    last
-  />
 
-  <FrequencyDropdown
-    open={frequencyOpen}
-    selected={frequency}
-    onSelect={handleFrequencySelect}
-  />
-</div>
+              {/* <SF icon={svc.icon} label="Service" value={svc.label} flex={1.1} /> */}
+              <div className="relative flex w-full min-h-[88px] items-stretch sm:min-h-0 sm:flex-1">
+                <SF
+                  icon="ti-repeat"
+                  label="Frequency"
+                  value={frequency}
+                  active={frequencyOpen}
+                  onClick={handleFrequencyField}
+                  flex={1}
+                  last
+                />
+
+                <FrequencyDropdown
+                  open={frequencyOpen}
+                  selected={frequency}
+                  onSelect={handleFrequencySelect}
+                />
+              </div>
+              </div>
             </div>
   
             {/* Active Panel */}
