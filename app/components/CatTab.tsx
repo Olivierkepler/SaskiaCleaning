@@ -408,7 +408,51 @@ const threeCol:   React.CSSProperties = { display: "grid", gridTemplateColumns: 
 const addonsGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr",     gap: 6  };
 const sec:        React.CSSProperties = { fontSize: 10, fontWeight: 800, color: K.hint, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 };
 const chipsRow:   React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 6 };
-
+function CollapsibleGroup({
+    title,
+    defaultOpen = false,
+    children,
+  }: {
+    title: string;
+    defaultOpen?: boolean;
+    children: React.ReactNode;
+  }) {
+    const [open, setOpen] = useState(defaultOpen);
+  
+    return (
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          className="flex w-full items-center justify-between gap-4 p-4 text-left sm:p-5"
+        >
+          <span style={sec}>{title}</span>
+  
+          <motion.i
+            className="ti ti-chevron-down"
+            animate={{ rotate: open ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+            style={{ fontSize: 18, color: K.hint }}
+            aria-hidden="true"
+          />
+        </button>
+  
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
+              className="overflow-hidden"
+            >
+              <div className="px-4 pb-4 sm:px-5 sm:pb-5">{children}</div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
+    );
+  }
 // ── Service panels ─────────────────────────────────────────────────────────────
 function StandardPanel({
     onPrice,
@@ -450,70 +494,38 @@ function StandardPanel({
   }, [bedIdx, bathIdx, freqIdx, addonTotal, onPrice]);
 
   return (
-    <div className="grid gap-5 lg:grid-cols-2">
-      {/* Bedrooms */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <p style={sec}>Bedrooms</p>
-  
+    <div className="grid gap-4 lg:grid-cols-2">
+      <CollapsibleGroup title="Bedrooms" defaultOpen>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {BEDS.map((b, i) => (
-            <Chip
-              key={b}
-              label={b}
-              selected={bedIdx === i}
-              onClick={() => setBedIdx(i)}
-            />
+            <Chip key={b} label={b} selected={bedIdx === i} onClick={() => setBedIdx(i)} />
           ))}
         </div>
-      </section>
+      </CollapsibleGroup>
   
-      {/* Bathrooms */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <p style={sec}>Bathrooms</p>
-  
+      <CollapsibleGroup title="Bathrooms" defaultOpen>
         <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
           {[1, 1.5, 2, 2.5, 3].map((b, i) => (
-            <Chip
-              key={b}
-              label={String(b)}
-              selected={bathIdx === i}
-              onClick={() => setBathIdx(i)}
-            />
+            <Chip key={b} label={String(b)} selected={bathIdx === i} onClick={() => setBathIdx(i)} />
           ))}
         </div>
-      </section>
+      </CollapsibleGroup>
   
-      {/* Frequency */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <p style={sec}>Frequency</p>
-  
+      <CollapsibleGroup title="Frequency">
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {FREQS.map((f) => (
-            <Chip
-              key={f.label}
-              label={f.label}
-              selected={frequency === f.label}
-              onClick={() => onFrequencyChange(f.label)}
-            />
+            <Chip key={f.label} label={f.label} selected={frequency === f.label} onClick={() => onFrequencyChange(f.label)} />
           ))}
         </div>
-      </section>
+      </CollapsibleGroup>
   
-      {/* Add-ons */}
-      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
-        <p style={sec}>Add-ons</p>
-  
+      <CollapsibleGroup title="Add-ons">
         <div className="grid gap-2 sm:grid-cols-2">
           {ADDONS.map((a, i) => (
-            <Addon
-              key={a.label}
-              label={a.label}
-              selected={addons.has(i)}
-              onClick={() => toggle(i)}
-            />
+            <Addon key={a.label} label={a.label} selected={addons.has(i)} onClick={() => toggle(i)} />
           ))}
         </div>
-      </section>
+      </CollapsibleGroup>
     </div>
   );
 }
@@ -749,6 +761,8 @@ function handleFrequencyField() {
     setFrequencyOpen(false);
   }
   const panels = [
+
+    
     <StandardPanel
     key="std"
     onPrice={setPrices}
