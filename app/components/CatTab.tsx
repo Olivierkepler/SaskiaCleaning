@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import { MASSACHUSETTS_LOCATIONS } from "@/app/data/massachusettsLocations";
 import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
 
@@ -428,13 +429,12 @@ function CollapsibleGroup({
         >
           <span style={sec}>{title}</span>
   
-          <motion.i
-            className="ti ti-chevron-down"
+          <motion.div
             animate={{ rotate: open ? 180 : 0 }}
             transition={{ duration: 0.2 }}
-            style={{ fontSize: 18, color: K.hint }}
-            aria-hidden="true"
-          />
+          >
+            <ChevronDown size={18} className="text-slate-400" />
+          </motion.div>
         </button>
   
         <AnimatePresence initial={false}>
