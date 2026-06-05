@@ -450,18 +450,70 @@ function StandardPanel({
   }, [bedIdx, bathIdx, freqIdx, addonTotal, onPrice]);
 
   return (
-    <div style={twoCol}>
-      <div><p style={sec}>Bedrooms</p><div style={chipsRow}>{BEDS.map((b, i) => <Chip key={b} label={b} selected={bedIdx === i} onClick={() => setBedIdx(i)} />)}</div></div>
-      <div><p style={sec}>Bathrooms</p><div style={chipsRow}>{[1, 1.5, 2, 2.5, 3].map((b, i) => <Chip key={b} label={String(b)} selected={bathIdx === i} onClick={() => setBathIdx(i)} />)}</div></div>
-      <div><p style={sec}>Frequency</p><div style={chipsRow}>{FREQS.map((f, i) => 
-        
-        <Chip
-        key={f.label}
-        label={f.label}
-        selected={frequency === f.label}
-        onClick={() => onFrequencyChange(f.label)}
-      />)}</div></div>
-      <div><p style={sec}>Add-ons</p><div style={addonsGrid}>{ADDONS.map((a, i) => <Addon key={a.label} label={a.label} selected={addons.has(i)} onClick={() => toggle(i)} />)}</div></div>
+    <div className="grid gap-5 lg:grid-cols-2">
+      {/* Bedrooms */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+        <p style={sec}>Bedrooms</p>
+  
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {BEDS.map((b, i) => (
+            <Chip
+              key={b}
+              label={b}
+              selected={bedIdx === i}
+              onClick={() => setBedIdx(i)}
+            />
+          ))}
+        </div>
+      </section>
+  
+      {/* Bathrooms */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+        <p style={sec}>Bathrooms</p>
+  
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
+          {[1, 1.5, 2, 2.5, 3].map((b, i) => (
+            <Chip
+              key={b}
+              label={String(b)}
+              selected={bathIdx === i}
+              onClick={() => setBathIdx(i)}
+            />
+          ))}
+        </div>
+      </section>
+  
+      {/* Frequency */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+        <p style={sec}>Frequency</p>
+  
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {FREQS.map((f) => (
+            <Chip
+              key={f.label}
+              label={f.label}
+              selected={frequency === f.label}
+              onClick={() => onFrequencyChange(f.label)}
+            />
+          ))}
+        </div>
+      </section>
+  
+      {/* Add-ons */}
+      <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+        <p style={sec}>Add-ons</p>
+  
+        <div className="grid gap-2 sm:grid-cols-2">
+          {ADDONS.map((a, i) => (
+            <Addon
+              key={a.label}
+              label={a.label}
+              selected={addons.has(i)}
+              onClick={() => toggle(i)}
+            />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
