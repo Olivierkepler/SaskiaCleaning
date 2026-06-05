@@ -42,7 +42,7 @@ export default function ChatBot() {
   return (
     <div data-chatbot>
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-[9999] w-[340px] overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200">
+        <div className="fixed bottom-20 right-6 z-[9999] w-[340px] overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-slate-200">
           <div className="flex items-center justify-between bg-sky-500 px-5 py-4 text-white">
             <div>
               <p className="text-sm font-bold">Saskia Assistant</p>

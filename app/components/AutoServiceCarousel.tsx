@@ -81,9 +81,6 @@ const services = [
 type Service = (typeof services)[number];
 
 const COUNT = services.length;
-const CARD_WIDTH = 380;
-const GAP = 28;
-const STRIDE = CARD_WIDTH + GAP;
 const AUTO_DELAY = 4000;
 const RESUME_AFTER = 6000;
 
@@ -244,7 +241,7 @@ function ServiceCard({
       onClick={onClick}
       aria-label={`View details for ${service.title}`}
       className={`
-        group relative w-[min(380px,calc(100vw-3rem))] shrink-0 overflow-hidden rounded-[2rem]
+        group relative h-full w-full shrink-0 overflow-hidden rounded-[2rem]
         bg-white text-left ring-1 transition duration-500
         ease-[cubic-bezier(0.22,1,0.36,1)]
         hover:-translate-y-2 hover:ring-sky-200
@@ -286,7 +283,7 @@ function ServiceCard({
           style={{ width: active ? 56 : 32 }}
         />
 
-        <h3 className="font-[family-name:var(--font-cormorant)] text-[1.85rem] font-semibold leading-[0.98] tracking-[-0.05em] text-slate-950">
+        <h3 className="font-[family-name:var(--font-cormorant)] text-[1.85rem] font-semibold leading-[0.98] tracking-[-0.05em] text-sky-500">
           {service.title}
         </h3>
 
@@ -299,7 +296,7 @@ function ServiceCard({
             Details
           </span>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-950 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition duration-300 group-hover:bg-sky-500">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition duration-300 group-hover:bg-slate-950">
             View
             <IconArrowUpRight />
           </span>
@@ -476,8 +473,55 @@ export default function ServiceCarousel() {
   const activeRef = useRef(activeIndex);
   const playingRef = useRef(isPlaying);
   const trackRef = useRef<HTMLDivElement>(null);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const scrollRaf = useRef<number | null>(null);
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dotKey = useRef(0);
+
+  const getNearestIndex = useCallback(() => {
+    const track = trackRef.current;
+    if (!track || cardRefs.current.length === 0) return 0;
+
+    const trackCenter = track.scrollLeft + track.clientWidth / 2;
+    let nearest = 0;
+    let minDistance = Infinity;
+
+    cardRefs.current.forEach((card, index) => {
+      if (!card) return;
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(cardCenter - trackCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = index;
+      }
+    });
+
+    return nearest;
+  }, []);
+
+  const syncScrollPadding = useCallback(() => {
+    const track = trackRef.current;
+    const card = cardRefs.current[0];
+    if (!track || !card) return;
+
+    const pad = Math.max(16, (track.clientWidth - card.offsetWidth) / 2);
+    track.style.scrollPaddingInline = `${pad}px`;
+  }, []);
+
+  const scrollTo = useCallback((index: number, smooth = true) => {
+    const track = trackRef.current;
+    const card = cardRefs.current[index];
+    if (!track || !card) return;
+
+    const target =
+      card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2;
+    const maxScroll = track.scrollWidth - track.clientWidth;
+
+    track.scrollTo({
+      left: Math.max(0, Math.min(target, maxScroll)),
+      behavior: smooth ? "smooth" : "auto",
+    });
+  }, []);
 
   const clearResumeTimer = useCallback(() => {
     if (resumeTimer.current) {
@@ -500,16 +544,6 @@ export default function ServiceCarousel() {
       resumeTimer.current = null;
     }, RESUME_AFTER);
   }, [clearResumeTimer, setAutoplay]);
-
-  const scrollTo = useCallback((index: number) => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    track.scrollTo({
-      left: index * STRIDE,
-      behavior: "smooth",
-    });
-  }, []);
 
   const goTo = useCallback(
     (rawIndex: number, userInitiated = false) => {
@@ -562,28 +596,54 @@ export default function ServiceCarousel() {
     if (!track) return;
 
     const handleScroll = () => {
-      const index = Math.round(track.scrollLeft / STRIDE);
-      const clampedIndex = Math.max(0, Math.min(COUNT - 1, index));
-
-      if (clampedIndex !== activeRef.current) {
-        setActiveIndex(clampedIndex);
-        activeRef.current = clampedIndex;
-        dotKey.current += 1;
+      if (scrollRaf.current !== null) {
+        cancelAnimationFrame(scrollRaf.current);
       }
+
+      scrollRaf.current = requestAnimationFrame(() => {
+        const nearest = getNearestIndex();
+
+        if (nearest !== activeRef.current) {
+          setActiveIndex(nearest);
+          activeRef.current = nearest;
+          dotKey.current += 1;
+        }
+      });
     };
 
     track.addEventListener("scroll", handleScroll, { passive: true });
-    return () => track.removeEventListener("scroll", handleScroll);
-  }, []);
+    return () => {
+      track.removeEventListener("scroll", handleScroll);
+      if (scrollRaf.current !== null) {
+        cancelAnimationFrame(scrollRaf.current);
+      }
+    };
+  }, [getNearestIndex]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+
+    syncScrollPadding();
+    scrollTo(activeRef.current, false);
+
+    const observer = new ResizeObserver(() => {
+      syncScrollPadding();
+      scrollTo(activeRef.current, false);
+    });
+
+    observer.observe(track);
+    return () => observer.disconnect();
+  }, [scrollTo, syncScrollPadding]);
 
   useEffect(() => {
     return () => clearResumeTimer();
   }, [clearResumeTimer]);
 
   return (
-    <section className="relative w-screen  overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
-      <div className="relative w-full">
-        <header className="mx-auto mb-16 max-w-4xl px-6 text-center">
+    <section id="services" className="relative overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
+      <div className="relative mx-auto w-full max-w-[1280px] px-4 sm:px-6">
+        <header className="mx-auto mb-16 max-w-4xl text-center">
           <h2 className="font-['Poppins',sans-serif] text-[clamp(2.8rem,3.5vw,5rem)] leading-[0.9] tracking-[-0.04em] text-slate-950">
             Elevated cleaning for{" "}
             <em className="font-light italic text-sky-500">modern living</em>
@@ -604,18 +664,23 @@ export default function ServiceCarousel() {
             }}
             aria-label="Cleaning services carousel"
             className="
-              flex w-full gap-7 overflow-x-auto overscroll-x-contain
-              scroll-smooth py-8
-              [scroll-snap-type:x_mandatory]
+              flex w-full snap-x snap-mandatory gap-5 overflow-x-auto
+              overscroll-x-contain scroll-smooth py-8
+              sm:gap-6 lg:gap-7
               [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
             "
-            style={{
-              paddingLeft: `max(1.5rem, calc((100vw - (${CARD_WIDTH * 3 + GAP * 2}px)) / 2))`,
-              paddingRight: `max(1.5rem, calc((100vw - (${CARD_WIDTH * 3 + GAP * 2}px)) / 2))`,
-            }}
           >
             {services.map((service, index) => (
-              <div key={service.title} className="[scroll-snap-align:center]">
+              <div
+                key={service.title}
+                ref={(el) => {
+                  cardRefs.current[index] = el;
+                }}
+                className="
+                  w-[min(calc(100vw-2.5rem),380px)] shrink-0 snap-center
+                  sm:w-[min(320px,42vw)] md:w-[340px] lg:w-[380px]
+                "
+              >
                 <ServiceCard
                   service={service}
                   index={index}
