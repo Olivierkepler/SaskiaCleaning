@@ -2,8 +2,6 @@
 
 import { motion, useReducedMotion, Variants } from "framer-motion";
 
-/* ─── Types ──────────────────────────────────────────────────────────────── */
-
 type InfoIconType = "phone" | "envelope" | "globe";
 
 type InfoItemData = {
@@ -13,8 +11,6 @@ type InfoItemData = {
   href?: string;
   ariaLabel?: string;
 };
-
-/* ─── Data ───────────────────────────────────────────────────────────────── */
 
 const ITEMS: InfoItemData[] = [
   {
@@ -37,72 +33,64 @@ const ITEMS: InfoItemData[] = [
   },
 ];
 
-/* ─── Component ──────────────────────────────────────────────────────────── */
-
 export default function InfoBar() {
   const prefersReducedMotion = useReducedMotion();
 
-  // Parent container variant to coordinate the staggered scroll animation
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: prefersReducedMotion ? 0 : 0.15, // Time gap between each card's entrance animation
+        staggerChildren: prefersReducedMotion ? 0 : 0.08,
       },
     },
   };
 
-  // Individual card variant for the scroll entrance
   const cardEntranceVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      y: prefersReducedMotion ? 0 : 40 
+    hidden: {
+      opacity: 0,
+      y: prefersReducedMotion ? 0 : 18,
     },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       y: 0,
       transition: {
         type: "spring",
-        stiffness: 100,
-        damping: 15,
-        duration: 0.8
-      }
+        stiffness: 130,
+        damping: 18,
+      },
     },
   };
 
   return (
     <section
-    
       aria-label="Contact Information"
-      className="relative overflow-hidden bg-white py-20 "
+      className="relative bg-white px-4 py-8 sm:px-6 sm:py-10 lg:px-12"
     >
-  
-
-    
-
-      {/* This wrapper hooks into the scroll viewport. 
-        It resets and staggers the children EVERY time it enters from the top or bottom screen boundary.
-      */}
-      <motion.div 
-        className="relative mx-auto grid max-w-9xl grid-cols-1 gap-6 px-6 md:grid-cols-3 lg:px-28"
+      <motion.div
+        className="
+          mx-auto grid max-w-7xl grid-cols-1 gap-3
+          sm:grid-cols-2
+          lg:grid-cols-3
+        "
         variants={containerVariants}
         initial="hidden"
         whileInView="visible"
-        // UPDATED VIEWPORT SETTINGS 👇
-        viewport={{ 
-          once: false,      // Allows multi-directional animations (up & down)
-          amount: 0.15,     // Triggers when 15% of the element enters the viewport
-          margin: "-60px"   // Screen margin buffer preventing jittering near view cutoffs
+        viewport={{
+          once: true,
+          amount: 0.2,
         }}
       >
         {ITEMS.map((item) => (
           <motion.div
             key={item.title}
-            variants={cardEntranceVariants} 
+            variants={cardEntranceVariants}
             className="h-full"
           >
-            <InfoItem {...item} prefersReducedMotion={!!prefersReducedMotion} />
+            <InfoItem
+              {...item}
+              prefersReducedMotion={!!prefersReducedMotion}
+            />
           </motion.div>
         ))}
       </motion.div>
@@ -110,86 +98,82 @@ export default function InfoBar() {
   );
 }
 
-/* ─── Item ───────────────────────────────────────────────────────────────── */
-
-function InfoItem({ icon, title, lines, href, prefersReducedMotion }: InfoItemData & { prefersReducedMotion: boolean }) {
+function InfoItem({
+  icon,
+  title,
+  lines,
+  href,
+  ariaLabel,
+  prefersReducedMotion,
+}: InfoItemData & { prefersReducedMotion: boolean }) {
   const content = (
     <motion.div
-      whileHover={prefersReducedMotion ? {} : "hover"}
+      whileHover={
+        prefersReducedMotion
+          ? undefined
+          : {
+              y: -3,
+              boxShadow: "0 16px 45px rgba(15, 23, 42, 0.08)",
+            }
+      }
+      transition={{ type: "spring", stiffness: 320, damping: 24 }}
       className="
-        group relative h-full overflow-hidden
-        rounded-3xl 
-        bg-white/90 p-8
-    
-        backdrop-blur-sm
-        cursor-pointer
+        group relative h-full overflow-hidden rounded-2xl
+        border border-slate-200/80 bg-white
+        px-4 py-4 shadow-sm
+        transition-colors duration-300
+        hover:border-sky-200
+        sm:px-5 sm:py-5
       "
-      style={{ transition: "border-color 0.4s, box-shadow 0.4s" }}
-      variants={{
-        hover: {
-          y: -6,
-          borderColor: "rgb(191, 219, 254)",
-          boxShadow: "0 18px 60px rgba(37, 99, 235, 0.12)"
-        }
-      }}
-      transition={{ type: "spring", stiffness: 300, damping: 20 }}
     >
-      {/* Glow */}
       <div
         className="
-          absolute inset-0 opacity-0 transition-opacity duration-500
+          pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-500
           group-hover:opacity-100
-          bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.08),transparent_55%)]
+          bg-[radial-gradient(circle_at_top_right,rgba(56,189,248,0.10),transparent_58%)]
         "
       />
 
-      <div className="relative flex items-start gap-5">
-        
-        {/* Animated Icon Container */}
+      <div className="relative flex items-center gap-4">
         <motion.div
-          variants={{
-            hover: { scale: 1.1, rotate: icon === "phone" ? -10 : 0 }
-          }}
-          transition={{ type: "spring", stiffness: 400, damping: 15 }}
+          whileHover={prefersReducedMotion ? undefined : { scale: 1.06 }}
+          transition={{ type: "spring", stiffness: 400, damping: 18 }}
           className="
-            flex h-16 w-16 shrink-0 items-center justify-center
-            rounded-2xl
-            bg-gradient-to-br from-blue-600 to-sky-400
-            text-white
-            shadow-lg shadow-blue-500/20
+            flex h-11 w-11 shrink-0 items-center justify-center
+            rounded-xl bg-sky-500 text-white
+            shadow-md shadow-sky-500/20
+            sm:h-12 sm:w-12
           "
         >
           <InfoIcon type={icon} />
         </motion.div>
 
-        {/* Text */}
-        <div>
-          <h3 className="text-xl font-bold tracking-tight text-slate-900">
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-sm font-extrabold tracking-tight text-slate-950 sm:text-base">
             {title}
           </h3>
 
-          <div className="mt-2 space-y-1 text-[15px] leading-relaxed">
-            <p className="font-medium text-slate-800">
+          <div className="mt-1 min-w-0 text-sm leading-5">
+            <p className="truncate font-semibold text-slate-800">
               {lines[0]}
             </p>
-            <p className="text-slate-500">
+
+            <p className="truncate text-xs font-medium text-slate-500 sm:text-sm">
               {lines[1]}
             </p>
           </div>
-
-          {/* Animated Accent Line */}
-          <motion.div
-            variants={{
-              hover: { width: "80px" }
-            }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
-            className="
-              mt-5 h-[2px] w-10
-              bg-gradient-to-r from-blue-500 to-sky-400
-            "
-          />
         </div>
 
+        <span
+          aria-hidden="true"
+          className="
+            hidden text-slate-300 transition-transform duration-300
+            group-hover:translate-x-0.5 group-hover:text-sky-400
+            sm:block
+          "
+        >
+          →
+        </span>
       </div>
     </motion.div>
   );
@@ -201,6 +185,7 @@ function InfoItem({ icon, title, lines, href, prefersReducedMotion }: InfoItemDa
       href={href}
       target={href.startsWith("http") ? "_blank" : undefined}
       rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
+      aria-label={ariaLabel ?? `${title}: ${lines[0]}`}
       className="block h-full"
     >
       {content}
@@ -208,16 +193,14 @@ function InfoItem({ icon, title, lines, href, prefersReducedMotion }: InfoItemDa
   );
 }
 
-/* ─── Icons ──────────────────────────────────────────────────────────────── */
-
 function InfoIcon({ type }: { type: InfoIconType }) {
   const common = {
-    width: 24,
-    height: 24,
+    width: 21,
+    height: 21,
     viewBox: "0 0 24 24",
     fill: "none",
     stroke: "currentColor" as const,
-    strokeWidth: 1.8,
+    strokeWidth: 1.9,
     strokeLinecap: "round" as const,
     strokeLinejoin: "round" as const,
   };

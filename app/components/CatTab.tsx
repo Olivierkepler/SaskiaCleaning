@@ -550,14 +550,60 @@ function DeepCleanPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => 
   useEffect(() => onPrice(calc(DEEP_BASE[sizeIdx] + DEEP_COND[condIdx] + addonTotal)), [sizeIdx, condIdx, addonTotal]);
 
   return (
-    <div style={twoCol}>
-      <div><p style={sec}>Home size</p><div style={chipsRow}>{SIZES.map((s, i) => <Chip key={s} label={s} selected={sizeIdx === i} onClick={() => setSize(i)} />)}</div></div>
-      <div><p style={sec}>Condition</p><div style={chipsRow}>{CONDS.map((c, i) => <Chip key={c} label={c} selected={condIdx === i} onClick={() => setCond(i)} />)}</div></div>
-      <div><p style={sec}>Deep clean extras</p><div style={addonsGrid}>{ADDONS.map((a, i) => <Addon key={a.label} label={a.label} selected={addons.has(i)} onClick={() => toggle(i)} />)}</div></div>
-      <div>
-        <p style={sec}>What's included</p>
-        <Checklist items={["Everything in Standard clean","Inside appliances (fridge + oven)","Light fixtures & ceiling fans","Behind & under furniture","Window sills & tracks","Sanitize all surfaces"]} />
-      </div>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <CollapsibleGroup title="Home size" defaultOpen>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {SIZES.map((s, i) => (
+            <Chip
+              key={s}
+              label={s}
+              selected={sizeIdx === i}
+              onClick={() => setSize(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Condition" defaultOpen>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {CONDS.map((c, i) => (
+            <Chip
+              key={c}
+              label={c}
+              selected={condIdx === i}
+              onClick={() => setCond(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Deep clean extras">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {ADDONS.map((a, i) => (
+            <Addon
+              key={a.label}
+              label={a.label}
+              selected={addons.has(i)}
+              onClick={() => toggle(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="What's included">
+        <div className="rounded-xl bg-slate-50 p-4">
+          <Checklist
+            items={[
+              "Everything in Standard clean",
+              "Inside appliances (fridge + oven)",
+              "Light fixtures & ceiling fans",
+              "Behind & under furniture",
+              "Window sills & tracks",
+              "Sanitize all surfaces",
+            ]}
+          />
+        </div>
+      </CollapsibleGroup>
     </div>
   );
 }
@@ -582,15 +628,62 @@ function MoveOutPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => vo
   useEffect(() => onPrice(calc(MO_BASE[sqftIdx] + addonTotal)), [sqftIdx, addonTotal]);
 
   return (
-    <div style={twoCol}>
-      <div><p style={sec}>Property type</p><div style={chipsRow}>{TYPES.map((t, i) => <Chip key={t} label={t} selected={typeIdx === i} onClick={() => setType(i)} />)}</div></div>
-      <div><p style={sec}>Square footage</p><div style={chipsRow}>{SQFTS.map((s, i) => <Chip key={s} label={s} selected={sqftIdx === i} onClick={() => setSqft(i)} />)}</div></div>
-      <div><p style={sec}>Move-out extras</p><div style={addonsGrid}>{ADDONS.map((a, i) => <Addon key={a.label} label={a.label} selected={addons.has(i)} onClick={() => toggle(i)} />)}</div></div>
-      <div>
-        <Notice text={
-          <><strong style={{ color: "#082F49" }}>Deposit-back guarantee.</strong> Our move-out clean meets most landlord inspection standards. If your deposit is withheld for cleaning reasons, we'll re-clean for free.</>
-        } />
-      </div>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <CollapsibleGroup title="Property type" defaultOpen>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {TYPES.map((t, i) => (
+            <Chip
+              key={t}
+              label={t}
+              selected={typeIdx === i}
+              onClick={() => setType(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Square footage" defaultOpen>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {SQFTS.map((s, i) => (
+            <Chip
+              key={s}
+              label={s}
+              selected={sqftIdx === i}
+              onClick={() => setSqft(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Move-out extras">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {ADDONS.map((a, i) => (
+            <Addon
+              key={a.label}
+              label={a.label}
+              selected={addons.has(i)}
+              onClick={() => toggle(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Deposit Protection">
+        <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
+          <Notice
+            text={
+              <>
+                <strong style={{ color: "#082F49" }}>
+                  Deposit-back guarantee.
+                </strong>{" "}
+                Our move-out clean meets most landlord inspection standards. If
+                your deposit is withheld for cleaning reasons, we'll re-clean for
+                free.
+              </>
+            }
+          />
+        </div>
+      </CollapsibleGroup>
     </div>
   );
 }
@@ -621,13 +714,84 @@ function CommercialPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) =>
   useEffect(() => onPrice(calc(Math.round((COM_BASE[sqftIdx] + addonTotal) * SCHEDS[schedIdx].mult))), [sqftIdx, schedIdx, addonTotal]);
 
   return (
-    <div style={threeCol}>
-      <div><p style={sec}>Space type</p><div style={chipsRow}>{TYPES.map((t, i) => <Chip key={t} label={t} selected={typeIdx === i} onClick={() => setType(i)} />)}</div></div>
-      <div><p style={sec}>Square footage</p><div style={chipsRow}>{SQFTS.map((s, i) => <Chip key={s} label={s} selected={sqftIdx === i} onClick={() => setSqft(i)} />)}</div></div>
-      <div><p style={sec}>Schedule</p><div style={chipsRow}>{SCHEDS.map((s, i) => <Chip key={s.label} label={s.label} selected={schedIdx === i} onClick={() => setSched(i)} />)}</div></div>
-      <div><p style={sec}>Add-ons</p><div style={addonsGrid}>{ADDONS.map((a, i) => <Addon key={a.label} label={a.label} selected={addons.has(i)} onClick={() => toggle(i)} />)}</div></div>
-      <div><p style={sec}>Timing</p><div style={chipsRow}>{TIMINGS.map((t, i) => <Chip key={t} label={t} selected={timingIdx === i} onClick={() => setTiming(i)} />)}</div></div>
-      <div><p style={sec}>Contract</p><div style={chipsRow}>{CONTRACTS.map((c, i) => <Chip key={c} label={c} selected={contractIdx === i} onClick={() => setContract(i)} />)}</div></div>
+    <div className="grid gap-4 lg:grid-cols-2">
+      <CollapsibleGroup title="Space type" defaultOpen>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {TYPES.map((t, i) => (
+            <Chip
+              key={t}
+              label={t}
+              selected={typeIdx === i}
+              onClick={() => setType(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Square footage" defaultOpen>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {SQFTS.map((s, i) => (
+            <Chip
+              key={s}
+              label={s}
+              selected={sqftIdx === i}
+              onClick={() => setSqft(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Schedule" defaultOpen>
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {SCHEDS.map((s, i) => (
+            <Chip
+              key={s.label}
+              label={s.label}
+              selected={schedIdx === i}
+              onClick={() => setSched(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Add-ons">
+        <div className="grid gap-2 sm:grid-cols-2">
+          {ADDONS.map((a, i) => (
+            <Addon
+              key={a.label}
+              label={a.label}
+              selected={addons.has(i)}
+              onClick={() => toggle(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Timing">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {TIMINGS.map((t, i) => (
+            <Chip
+              key={t}
+              label={t}
+              selected={timingIdx === i}
+              onClick={() => setTiming(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
+  
+      <CollapsibleGroup title="Contract">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
+          {CONTRACTS.map((c, i) => (
+            <Chip
+              key={c}
+              label={c}
+              selected={contractIdx === i}
+              onClick={() => setContract(i)}
+            />
+          ))}
+        </div>
+      </CollapsibleGroup>
     </div>
   );
 }
@@ -907,11 +1071,13 @@ style={{
                 >
                   {mobileSearchSummary}
                 </span>
-                <i
-                  className={`ti ${mobileSearchOpen ? "ti-chevron-up" : "ti-chevron-down"}`}
-                  style={{ fontSize: 18, color: K.hint, flexShrink: 0 }}
-                  aria-hidden="true"
-                />
+                <motion.div
+                  animate={{ rotate: mobileSearchOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ flexShrink: 0, color: K.hint }}
+                >
+                  <ChevronDown size={20} />
+                </motion.div>
               </button>
 
               <div

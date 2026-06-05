@@ -36,7 +36,10 @@ export default function Home() {
       <Navbar />
       <ChatBot />
       <Hero2 />
-      <InfoBar />
+      <div className="hidden sm:block">
+        <InfoBar />
+      </div>
+ 
 
       <div ref={socialSectionRef} className="relative">
         {showSocialCorner && <SocialCorner />}
