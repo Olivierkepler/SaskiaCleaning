@@ -35,7 +35,7 @@ function Counter({
         aria-label={`Decrease ${label}`}
         disabled={value <= min}
         onClick={() => onChange(Math.max(min, value - 1))}
-        className="flex h-full w-10 items-center justify-center text-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-30"
+        className="flex h-full w-10 items-center justify-center text-lg text-stone-400 transition-colors hover:bg-sky-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
       >
         −
       </button>
@@ -55,7 +55,7 @@ function Counter({
         aria-label={`Increase ${label}`}
         disabled={value >= max}
         onClick={() => onChange(Math.min(max, value + 1))}
-        className="flex h-full w-10 items-center justify-center text-lg text-stone-400 transition-colors hover:bg-stone-100 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-30"
+        className="flex h-full w-10 items-center justify-center text-lg text-stone-400 transition-colors hover:bg-sky-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
       >
         +
       </button>
