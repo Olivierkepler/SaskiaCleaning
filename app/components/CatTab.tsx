@@ -950,6 +950,18 @@ function handleFrequencyField() {
       background: K.white,
     }}
   >
+    <div className="mx-auto mt-20 max-w-4xl text-center">
+
+
+  <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
+    See Your Cleaning Price <span style={{ color: K.blue }}>Instantly</span>
+  </h2>
+
+  <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
+    Answer a few quick questions and receive an estimate customized to your
+    home or business.
+  </p>
+</div>
       <div
      
      className="grid grid-cols-1 gap-7 lg:grid-cols-[1.65fr_1fr] py-20"
@@ -959,6 +971,8 @@ style={{
   alignItems: "stretch",
 }}
       >
+
+        
         {/* Left Column */}
         <div style={{ minWidth: 0 }}>
           {/* Tabs */}
