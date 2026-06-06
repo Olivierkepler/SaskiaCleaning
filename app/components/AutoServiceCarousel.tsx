@@ -283,7 +283,7 @@ function ServiceCard({
           style={{ width: active ? 56 : 32 }}
         />
 
-        <h3 className="font-[family-name:var(--font-cormorant)] text-[1.85rem] font-semibold leading-[0.98] tracking-[-0.05em] text-sky-500">
+        <h3 className="text-[1.85rem] font-semibold leading-[0.98] tracking-[-0.05em] text-sky-500">
           {service.title}
         </h3>
 
@@ -374,7 +374,6 @@ function ServiceModal({
             <h2
               id="service-modal-title"
               className="
-                font-[family-name:var(--font-cormorant)]
                 text-[clamp(2.25rem,6vw,3.35rem)]
                 font-semibold leading-[0.9]
                 tracking-[-0.055em] text-white
@@ -644,7 +643,7 @@ export default function ServiceCarousel() {
     <section id="services" className="relative overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
       <div className="relative mx-auto w-full max-w-[1280px] px-4 sm:px-6">
         <header className="mx-auto mb-16 max-w-4xl text-center">
-          <h2 className="font-['Poppins',sans-serif] text-[clamp(2.8rem,3.5vw,5rem)] leading-[0.9] tracking-[-0.04em] text-slate-950">
+          <h2 className="font-heading text-[clamp(2.8rem,3.5vw,5rem)] leading-[0.9] tracking-[-0.04em] text-slate-950">
             Elevated cleaning for{" "}
             <em className="font-light italic text-sky-500">modern living</em>
           </h2>

@@ -948,7 +948,6 @@ function handleFrequencyField() {
     transition={{ duration: 0.7, ease: "easeOut" }}
     style={{
       background: K.white,
-      fontFamily: "Inter, sans-serif",
     }}
   >
       <div

@@ -91,7 +91,7 @@ export default function CleaningServicesPricing() {
               <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-200">
                 {selectedCategory.tag}
               </p>
-              <h3 className="font-[family-name:var(--font-cormorant)] text-4xl font-semibold leading-none text-white">
+              <h3 className="text-4xl font-semibold leading-none text-white">
                 {selectedCategory.title}
               </h3>
             </div>
@@ -141,7 +141,7 @@ export default function CleaningServicesPricing() {
             <span className="h-px w-6 bg-sky-300" />
           </div> */}
 
-          <h2 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.8rem,3.5vw,5.4rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950">
+          <h2 className="font-heading text-[clamp(2.8rem,3.5vw,5.4rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950">
             Cleaning & laundry pricing,{" "}
             <span className="font-light italic text-slate-400">refined.</span>
           </h2>
@@ -186,7 +186,7 @@ export default function CleaningServicesPricing() {
                     {category.tag}
                   </span>
 
-                  <span className="font-[family-name:var(--font-cormorant)] text-3xl text-white/35">
+                  <span className="text-3xl text-white/35">
                     {String(index + 1).padStart(2, "0")}
                   </span>
                 </div>
@@ -194,7 +194,7 @@ export default function CleaningServicesPricing() {
                 <div className="absolute bottom-6 left-6 right-6">
                   <div className="mb-4 h-[2px] w-10 bg-sky-400 transition-all duration-300 group-hover:w-16" />
 
-                  <h3 className="font-[family-name:var(--font-cormorant)] text-[2rem] font-semibold leading-[0.95] tracking-[-0.045em] text-white">
+                  <h3 className="text-[2rem] font-semibold leading-[0.95] tracking-[-0.045em] text-white">
                     {category.title}
                   </h3>
                 </div>

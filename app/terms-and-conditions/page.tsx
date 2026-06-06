@@ -27,7 +27,7 @@ export default function TermsAndConditionsPage() {
           Legal
         </p>
 
-        <h1 className="mt-4 font-[family-name:var(--font-cormorant)] text-[clamp(2.4rem,4vw,3.75rem)] font-semibold leading-[0.95] tracking-[-0.05em] text-slate-950">
+        <h1 className="font-heading mt-4 text-[clamp(2.4rem,4vw,3.75rem)] font-semibold leading-[0.95] tracking-[-0.05em] text-slate-950">
           Terms &amp; Conditions
         </h1>
 
@@ -48,7 +48,7 @@ export default function TermsAndConditionsPage() {
 
         <article className="mt-12 space-y-10 text-[15px] leading-8 text-slate-600">
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Services
             </h2>
             <p className="mt-4">
@@ -63,7 +63,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Quotes and Estimates
             </h2>
             <p className="mt-4">
@@ -77,7 +77,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Booking and Scheduling
             </h2>
             <p className="mt-4">
@@ -90,7 +90,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Access to Property
             </h2>
             <p className="mt-4">
@@ -104,7 +104,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Cancellations and Rescheduling
             </h2>
             <p className="mt-4">
@@ -118,7 +118,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Payment
             </h2>
             <p className="mt-4">
@@ -132,7 +132,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Satisfaction Policy
             </h2>
             <p className="mt-4">
@@ -148,7 +148,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Cleaning Supplies
             </h2>
             <p className="mt-4">
@@ -162,7 +162,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Pets
             </h2>
             <p className="mt-4">
@@ -175,7 +175,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Customer Responsibilities
             </h2>
             <p className="mt-4">You agree to:</p>
@@ -189,7 +189,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Services Not Included
             </h2>
             <p className="mt-4">
@@ -202,7 +202,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Limitation of Liability
             </h2>
             <p className="mt-4">
@@ -222,7 +222,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Right to Refuse Service
             </h2>
             <p className="mt-4">
@@ -234,7 +234,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               SMS and Text Consent
             </h2>
             <p className="mt-4">
@@ -248,7 +248,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Intellectual Property
             </h2>
             <p className="mt-4">
@@ -260,7 +260,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Changes to Terms
             </h2>
             <p className="mt-4">
@@ -273,7 +273,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Governing Law
             </h2>
             <p className="mt-4">
@@ -285,7 +285,7 @@ export default function TermsAndConditionsPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Contact Information
             </h2>
             <p className="mt-4">

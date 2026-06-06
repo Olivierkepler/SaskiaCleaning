@@ -144,10 +144,8 @@ export default function HeroBooking() {
            <form onSubmit={handleSubmit} className="space-y-3">
 
            <h1
-             className="max-w-7xl animate-[fadeInUp_0.8s_ease-out_forwards] text-3xl font-thin font-serif leading-[0.95] tracking-tight sm:text-4xl lg:text-4xl"
+             className="font-heading max-w-7xl animate-[fadeInUp_0.8s_ease-out_forwards] text-3xl font-thin leading-[0.95] tracking-tight sm:text-4xl lg:text-4xl"
              style={{
-               fontFamily:
-                 "'Playfair Display', 'Georgia', 'Times New Roman', Times, serif",
                fontWeight: 300,
                letterSpacing: "-0.01em",
              }}

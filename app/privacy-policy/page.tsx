@@ -27,7 +27,7 @@ export default function PrivacyPolicyPage() {
           Legal
         </p>
 
-        <h1 className="mt-4 font-[family-name:var(--font-cormorant)] text-[clamp(2.4rem,4vw,3.75rem)] font-semibold leading-[0.95] tracking-[-0.05em] text-slate-950">
+        <h1 className="font-heading mt-4 text-[clamp(2.4rem,4vw,3.75rem)] font-semibold leading-[0.95] tracking-[-0.05em] text-slate-950">
           Privacy Policy
         </h1>
 
@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
 
         <article className="mt-12 space-y-10 text-[15px] leading-8 text-slate-600">
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Information We Collect
             </h2>
             <p className="mt-4">
@@ -78,7 +78,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               How We Use Information
             </h2>
             <p className="mt-4">We use personal information to:</p>
@@ -94,7 +94,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               SMS and Text Message Consent
             </h2>
             <p className="mt-4">
@@ -113,7 +113,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               How Information Is Shared
             </h2>
             <p className="mt-4">
@@ -138,7 +138,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Cookies and Analytics
             </h2>
             <p className="mt-4">
@@ -154,7 +154,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Data Security
             </h2>
             <p className="mt-4">
@@ -167,7 +167,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Your Choices
             </h2>
             <p className="mt-4">
@@ -184,7 +184,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Children&apos;s Privacy
             </h2>
             <p className="mt-4">
@@ -197,7 +197,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Policy Updates
             </h2>
             <p className="mt-4">
@@ -211,7 +211,7 @@ export default function PrivacyPolicyPage() {
           </section>
 
           <section>
-            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold tracking-[-0.03em] text-slate-950">
+            <h2 className="font-heading text-2xl font-semibold tracking-[-0.03em] text-slate-950">
               Contact Us
             </h2>
             <p className="mt-4">

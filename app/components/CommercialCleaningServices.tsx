@@ -102,14 +102,14 @@ export default function CommercialCleaningServices({
 
           <motion.h2
             id="commercial-cleaning-heading"
-            className="font-[family-name:var(--font-cormorant)] text-[clamp(2.7rem,3.5vw,5.2rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950"
+            className="font-heading text-[clamp(2.7rem,3.5vw,5.2rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950"
             variants={fadeUp}
           >
             {title}
           </motion.h2>
 
           <motion.p
-            className="mt-5 font-[family-name:var(--font-cormorant)] text-2xl font-light italic tracking-[-0.03em] text-slate-400 sm:text-3xl"
+            className="mt-5 text-2xl font-light italic tracking-[-0.03em] text-slate-400 sm:text-3xl"
             variants={fadeUp}
           >
             “{tagline}”
@@ -145,14 +145,14 @@ export default function CommercialCleaningServices({
                     <button
                       type="button"
                       onClick={() => onServiceClick?.(service.id)}
-                      className="text-left font-[family-name:var(--font-cormorant)] text-xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 transition hover:text-sky-500"
+                      className="text-left text-xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 transition hover:text-sky-500"
                     >
                       {service.label}
                     </button>
                   ) : (
                     <a
                       href={`#${service.id}`}
-                      className="font-[family-name:var(--font-cormorant)] text-xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 transition hover:text-sky-500"
+                      className="text-xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 transition hover:text-sky-500"
                     >
                       {service.label}
                     </a>

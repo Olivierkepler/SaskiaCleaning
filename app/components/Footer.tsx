@@ -40,7 +40,7 @@ export default function Footer() {
 
             <h3
               className="
-                font-[family-name:var(--font-cormorant)]
+                font-heading
                 text-[clamp(2.2rem,4vw,3.5rem)]
                 font-semibold
                 leading-[0.95]

@@ -85,7 +85,6 @@ const baseInputStyle: React.CSSProperties = {
   border: "none",
   borderRadius: 0,
   outline: "none",
-  fontFamily: "'DM Sans', sans-serif",
   fontSize: "14px",
   fontWeight: 300,
   color: "#1A1A1A",
@@ -413,7 +412,6 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
 
   return (
     <div style={{
-      fontFamily: "'DM Sans', sans-serif",
       minHeight: "100vh",
       background: "#FAFAF8",
       display: "flex",
@@ -422,7 +420,6 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
       zIndex: 9999,
     }}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap');
         * { box-sizing: border-box; }
         .sif-btn-next:hover { background: #333 !important; }
         .sif-btn-back:hover { color: #1A1A1A !important; }
@@ -466,7 +463,6 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
                 Private Concierge
               </p>
               <h2 style={{
-                fontFamily: "'Cormorant Garamond', serif",
                 fontSize: "46px", fontWeight: 300, fontStyle: "italic",
                 color: "#1A1A1A", lineHeight: 1, marginTop: "18px",
               }}>
@@ -523,7 +519,6 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
               borderBottom: "1px solid #EDE8E3",
             }}>
               <span style={{
-                fontFamily: "'Cormorant Garamond', serif",
                 fontStyle: "italic", fontSize: "20px", fontWeight: 300, color: "#1A1A1A",
               }}>
                 Curated Care.
@@ -555,7 +550,6 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
                     Step {step + 1} of {STEPS.length}
                   </p>
                   <h3 className="sif-step-title" style={{
-                    fontFamily: "'Cormorant Garamond', serif",
                     fontSize: "40px", fontWeight: 400, color: "#1A1A1A",
                     lineHeight: 1.05, marginTop: "8px",
                   }}>
@@ -605,7 +599,7 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
                     cursor: step === 0 ? "default" : "pointer",
                     display: "flex", alignItems: "center", gap: "10px",
                     fontSize: "10px", letterSpacing: "0.3em", textTransform: "uppercase",
-                    color: "#A09890", fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                    color: "#A09890", fontWeight: 500,
                     padding: 0, opacity: step === 0 ? 0.3 : 1,
                     transition: "color 0.2s",
                   }}
@@ -627,7 +621,7 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
                     border: "none", cursor: "pointer",
                     padding: "16px 32px",
                     fontSize: "10px", letterSpacing: "0.35em", textTransform: "uppercase",
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 500,
+                    fontWeight: 500,
                     display: "flex", alignItems: "center", gap: "12px",
                     transition: "background 0.25s",
                     opacity: isSubmitting ? 0.55 : 1,

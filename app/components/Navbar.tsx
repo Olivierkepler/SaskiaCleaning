@@ -98,7 +98,7 @@ export default function Navbar({
 
             <div className="leading-none">
               <p
-                className={`font-[family-name:var(--font-cormorant)] text-[1.65rem] font-semibold tracking-[-0.04em] transition-colors duration-300 ${
+                className={`text-[1.65rem] font-semibold tracking-[-0.04em] transition-colors duration-300 ${
                   isScrolled ? "text-sky-500" : "text-white"
                 }`}
               >
@@ -120,7 +120,7 @@ export default function Navbar({
               <a
                 key={link.label}
                 href={link.href}
-                className={`group cursor-pointer relative text-[11px] font-semibold uppercase tracking-[0.16em] transition duration-300 ${
+                className={`group cursor-pointer relative text-[13px] font-semibold uppercase tracking-[0.16em] transition duration-300 ${
                   isScrolled
                     ? "text-sky-500 hover:text-sky-500"
                     : "text-white hover:text-white/80"
@@ -138,14 +138,14 @@ export default function Navbar({
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
-            <div className="relative">
+            {/* <div className="relative">
               <button
                 type="button"
                 aria-label="More information"
                 aria-expanded={isInfoOpen}
                 aria-controls="info-popover-desktop"
                 onClick={() => setIsInfoOpen((open) => !open)}
-                className={`rounded-full border px-4 py-3 text-[11px] font-medium uppercase tracking-[0.14em] transition ${
+                className={`rounded-full border px-4 py-3 text-[13px] font-medium uppercase tracking-[0.14em] transition ${
                   isScrolled
                     ? "border-slate-200 text-slate-600 hover:border-slate-950 hover:text-slate-950"
                     : "border-white/40 text-white hover:border-white hover:bg-white hover:text-slate-950"
@@ -163,11 +163,11 @@ export default function Navbar({
                   More information coming soon.
                 </div>
               )}
-            </div>
+            </div> */}
 
             <a
               href="tel:+18573528554"
-              className={`hidden rounded-full border px-6 py-3 text-[11px] font-medium uppercase tracking-[0.14em] transition xl:block ${
+              className={`hidden rounded-full border px-6 py-3 text-[13px] font-medium uppercase tracking-[0.14em] transition xl:block ${
                 isScrolled
                   ? "border-slate-200 text-slate-600 hover:border-slate-950 hover:text-slate-950"
                   : "border-white/40 text-white hover:border-white hover:bg-white hover:text-slate-950"
@@ -178,7 +178,7 @@ export default function Navbar({
 
             <a
               href="#quote"
-              className={`group cursor-pointer flex items-center gap-2 rounded-full border px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] transition duration-300 ${
+              className={`group cursor-pointer flex items-center gap-2 rounded-full border px-7 py-3 text-[13px] font-semibold uppercase tracking-[0.14em] transition duration-300 ${
                 isScrolled
                   ? "border-sky-500 bg-sky-500 text-white hover:bg-white hover:text-sky-500"
                   : "border-white bg-white text-slate-950 hover:bg-transparent hover:text-white"
@@ -228,7 +228,7 @@ export default function Navbar({
             <div className="flex h-full flex-col">
               <div className="flex items-center justify-between border-b border-slate-100 px-6 py-6">
                 <div>
-                  <p className="font-[family-name:var(--font-cormorant)] text-4xl font-semibold tracking-[-0.05em] text-slate-950">
+                  <p className="text-4xl font-semibold tracking-[-0.05em] text-slate-950">
                     Saskia
                   </p>
 

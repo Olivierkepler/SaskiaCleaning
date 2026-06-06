@@ -164,7 +164,7 @@ export default function CommercialCleaningPlans({
               <h2
                 id="plans-heading"
                 className="
-                  font-[family-name:var(--font-cormorant)]
+                  font-heading
                   text-[clamp(1.5rem,2vw,2.2rem)]
                   font-semibold
                   leading-[0.95]
@@ -303,7 +303,6 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
       <div className={`${headerClasses} relative px-6 py-5 text-center`}>
         <h4
           className="
-            font-[family-name:var(--font-cormorant)]
             text-[1.7rem] font-semibold
             leading-none tracking-[-0.035em]
             text-white sm:text-[1.95rem]
