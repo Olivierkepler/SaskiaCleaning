@@ -7,6 +7,7 @@ import "./globals.css";
   {/* import Navbar from './components/Navbar'; */}
 import Footer from "./components/Footer";
 import CustomCursor from "./components/CustomCursor";
+import LeadCaptureTabs from "./components/LeadCaptureTabs";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -45,6 +46,7 @@ export default function RootLayout({
     
           {/*   <Navbar /> */}
         {children}
+        <LeadCaptureTabs />
         <Footer/>
         {/* <SocialCorner/> */}
         <WhatsAppFloat/>

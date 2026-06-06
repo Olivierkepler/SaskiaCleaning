@@ -20,48 +20,67 @@ interface FormState {
 type SubmitStatus = "idle" | "loading" | "success";
 
 function Counter({
-  label,
-  value,
-  min,
-  max,
-  onChange,
-}: CounterField & { onChange: (v: number) => void }) {
-  const plural = value !== 1;
-
-  return (
-    <div className="flex h-[52px] items-center overflow-hidden rounded-md border border-stone-200 bg-stone-50 transition-colors focus-within:border-orange-400 focus-within:ring-2 focus-within:ring-orange-100">
-      <button
-        type="button"
-        aria-label={`Decrease ${label}`}
-        disabled={value <= min}
-        onClick={() => onChange(Math.max(min, value - 1))}
-        className="flex h-full w-10 items-center justify-center text-lg text-stone-400 transition-colors hover:bg-sky-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+    label,
+    value,
+    min,
+    max,
+    onChange,
+  }: CounterField & { onChange: (v: number) => void }) {
+    const plural = value !== 1;
+  
+    return (
+      <div
+        className="
+          grid h-[54px] w-full grid-cols-[48px_1fr_48px]
+          overflow-hidden rounded-md border border-white/30 bg-white
+          shadow-sm transition-colors
+          focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-100
+          sm:w-auto sm:min-w-[178px]
+        "
       >
-        −
-      </button>
-
-      <div className="flex min-w-[92px] select-none flex-col items-center px-3">
-        <span className="text-[18px] font-medium leading-none text-stone-800 tabular-nums">
-          {value}
-        </span>
-        <span className="mt-1 text-[10px] uppercase tracking-wider text-stone-400">
-          {label}
-          {plural ? "s" : ""}
-        </span>
+        <button
+          type="button"
+          aria-label={`Decrease ${label}`}
+          disabled={value <= min}
+          onClick={() => onChange(Math.max(min, value - 1))}
+          className="
+            flex h-full items-center justify-center
+            text-xl font-medium text-slate-400 transition-colors
+            hover:bg-sky-500 hover:text-white
+            disabled:cursor-not-allowed disabled:opacity-30
+          "
+        >
+          −
+        </button>
+  
+        <div className="flex min-w-0 select-none flex-col items-center justify-center border-x border-stone-100 px-2">
+          <span className="text-[18px] font-semibold leading-none text-slate-900 tabular-nums">
+            {value}
+          </span>
+  
+          <span className="mt-1 truncate text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400">
+            {label}
+            {plural ? "s" : ""}
+          </span>
+        </div>
+  
+        <button
+          type="button"
+          aria-label={`Increase ${label}`}
+          disabled={value >= max}
+          onClick={() => onChange(Math.min(max, value + 1))}
+          className="
+            flex h-full items-center justify-center
+            text-xl font-medium text-slate-400 transition-colors
+            hover:bg-sky-500 hover:text-white
+            disabled:cursor-not-allowed disabled:opacity-30
+          "
+        >
+          +
+        </button>
       </div>
-
-      <button
-        type="button"
-        aria-label={`Increase ${label}`}
-        disabled={value >= max}
-        onClick={() => onChange(Math.min(max, value + 1))}
-        className="flex h-full w-10 items-center justify-center text-lg text-stone-400 transition-colors hover:bg-sky-500 hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
-      >
-        +
-      </button>
-    </div>
-  );
-}
+    );
+  }
 
 function TrustBadge({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
@@ -141,10 +160,22 @@ export default function HeroBooking() {
       className="flex items-center justify-center  "
      
     >
-           <form onSubmit={handleSubmit} className="space-y-3">
-
+         <form
+  onSubmit={handleSubmit}
+  className="mx-auto w-full max-w-4xl space-y-4"
+>
            <h1
-             className="font-heading max-w-7xl animate-[fadeInUp_0.8s_ease-out_forwards] text-3xl font-thin leading-[0.95] tracking-tight sm:text-4xl lg:text-4xl"
+           className="
+           font-heading
+           max-w-3xl
+           animate-[fadeInUp_0.8s_ease-out_forwards]
+           text-3xl
+           font-thin
+           leading-[0.95]
+           tracking-tight
+           sm:text-4xl
+           lg:text-5xl
+         "
              style={{
                fontWeight: 300,
                letterSpacing: "-0.01em",
@@ -162,7 +193,7 @@ export default function HeroBooking() {
             Book a trusted cleaner instantly below.
           </p>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto_auto] md:items-center">
             <input
               type="text"
               placeholder="Your name"
