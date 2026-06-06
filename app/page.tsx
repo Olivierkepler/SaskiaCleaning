@@ -32,7 +32,7 @@ export default function Home() {
 
   return (
     <main className="relative overflow-x-hidden bg-white">
-      <CustomCursor />
+      {/* <CustomCursor /> */}
       <Navbar />
       <ChatBot />
       <Hero2 />

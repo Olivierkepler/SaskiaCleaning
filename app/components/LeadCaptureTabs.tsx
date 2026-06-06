@@ -140,7 +140,7 @@ export default function FloatingLeadWidget() {
 
   return (
     // Fixed wrapper — place this once in your root layout
-    <div className="fixed bottom-7 right-30 z-50 flex flex-col items-end gap-3" ref={panelRef}>
+    <div className="fixed bottom-30 right-7 z-50 flex flex-col items-end gap-3" ref={panelRef}>
 
       {/* ── Panel ── */}
       <div
