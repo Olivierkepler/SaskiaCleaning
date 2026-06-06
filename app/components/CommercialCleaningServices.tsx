@@ -110,7 +110,7 @@ export default function CommercialCleaningServices({
           </motion.h2>
 
           <motion.p
-            className="mt-5 text-2xl font-light italic tracking-[-0.03em] text-slate-400 sm:text-3xl"
+            className="mt-5 text-2xl font-light italic tracking-[-0.03em] text-sky-500 sm:text-3xl"
             variants={fadeUp}
           >
             “{tagline}”

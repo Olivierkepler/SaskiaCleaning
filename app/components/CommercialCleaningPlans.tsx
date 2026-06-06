@@ -64,7 +64,7 @@ const DEFAULT_PLANS: Plan[] = [
 const ease = [0.16, 1, 0.3, 1] as const;
 
 export default function CommercialCleaningPlans({
-  title = "Commercial Cleaning Service Plans",
+  title = "Commercial Cleaning ",
   description = [
     "Choose the plan that best fits your company's needs — from routine maintenance to complete facility care.",
 
@@ -177,6 +177,7 @@ export default function CommercialCleaningPlans({
                 "
               >
                 {title}
+               <span className="text-sky-500">Service Plans</span>
               </h2>
 
               <div className="mt-3 space-y-1.5 text-sm leading-6 text-slate-600">

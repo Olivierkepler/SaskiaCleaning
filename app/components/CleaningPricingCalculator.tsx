@@ -141,9 +141,9 @@ export default function CleaningServicesPricing() {
             <span className="h-px w-6 bg-sky-300" />
           </div> */}
 
-          <h2 className="font-heading text-[clamp(2.8rem,3.5vw,5.4rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950">
+          <h2 className="font-heading text-[clamp(2.8rem,3.5vw,4.4rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950">
             Cleaning & laundry pricing,{" "}
-            <span className="font-light italic text-slate-400">refined.</span>
+            <span className="font-light italic text-sky-500">refined.</span>
           </h2>
 
           <p className="mx-auto mt-7 max-w-2xl text-[15px] leading-8 text-slate-500 sm:text-lg">

@@ -26,7 +26,7 @@ export default function Contact() {
 
             <h2 className="font-heading text-[clamp(2.8rem,3.5vw,5.4rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950">
               Begin your{" "}
-              <span className="font-light italic text-slate-400">
+              <span className="font-light italic text-sky-500">
                 consultation.
               </span>
             </h2>
