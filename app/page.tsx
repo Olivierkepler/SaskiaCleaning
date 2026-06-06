@@ -21,6 +21,7 @@ import SocialCorner from "./components/SocialCorner";
 import ChatBot from "./components/ChatBot";
 import CustomCursor from "./components/CustomCursor";
 import CatTab from "./components/CatTab";
+import LocationMap from "./components/LocationMap";
 
 export default function Home() {
   const socialSectionRef = useRef<HTMLDivElement | null>(null);
@@ -36,6 +37,7 @@ export default function Home() {
       <Navbar />
       <ChatBot />
       <Hero2 />
+
       <div className="hidden sm:block">
         <InfoBar />
       </div>
@@ -79,7 +81,7 @@ export default function Home() {
       </SectionWrapper>
 
       <SectionWrapper>
-        <Contact />
+   <LocationMap />
       </SectionWrapper>
       
 

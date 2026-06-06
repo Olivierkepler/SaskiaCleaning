@@ -56,6 +56,71 @@ function formatDate(d: Date) {
   return `${DOW_SHORT[d.getDay()]} ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}`;
 }
 
+const SCROLL_VIEWPORT = { once: false, amount: 0.2 };
+
+const MOTION_EASE = [0.22, 1, 0.36, 1] as const;
+
+const fadeUp = {
+  hidden: {
+    opacity: 0,
+    y: 24,
+    transition: { duration: 0.5, ease: MOTION_EASE },
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: MOTION_EASE },
+  },
+};
+
+const slideLeft = {
+  hidden: {
+    opacity: 0,
+    x: -50,
+    transition: { duration: 0.5, ease: MOTION_EASE },
+  },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.7, ease: MOTION_EASE },
+  },
+};
+
+const slideRight = {
+  hidden: {
+    opacity: 0,
+    x: 50,
+    transition: { duration: 0.5, ease: MOTION_EASE },
+  },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.7, ease: MOTION_EASE },
+  },
+};
+
+const staggerContainer = {
+  hidden: {
+    transition: { staggerChildren: 0.05, staggerDirection: -1 },
+  },
+  visible: {
+    transition: { staggerChildren: 0.08 },
+  },
+};
+
+const staggerItem = {
+  hidden: {
+    opacity: 0,
+    y: 12,
+    transition: { duration: 0.4, ease: MOTION_EASE },
+  },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: MOTION_EASE },
+  },
+};
+
 // ── Dropdown wrapper ──────────────────────────────────────────────────────────
 function Dropdown({ open, children, minWidth = 260 }: { open: boolean; children: React.ReactNode; minWidth?: number }) {
   return (
@@ -279,10 +344,16 @@ function SF({
         aria-hidden="true"
       />
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 1, minWidth: 0, }}>
-        <span style={{ fontSize: 11, fontWeight: 900, color: active ? K.blue : K.hint, textTransform: "uppercase", letterSpacing: "0.14em", lineHeight: 1, display: "block" }}>
+        <span style={{ fontSize: 14, fontWeight: 900, color: active ? K.blue : K.hint, textTransform: "uppercase", letterSpacing: "0.14em", lineHeight: 1, display: "block" }}>
           {label}
         </span>
-        <span className="whitespace-normal sm:truncate sm:whitespace-nowrap" style={{ fontSize: 18, fontWeight: 800, letterSpacing: "-0.03em", color: placeholder ? K.text : K.text, lineHeight: 1, display: "block" }}>
+        <span className="whitespace-normal sm:truncate sm:whitespace-nowrap" 
+        style={{ 
+            fontSize: 18, 
+            fontWeight: 800, 
+            letterSpacing: "-0.03em", 
+            color: placeholder ? K.blue : K.blue, 
+            lineHeight: 1, display: "block" }}>
           {value}
         </span>
       </div>
@@ -407,7 +478,7 @@ function Notice({ text }: { text: React.ReactNode }) {
 const twoCol:     React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr",     gap: 20 };
 const threeCol:   React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 };
 const addonsGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr",     gap: 6  };
-const sec:        React.CSSProperties = { fontSize: 10, fontWeight: 800, color: K.hint, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 };
+const sec:        React.CSSProperties = { fontSize: 14, fontWeight: 800, color: K.hint, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 };
 const chipsRow:   React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 6 };
 function CollapsibleGroup({
     title,
@@ -425,7 +496,7 @@ function CollapsibleGroup({
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="flex w-full items-center justify-between gap-4 p-4 text-left sm:p-5"
+          className="flex w-full cursor-pointer items-center justify-between gap-4 p-4 text-left sm:p-5"
         >
           <span style={sec}>{title}</span>
   
@@ -433,7 +504,7 @@ function CollapsibleGroup({
             animate={{ rotate: open ? 180 : 0 }}
             transition={{ duration: 0.2 }}
           >
-            <ChevronDown size={18} className="text-slate-400" />
+            <ChevronDown size={18} className="text-sky-500 cursor-pointer" />
           </motion.div>
         </button>
   
@@ -951,17 +1022,39 @@ function handleFrequencyField() {
     }}
   >
     <div className="mx-auto mt-20 max-w-4xl text-center">
-
-
-    <h2 className="font-heading text-[clamp(2.8rem,3.5vw,5rem)] leading-[0.9] tracking-[-0.04em] text-slate-950">
-    See Your Cleaning Price <span style={{ color: K.blue }}>Instantly</span>
-  </h2>
-
-  <p className="mx-auto mt-6 max-w-xl text-[15px] font-light leading-[1.75] text-slate-500 sm:text-base">
-             Answer a few quick questions and receive an estimate customized to your
-    home or business.
-  </p>
-</div>
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={SCROLL_VIEWPORT}
+        variants={staggerContainer}
+      >
+        <motion.h2
+          variants={fadeUp}
+          className="
+            font-heading
+            max-w-3xl
+            text-3xl
+            font-thin
+            leading-[0.95]
+            tracking-tight
+            sm:text-4xl
+            lg:text-5xl
+          "
+          style={{
+            fontWeight: 300,
+            letterSpacing: "-0.01em",
+          }}
+        >
+          See Your Cleaning Price <span style={{ color: K.blue }}>Instantly</span>
+        </motion.h2>
+        <motion.p
+          variants={fadeUp}
+          className="my-4 mx-auto w-[80%] text-[16px] font-medium uppercase tracking-[0.09em] text-slate-600"
+        >
+          Instant estimate. Book when you&apos;re ready.
+        </motion.p>
+      </motion.div>
+    </div>
       <div
      
      className="grid grid-cols-1 gap-7 lg:grid-cols-[1.65fr_1fr] py-20"
@@ -976,21 +1069,26 @@ style={{
         {/* Left Column */}
         <div style={{ minWidth: 0 }}>
           {/* Tabs */}
-          <div
-  className="
-    -mb-px grid grid-cols-2 gap-2
-    sm:flex sm:overflow-x-auto sm:pb-px
-    lg:gap-2
-  "
->
-  {SERVICES.map((s, i) => {
-    const active = serviceIdx === i;
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={SCROLL_VIEWPORT}
+            variants={staggerContainer}
+            className="
+              -mb-px grid grid-cols-2 gap-2
+              sm:flex sm:overflow-x-auto sm:pb-px
+              lg:gap-2
+            "
+          >
+            {SERVICES.map((s, i) => {
+              const active = serviceIdx === i;
 
-    return (
-      <button
-        key={s.label}
-        type="button"
-        onClick={() => setServiceIdx(i)}
+              return (
+                <motion.button
+                  key={s.label}
+                  type="button"
+                  variants={staggerItem}
+                  onClick={() => setServiceIdx(i)}
         className="
           flex min-w-0 items-center gap-3 rounded-2xl
           px-3 py-3 text-left transition-all duration-200
@@ -1028,7 +1126,7 @@ style={{
 
         <span
           className="
-            truncate text-[12px] font-extrabold
+            truncate text-[16px] font-extrabold
             sm:whitespace-nowrap
           "
           style={{
@@ -1037,13 +1135,17 @@ style={{
         >
           {s.label}
         </span>
-      </button>
-    );
-  })}
-</div>
+                </motion.button>
+              );
+            })}
+          </motion.div>
   
           {/* Main Card */}
-          <div
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={SCROLL_VIEWPORT}
+            variants={slideLeft}
             style={{
               background: K.white,
               border: `1.5px solid ${K.border}`,
@@ -1055,99 +1157,146 @@ style={{
             }}
           >
             {/* Search Bar */}
-            <div
-              style={{
-                borderBottom: `1.5px solid ${K.border}`,
-                background: K.white,
-              }}
-            >
-              <button
-                type="button"
-                className="flex w-full items-center justify-between gap-3 px-4 py-4 sm:hidden"
-                onClick={() => setMobileSearchOpen((value) => !value)}
-                style={{
-                  cursor: "pointer",
-                  border: "none",
-                  background: "transparent",
-                  textAlign: "left",
-                }}
-              >
-                <span
-                  className="whitespace-normal"
-                  style={{
-                    fontSize: 18,
-                    fontWeight: 800,
-                    letterSpacing: "-0.03em",
-                    color: K.text,
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {mobileSearchSummary}
-                </span>
-                <motion.div
-                  animate={{ rotate: mobileSearchOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  style={{ flexShrink: 0, color: K.hint }}
-                >
-                  <ChevronDown size={20} />
-                </motion.div>
-              </button>
+           {/* Search Bar */}
+<div
+  style={{
+    borderBottom: `1.5px solid ${K.border}`,
+    background: K.white,
+  }}
+>
+  <button
+    type="button"
+    className="flex w-full items-center justify-between gap-3 px-4 py-4 sm:hidden"
+    onClick={() => setMobileSearchOpen((value) => !value)}
+    style={{
+      cursor: "pointer",
+      border: "none",
+      background: "transparent",
+      textAlign: "left",
+      
+    }}
+  >
+    <span
+      className="whitespace-normal"
+      style={{
+        fontSize: 18,
+        fontWeight: 800,
+        letterSpacing: "-0.03em",
+        color: K.text,
+        lineHeight: 1.2,
+    
+      }}
+    >
+      {mobileSearchSummary}
+    </span>
 
-              <div
-                className={`relative z-50 flex-col ${mobileSearchOpen ? "flex" : "hidden"} sm:flex sm:h-[88px] sm:flex-row sm:items-stretch`}
-              >
-              <div
-                className="relative flex w-full min-h-[88px] items-stretch border-b border-solid border-[#CBD5E1] sm:min-h-0 sm:flex-[1.33] sm:border-b-0"
-                style={{ zIndex: locOpen ? 99999 : undefined }}
-              >
-                <SF
-                  icon="ti-map-pin"
-                  label="Location"
-                  value={`${locCity}, ${locState}`}
-                  active={locOpen}
-                  onClick={handleLocField}
-                />
-                <LocationDropdown
-                  open={locOpen}
-                  state={locState}
-                  city={locCity}
-                  onStateChange={setLocState}
-                  onCitySelect={handleCitySelect}
-                />
-              </div>
+    <motion.div
+      animate={{ rotate: mobileSearchOpen ? 180 : 0 }}
+      transition={{ duration: 0.2 }}
+      style={{ flexShrink: 0, color: K.hint }}
+    >
+      <ChevronDown size={20} />
+    </motion.div>
+  </button>
 
-              <div className="relative flex w-full min-h-[88px] items-stretch border-b border-solid border-[#CBD5E1] sm:min-h-0 sm:flex-1 sm:border-b-0">
-                <SF
-                  icon="ti-calendar"
-                  label="Date"
-                  value={date ? formatDate(date) : "Select date"}
-                  active={dateOpen}
-                  onClick={handleDateField}
-                  placeholder={!date}
-                />
-                <CalendarDropdown open={dateOpen} selected={date} onSelect={handleDateSelect} />
-              </div>
+  <div
+    className={`relative z-50 flex-col ${
+      mobileSearchOpen ? "flex" : "hidden"
+    } sm:flex sm:h-[88px] sm:flex-row sm:items-stretch`}
+  >
+    {/* Location */}
+    <div
+      className="relative flex w-full min-h-[88px] items-stretch border-b border-solid border-[#CBD5E1] sm:min-h-0 sm:flex-[1.33] sm:border-b-0"
+      style={{ zIndex: locOpen ? 99999 : undefined }}
+    >
+      <SF
+        icon="ti-map-pin"
+        label="Location"
+        value={`${locCity}, ${locState}`}
+        active={locOpen}
+        onClick={handleLocField}
+      />
 
-              {/* <SF icon={svc.icon} label="Service" value={svc.label} flex={1.1} /> */}
-              <div className="relative flex w-full min-h-[88px] items-stretch sm:min-h-0 sm:flex-1">
-                <SF
-                  icon="ti-repeat"
-                  label="Frequency"
-                  value={frequency}
-                  active={frequencyOpen}
-                  onClick={handleFrequencyField}
-                  flex={1}
-                  last
-                />
+      <motion.div
+        animate={{ rotate: locOpen ? 180 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 sm:right-5"
+        style={{ color: locOpen ? K.blue : K.hint }}
+      >
+        <ChevronDown size={20} strokeWidth={2.2} />
+      </motion.div>
 
-                <FrequencyDropdown
-                  open={frequencyOpen}
-                  selected={frequency}
-                  onSelect={handleFrequencySelect}
-                />
-              </div>
-              </div>
-            </div>
+      <LocationDropdown
+        open={locOpen}
+        state={locState}
+        city={locCity}
+        onStateChange={setLocState}
+        onCitySelect={handleCitySelect}
+      />
+    </div>
+
+    {/* Date */}
+    <div
+      className="relative flex w-full min-h-[88px] items-stretch border-b border-solid border-[#CBD5E1] sm:min-h-0 sm:flex-1 sm:border-b-0"
+      style={{ zIndex: dateOpen ? 99999 : undefined }}
+    >
+      <SF
+        icon="ti-calendar"
+        label="Date"
+        value={date ? formatDate(date) : "Select date"}
+        active={dateOpen}
+        onClick={handleDateField}
+        placeholder={!date}
+      />
+
+      <motion.div
+        animate={{ rotate: dateOpen ? 180 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 sm:right-5"
+        style={{ color: dateOpen ? K.blue : K.hint }}
+      >
+        <ChevronDown size={20} strokeWidth={2.2} />
+      </motion.div>
+
+      <CalendarDropdown
+        open={dateOpen}
+        selected={date}
+        onSelect={handleDateSelect}
+      />
+    </div>
+
+    {/* Frequency */}
+    <div
+      className="relative flex w-full min-h-[88px] items-stretch sm:min-h-0 sm:flex-1"
+      style={{ zIndex: frequencyOpen ? 99999 : undefined }}
+    >
+      <SF
+        icon="ti-repeat"
+        label="Frequency"
+        value={frequency}
+        active={frequencyOpen}
+        onClick={handleFrequencyField}
+        flex={1}
+        last
+      />
+
+      <motion.div
+        animate={{ rotate: frequencyOpen ? 180 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 sm:right-5"
+        style={{ color: frequencyOpen ? K.blue : K.hint }}
+      >
+        <ChevronDown size={20} strokeWidth={2.2} />
+      </motion.div>
+
+      <FrequencyDropdown
+        open={frequencyOpen}
+        selected={frequency}
+        onSelect={handleFrequencySelect}
+      />
+    </div>
+  </div>
+</div>
   
             {/* Active Panel */}
             <div style={{ padding: 24, background: K.surface }}>
@@ -1165,7 +1314,11 @@ style={{
             </div>
   
             {/* Price Strip */}
-            <div
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={SCROLL_VIEWPORT}
+              variants={fadeUp}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -1244,14 +1397,18 @@ style={{
                   {svc.bookLabel}
                 </motion.button>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         </div>
   
         {/* Right Image Card */}
-        <div
-  className="hidden lg:flex"
-  style={{
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={SCROLL_VIEWPORT}
+          variants={slideRight}
+          className="hidden lg:flex"
+          style={{
     minHeight: 440,
     background: K.white,
     overflow: "hidden",
@@ -1329,7 +1486,7 @@ style={{
               </span>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </motion.section>
   );
