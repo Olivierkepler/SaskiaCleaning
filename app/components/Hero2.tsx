@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
+import HeroQuoteForm from "./HeroQuoteForm";
 
 const heroImages = [
   "/images/house.jpg",
@@ -55,26 +56,28 @@ export default function Hero() {
           {/* Left Content */}
           <div className="max-w-3xl">
             {/* Heading */}
-            <h1 className="max-w-3xl animate-[fadeInUp_0.8s_ease-out_forwards] text-3xl font-black leading-[0.95] tracking-tight sm:text-4xl lg:text-6xl">
+            {/* <h1 className="max-w-3xl animate-[fadeInUp_0.8s_ease-out_forwards] text-3xl font-black leading-[0.95] tracking-tight sm:text-4xl lg:text-6xl">
               Come home to spotless. Every single time.
-            </h1>
+            </h1> */}
 
             {/* Paragraph */}
-            <p className="mt-8 max-w-3xl animate-[fadeInUp_0.8s_ease-out_0.2s_forwards] text-lg font-medium leading-8 text-slate-100 opacity-0 sm:text-xl">
+            {/* <p className="mt-8 max-w-3xl animate-[fadeInUp_0.8s_ease-out_0.2s_forwards] text-lg font-medium leading-8 text-slate-100 opacity-0 sm:text-xl">
               Life gets busy, and cleaning is usually the first thing to slip.
               That&apos;s where we come in. Saskia Cleaning keeps homes and
               businesses spotless with reliable service, premium care, and
               attention to detail you can trust.
-            </p>
+            </p> */}
+
+            <HeroQuoteForm />
 
             {/* CTA Buttons */}
             <div className="my-10 flex flex-col gap-4 opacity-0 animate-[fadeInUp_0.8s_ease-out_0.4s_forwards] sm:flex-row">
-              <a
+              {/* <a
                 href="#quote"
                 className="inline-flex items-center justify-center rounded-full bg-sky-400 px-8 py-4 text-lg font-extrabold text-white shadow-lg transition duration-300 hover:scale-[1.03] hover:bg-sky-300 hover:shadow-sky-400/20 active:scale-[0.98]"
               >
                 Get My Free Quote →
-              </a>
+              </a> */}
 
               <a
                 href="sms:8573528554"
