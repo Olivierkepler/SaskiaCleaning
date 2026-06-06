@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
 
 const navLinks = [
-  { label: "Expertise", href: "#expertise" },
-  { label: "Services", href: "#services" },
-  { label: "Standards", href: "#standards" },
-  { label: "Contact", href: "#contact" },
+   { label: "Services", href: "#services" },
+  { label: "Plans", href: "#plans" },
+ 
+  { label: "Commercial Cleaning", href: "#commercial-cleaning" },
+  { label: "Pricing", href: "#pricing" },
 ];
 
 export default function Navbar({

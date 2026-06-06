@@ -67,7 +67,7 @@ export default function CommercialCleaningPlans({
   title = "Commercial Cleaning Service Plans",
   description = [
     "Choose the plan that best fits your company's needs — from routine maintenance to complete facility care.",
-    "Every plan can be customized around your space, schedule, and cleaning priorities.",
+
   ],
   contactLabel = "Contact Us",
   onContactClick,
@@ -112,6 +112,7 @@ export default function CommercialCleaningPlans({
 
   return (
     <motion.section
+      id="plans"  
       aria-labelledby="plans-heading"
       className="relative w-full overflow-hidden bg-white py-24"
       variants={sectionVariants}
@@ -145,13 +146,16 @@ export default function CommercialCleaningPlans({
         style={{ backgroundImage: `url(${backgroundImageSrc})` }}
       />
 
-      <div aria-hidden="true" className="absolute inset-0 bg-slate-950/55" />
+      {/* <div aria-hidden="true" className="absolute inset-0 bg-slate-950/55" /> */}
+
+   {/* Blue overlay */}
+   <div className="absolute inset-0 bg-gradient-to-r from-[#172b45]/60 via-[#29496b]/40 to-[#7fb6e7]/20" />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8">
         <motion.div
           variants={fadeUpVariants}
           className="
-            rounded-[1.75rem]
+            rounded-[0.75rem]
             bg-white
             px-5 py-6
             sm:px-8 sm:py-7
@@ -284,7 +288,7 @@ function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
         damping: 20,
       }}
       className="
-        group relative flex flex-col overflow-hidden rounded-[1.75rem]
+        group relative flex flex-col overflow-hidden rounded-[0.75rem]
         bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]
         transition-shadow duration-300
         hover:shadow-[0_30px_70px_rgba(14,165,233,0.15)]

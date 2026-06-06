@@ -41,7 +41,7 @@ export default function Footer() {
             <h3
               className="
                 font-heading
-                text-[clamp(2.2rem,4vw,3.5rem)]
+                text-[clamp(2.2rem,4vw,2.5rem)]
                 font-semibold
                 leading-[0.95]
                 tracking-[-0.05em]
@@ -49,7 +49,7 @@ export default function Footer() {
               "
             >
               A consistent standard,{" "}
-              <span className="font-light italic text-slate-400">
+              <span className="font-light italic text-sky-500">
                 delivered with care.
               </span>
             </h3>

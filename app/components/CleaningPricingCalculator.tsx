@@ -128,7 +128,7 @@ export default function CleaningServicesPricing() {
     );
 
   return (
-    <section className="relative overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
+    <section id="pricing" className="relative overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
       <div className="pointer-events-none absolute left-1/2 top-0 h-[32rem] w-[70rem] -translate-x-1/2 rounded-full bg-sky-100/50 blur-3xl" />
 
       <div className="relative mx-auto max-w-7xl px-6 lg:px-10">

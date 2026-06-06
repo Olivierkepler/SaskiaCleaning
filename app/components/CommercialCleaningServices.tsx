@@ -82,7 +82,8 @@ export default function CommercialCleaningServices({
   };
 
   return (
-    <motion.section
+    <motion.section 
+      id="commercial-cleaning"
       className="relative overflow-hidden bg-white px-6 py-24 sm:py-28 lg:px-12 lg:py-32"
       aria-labelledby="commercial-cleaning-heading"
       variants={sectionVariants}
