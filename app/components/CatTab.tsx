@@ -953,12 +953,12 @@ function handleFrequencyField() {
     <div className="mx-auto mt-20 max-w-4xl text-center">
 
 
-  <h2 className="font-heading text-4xl font-bold tracking-tight text-slate-900 md:text-5xl">
+    <h2 className="font-heading text-[clamp(2.8rem,3.5vw,5rem)] leading-[0.9] tracking-[-0.04em] text-slate-950">
     See Your Cleaning Price <span style={{ color: K.blue }}>Instantly</span>
   </h2>
 
-  <p className="mx-auto mt-5 max-w-2xl text-lg text-slate-600">
-    Answer a few quick questions and receive an estimate customized to your
+  <p className="mx-auto mt-6 max-w-xl text-[15px] font-light leading-[1.75] text-slate-500 sm:text-base">
+             Answer a few quick questions and receive an estimate customized to your
     home or business.
   </p>
 </div>
