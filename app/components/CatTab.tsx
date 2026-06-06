@@ -714,7 +714,7 @@ function CommercialPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) =>
   useEffect(() => onPrice(calc(Math.round((COM_BASE[sqftIdx] + addonTotal) * SCHEDS[schedIdx].mult))), [sqftIdx, schedIdx, addonTotal]);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-2 ">
       <CollapsibleGroup title="Space type" defaultOpen>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
           {TYPES.map((t, i) => (
@@ -953,7 +953,7 @@ function handleFrequencyField() {
   >
       <div
      
-     className="grid grid-cols-1 gap-7 lg:grid-cols-[1.65fr_1fr]"
+     className="grid grid-cols-1 gap-7 lg:grid-cols-[1.65fr_1fr] py-20"
 style={{
   maxWidth: 1280,
   margin: "0 auto",
