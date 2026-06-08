@@ -38,13 +38,15 @@ export default function Home() {
       <ChatBot />
       <Hero2 />
 
-      <div className="hidden sm:block">
-        <InfoBar />
-      </div>
- 
+     
 
       <div ref={socialSectionRef} className="relative">
         {showSocialCorner && <SocialCorner />}
+
+        <div className="hidden sm:block">
+        <InfoBar />
+      </div>
+ 
 
 <div className="bg-white ">
   <CatTab />

@@ -44,7 +44,7 @@ function Counter({
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, value - 1))}
           className="
-            flex h-full items-center justify-center
+            flex h-full items-center justify-center cursor-pointer
             text-xl font-medium text-slate-400 transition-colors
             hover:bg-sky-500 hover:text-white
             disabled:cursor-not-allowed disabled:opacity-30
@@ -70,7 +70,7 @@ function Counter({
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, value + 1))}
           className="
-            flex h-full items-center justify-center
+            flex h-full items-center justify-center cursor-pointer
             text-xl font-medium text-slate-400 transition-colors
             hover:bg-sky-500 hover:text-white
             disabled:cursor-not-allowed disabled:opacity-30
@@ -246,7 +246,7 @@ export default function HeroBooking() {
             type="submit"
             disabled={isLoading || isSuccess}
             className={[
-              "flex h-14 w-full items-center justify-center gap-2.5 rounded-[14px]",
+              "flex h-14 w-full cursor-pointer items-center justify-center gap-2.5 rounded-[14px]",
               "text-[16px] font-bold uppercase tracking-[0.05em] text-white",
               "transition-all duration-200",
               isSuccess
