@@ -22,6 +22,7 @@ import ChatBot from "./components/ChatBot";
 import CustomCursor from "./components/CustomCursor";
 import CatTab from "./components/CatTab";
 import LocationMap from "./components/LocationMap";
+import AdCardGrid from "./components/AdCardGrid";
 
 export default function Home() {
   const socialSectionRef = useRef<HTMLDivElement | null>(null);
@@ -43,8 +44,9 @@ export default function Home() {
       <div ref={socialSectionRef} className="relative">
         {showSocialCorner && <SocialCorner />}
 
-        <div className="hidden sm:block">
-        <InfoBar />
+        <div className="hidden sm:block ">
+        {/* <InfoBar /> */}
+        <AdCardGrid />
       </div>
  
 
