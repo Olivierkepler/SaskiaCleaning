@@ -21,7 +21,8 @@ const cards: AdCard[] = [
     tag: "REFERRAL",
     tagColor: "#16a34a",
     title: "Give $20, Get $20",
-    description: "Refer a friend to Saskia Cleaning and you both get $20 off your next booking.",
+    description:
+      "Refer a friend to Saskia Cleaning and you both get $20 off your next booking.",
     ctaLabel: "REFER NOW",
     ctaHref: "https://saskiaservices.com/#quote",
     imageUrl: "/images/friend_sharing.jpg",
@@ -33,7 +34,8 @@ const cards: AdCard[] = [
     tag: "LIMITED DEAL",
     tagColor: "#CC0000",
     title: "$20 Off Deep Clean",
-    description: "Book a deep clean this week and save $20. Serving Massachusetts & Rhode Island.",
+    description:
+      "Book a deep clean this week and save $20. Serving Massachusetts & Rhode Island.",
     ctaLabel: "BOOK NOW",
     ctaHref: "https://saskiaservices.com/#quote",
     imageUrl: "/images/limited_deal.jpg",
@@ -45,7 +47,8 @@ const cards: AdCard[] = [
     tag: "NEW SERVICE",
     tagColor: "#0ea5e9",
     title: "Airbnb Turnover",
-    description: "Fast, guest-ready turnovers for your short-term rental. Starting at $120.",
+    description:
+      "Fast, guest-ready turnovers for your short-term rental. Starting at $120.",
     ctaLabel: "LEARN MORE",
     ctaHref: "https://saskiaservices.com/#services",
     imageUrl: "/images/towel-folder.jpg",
@@ -61,7 +64,7 @@ function AdCard({ card }: { card: AdCard }) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="flex w-full  overflow-hidden rounded-2xl bg-white transition-all duration-300"
+      className="flex h-full w-full overflow-hidden rounded-2xl bg-white  transition-all duration-300 md:flex-col lg:flex-row"
       style={{
         boxShadow: hovered
           ? `4px 10px 28px -2px ${card.accent}44`
@@ -69,35 +72,29 @@ function AdCard({ card }: { card: AdCard }) {
         transform: hovered ? "translateY(-3px)" : "translateY(0)",
       }}
     >
-      {/* Left content */}
-      <div className="flex flex-1 flex-col justify-between p-5">
-        {/* Tag */}
+      <div className="flex flex-1 flex-col justify-between p-4 sm:p-5 lg:p-6">
         <span
-          className="inline-block w-fit rounded-full px-2.5 py-0.5 text-[14px] font-extrabold uppercase tracking-widest "
+          className="inline-block w-fit rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-widest sm:text-xs"
           style={{ color: card.tagColor }}
         >
           {card.tag}
         </span>
 
-        {/* Text */}
-        <div className="mt-3 space-y-1">
-          <p
-            className="text-[17px] font-extrabold leading-tight text-gray-900"
-            style={{ fontFamily: "'Georgia', serif" }}
-          >
+        <div className="mt-3 space-y-2">
+          <p className="text-lg font-black leading-tight tracking-tight text-gray-900 sm:text-xl lg:text-[21px]">
             {card.title}
           </p>
-          <p className="text-[12px] leading-snug text-gray-500">
+
+          <p className="text-xs font-medium leading-5 text-slate-600 sm:text-sm sm:leading-6">
             {card.description}
           </p>
         </div>
 
-        {/* CTA */}
         <a
           href={card.ctaHref}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-4 inline-flex w-fit items-center gap-1.5 text-[11px] font-extrabold uppercase tracking-widest transition-colors duration-150"
+          className="mt-4 inline-flex w-fit items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-widest transition-colors duration-150 sm:text-[11px]"
           style={{
             color: card.accent,
             borderBottom: `2px solid ${card.accent}`,
@@ -105,9 +102,10 @@ function AdCard({ card }: { card: AdCard }) {
           }}
         >
           {card.ctaLabel}
+
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            className="h-3 w-3"
+            className="h-3 w-3 shrink-0"
             viewBox="0 0 20 20"
             fill="currentColor"
           >
@@ -120,12 +118,11 @@ function AdCard({ card }: { card: AdCard }) {
         </a>
       </div>
 
-      {/* Right image */}
-      <div className="relative w-[130px] flex-shrink-0 overflow-hidden">
+      <div className="relative min-h-[160px] w-[38%] flex-shrink-0 overflow-hidden sm:min-h-[190px] md:h-[190px] md:w-full lg:h-auto lg:w-[130px] xl:w-[150px]">
         <img
           src={card.imageUrl}
           alt={card.imageAlt}
-          className="h-full w-full object-cover transition-transform duration-500 ease-in-out rounded-2xl"
+          className="h-full w-full object-cover transition-transform duration-500 ease-in-out"
           style={{ transform: hovered ? "scale(1.07)" : "scale(1)" }}
         />
       </div>
@@ -135,15 +132,27 @@ function AdCard({ card }: { card: AdCard }) {
 
 export default function AdCardGrid() {
   return (
-    <div
-    style={{ transform: "translateY(-14px)" }}
-    className="grid grid-cols-1 bg-white
-      md:grid-cols-3 gap-4 p-6 px-40  w-full">
-  
-     {cards.map((card) => (
-        <AdCard key={card.id} card={card} />
-      ))}
-    
-    </div>
+    <section className="relative z-20 w-full bg-white">
+      <div className="mx-auto max-w-7xl -translate-y-3 py-6">
+        {/* Mobile carousel */}
+        <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 sm:px-6 md:hidden">
+          {cards.map((card) => (
+            <div
+              key={card.id}
+              className="w-[85%] flex-none snap-center sm:w-[70%]"
+            >
+              <AdCard card={card} />
+            </div>
+          ))}
+        </div>
+
+        {/* Tablet/Desktop grid */}
+        <div className="hidden grid-cols-3 gap-4 px-6 md:grid lg:px-10 xl:px-12">
+          {cards.map((card) => (
+            <AdCard key={card.id} card={card} />
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }

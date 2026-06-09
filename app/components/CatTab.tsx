@@ -15,7 +15,7 @@ const K = {
   pageBg:       "#FFFFFF",
   white:        "#FFFFFF",
   surface:      "#F8FAFC",
-  border:       "#CBD5E1",
+  border:       "#E5E7EB",
   borderLight:  "#F1F5F9",
   text:         "#0C1A2E",
   textSub:      "#374151",
@@ -322,38 +322,32 @@ function SF({
     <div
       data-cursor-pointer="pointer"
       onClick={onClick}
-      className={`w-full min-h-[88px] px-4 sm:min-h-0 sm:h-full sm:px-7 ${last ? "" : "sm:border-r sm:border-solid sm:border-[#CBD5E1]"}`}
-      style={{
-        flex, display: "flex", alignItems: "center", alignSelf: "stretch", gap: 14,
-        minWidth: 0,
-        cursor: "pointer", position: "relative",
-        background: active ? K.blueLight : "transparent",
-        transition: "background .12s",
-      }}
+      className={[
+        "relative flex w-full min-w-0 cursor-pointer items-center gap-3.5 self-stretch px-4 py-4 transition-colors duration-200",
+        "sm:min-h-0 sm:h-full sm:px-6 sm:py-0",
+        "max-sm:rounded-2xl max-sm:border max-sm:border-gray-200 max-sm:shadow-sm",
+        last ? "" : "sm:border-r sm:border-gray-200",
+        active ? "bg-sky-50" : "bg-transparent hover:bg-slate-50/80",
+      ].join(" ")}
+      style={{ flex }}
     >
       <i
-        className={`ti ${icon}`}
-        style={{
-          fontSize: 18,
-          color: active ? K.blue : K.hint,
-          flexShrink: 0,
-          display: "inline-flex",
-          alignItems: "center",
-          lineHeight: 1,
-        }}
+        className={`ti ${icon} shrink-0 text-lg leading-none ${active ? "text-sky-400" : "text-slate-400"}`}
         aria-hidden="true"
       />
-      <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", gap: 1, minWidth: 0, }}>
-        <span style={{ fontSize: 14, fontWeight: 900, color: active ? K.blue : K.hint, textTransform: "uppercase", letterSpacing: "0.14em", lineHeight: 1, display: "block" }}>
+      <div className="flex min-w-0 flex-col justify-center gap-0.5">
+        <span
+          className={`block text-[11px] font-semibold uppercase tracking-[0.12em] leading-none sm:text-xs ${
+            active ? "text-sky-500" : "text-slate-400"
+          }`}
+        >
           {label}
         </span>
-        <span className="whitespace-normal sm:truncate sm:whitespace-nowrap" 
-        style={{ 
-            fontSize: 18, 
-            fontWeight: 800, 
-            letterSpacing: "-0.03em", 
-            color: placeholder ? K.blue : K.blue, 
-            lineHeight: 1, display: "block" }}>
+        <span
+          className={`block whitespace-normal text-base font-semibold leading-tight tracking-tight sm:truncate sm:text-lg ${
+            placeholder ? "text-sky-400/80" : "text-sky-500"
+          }`}
+        >
           {value}
         </span>
       </div>
@@ -364,61 +358,54 @@ function SF({
 // ── Chip ──────────────────────────────────────────────────────────────────────
 function Chip({ label, selected, onClick }: { label: string; selected?: boolean; onClick: () => void }) {
   return (
-    <button
+    <motion.button
+      type="button"
       onClick={onClick}
-      style={{
-        fontSize: 12, fontWeight: 600, cursor: "pointer",
-        padding: "5px 13px", borderRadius: 20, outline: "none",
-        borderTop:    `1.5px solid ${selected ? K.blue : K.border}`,
-        borderRight:  `1.5px solid ${selected ? K.blue : K.border}`,
-        borderBottom: `1.5px solid ${selected ? K.blue : K.border}`,
-        borderLeft:   `1.5px solid ${selected ? K.blue : K.border}`,
-        background: selected ? K.blueLight : K.chipBg,
-        color: selected ? K.chipText : K.textSub,
-        transition: "all .12s",
-      }}
+      whileHover={{ scale: selected ? 1 : 1.03, y: selected ? 0 : -1 }}
+      whileTap={{ scale: 0.97 }}
+      className={[
+        "cursor-pointer rounded-full px-3.5 py-2 text-xs font-semibold outline-none transition-colors duration-150",
+        selected
+          ? "border border-sky-400 bg-sky-50 text-sky-700 shadow-sm"
+          : "border border-gray-200 bg-slate-100 text-slate-600 hover:border-sky-200 hover:bg-white",
+      ].join(" ")}
     >
       {label}
-    </button>
+    </motion.button>
   );
 }
 
 // ── Addon ─────────────────────────────────────────────────────────────────────
 function Addon({ label, selected, onClick }: { label: string; selected?: boolean; onClick: () => void }) {
   return (
-    <button
+    <motion.button
+      type="button"
       onClick={onClick}
-      style={{
-        display: "flex", alignItems: "center", gap: 8, padding: "8px 12px",
-        cursor: "pointer", outline: "none",
-        borderTop:    `1.5px solid ${selected ? K.blue : K.border}`,
-        borderRight:  `1.5px solid ${selected ? K.blue : K.border}`,
-        borderBottom: `1.5px solid ${selected ? K.blue : K.border}`,
-        borderLeft:   `1.5px solid ${selected ? K.blue : K.border}`,
-        borderRadius: 8,
-        background: selected ? K.blueLight : K.white,
-        transition: "all .12s", textAlign: "left", width: "100%",
-      }}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.98 }}
+      className={[
+        "flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-3 py-2.5 text-left outline-none transition-colors duration-150",
+        selected
+          ? "border border-sky-400 bg-sky-50"
+          : "border border-gray-200 bg-white hover:border-sky-200 hover:bg-slate-50",
+      ].join(" ")}
     >
-      <div style={{
-        width: 16, height: 16, borderRadius: 4, flexShrink: 0,
-        borderTop:    `1.5px solid ${selected ? K.blue : "#CBD5E1"}`,
-        borderRight:  `1.5px solid ${selected ? K.blue : "#CBD5E1"}`,
-        borderBottom: `1.5px solid ${selected ? K.blue : "#CBD5E1"}`,
-        borderLeft:   `1.5px solid ${selected ? K.blue : "#CBD5E1"}`,
-        background: selected ? K.blue : K.white,
-        display: "flex", alignItems: "center", justifyContent: "center",
-      }}>
+      <div
+        className={[
+          "flex h-4 w-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors",
+          selected ? "border-sky-400 bg-sky-400" : "border-gray-300 bg-white",
+        ].join(" ")}
+      >
         {selected && (
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
             <path d="M2 5l2.5 2.5 4-4" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
       </div>
-      <span style={{ fontSize: 12, fontWeight: 600, color: selected ? K.chipText : K.textSub }}>
+      <span className={`text-xs font-semibold ${selected ? "text-sky-700" : "text-slate-600"}`}>
         {label}
       </span>
-    </button>
+    </motion.button>
   );
 }
 
@@ -426,14 +413,18 @@ function Addon({ label, selected, onClick }: { label: string; selected?: boolean
 function PricePill({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   const display = "$" + value.toLocaleString("en-US");
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-      <span style={{ fontSize: 9, fontWeight: 700, color: K.hint, textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
+    <div className="flex flex-col items-center gap-1">
+      <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">{label}</span>
       <AnimatePresence mode="wait">
         <motion.span
           key={display}
-          initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.13 }}
-          style={{ fontSize: 20, fontWeight: 900, letterSpacing: -0.5, lineHeight: 1, color: accent ? K.blue : K.text }}
+          className={`text-xl font-bold leading-none tracking-tight sm:text-2xl ${
+            accent ? "text-sky-400" : "text-slate-900"
+          }`}
         >
           {display}
         </motion.span>
@@ -478,7 +469,7 @@ function Notice({ text }: { text: React.ReactNode }) {
 const twoCol:     React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr",     gap: 20 };
 const threeCol:   React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 };
 const addonsGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr",     gap: 6  };
-const sec:        React.CSSProperties = { fontSize: 14, fontWeight: 800, color: K.hint, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 10 };
+const sec:        React.CSSProperties = { fontSize: 14, fontWeight: 600, color: K.hint, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 0 };
 const chipsRow:   React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 6 };
 function CollapsibleGroup({
     title,
@@ -492,7 +483,7 @@ function CollapsibleGroup({
     const [open, setOpen] = useState(defaultOpen);
   
     return (
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+      <section className="overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
@@ -502,9 +493,9 @@ function CollapsibleGroup({
   
           <motion.div
             animate={{ rotate: open ? 180 : 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.25, ease: MOTION_EASE }}
           >
-            <ChevronDown size={18} className="text-sky-500 cursor-pointer" />
+            <ChevronDown size={18} className="cursor-pointer text-sky-400" />
           </motion.div>
         </button>
   
@@ -514,7 +505,7 @@ function CollapsibleGroup({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.22, ease: "easeOut" }}
+              transition={{ duration: 0.28, ease: MOTION_EASE }}
               className="overflow-hidden"
             >
               <div className="px-4 pb-4 sm:px-5 sm:pb-5">{children}</div>
@@ -1017,11 +1008,9 @@ function handleFrequencyField() {
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.25 }}
     transition={{ duration: 0.7, ease: "easeOut" }}
-    style={{
-      background: K.white,
-    }}
+    className="overflow-x-hidden bg-white"
   >
-    <div className="mx-auto mt-20 max-w-4xl text-center">
+    <div className="mx-auto mt-12 max-w-4xl px-4 text-center sm:mt-16 sm:px-6 lg:mt-20">
       <motion.div
         initial="hidden"
         whileInView="visible"
@@ -1055,19 +1044,10 @@ function handleFrequencyField() {
         </motion.p>
       </motion.div>
     </div>
-      <div
-     
-     className="grid grid-cols-1 gap-7 lg:grid-cols-[1.65fr_1fr] py-20"
-style={{
-  maxWidth: 1280,
-  margin: "0 auto",
-  alignItems: "stretch",
-}}
-      >
-
+      <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 py-12 sm:gap-7 sm:px-6 sm:py-16 lg:grid-cols-[1.65fr_1fr] lg:gap-8 lg:px-8 lg:py-20">
         
         {/* Left Column */}
-        <div style={{ minWidth: 0 }}>
+        <div className="min-w-0">
           {/* Tabs */}
           <motion.div
             initial="hidden"
@@ -1075,9 +1055,9 @@ style={{
             viewport={SCROLL_VIEWPORT}
             variants={staggerContainer}
             className="
-              -mb-px grid grid-cols-2 gap-2
-              sm:flex sm:overflow-x-auto sm:pb-px
-              lg:gap-2
+              -mb-px flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 scroll-smooth
+              [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+              sm:pb-px lg:gap-2
             "
           >
             {SERVICES.map((s, i) => {
@@ -1089,30 +1069,34 @@ style={{
                   type="button"
                   variants={staggerItem}
                   onClick={() => setServiceIdx(i)}
-        className="
-          flex min-w-0 items-center gap-3 rounded-2xl
-          px-3 py-3 text-left transition-all duration-200
-          sm:min-w-[112px] sm:flex-col sm:items-center sm:gap-2
-          sm:rounded-b-none sm:rounded-t-[14px] sm:px-4 sm:py-3
-        "
-        style={{
-          cursor: "pointer",
-          outline: "none",
-          borderTop: `1.5px solid ${active ? K.border : "transparent"}`,
-          borderLeft: `1.5px solid ${active ? K.border : "transparent"}`,
-          borderRight: `1.5px solid ${active ? K.border : "transparent"}`,
-          borderBottom: "none",
-          background: active ? K.white : "#FAFCFD",
-          position: "relative",
-          zIndex: active ? 2 : 1,
-          marginBottom: active ? -1 : 0,
-          boxShadow: active ? "0 -2px 16px rgba(12,26,46,0.04)" : "none",
-        }}
-      >
+                  whileHover={active ? undefined : { y: -2 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="
+                    flex min-w-[140px] shrink-0 snap-start items-center gap-3 rounded-2xl
+                    px-3 py-3 text-left transition-all duration-200
+                    sm:min-w-[112px] sm:flex-col sm:items-center sm:gap-2
+                    sm:rounded-b-none sm:rounded-t-[18px] sm:px-4 sm:py-3
+                  "
+                  style={{
+                    cursor: "pointer",
+                    outline: "none",
+                    borderTop: `1px solid ${active ? K.border : "transparent"}`,
+                    borderLeft: `1px solid ${active ? K.border : "transparent"}`,
+                    borderRight: `1px solid ${active ? K.border : "transparent"}`,
+                    borderBottom: "none",
+                    background: active ? K.white : "#F8FAFC",
+                    position: "relative",
+                    zIndex: active ? 2 : 1,
+                    marginBottom: active ? -1 : 0,
+                    boxShadow: active
+                      ? "0 -4px 20px rgba(12,26,46,0.06), 0 1px 0 rgba(255,255,255,0.8) inset"
+                      : "none",
+                  }}
+                >
         <div
           className="
-            grid h-10 w-10 shrink-0 place-items-center rounded-xl
-            sm:h-11 sm:w-11 sm:rounded-[13px]
+            grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white shadow-sm
+            sm:h-11 sm:w-11 sm:rounded-[14px]
           "
         >
           <Image
@@ -1126,8 +1110,8 @@ style={{
 
         <span
           className="
-            truncate text-[16px] font-extrabold
-            sm:whitespace-nowrap
+            truncate text-sm font-semibold
+            sm:whitespace-nowrap sm:text-base
           "
           style={{
             color: active ? K.text : K.muted,
@@ -1146,67 +1130,36 @@ style={{
             whileInView="visible"
             viewport={SCROLL_VIEWPORT}
             variants={slideLeft}
-            style={{
-              background: K.white,
-              border: `1.5px solid ${K.border}`,
-              borderRadius: "0 18px 18px 18px",
-              position: "relative",
-              zIndex: 1,
-              overflow: "visible",
-              boxShadow: "0 1px 2px rgba(12,26,46,.04), 0 20px 60px rgba(12,26,46,.08)",
-            }}
+            className="relative z-[1] overflow-visible rounded-b-[20px] rounded-tr-[20px] border border-gray-200 bg-white shadow-[0_1px_3px_rgba(12,26,46,.04),0_16px_48px_rgba(12,26,46,.07)]"
           >
             {/* Search Bar */}
-           {/* Search Bar */}
-<div
-  style={{
-    borderBottom: `1.5px solid ${K.border}`,
-    background: K.white,
-  }}
->
+<div className="border-b border-gray-200 bg-white">
   <button
     type="button"
-    className="flex w-full items-center justify-between gap-3 px-4 py-4 sm:hidden"
+    className="flex w-full items-center justify-between gap-3 rounded-none border-none bg-slate-50 px-4 py-4 text-left sm:hidden"
     onClick={() => setMobileSearchOpen((value) => !value)}
-    style={{
-      cursor: "pointer",
-      border: "none",
-      background: "transparent",
-      textAlign: "left",
-      
-    }}
   >
-    <span
-      className="whitespace-normal"
-      style={{
-        fontSize: 18,
-        fontWeight: 800,
-        letterSpacing: "-0.03em",
-        color: K.text,
-        lineHeight: 1.2,
-    
-      }}
-    >
+    <span className="whitespace-normal text-base font-semibold leading-snug tracking-tight text-slate-900">
       {mobileSearchSummary}
     </span>
 
     <motion.div
       animate={{ rotate: mobileSearchOpen ? 180 : 0 }}
       transition={{ duration: 0.2 }}
-      style={{ flexShrink: 0, color: K.hint }}
+      className="shrink-0 text-slate-400"
     >
       <ChevronDown size={20} />
     </motion.div>
   </button>
 
   <div
-    className={`relative z-50 flex-col ${
+    className={`relative z-50 flex-col gap-2 p-3 sm:gap-0 sm:p-0 ${
       mobileSearchOpen ? "flex" : "hidden"
     } sm:flex sm:h-[88px] sm:flex-row sm:items-stretch`}
   >
     {/* Location */}
     <div
-      className="relative flex w-full min-h-[88px] items-stretch border-b border-solid border-[#CBD5E1] sm:min-h-0 sm:flex-[1.33] sm:border-b-0"
+      className="relative flex w-full items-stretch sm:min-h-0 sm:flex-[1.33]"
       style={{ zIndex: locOpen ? 99999 : undefined }}
     >
       <SF
@@ -1237,7 +1190,7 @@ style={{
 
     {/* Date */}
     <div
-      className="relative flex w-full min-h-[88px] items-stretch border-b border-solid border-[#CBD5E1] sm:min-h-0 sm:flex-1 sm:border-b-0"
+      className="relative flex w-full items-stretch sm:min-h-0 sm:flex-1"
       style={{ zIndex: dateOpen ? 99999 : undefined }}
     >
       <SF
@@ -1267,7 +1220,7 @@ style={{
 
     {/* Frequency */}
     <div
-      className="relative flex w-full min-h-[88px] items-stretch sm:min-h-0 sm:flex-1"
+      className="relative flex w-full items-stretch sm:min-h-0 sm:flex-1"
       style={{ zIndex: frequencyOpen ? 99999 : undefined }}
     >
       <SF
@@ -1299,14 +1252,14 @@ style={{
 </div>
   
             {/* Active Panel */}
-            <div style={{ padding: 24, background: K.surface }}>
+            <div className="bg-slate-50/80 p-4 sm:p-6">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={serviceIdx}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.22 }}
+                  transition={{ duration: 0.28, ease: MOTION_EASE }}
                 >
                   {panels[serviceIdx]}
                 </motion.div>
@@ -1319,80 +1272,34 @@ style={{
               whileInView="visible"
               viewport={SCROLL_VIEWPORT}
               variants={fadeUp}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 20,
-                padding: "18px 24px",
-                borderTop: `1px solid ${K.borderLight}`,
-                background: K.white,
-                flexWrap: "wrap",
-              }}
+              className="flex flex-col gap-5 border-t border-gray-200 bg-gradient-to-b from-slate-50 to-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6 lg:px-8"
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 900,
-                    color: K.hint,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.1em",
-                  }}
-                >
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-5">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
                   Estimate range
                 </span>
   
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div className="flex items-center justify-between gap-3 sm:justify-start sm:gap-4">
                   <PricePill label="Low" value={prices.low} />
-                  <div style={{ width: 1, height: 28, background: K.border }} />
+                  <div className="hidden h-7 w-px bg-gray-200 sm:block" />
                   <PricePill label="Mid" value={prices.mid} accent />
-                  <div style={{ width: 1, height: 28, background: K.border }} />
+                  <div className="hidden h-7 w-px bg-gray-200 sm:block" />
                   <PricePill label="High" value={prices.high} />
                 </div>
               </div>
   
-              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    background: K.greenBg,
-                    borderRadius: 999,
-                    padding: "6px 12px",
-                  }}
-                >
-                  <div style={{ width: 7, height: 7, borderRadius: "50%", background: K.green }} />
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: K.green,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                    }}
-                  >
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
+                <div className="flex items-center justify-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 sm:justify-start">
+                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
+                  <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
                     Licensed & insured
                   </span>
                 </div>
   
                 <motion.button
-                  whileHover={{ scale: 1.02 }}
+                  whileHover={{ scale: 1.02, y: -1 }}
                   whileTap={{ scale: 0.97 }}
-                  style={{
-                    background: K.blue,
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 12,
-                    padding: "14px 28px",
-                    fontSize: 14,
-                    fontWeight: 900,
-                    cursor: "pointer",
-                    boxShadow: "0 10px 24px rgba(56,189,248,.25)",
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = K.blueHover)}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = K.blue)}
+                  className="w-full cursor-pointer rounded-xl border-none bg-sky-400 px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(56,189,248,.35)] transition-colors duration-200 hover:bg-sky-500 sm:w-auto"
                 >
                   {svc.bookLabel}
                 </motion.button>
@@ -1407,81 +1314,37 @@ style={{
           whileInView="visible"
           viewport={SCROLL_VIEWPORT}
           variants={slideRight}
-          className="hidden lg:flex"
-          style={{
-    minHeight: 440,
-    background: K.white,
-    overflow: "hidden",
-    position: "relative",
-    flexDirection: "column",
-  }}
->
-          {/* <div style={{ padding: "32px 32px 24px" }}>
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={serviceIdx}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.25 }}
-              >
-                <h2
-                  style={{
-                    fontSize: 38,
-                    lineHeight: 1.05,
-                    fontWeight: 900,
-                    color: K.text,
-                    letterSpacing: "-0.05em",
-                    margin: 0,
-                  }}
-                >
-                  {svc.headline}
-                </h2>
-              </motion.div>
-            </AnimatePresence>
-          </div> */}
-
-          <div style={{ flex: 1, position: "relative", minHeight: 0 }}>
+          className="hidden min-h-[440px] flex-col overflow-hidden rounded-[24px] border border-gray-200 bg-gradient-to-b from-slate-50 to-white shadow-[0_1px_3px_rgba(12,26,46,.04),0_16px_48px_rgba(12,26,46,.07)] lg:flex"
+        >
+          <div className="relative flex min-h-0 flex-1 items-center justify-center p-6 lg:p-8">
             <AnimatePresence mode="wait">
               <motion.div
                 key={svc.photo}
-                initial={{ opacity: 0, scale: 1.03 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                style={{ height: "100%" }}
-                className="flex justify-center items-center"
+                initial={{ opacity: 0, scale: 0.96, x: 12 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.98, x: -8 }}
+                transition={{ duration: 0.4, ease: MOTION_EASE }}
+                className="flex h-full w-full items-center justify-center"
               >
-                <img
-                  src={svc.photo}
-                  alt={svc.label}
-                  className="w-[400px] h-[300px]"
-                  style={{
-                    width: "[400px]",
-                    height: "[300px]",
-                   
-
-                  }}
-                />
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3, ease: MOTION_EASE }}
+                  className="relative max-h-[320px] w-full max-w-[400px]"
+                >
+                  <Image
+                    src={svc.photo}
+                    alt={svc.label}
+                    width={400}
+                    height={320}
+                    className="h-auto max-h-[320px] w-full object-contain drop-shadow-[0_12px_32px_rgba(12,26,46,0.12)]"
+                  />
+                </motion.div>
               </motion.div>
             </AnimatePresence>
 
-            <div
-              style={{
-                position: "absolute",
-                left: 20,
-                bottom: 20,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                padding: "8px 16px",
-                borderRadius: 999,
-                background: K.blueLight,
-                color: K.blue,
-              }}
-            >
+            <div className="absolute bottom-5 left-5 inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50/95 px-4 py-2 shadow-sm backdrop-blur-sm">
               <Image src={svc.image} alt={svc.label} width={16} height={16} style={{ objectFit: "contain" }} />
-              <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: "-0.02em" }}>
+              <span className="text-sm font-semibold tracking-tight text-sky-600">
                 {svc.label}
               </span>
             </div>

@@ -41,10 +41,10 @@ export default function Home() {
 
      
 
-      <div ref={socialSectionRef} className="relative">
+      <div ref={socialSectionRef} className="relative bg-white py-10  " style={{ transform: "translateY(-14px)" }}>
         {showSocialCorner && <SocialCorner />}
 
-        <div className="hidden sm:block ">
+        <div className="hidden sm:block bg-white ">
         {/* <InfoBar /> */}
         <AdCardGrid />
       </div>
