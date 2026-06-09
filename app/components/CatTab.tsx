@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
@@ -20,7 +20,7 @@ const K = {
   text:         "#0C1A2E",
   textSub:      "#374151",
   muted:        "#64748B",
-  hint:         "#94A3B8",
+  hint:         "black",
   chipBg:       "#F1F5F9",
   chipText:     "#0369A1",
   noticeText:   "#0C4A6E",
@@ -469,9 +469,30 @@ function Notice({ text }: { text: React.ReactNode }) {
 const twoCol:     React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr",     gap: 20 };
 const threeCol:   React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 };
 const addonsGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr",     gap: 6  };
-const sec:        React.CSSProperties = { fontSize: 14, fontWeight: 600, color: K.hint, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 0 };
+const sec:        React.CSSProperties = { fontSize: 14, fontWeight: 600, color: K.text, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 0 };
 const chipsRow:   React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 6 };
-function CollapsibleGroup({
+function useIsLargeScreen() {
+    const [isLarge, setIsLarge] = useState(false);
+  
+    useEffect(() => {
+      const mediaQuery = window.matchMedia("(min-width: 1024px)");
+  
+      const handleChange = () => {
+        setIsLarge(mediaQuery.matches);
+      };
+  
+      handleChange();
+  
+      mediaQuery.addEventListener("change", handleChange);
+  
+      return () => {
+        mediaQuery.removeEventListener("change", handleChange);
+      };
+    }, []);
+  
+    return isLarge;
+  }
+  function CollapsibleGroup({
     title,
     defaultOpen = false,
     children,
@@ -480,10 +501,19 @@ function CollapsibleGroup({
     defaultOpen?: boolean;
     children: React.ReactNode;
   }) {
+    const isLargeScreen = useIsLargeScreen();
     const [open, setOpen] = useState(defaultOpen);
   
+    useEffect(() => {
+      if (isLargeScreen) {
+        setOpen(true);
+      } else {
+        setOpen(defaultOpen);
+      }
+    }, [isLargeScreen, defaultOpen]);
+  
     return (
-      <section className="overflow-hidden rounded-[20px] border border-gray-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md">
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
@@ -493,9 +523,9 @@ function CollapsibleGroup({
   
           <motion.div
             animate={{ rotate: open ? 180 : 0 }}
-            transition={{ duration: 0.25, ease: MOTION_EASE }}
+            transition={{ duration: 0.2 }}
           >
-            <ChevronDown size={18} className="cursor-pointer text-sky-400" />
+            <ChevronDown size={18} className="cursor-pointer text-sky-500" />
           </motion.div>
         </button>
   
@@ -505,7 +535,7 @@ function CollapsibleGroup({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.28, ease: MOTION_EASE }}
+              transition={{ duration: 0.22, ease: "easeOut" }}
               className="overflow-hidden"
             >
               <div className="px-4 pb-4 sm:px-5 sm:pb-5">{children}</div>
@@ -515,17 +545,275 @@ function CollapsibleGroup({
       </section>
     );
   }
+const STANDARD_ADDONS = [
+  { label: "Inside fridge", price: 15 },
+  { label: "Inside oven", price: 20 },
+  { label: "Laundry fold", price: 25 },
+  { label: "Windows", price: 30 },
+] as const;
+
+type StandardAddonLabel = (typeof STANDARD_ADDONS)[number]["label"];
+
+type StandardPreviewImage = {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+};
+
+const STANDARD_GALLERY_DEFAULT_WIDTH = 320;
+const STANDARD_GALLERY_DEFAULT_HEIGHT = 240;
+
+function getStandardGalleryDimensions(img: StandardPreviewImage) {
+  return {
+    width: img.width ?? STANDARD_GALLERY_DEFAULT_WIDTH,
+    height: img.height ?? STANDARD_GALLERY_DEFAULT_HEIGHT,
+  };
+}
+
+const STANDARD_PREVIEW_IMAGES = {
+  default: [
+    { src: "/images/standard/bed.png", alt: "Bedroom" },
+    {
+      src: "/images/standard/shower1.png",
+      alt: "Bathroom",
+      width: 220,
+      height: 200,
+    },
+  ] satisfies StandardPreviewImage[],
+  addons: {
+    "Inside fridge": { src: "/images/standard/modernfridge.png", alt: "Clean refrigerator interior" , 
+      height: 200,},
+    "Inside oven": { src: "/images/standard/modernoven.png", alt: "Clean oven interior" },
+    "Laundry fold": { src: "/images/standard/towel.png", alt: "Folded laundry" , width: 220, height: 200,},
+    Windows: { src: "/images/standard/window.png", alt: "Clean windows", width: 220, height: 200,},
+  } satisfies Record<StandardAddonLabel, StandardPreviewImage>,
+};
+
+function buildStandardGalleryImages(selectedAddons: Set<string>): StandardPreviewImage[] {
+  const images: StandardPreviewImage[] = [...STANDARD_PREVIEW_IMAGES.default];
+  for (const addon of STANDARD_ADDONS) {
+    if (selectedAddons.has(addon.label)) {
+      images.push(STANDARD_PREVIEW_IMAGES.addons[addon.label]);
+    }
+  }
+  return images;
+}
+
+function StandardGalleryImageCard({ img }: { img: StandardPreviewImage }) {
+  const { width, height } = getStandardGalleryDimensions(img);
+  const hasCustomSize = img.width != null || img.height != null;
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.92, y: 8 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: -8 }}
+      transition={{ duration: 0.35, ease: MOTION_EASE }}
+      className={[
+        "relative overflow-hidden  ",
+        hasCustomSize ? "mx-auto max-w-full shrink-0" : "aspect-[4/3] w-full",
+      ].join(" ")}
+      style={hasCustomSize ? { width, height } : undefined}
+    >
+      <Image
+        src={img.src}
+        alt={img.alt}
+        fill
+        sizes="(min-width: 1024px) 280px, 100vw"
+        className="object-cover"
+      />
+    </motion.div>
+  );
+}
+
+function DynamicServiceGallery({
+  galleryKey,
+  images,
+  isDefaultOnly,
+}: {
+  galleryKey: string;
+  images: StandardPreviewImage[];
+  isDefaultOnly: boolean;
+}) {
+  return (
+    <motion.div
+      key={galleryKey}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3, ease: MOTION_EASE }}
+      className={`flex min-h-0 flex-1 flex-col ${
+        isDefaultOnly ? "justify-center" : "justify-start"
+      }`}
+    >
+      <div
+        className={
+          isDefaultOnly
+            ? "mx-auto flex w-full max-w-[320px] flex-col gap-3"
+            : "grid min-h-0 flex-1 auto-rows-fr grid-cols-1 gap-3 overflow-y-auto sm:grid-cols-2"
+        }
+      >
+        <AnimatePresence mode="popLayout">
+          {images.map((img) => (
+            <StandardGalleryImageCard key={img.src} img={img} />
+          ))}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+const DEEP_CLEAN_ADDONS = [
+  { label: "Baseboards", price: 35 },
+  { label: "Inside cabinets", price: 40 },
+  { label: "Wall scrub", price: 30 },
+  { label: "Carpet steam", price: 45 },
+] as const;
+
+type DeepCleanAddonLabel = (typeof DEEP_CLEAN_ADDONS)[number]["label"];
+
+const DEEP_CLEAN_PREVIEW_IMAGES = {
+  default: [
+    { src: "/images/vacium/vacuum.png", alt: "Deep cleaning service" , width: 280, height: 240,},
+  ] satisfies StandardPreviewImage[],
+  addons: {
+    Baseboards: { src: "/images/deepclean/baseboard.png", alt: "Baseboards cleaning" , width: 220, height: 200,},
+    "Inside cabinets": { src: "/images/deepclean/cabinet.png", alt: "Clean cabinet interior" , width: 350, height: 100,},
+    "Wall scrub": { src: "/images/deepclean/wall.png", alt: "Wall scrub cleaning" , width: 220, height: 200,},
+    "Carpet steam": { src: "/images/deepclean/carpet1.png", alt: "Carpet steam cleaning" , width: 220, height: 200,},
+  } satisfies Record<DeepCleanAddonLabel, StandardPreviewImage>,
+};
+
+function buildDeepCleanGalleryImages(selectedAddons: Set<string>): StandardPreviewImage[] {
+  const images: StandardPreviewImage[] = [...DEEP_CLEAN_PREVIEW_IMAGES.default];
+  for (const addon of DEEP_CLEAN_ADDONS) {
+    if (selectedAddons.has(addon.label)) {
+      images.push(DEEP_CLEAN_PREVIEW_IMAGES.addons[addon.label]);
+    }
+  }
+  return images;
+}
+
+const MOVE_OUT_ADDONS = [
+  { label: "Carpet steam", price: 50 },
+  { label: "Patch & paint", price: 40 },
+  { label: "Window wash", price: 35 },
+  { label: "Garage clean", price: 60 },
+] as const;
+
+type MoveOutAddonLabel = (typeof MOVE_OUT_ADDONS)[number]["label"];
+
+const MOVE_OUT_PREVIEW_IMAGES = {
+  default: [
+    {
+      src: "/images/moveout/moveout.png",
+      alt: "Move-out cleaning service",
+    },
+  ] satisfies StandardPreviewImage[],
+  addons: {
+    "Carpet steam": {
+      src: "/images/deepclean/carpet1.png",
+      alt: "Carpet steam cleaning",
+      width: 220,
+      height: 200,
+    },
+    "Patch & paint": {
+      src: "/images/moveout/paint.png",
+      alt: "Patch and paint service",
+      width: 220,
+      height: 220,
+    },
+    "Window wash": {
+      src: "/images/moveout/window.png",
+      alt: "Window washing service",
+      width: 220,
+      height: 200,
+    },
+    "Garage clean": {
+      src: "/images/moveout/garage.png",
+      alt: "Garage cleaning service",
+      width: 220,
+      height: 200,
+    },
+  } satisfies Record<MoveOutAddonLabel, StandardPreviewImage>,
+};
+
+function buildMoveOutGalleryImages(selectedAddons: Set<string>): StandardPreviewImage[] {
+  const images: StandardPreviewImage[] = [...MOVE_OUT_PREVIEW_IMAGES.default];
+  for (const addon of MOVE_OUT_ADDONS) {
+    if (selectedAddons.has(addon.label)) {
+      images.push(MOVE_OUT_PREVIEW_IMAGES.addons[addon.label]);
+    }
+  }
+  return images;
+}
+
+const COMMERCIAL_ADDONS = [
+  { label: "Floor wax", price: 60 },
+  { label: "Pressure wash", price: 45 },
+  { label: "Window ext.", price: 55 },
+  { label: "Sanitize", price: 40 },
+] as const;
+
+type CommercialAddonLabel = (typeof COMMERCIAL_ADDONS)[number]["label"];
+
+const COMMERCIAL_PREVIEW_IMAGES = {
+  default: [
+    {
+      src: "/images/commercial/commercial.png",
+      alt: "Commercial cleaning service",
+    },
+  ] satisfies StandardPreviewImage[],
+  addons: {
+    "Floor wax": {
+      src: "/images/commercial/wax.png",
+      alt: "Floor waxing service",
+      width: 220,
+      height: 100,
+ 
+    },
+    "Pressure wash": {
+      src: "/images/commercial/pressure.png",
+      alt: "Pressure washing service",
+    },
+    "Window ext.": {
+      src: "/images/commercial/windowext.png",
+      alt: "Exterior window cleaning",
+    },
+    Sanitize: {
+      src: "/images/commercial/sanitize.png",
+      alt: "Commercial sanitizing service",
+    },
+  } satisfies Record<CommercialAddonLabel, StandardPreviewImage>,
+};
+
+function buildCommercialGalleryImages(selectedAddons: Set<string>): StandardPreviewImage[] {
+  const images: StandardPreviewImage[] = [...COMMERCIAL_PREVIEW_IMAGES.default];
+  for (const addon of COMMERCIAL_ADDONS) {
+    if (selectedAddons.has(addon.label)) {
+      images.push(COMMERCIAL_PREVIEW_IMAGES.addons[addon.label]);
+    }
+  }
+  return images;
+}
+
 // ── Service panels ─────────────────────────────────────────────────────────────
 function StandardPanel({
     onPrice,
     frequency,
     onFrequencyChange,
+    selectedAddons,
+    onSelectedAddonsChange,
   }: {
     onPrice: (p: ReturnType<typeof calc>) => void;
     frequency: string;
     onFrequencyChange: (frequency: string) => void;
+    selectedAddons: Set<string>;
+    onSelectedAddonsChange: (addons: Set<string>) => void;
   }) {
-  const [bedIdx,  setBedIdx]  = useState(2);
+  const [bedIdx,  setBedIdx]  = useState(1);
   const [bathIdx, setBathIdx] = useState(0);
   const FREQS = [
     { label: "One-time",  discount: 0  },
@@ -533,27 +821,48 @@ function StandardPanel({
     { label: "Weekly",    discount: 15 },
     { label: "Monthly",   discount: 5  },
   ];
-  const freqIdx = Math.max(
-    0,
-    FREQS.findIndex((item) => item.label === frequency)
+  const freqIdx = FREQS.findIndex(
+    (item) => item.label === frequency
   );
-  const [addons,  setAddons]  = useState<Set<number>>(new Set([1]));
 
-  const BEDS  = ["Studio","1 bed","2 bed","3 bed","4+ bed"];
-  const ADDONS = [
-    { label: "Inside fridge", price: 15 },
-    { label: "Inside oven",   price: 20 },
-    { label: "Laundry fold",  price: 25 },
-    { label: "Windows",       price: 30 },
-  ];
 
-  const toggle     = useCallback((i: number) => setAddons(p => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; }), []);
-  const addonTotal = [...addons].reduce((s, i) => s + ADDONS[i].price, 0);
+  const BEDS = ["Studio", "1 bed", "2 bed", "3 bed", "4+ bed"];
+
+  const toggle = useCallback(
+    (label: StandardAddonLabel) => {
+      const next = new Set(selectedAddons);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      onSelectedAddonsChange(next);
+    },
+    [selectedAddons, onSelectedAddonsChange],
+  );
+  const addonTotal = STANDARD_ADDONS.reduce(
+    (sum, addon) => sum + (selectedAddons.has(addon.label) ? addon.price : 0),
+    0,
+  );
 
   useEffect(() => {
-    const b = BED_BASE[bedIdx] + (BATH_VALS[bathIdx] - 1) * 18 + addonTotal;
-    onPrice(calc(Math.round(b * (1 - FREQS[freqIdx].discount / 100))));
+    const b =
+    BED_BASE[bedIdx] +
+    (BATH_VALS[bathIdx] - 1) * 18 +
+    addonTotal;
+  
+  const discount =
+    freqIdx >= 0 ? FREQS[freqIdx].discount : 0;
+  
+  onPrice(
+    calc(
+      Math.round(
+        b * (1 - discount / 100)
+      )
+    )
+  );
+
+
   }, [bedIdx, bathIdx, freqIdx, addonTotal, onPrice]);
+
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -583,8 +892,13 @@ function StandardPanel({
   
       <CollapsibleGroup title="Add-ons">
         <div className="grid gap-2 sm:grid-cols-2">
-          {ADDONS.map((a, i) => (
-            <Addon key={a.label} label={a.label} selected={addons.has(i)} onClick={() => toggle(i)} />
+          {STANDARD_ADDONS.map((a) => (
+            <Addon
+              key={a.label}
+              label={a.label}
+              selected={selectedAddons.has(a.label)}
+              onClick={() => toggle(a.label)}
+            />
           ))}
         </div>
       </CollapsibleGroup>
@@ -592,24 +906,35 @@ function StandardPanel({
   );
 }
 
-function DeepCleanPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => void }) {
+function DeepCleanPanel({
+  onPrice,
+  selectedAddons,
+  onSelectedAddonsChange,
+}: {
+  onPrice: (p: ReturnType<typeof calc>) => void;
+  selectedAddons: Set<string>;
+  onSelectedAddonsChange: (addons: Set<string>) => void;
+}) {
   const [sizeIdx, setSize]   = useState(1);
   const [condIdx, setCond]   = useState(0);
-  const [addons,  setAddons] = useState<Set<number>>(new Set([0, 2]));
-
   const SIZES  = ["Studio","1–2 bed","3–4 bed","5+ bed"];
   const CONDS  = ["Good","Needs work","Very dirty"];
-  const ADDONS = [
-    { label: "Baseboards",      price: 35 },
-    { label: "Inside cabinets", price: 40 },
-    { label: "Wall scrub",      price: 30 },
-    { label: "Carpet steam",    price: 45 },
-  ];
 
-  const toggle     = useCallback((i: number) => setAddons(p => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; }), []);
-  const addonTotal = [...addons].reduce((s, i) => s + ADDONS[i].price, 0);
+  const toggle = useCallback(
+    (label: DeepCleanAddonLabel) => {
+      const next = new Set(selectedAddons);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      onSelectedAddonsChange(next);
+    },
+    [selectedAddons, onSelectedAddonsChange],
+  );
+  const addonTotal = DEEP_CLEAN_ADDONS.reduce(
+    (sum, addon) => sum + (selectedAddons.has(addon.label) ? addon.price : 0),
+    0,
+  );
 
-  useEffect(() => onPrice(calc(DEEP_BASE[sizeIdx] + DEEP_COND[condIdx] + addonTotal)), [sizeIdx, condIdx, addonTotal]);
+  useEffect(() => onPrice(calc(DEEP_BASE[sizeIdx] + DEEP_COND[condIdx] + addonTotal)), [sizeIdx, condIdx, addonTotal, onPrice]);
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -641,12 +966,12 @@ function DeepCleanPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => 
   
       <CollapsibleGroup title="Deep clean extras">
         <div className="grid gap-2 sm:grid-cols-2">
-          {ADDONS.map((a, i) => (
+          {DEEP_CLEAN_ADDONS.map((a) => (
             <Addon
               key={a.label}
               label={a.label}
-              selected={addons.has(i)}
-              onClick={() => toggle(i)}
+              selected={selectedAddons.has(a.label)}
+              onClick={() => toggle(a.label)}
             />
           ))}
         </div>
@@ -670,24 +995,35 @@ function DeepCleanPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => 
   );
 }
 
-function MoveOutPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => void }) {
+function MoveOutPanel({
+  onPrice,
+  selectedAddons,
+  onSelectedAddonsChange,
+}: {
+  onPrice: (p: ReturnType<typeof calc>) => void;
+  selectedAddons: Set<string>;
+  onSelectedAddonsChange: (addons: Set<string>) => void;
+}) {
   const [typeIdx, setType]   = useState(0);
   const [sqftIdx, setSqft]   = useState(1);
-  const [addons,  setAddons] = useState<Set<number>>(new Set([0, 2]));
-
   const TYPES  = ["Apartment","Condo","House","Studio"];
   const SQFTS  = ["Under 500","500–1000","1000–1500","1500+"];
-  const ADDONS = [
-    { label: "Carpet steam",  price: 50 },
-    { label: "Patch & paint", price: 40 },
-    { label: "Window wash",   price: 35 },
-    { label: "Garage clean",  price: 60 },
-  ];
 
-  const toggle     = useCallback((i: number) => setAddons(p => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; }), []);
-  const addonTotal = [...addons].reduce((s, i) => s + ADDONS[i].price, 0);
+  const toggle = useCallback(
+    (label: MoveOutAddonLabel) => {
+      const next = new Set(selectedAddons);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      onSelectedAddonsChange(next);
+    },
+    [selectedAddons, onSelectedAddonsChange],
+  );
+  const addonTotal = MOVE_OUT_ADDONS.reduce(
+    (sum, addon) => sum + (selectedAddons.has(addon.label) ? addon.price : 0),
+    0,
+  );
 
-  useEffect(() => onPrice(calc(MO_BASE[sqftIdx] + addonTotal)), [sqftIdx, addonTotal]);
+  useEffect(() => onPrice(calc(MO_BASE[sqftIdx] + addonTotal)), [sqftIdx, addonTotal, onPrice]);
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -719,12 +1055,12 @@ function MoveOutPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => vo
   
       <CollapsibleGroup title="Move-out extras">
         <div className="grid gap-2 sm:grid-cols-2">
-          {ADDONS.map((a, i) => (
+          {MOVE_OUT_ADDONS.map((a) => (
             <Addon
               key={a.label}
               label={a.label}
-              selected={addons.has(i)}
-              onClick={() => toggle(i)}
+              selected={selectedAddons.has(a.label)}
+              onClick={() => toggle(a.label)}
             />
           ))}
         </div>
@@ -750,30 +1086,45 @@ function MoveOutPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => vo
   );
 }
 
-function CommercialPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) => void }) {
-  const [typeIdx,     setType]     = useState(0);
-  const [sqftIdx,     setSqft]     = useState(1);
-  const [schedIdx,    setSched]    = useState(1);
-  const [timingIdx,   setTiming]   = useState(1);
-  const [contractIdx, setContract] = useState(1);
-  const [addons,      setAddons]   = useState<Set<number>>(new Set([0, 3]));
+function CommercialPanel({
+  onPrice,
+  selectedAddons,
+  onSelectedAddonsChange,
+}: {
+  onPrice: (p: ReturnType<typeof calc>) => void;
+  selectedAddons: Set<string>;
+  onSelectedAddonsChange: (addons: Set<string>) => void;
+}) {
+    const [typeIdx, setType] = useState(0);
+    const [sqftIdx, setSqft] = useState(0);
+    const [schedIdx, setSched] = useState(3);
+    const [timingIdx, setTiming] = useState(-1);
+    const [contractIdx, setContract] = useState(0); // No contract default
 
   const TYPES     = ["Office","Retail","Restaurant","Medical","Gym"];
   const SQFTS     = ["Under 1k","1k–2.5k","2.5k–5k","5k+"];
   const SCHEDS    = [{ label: "Daily", mult: 1.4 }, { label: "3x/week", mult: 1 }, { label: "Weekly", mult: .7 }, { label: "One-time", mult: .5 }];
   const TIMINGS   = ["Before open","After close","Weekend"];
   const CONTRACTS = ["No contract","3 months","6 months","Annual"];
-  const ADDONS    = [
-    { label: "Floor wax",     price: 60 },
-    { label: "Pressure wash", price: 45 },
-    { label: "Window ext.",   price: 55 },
-    { label: "Sanitize",      price: 40 },
-  ];
 
-  const toggle     = useCallback((i: number) => setAddons(p => { const n = new Set(p); n.has(i) ? n.delete(i) : n.add(i); return n; }), []);
-  const addonTotal = [...addons].reduce((s, i) => s + ADDONS[i].price, 0);
+  const toggle = useCallback(
+    (label: CommercialAddonLabel) => {
+      const next = new Set(selectedAddons);
+      if (next.has(label)) next.delete(label);
+      else next.add(label);
+      onSelectedAddonsChange(next);
+    },
+    [selectedAddons, onSelectedAddonsChange],
+  );
+  const addonTotal = COMMERCIAL_ADDONS.reduce(
+    (sum, addon) => sum + (selectedAddons.has(addon.label) ? addon.price : 0),
+    0,
+  );
 
-  useEffect(() => onPrice(calc(Math.round((COM_BASE[sqftIdx] + addonTotal) * SCHEDS[schedIdx].mult))), [sqftIdx, schedIdx, addonTotal]);
+  useEffect(
+    () => onPrice(calc(Math.round((COM_BASE[sqftIdx] + addonTotal) * SCHEDS[schedIdx].mult))),
+    [sqftIdx, schedIdx, addonTotal, onPrice],
+  );
 
   return (
     <div className="grid gap-4 lg:grid-cols-2 ">
@@ -818,12 +1169,12 @@ function CommercialPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) =>
   
       <CollapsibleGroup title="Add-ons">
         <div className="grid gap-2 sm:grid-cols-2">
-          {ADDONS.map((a, i) => (
+          {COMMERCIAL_ADDONS.map((a) => (
             <Addon
               key={a.label}
               label={a.label}
-              selected={addons.has(i)}
-              onClick={() => toggle(i)}
+              selected={selectedAddons.has(a.label)}
+              onClick={() => toggle(a.label)}
             />
           ))}
         </div>
@@ -860,10 +1211,10 @@ function CommercialPanel({ onPrice }: { onPrice: (p: ReturnType<typeof calc>) =>
 
 // ── Service config ─────────────────────────────────────────────────────────────
 const SERVICES = [
-  { image: "/images/Designer(2).png", label: "Standard",  photo: "/images/Designer(2).png", headline: <>Find the right cleaner<br />from Boston's best<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book now"            },
-  { image: "/images/Designer(5).png",        label: "Deep clean", photo: "/images/Designer(5).png", headline: <>Book a deep clean<br />that actually goes deep<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book deep clean"     },
-  { image: "/images/Designer(6).png",          label: "Move-out",   photo: "/images/Designer(6).png", headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,        bookLabel: "Book move-out clean" },
-  { image: "/images/Designer(7).png",        label: "Commercial", photo: "/images/Designer(7).png", headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,      bookLabel: "Get a quote"         },
+  { image: "/images/standard/bed.png", label: "Standard",  photo: "/images/booking/Designer(9).png", headline: <>Find the right cleaner<br />from Boston's best<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book now"            },
+  { image: "/images/vacium/vacuum.png",        label: "Deep clean", photo: "/images/boston.jpg", headline: <>Book a deep clean<br />that actually goes deep<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book deep clean"     },
+  { image: "/images/moveout/moveout.png",          label: "Move-out",   photo: "/images/boston.jpg", headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,        bookLabel: "Book move-out clean" },
+  { image: "/images/commercial/commercial.png",        label: "Commercial", photo: "/images/boston.jpg", headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,      bookLabel: "Get a quote"         },
 ];
 function FrequencyDropdown({
     open,
@@ -930,9 +1281,56 @@ export default function CleaningEstimator() {
   const svc     = SERVICES[serviceIdx];
   const rootRef = useRef<HTMLElement>(null);
 
-  const [frequency, setFrequency] = useState("Bi-weekly");
+  const [frequency, setFrequency] = useState("One-time");
   const [frequencyOpen, setFrequencyOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(new Set());
+
+  const handleStandardAddonsChange = useCallback((addons: Set<string>) => {
+    setStandardSelectedAddons(new Set(addons));
+  }, []);
+
+  const [deepCleanSelectedAddons, setDeepCleanSelectedAddons] = useState<Set<string>>(new Set());
+
+  const handleDeepCleanAddonsChange = useCallback((addons: Set<string>) => {
+    setDeepCleanSelectedAddons(new Set(addons));
+  }, []);
+
+  const standardGalleryImages = useMemo(
+    () => buildStandardGalleryImages(standardSelectedAddons),
+    [standardSelectedAddons],
+  );
+  const isDefaultGalleryOnly = standardGalleryImages.length === 2;
+
+  const deepCleanGalleryImages = useMemo(
+    () => buildDeepCleanGalleryImages(deepCleanSelectedAddons),
+    [deepCleanSelectedAddons],
+  );
+  const isDeepCleanDefaultGalleryOnly = deepCleanGalleryImages.length === 1;
+
+  const [moveOutSelectedAddons, setMoveOutSelectedAddons] = useState<Set<string>>(new Set());
+
+  const handleMoveOutAddonsChange = useCallback((addons: Set<string>) => {
+    setMoveOutSelectedAddons(new Set(addons));
+  }, []);
+
+  const moveOutGalleryImages = useMemo(
+    () => buildMoveOutGalleryImages(moveOutSelectedAddons),
+    [moveOutSelectedAddons],
+  );
+  const isMoveOutDefaultGalleryOnly = moveOutGalleryImages.length === 1;
+
+  const [commercialSelectedAddons, setCommercialSelectedAddons] = useState<Set<string>>(new Set());
+
+  const handleCommercialAddonsChange = useCallback((addons: Set<string>) => {
+    setCommercialSelectedAddons(new Set(addons));
+  }, []);
+
+  const commercialGalleryImages = useMemo(
+    () => buildCommercialGalleryImages(commercialSelectedAddons),
+    [commercialSelectedAddons],
+  );
+  const isCommercialDefaultGalleryOnly = commercialGalleryImages.length === 1;
 
   const mobileSearchSummary = `${locCity}, ${locState} · ${date ? formatDate(date) : "Select date"} · ${frequency}`;
 
@@ -994,10 +1392,27 @@ function handleFrequencyField() {
     onPrice={setPrices}
     frequency={frequency}
     onFrequencyChange={setFrequency}
+    selectedAddons={standardSelectedAddons}
+    onSelectedAddonsChange={handleStandardAddonsChange}
   /> ,
-    <DeepCleanPanel  key="deep" onPrice={setPrices} />,
-    <MoveOutPanel    key="mo"   onPrice={setPrices} />,
-    <CommercialPanel key="com"  onPrice={setPrices} />,
+    <DeepCleanPanel
+    key="deep"
+    onPrice={setPrices}
+    selectedAddons={deepCleanSelectedAddons}
+    onSelectedAddonsChange={handleDeepCleanAddonsChange}
+  />,
+    <MoveOutPanel
+    key="mo"
+    onPrice={setPrices}
+    selectedAddons={moveOutSelectedAddons}
+    onSelectedAddonsChange={handleMoveOutAddonsChange}
+  />,
+    <CommercialPanel
+    key="com"
+    onPrice={setPrices}
+    selectedAddons={commercialSelectedAddons}
+    onSelectedAddonsChange={handleCommercialAddonsChange}
+  />,
   ];
 
   return (
@@ -1199,7 +1614,7 @@ function handleFrequencyField() {
         value={date ? formatDate(date) : "Select date"}
         active={dateOpen}
         onClick={handleDateField}
-        placeholder={!date}
+        placeholder={!frequency}
       />
 
       <motion.div
@@ -1226,7 +1641,7 @@ function handleFrequencyField() {
       <SF
         icon="ti-repeat"
         label="Frequency"
-        value={frequency}
+        value={frequency || "Select frequency"}
         active={frequencyOpen}
         onClick={handleFrequencyField}
         flex={1}
@@ -1275,7 +1690,7 @@ function handleFrequencyField() {
               className="flex flex-col gap-5 border-t border-gray-200 bg-gradient-to-b from-slate-50 to-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6 lg:px-8"
             >
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-5">
-                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-black">
                   Estimate range
                 </span>
   
@@ -1289,12 +1704,12 @@ function handleFrequencyField() {
               </div>
   
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
-                <div className="flex items-center justify-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 sm:justify-start">
+                {/* <div className="flex items-center justify-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 sm:justify-start">
                   <div className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
                   <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
                     Licensed & insured
                   </span>
-                </div>
+                </div> */}
   
                 <motion.button
                   whileHover={{ scale: 1.02, y: -1 }}
@@ -1316,33 +1731,36 @@ function handleFrequencyField() {
           variants={slideRight}
           className="hidden min-h-[440px] flex-col overflow-hidden rounded-[24px] border border-gray-200 bg-gradient-to-b from-slate-50 to-white shadow-[0_1px_3px_rgba(12,26,46,.04),0_16px_48px_rgba(12,26,46,.07)] lg:flex"
         >
-          <div className="relative flex min-h-0 flex-1 items-center justify-center p-6 lg:p-8">
+          <div className="relative flex min-h-0 flex-1 flex-col p-5 lg:p-6">
             <AnimatePresence mode="wait">
-              <motion.div
-                key={svc.photo}
-                initial={{ opacity: 0, scale: 0.96, x: 12 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.98, x: -8 }}
-                transition={{ duration: 0.4, ease: MOTION_EASE }}
-                className="flex h-full w-full items-center justify-center"
-              >
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3, ease: MOTION_EASE }}
-                  className="relative max-h-[320px] w-full max-w-[400px]"
-                >
-                  <Image
-                    src={svc.photo}
-                    alt={svc.label}
-                    width={400}
-                    height={320}
-                    className="h-auto max-h-[320px] w-full object-contain drop-shadow-[0_12px_32px_rgba(12,26,46,0.12)]"
-                  />
-                </motion.div>
-              </motion.div>
+              {serviceIdx === 0 ? (
+                <DynamicServiceGallery
+                  galleryKey="standard-gallery"
+                  images={standardGalleryImages}
+                  isDefaultOnly={isDefaultGalleryOnly}
+                />
+              ) : serviceIdx === 1 ? (
+                <DynamicServiceGallery
+                  galleryKey="deep-clean-gallery"
+                  images={deepCleanGalleryImages}
+                  isDefaultOnly={isDeepCleanDefaultGalleryOnly}
+                />
+              ) : serviceIdx === 2 ? (
+                <DynamicServiceGallery
+                  galleryKey="move-out-gallery"
+                  images={moveOutGalleryImages}
+                  isDefaultOnly={isMoveOutDefaultGalleryOnly}
+                />
+              ) : (
+                <DynamicServiceGallery
+                  galleryKey="commercial-gallery"
+                  images={commercialGalleryImages}
+                  isDefaultOnly={isCommercialDefaultGalleryOnly}
+                />
+              )}
             </AnimatePresence>
 
-            <div className="absolute bottom-5 left-5 inline-flex items-center gap-2 rounded-full border border-sky-100 bg-sky-50/95 px-4 py-2 shadow-sm backdrop-blur-sm">
+            <div className="mt-4 inline-flex w-fit items-center gap-2 rounded-full border border-sky-100 bg-sky-50/95 px-4 py-2 shadow-sm backdrop-blur-sm">
               <Image src={svc.image} alt={svc.label} width={16} height={16} style={{ objectFit: "contain" }} />
               <span className="text-sm font-semibold tracking-tight text-sky-600">
                 {svc.label}
