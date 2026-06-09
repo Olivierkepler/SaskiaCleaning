@@ -679,10 +679,10 @@ const DEEP_CLEAN_PREVIEW_IMAGES = {
     { src: "/images/vacium/vacuum.png", alt: "Deep cleaning service" , width: 280, height: 240,},
   ] satisfies StandardPreviewImage[],
   addons: {
-    Baseboards: { src: "/images/deepclean/baseboard.png", alt: "Baseboards cleaning" , width: 220, height: 200,},
+    Baseboards: { src: "/images/deepclean/baseboard.png", alt: "Baseboards cleaning" , width: 120, height: 150,},
     "Inside cabinets": { src: "/images/deepclean/cabinet.png", alt: "Clean cabinet interior" , width: 350, height: 100,},
-    "Wall scrub": { src: "/images/deepclean/wall.png", alt: "Wall scrub cleaning" , width: 220, height: 200,},
-    "Carpet steam": { src: "/images/deepclean/carpet1.png", alt: "Carpet steam cleaning" , width: 220, height: 200,},
+    "Wall scrub": { src: "/images/deepclean/wall.png", alt: "Wall scrub cleaning" , width: 120, height: 130,},
+    "Carpet steam": { src: "/images/deepclean/carpet1.png", alt: "Carpet steam cleaning" , width: 130, height: 130,},
   } satisfies Record<DeepCleanAddonLabel, StandardPreviewImage>,
 };
 

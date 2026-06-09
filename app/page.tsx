@@ -1,8 +1,5 @@
 "use client";
 
-import { useRef } from "react";
-import { useInView } from "framer-motion";
-
 import Hero from "./components/Hero";
 import BentoGrid from "./components/BentoGrid";
 import { TrustBar } from "./components/TrustBar";
@@ -25,13 +22,6 @@ import LocationMap from "./components/LocationMap";
 import AdCardGrid from "./components/AdCardGrid";
 
 export default function Home() {
-  const socialSectionRef = useRef<HTMLDivElement | null>(null);
-
-  const showSocialCorner = useInView(socialSectionRef, {
-    amount: 0.2,
-    margin: "-10% 0px -30% 0px",
-  });
-
   return (
     <main className="relative overflow-x-hidden bg-white">
       {/* <CustomCursor /> */}
@@ -39,31 +29,26 @@ export default function Home() {
       <ChatBot />
       <Hero2 />
 
-     
+      <SocialCorner sectionId="social-section" />
 
-      <div ref={socialSectionRef} className="relative bg-white py-10  " style={{ transform: "translateY(-14px)" }}>
-        {showSocialCorner && <SocialCorner />}
+      <section
+        id="social-section"
+        className="relative bg-white py-10"
+        style={{ transform: "translateY(-14px)" }}
+      >
+        <div className="hidden bg-white sm:block">
+          {/* <InfoBar /> */}
+          <AdCardGrid />
+        </div>
 
-        <div className="hidden sm:block bg-white ">
-        {/* <InfoBar /> */}
-        <AdCardGrid />
-      </div>
- 
-
-<div className="bg-white ">
-  <CatTab />
-</div>
-
-
-
-      
+        <div className="bg-white">
+          <CatTab />
+        </div>
 
         <SectionWrapper>
           <AutoServiceCarousel />
         </SectionWrapper>
-
-      
-      </div>
+      </section>
 
       <CommercialCleaningPlans
         backgroundImageSrc="/images/kitchen.jpg"
@@ -85,9 +70,8 @@ export default function Home() {
       </SectionWrapper>
 
       <SectionWrapper>
-   <LocationMap />
+        <LocationMap />
       </SectionWrapper>
-      
 
       <footer className="border-t border-stone-100 px-8 py-20">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row" />
