@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { MASSACHUSETTS_LOCATIONS } from "@/app/data/massachusettsLocations";
 import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
+import BookingSummary from "@/app/components/BookingSummary";
 
 const K = {
   blue:         "#38BDF8",
@@ -577,16 +578,16 @@ const STANDARD_PREVIEW_IMAGES = {
     {
       src: "/images/standard/shower1.png",
       alt: "Bathroom",
-      width: 220,
-      height: 200,
+      width: 100,
+      height: 100,
     },
   ] satisfies StandardPreviewImage[],
   addons: {
     "Inside fridge": { src: "/images/standard/modernfridge.png", alt: "Clean refrigerator interior" , 
-      height: 200,},
-    "Inside oven": { src: "/images/standard/modernoven.png", alt: "Clean oven interior" },
-    "Laundry fold": { src: "/images/standard/towel.png", alt: "Folded laundry" , width: 220, height: 200,},
-    Windows: { src: "/images/standard/window.png", alt: "Clean windows", width: 220, height: 200,},
+    width: 100, height: 100,},
+    "Inside oven": { src: "/images/standard/modernoven.png", alt: "Clean oven interior" , width: 100, height: 100,},
+    "Laundry fold": { src: "/images/standard/towel.png", alt: "Folded laundry" , width: 100, height: 100,},
+    Windows: { src: "/images/standard/window.png", alt: "Clean windows", width: 100, height: 100,},
   } satisfies Record<StandardAddonLabel, StandardPreviewImage>,
 };
 
@@ -1415,6 +1416,17 @@ function handleFrequencyField() {
   />,
   ];
 
+
+  const summaryExtras =
+  serviceIdx === 0
+    ? Array.from(standardSelectedAddons)
+    : serviceIdx === 1
+    ? Array.from(deepCleanSelectedAddons)
+    : serviceIdx === 2
+    ? Array.from(moveOutSelectedAddons)
+    : Array.from(commercialSelectedAddons);
+
+
   return (
     <motion.section
     id="quote"
@@ -1723,8 +1735,30 @@ function handleFrequencyField() {
           </motion.div>
         </div>
   
-        {/* Right Image Card */}
-        <motion.div
+
+  {/* right side */}
+  <div className="hidden flex-col gap-6 lg:flex">
+ {/* Booking Summary */}
+ <motion.div
+  initial="hidden"
+  whileInView="visible"
+  viewport={SCROLL_VIEWPORT}
+  variants={slideRight}
+  className="hidden lg:block"
+>
+  <BookingSummary
+    service={svc.label}
+    frequency={frequency}
+    location={`${locCity}, ${locState}`}
+    date={date}
+    extras={summaryExtras}
+    total={prices.mid}
+  />
+</motion.div>
+
+
+          {/* Right Image Card */}
+          <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={SCROLL_VIEWPORT}
@@ -1760,14 +1794,16 @@ function handleFrequencyField() {
               )}
             </AnimatePresence>
 
-            <div className="mt-4 inline-flex w-fit items-center gap-2 rounded-full border border-sky-100 bg-sky-50/95 px-4 py-2 shadow-sm backdrop-blur-sm">
+            {/* <div className="mt-4 inline-flex w-fit items-center gap-2 rounded-full border border-sky-100 bg-sky-50/95 px-4 py-2 shadow-sm backdrop-blur-sm">
               <Image src={svc.image} alt={svc.label} width={16} height={16} style={{ objectFit: "contain" }} />
               <span className="text-sm font-semibold tracking-tight text-sky-600">
                 {svc.label}
               </span>
-            </div>
+            </div> */}
           </div>
         </motion.div>
+       
+  </div>
       </div>
     </motion.section>
   );
