@@ -79,7 +79,7 @@ export default function BookingSummary({
           type="button"
           onClick={() => setCollapsed((c) => !c)}
           aria-label={collapsed ? "Expand booking summary" : "Collapse booking summary"}
-          className="text-slate-400 transition-colors hover:text-sky-500"
+          className="text-slate-400 transition-colors hover:text-sky-500 cursor-pointer hover:scale-110"
         >
           <CollapseIcon collapsed={collapsed} />
         </button>
