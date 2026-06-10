@@ -238,7 +238,7 @@ export default function FloatingLeadWidget() {
       ref={panelRef}
       style={{
         position: "fixed",
-        bottom: 300,
+        bottom: 100,
         right: 30,
         zIndex: 50,
         display: "flex",
