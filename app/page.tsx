@@ -36,14 +36,16 @@ export default function Home() {
         className="relative bg-white py-10"
         style={{ transform: "translateY(-14px)" }}
       >
+         
+        
         <div className="hidden bg-white sm:block">
           {/* <InfoBar /> */}
           <AdCardGrid />
         </div>
-
         <div className="bg-white">
           <CatTab />
         </div>
+      
 
         <SectionWrapper>
           <AutoServiceCarousel />

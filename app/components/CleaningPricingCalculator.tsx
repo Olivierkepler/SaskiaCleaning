@@ -69,12 +69,12 @@ export default function CleaningServicesPricing() {
         onClick={() => setSelectedCategory(null)}
       >
         <div
-          className="relative max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-[2rem] bg-white shadow-[0_30px_90px_rgba(15,23,42,0.24)]"
+          className="relative max-h-[90dvh] w-full max-w-2xl overflow-y-auto rounded-[10px] border border-neutral-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)]"
           onClick={(e) => e.stopPropagation()}
         >
           <button
             onClick={() => setSelectedCategory(null)}
-            className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full bg-white text-slate-950 shadow-lg hover:bg-slate-950 hover:text-white"
+            className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center border border-neutral-200 bg-white text-slate-950 transition hover:bg-slate-950 hover:text-white"
           >
             ×
           </button>
@@ -87,38 +87,48 @@ export default function CleaningServicesPricing() {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 to-transparent" />
 
-            <div className="absolute bottom-6 left-6 right-16">
-              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-200">
+            <div className="absolute left-0 top-4 bg-sky-500 px-3 py-1">
+              <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
                 {selectedCategory.tag}
-              </p>
-              <h3 className="text-4xl font-semibold leading-none text-white">
+              </span>
+            </div>
+
+            <div className="absolute bottom-6 left-6 right-16">
+              <h3 className="font-serif text-[2.25rem] font-bold leading-none tracking-[-0.02em] text-white">
                 {selectedCategory.title}
               </h3>
             </div>
           </div>
 
           <div className="p-6 sm:p-8">
-            <p className="text-[15px] leading-7 text-slate-600">
+            <p className="text-[14px] leading-7 text-slate-500">
               {selectedCategory.description}
             </p>
 
-            <div className="mt-6 overflow-hidden rounded-[1.5rem] bg-slate-50 ring-1 ring-slate-100">
-              {selectedCategory.services.map((service) => (
+            <div className="mt-6 border border-neutral-200">
+              {selectedCategory.services.map((service, idx) => (
                 <div
                   key={service.name}
-                  className="flex items-center justify-between gap-4 border-b border-slate-100 px-5 py-4 last:border-b-0"
+                  className={`flex items-center justify-between gap-4 px-5 py-4 ${
+                    idx !== selectedCategory.services.length - 1
+                      ? "border-b border-neutral-200"
+                      : ""
+                  }`}
                 >
                   <span className="text-sm text-slate-700">
                     {service.name}
                   </span>
-                  <span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-950 ring-1 ring-slate-200">
+                  <span className="border border-neutral-300 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-950">
                     {service.price}
                   </span>
                 </div>
               ))}
             </div>
 
-            <button className="mt-7 w-full rounded-full bg-sky-500 px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(14,165,233,0.24)] transition hover:bg-slate-950">
+            <button
+              type="button"
+              className="mt-7 inline-flex w-full items-center justify-center border border-sky-500 bg-transparent py-3 text-[11px] font-black uppercase tracking-[0.14em] text-sky-500 transition-all duration-200 hover:bg-sky-500 hover:text-white"
+            >
               Request This Service
             </button>
           </div>
@@ -169,49 +179,43 @@ export default function CleaningServicesPricing() {
                 delay: index * 0.08,
                 ease: [0.16, 1, 0.3, 1],
               }}
-              className="group relative overflow-hidden rounded-[2rem] bg-white ring-1 ring-slate-200/70 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition duration-500 hover:-translate-y-2 hover:ring-sky-200 hover:shadow-[0_28px_90px_rgba(14,165,233,0.16)]"
+              className="group relative overflow-hidden rounded-[10px] border border-neutral-200 bg-white shadow-[0_8px_24px_rgba(15,23,42,0.08)] transition duration-500 hover:-translate-y-1"
             >
               <div className="relative h-72 overflow-hidden">
                 <img
                   src={category.image}
                   alt={category.title}
                   loading="lazy"
-                  className="h-full w-full object-cover grayscale-[8%] transition duration-700 group-hover:scale-[1.05] group-hover:grayscale-0"
+                  className="h-full w-full object-cover grayscale-[8%] transition duration-700 group-hover:scale-[1.03] group-hover:grayscale-0"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-slate-950/20 to-transparent" />
 
-                <div className="absolute left-6 right-6 top-6 flex items-center justify-between">
-                  <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.22em] text-white backdrop-blur-md">
+                <div className="absolute left-0 top-4 bg-sky-500 px-3 py-1">
+                  <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
                     {category.tag}
-                  </span>
-
-                  <span className="text-3xl text-white/35">
-                    {String(index + 1).padStart(2, "0")}
                   </span>
                 </div>
 
                 <div className="absolute bottom-6 left-6 right-6">
-                  <div className="mb-4 h-[2px] w-10 bg-sky-400 transition-all duration-300 group-hover:w-16" />
-
-                  <h3 className="text-[2rem] font-semibold leading-[0.95] tracking-[-0.045em] text-white">
+                  <h3 className="font-serif text-[2.15rem] font-bold leading-[0.95] tracking-[-0.02em] text-white">
                     {category.title}
                   </h3>
                 </div>
               </div>
 
               <div className="p-6 sm:p-7">
-                <p className="min-h-[78px] text-[15px] leading-7 text-slate-600">
+                <p className="min-h-[78px] text-[14px] leading-7 text-slate-500">
                   {category.description}
                 </p>
 
-                <div className="mt-7 overflow-hidden rounded-[1.4rem] bg-slate-50 ring-1 ring-slate-100">
+                <div className="mt-7 border border-neutral-200">
                   {category.services.map((service, idx) => (
                     <div
                       key={`${category.title}-${service.name}`}
-                      className={`flex items-center justify-between gap-4 px-5 py-4 transition duration-300 hover:bg-white ${
+                      className={`flex items-center justify-between gap-4 px-5 py-4 ${
                         idx !== category.services.length - 1
-                          ? "border-b border-slate-100"
+                          ? "border-b border-neutral-200"
                           : ""
                       }`}
                     >
@@ -219,7 +223,7 @@ export default function CleaningServicesPricing() {
                         {service.name}
                       </span>
 
-                      <span className="shrink-0 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-950">
+                      <span className="shrink-0 border border-neutral-300 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-950">
                         {service.price}
                       </span>
                     </div>
@@ -229,7 +233,7 @@ export default function CleaningServicesPricing() {
                 <button
                   type="button"
                   onClick={() => setSelectedCategory(category)}
-                  className="mt-7 w-full rounded-full bg-sky-500 px-6 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(14,165,233,0.24)] transition duration-300 hover:bg-slate-950"
+                  className="mt-7 inline-flex w-full items-center justify-center border border-sky-500 bg-transparent py-3 text-[11px] font-black uppercase tracking-[0.14em] text-sky-500 transition-all duration-200 hover:bg-sky-500 hover:text-white"
                 >
                   Request This Service
                 </button>

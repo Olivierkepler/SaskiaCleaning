@@ -70,7 +70,7 @@ export default function BookingSummary({
 
   return (
     <div
-      className={`w-full overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-[0_1px_3px_rgba(12,26,46,.04),0_16px_48px_rgba(12,26,46,.07)] ${className}`}
+      className={`w-full overflow-hidden rounded-[10px] border border-sky-100 bg-white shadow-[0_1px_3px_rgba(12,26,46,.04),0_16px_48px_rgba(12,26,46,.07)] ${className}`}
     >
       <div className="flex items-center justify-between border-b border-sky-50 bg-sky-50/60 px-4 py-3">
         <h3 className="text-lg font-bold text-slate-900">Booking Summary</h3>

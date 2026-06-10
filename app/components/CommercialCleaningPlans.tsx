@@ -4,6 +4,7 @@ import { motion, useReducedMotion, type Variants } from "framer-motion";
 import {
   ArrowUpRight,
   Building2,
+  Icon,
   Sparkles,
   Wind,
   type LucideIcon,
@@ -218,20 +219,39 @@ export default function CommercialCleaningPlans({
 
         <br />
 
-        <motion.div
-          variants={gridVariants}
-          className="mt-10 grid grid-cols-1 gap-6 sm:mt-12 md:grid-cols-3 lg:gap-8"
-        >
-          {plans.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              variants={fadeUpVariants}
-              reduced={prefersReducedMotion ?? false}
-              onClick={onPlanClick}
-            />
-          ))}
-        </motion.div>
+        <div className="relative">
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-8 top-8 h-28 w-28 rounded-full bg-sky-100/50 blur-3xl"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-10 bottom-10 h-36 w-36 rounded-full bg-slate-100 blur-3xl"
+          />
+          <svg
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-6 right-16 h-8 w-8 text-sky-200"
+            viewBox="0 0 24 24"
+            fill="currentColor"
+          >
+            <path d="M12 2l2.9 6.9H22l-5.5 4.5 2.1 6.9L12 17.8l-6.6 3.5 2.1-6.9L2 8.9h7.1z" />
+          </svg>
+
+          <motion.div
+            variants={gridVariants}
+            className="relative z-10 mt-10 grid grid-cols-1 gap-6 sm:mt-12 md:grid-cols-3 lg:gap-8"
+          >
+            {plans.map((plan) => (
+              <PlanCard
+                key={plan.id}
+                plan={plan}
+                variants={fadeUpVariants}
+                reduced={prefersReducedMotion ?? false}
+                onClick={onPlanClick}
+              />
+            ))}
+          </motion.div>
+        </div>
       </div>
 
       <Curve position="bottom" />
@@ -271,115 +291,82 @@ type PlanCardProps = {
 };
 
 function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
-  const Icon = plan.icon;
-
-  const headerClasses = plan.featured ? "bg-sky-500" : "bg-slate-900";
-
-  const ctaClasses = plan.featured
-    ? "bg-sky-500 text-white hover:bg-slate-900"
-    : "border border-slate-200 bg-white text-slate-900 hover:bg-slate-50";
-
   return (
     <motion.article
       variants={variants}
-      whileHover={reduced ? undefined : { y: -10, scale: 1.015 }}
+      whileHover={reduced ? undefined : { y: -6 }}
       transition={{
         type: "spring",
-        stiffness: 250,
-        damping: 20,
+        stiffness: 260,
+        damping: 22,
       }}
       className="
-        group relative flex flex-col overflow-hidden rounded-[0.75rem]
-        bg-white shadow-[0_20px_60px_rgba(15,23,42,0.08)]
-        transition-shadow duration-300
-        hover:shadow-[0_30px_70px_rgba(14,165,233,0.15)]
+        group relative flex h-full flex-col overflow-hidden rounded-[10px]
+        border border-neutral-200 bg-white
+        shadow-sm transition-all duration-300
+        hover:border-sky-500 hover:shadow-[0_18px_45px_rgba(12,26,46,0.12)]
       "
     >
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute inset-0
-          bg-[radial-gradient(circle_at_50%_0%,rgba(56,189,248,0.15),transparent_60%)]
-          opacity-0 transition-opacity duration-500 group-hover:opacity-100
-        "
-      />
+      {plan.featured && (
+        <div className="absolute left-0 top-4 z-10 bg-sky-500 px-3 py-1">
+          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
+            Most Popular
+          </span>
+        </div>
+      )}
 
-      {/* Card header */}
-      <div className={`${headerClasses} relative px-6 py-5 text-center`}>
-        <h4
-          className="
-            text-[1.7rem] font-semibold
-            leading-none tracking-[-0.035em]
-            text-white sm:text-[1.95rem]
-          "
-        >
-          {plan.name}
-        </h4>
+      <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden border-b border-neutral-200 bg-[#F8F8F8]">
+        {plan.imageSrc ? (
+          <Image
+            src={plan.imageSrc}
+            alt={plan.name}
+            width={190}
+            height={190}
+            className="object-contain transition-transform duration-700 ease-out group-hover:scale-105"
+          />
+        ) : (
+          <Wind className="h-10 w-10 text-sky-500" strokeWidth={1.75} />
+        )}
       </div>
 
-      {/* Card body */}
-      <div className="relative flex flex-1 flex-col items-center px-6 py-8 text-center sm:px-8 sm:py-10">
+      <div className="flex flex-1 flex-col justify-between px-5 py-5 text-center">
+        <div>
+          <h4
+            className="
+              font-serif text-[clamp(26px,2vw,34px)]
+              font-bold leading-none tracking-[-0.02em]
+              text-slate-950
+            "
+          >
+            {plan.name}
+          </h4>
 
-        {/* Image or icon fallback */}
-        <motion.div
-          className="relative h-40 w-full overflow-hidden rounded-2xl"
-          whileHover={reduced ? undefined : { scale: 1.03 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-        >
-          {plan.imageSrc ? (
-            <div className="flex items-center justify-center w-full h-full">
-              <Image
-                src={plan.imageSrc}
-                alt={plan.name}
-                width={150}
-                height={150}
-                className="object-contain"
-                style={{
-                  maxWidth: "150px",
-                  maxHeight: "150px",
-                }}
-              />
-            </div>
-      
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-sky-500/10">
-              <Icon className="h-8 w-8 text-sky-500" strokeWidth={1.75} />
-            </div>
-          )}
-        </motion.div>
-
-        <p className="mt-5 flex-1 text-[15px] leading-7 tracking-[-0.01em] text-slate-600">
-          {plan.description}
-        </p>
+          <p className="mx-auto mt-3 max-w-[260px] text-[13px] leading-6 text-slate-500">
+            {plan.description}
+          </p>
+        </div>
 
         <motion.button
           type="button"
           onClick={() => onClick?.(plan.id)}
-          whileHover={reduced ? undefined : { scale: 1.04 }}
-          whileTap={reduced ? undefined : { scale: 0.97 }}
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 16,
-          }}
-          className={`
-            group mt-8 inline-flex items-center justify-center gap-2 rounded-full
-            px-6 py-3.5 text-[10px] font-semibold uppercase tracking-[0.16em]
-            shadow-sm transition-all duration-300
+          whileHover={reduced ? undefined : { scale: 1.01 }}
+          whileTap={reduced ? undefined : { scale: 0.98 }}
+          className="
+            mt-6 inline-flex w-full items-center justify-center gap-2
+            border border-sky-500 bg-transparent px-6 py-3
+            text-[11px] font-black uppercase tracking-[0.14em]
+            text-sky-500 transition-all duration-200
+            hover:bg-sky-500 hover:text-white
             focus:outline-none focus-visible:ring-2
-            focus-visible:ring-slate-900 focus-visible:ring-offset-2
+            focus-visible:ring-sky-500 focus-visible:ring-offset-2
             cursor-pointer
-            ${ctaClasses}
-          `}
+          "
         >
           {plan.ctaLabel ?? "Get A Quote"}
           <ArrowUpRight
             aria-hidden="true"
             size={13}
-            className="
-              transition-transform duration-300
-              group-hover:-translate-y-0.5 group-hover:translate-x-0.5
-            "
+            className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
           />
         </motion.button>
       </div>
