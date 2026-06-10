@@ -12,7 +12,7 @@ export default function WhatsAppFloat() {
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"
       className="
-        fixed bottom-6 left-6 z-[9999]
+        fixed bottom-6 left-6 z-[9998]
         flex h-16 w-16 items-center justify-center
         rounded-full bg-[#25D366]
         text-white shadow-lg

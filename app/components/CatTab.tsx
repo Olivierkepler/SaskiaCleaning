@@ -7,7 +7,8 @@ import { Calendar, ChevronDown, MapPin, Repeat } from "lucide-react";
 import { MASSACHUSETTS_LOCATIONS } from "@/app/data/massachusettsLocations";
 import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
 import BookingSummary from "@/app/components/BookingSummary";
-
+import { ImOpera } from "react-icons/im";
+import { IoChatbubblesOutline } from "react-icons/io5";
 const K = {
   blue:         "#38BDF8",
   blueHover:    "#0EA5E9",
@@ -449,7 +450,7 @@ function PricePill({ label, value, accent }: { label: string; value: number; acc
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
           transition={{ duration: 0.13 }}
-          className={`text-xl font-bold leading-none tracking-tight sm:text-2xl ${
+          className={`text-[20px] sm:text-[20px] font-bold leading-none tracking-tight sm:text-base ${
             accent ? "text-sky-400" : "text-slate-900"
           }`}
         >
@@ -1726,11 +1727,11 @@ function handleFrequencyField() {
               variants={fadeUp}
               className="flex flex-col gap-5 border-t border-gray-200 bg-gradient-to-b from-slate-50 to-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6 lg:px-8"
             >
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-5">
+              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-5 lg:hidden">
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-black">
                   Estimate range
                 </span>
-  
+
                 <div className="flex items-center justify-between gap-3 sm:justify-start sm:gap-4">
                   <PricePill label="Low" value={prices.low} />
                   <div className="hidden h-7 w-px bg-gray-200 sm:block" />
@@ -1739,6 +1740,18 @@ function handleFrequencyField() {
                   <PricePill label="High" value={prices.high} />
                 </div>
               </div>
+         
+              <button
+                type="button"
+                className="flex hover:scale-105 transition-all duration-300 shadow-sm cursor-pointer items-center gap-2 rounded-[10px] bg-sky-500/10 px-4 py-2"
+                onClick={() => window.dispatchEvent(new Event("open-chatbot"))}
+              >
+                <IoChatbubblesOutline
+                  size={20}
+                  className="text-sky-500"
+                />
+                Chat with our Assistant
+              </button>
   
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
                 {/* <div className="flex items-center justify-center gap-1.5 rounded-[] bg-emerald-50 px-3 py-1.5 sm:justify-start">
@@ -1784,49 +1797,65 @@ function handleFrequencyField() {
 
           {/* Right Image Card */}
           <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={SCROLL_VIEWPORT}
-          variants={slideRight}
-          className="hidden min-h-[440px] flex-col overflow-hidden rounded-[10px] border border-gray-200 bg-gradient-to-b from-slate-50 to-white shadow-[0_1px_3px_rgba(12,26,46,.04),0_16px_48px_rgba(12,26,46,.07)] lg:flex"
-        >
-          <div className="relative flex min-h-0 flex-1 flex-col p-5 lg:p-6">
-            <AnimatePresence mode="wait">
-              {serviceIdx === 0 ? (
-                <DynamicServiceGallery
-                  galleryKey="standard-gallery"
-                  images={standardGalleryImages}
-                  isDefaultOnly={isDefaultGalleryOnly}
-                />
-              ) : serviceIdx === 1 ? (
-                <DynamicServiceGallery
-                  galleryKey="deep-clean-gallery"
-                  images={deepCleanGalleryImages}
-                  isDefaultOnly={isDeepCleanDefaultGalleryOnly}
-                />
-              ) : serviceIdx === 2 ? (
-                <DynamicServiceGallery
-                  galleryKey="move-out-gallery"
-                  images={moveOutGalleryImages}
-                  isDefaultOnly={isMoveOutDefaultGalleryOnly}
-                />
-              ) : (
-                <DynamicServiceGallery
-                  galleryKey="commercial-gallery"
-                  images={commercialGalleryImages}
-                  isDefaultOnly={isCommercialDefaultGalleryOnly}
-                />
-              )}
-            </AnimatePresence>
+  initial="hidden"
+  whileInView="visible"
+  viewport={SCROLL_VIEWPORT}
+  variants={slideRight}
+  className="hidden min-h-[440px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] lg:flex"
+>
+  {/* Estimate Header */}
+  <div className="border-b border-slate-200/80 bg-gradient-to-r from-slate-50 via-white to-slate-50 px-5 py-4 lg:px-6">
+    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+          Estimate Range
+        </p>
+       
+      </div>
 
-            {/* <div className="mt-4 inline-flex w-fit items-center gap-2 rounded-[] border border-sky-100 bg-sky-50/95 px-4 py-2 shadow-sm backdrop-blur-sm">
-              <Image src={svc.image} alt={svc.label} width={16} height={16} style={{ objectFit: "contain" }} />
-              <span className="text-sm font-semibold tracking-tight text-sky-600">
-                {svc.label}
-              </span>
-            </div> */}
-          </div>
-        </motion.div>
+      <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 py-2 bg-white shadow-sm">
+        <PricePill label="Low" value={prices.low} />
+        <div className="border-x border-slate-200 px-2">
+          <PricePill label="Mid" value={prices.mid} accent />
+        </div>
+        <PricePill label="High" value={prices.high} />
+      </div>
+    </div>
+  </div>
+
+  {/* Gallery Area */}
+  <div className="relative flex min-h-0 flex-1 flex-col bg-gradient-to-b from-white to-slate-50/70 p-5 lg:p-6">
+    <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+      <AnimatePresence mode="wait">
+        {serviceIdx === 0 ? (
+          <DynamicServiceGallery
+            galleryKey="standard-gallery"
+            images={standardGalleryImages}
+            isDefaultOnly={isDefaultGalleryOnly}
+          />
+        ) : serviceIdx === 1 ? (
+          <DynamicServiceGallery
+            galleryKey="deep-clean-gallery"
+            images={deepCleanGalleryImages}
+            isDefaultOnly={isDeepCleanDefaultGalleryOnly}
+          />
+        ) : serviceIdx === 2 ? (
+          <DynamicServiceGallery
+            galleryKey="move-out-gallery"
+            images={moveOutGalleryImages}
+            isDefaultOnly={isMoveOutDefaultGalleryOnly}
+          />
+        ) : (
+          <DynamicServiceGallery
+            galleryKey="commercial-gallery"
+            images={commercialGalleryImages}
+            isDefaultOnly={isCommercialDefaultGalleryOnly}
+          />
+        )}
+      </AnimatePresence>
+    </div>
+  </div>
+</motion.div>
        
   </div>
       </div>

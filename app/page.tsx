@@ -26,9 +26,9 @@ export default function Home() {
     <main className="relative overflow-x-hidden bg-white">
       {/* <CustomCursor /> */}
       <Navbar />
-      <ChatBot />
-      <Hero2 />
 
+      <Hero2 />
+     
       <SocialCorner sectionId="social-section" />
 
       <section
@@ -74,7 +74,7 @@ export default function Home() {
       <SectionWrapper>
         <LocationMap />
       </SectionWrapper>
-
+      <ChatBot />
       <footer className="border-t border-stone-100 px-8 py-20">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row" />
       </footer>

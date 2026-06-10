@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { FaComments, FaTimes, FaWhatsapp, FaPaperPlane } from "react-icons/fa";
+import { FaTimes, FaPaperPlane, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
-type Message = {
-  sender: "bot" | "user";
-  text: string;
-};
+// ── Types ────────────────────────────────────────────────────────────────────
+type Message = { sender: "bot" | "user"; text: string };
 
-const quickOptions = [
+// ── Constants ────────────────────────────────────────────────────────────────
+const QUICK_OPTIONS = [
   "Residential Cleaning",
   "Commercial Cleaning",
   "Airbnb Cleaning",
@@ -16,177 +15,541 @@ const quickOptions = [
   "Get a Quote",
 ];
 
-export default function ChatBot() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const bottomRef = useRef<HTMLDivElement | null>(null);
+// ── Design tokens (matches Macy's editorial system) ──────────────────────────
+const K = {
+  blue:       "#0ea5e9",
+  blueDark:   "#0284c7",
+  blueLight:  "#e0f2fe",
+  black:      "#111111",
+  white:      "#ffffff",
+  border:     "#e5e5e5",
+  bg:         "#fafafa",
+  text:       "#111111",
+  muted:      "#888888",
+  green:      "#22c55e",
+};
 
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      sender: "bot",
-      text: "Hi, welcome to Saskia Cleaning ✨ How can I help you today?",
-    },
+// ── Bot reply logic ──────────────────────────────────────────────────────────
+function getBotReply(userText: string): string {
+  const t = userText.toLowerCase();
+  if (t.includes("quote") || t.includes("price") || t.includes("cost"))
+    return "Please share your name, location, type of cleaning, number of rooms, and preferred date — I'll prepare your quote right away.";
+  if (t.includes("residential"))
+    return "Residential cleaning covers kitchens, bathrooms, bedrooms, floors, dusting, and a full home refresh. Would you prefer a standard clean or deep clean?";
+  if (t.includes("commercial"))
+    return "We clean offices, salons, studios, and small businesses across MA & RI. How often would you need service?";
+  if (t.includes("airbnb"))
+    return "Our Airbnb turnover includes cleaning, restocking, linen changes, and guest-ready staging. What city is the property in?";
+  if (t.includes("laundry"))
+    return "We offer wash-and-fold, linen service, and laundry bundled with cleaning. Which works best for you?";
+  return "I can help with residential cleaning, commercial cleaning, Airbnb turnovers, laundry, or a custom quote. What would you like to explore?";
+}
+
+// ── Typing indicator ─────────────────────────────────────────────────────────
+function TypingDots() {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "10px 14px" }}>
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          style={{
+            width: 7, height: 7, borderRadius: "50%",
+            background: "#ccc",
+            display: "inline-block",
+            animation: "chatBounce 1.1s ease-in-out infinite",
+            animationDelay: `${i * 0.18}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ── Avatar ───────────────────────────────────────────────────────────────────
+function Avatar({ size = 36 }: { size?: number }) {
+  return (
+    <div style={{ position: "relative", flexShrink: 0, width: size, height: size }}>
+      <img
+        src="/images/Designer(14).png"
+        alt="Saskia Assistant"
+        style={{
+          width: size, height: size,
+          borderRadius: "50%",
+          objectFit: "cover",
+          objectPosition: "center 20%",
+          border: `2px solid ${K.white}`,
+          boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+        }}
+      />
+      <span style={{
+        position: "absolute", bottom: 1, right: 1,
+        width: size * 0.28, height: size * 0.28,
+        borderRadius: "50%",
+        background: K.green,
+        border: `2px solid ${K.white}`,
+      }} />
+    </div>
+  );
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
+export default function ChatBot() {
+  const [isOpen,           setIsOpen]           = useState(false);
+  const [input,            setInput]            = useState("");
+  const [isTyping,         setIsTyping]         = useState(false);
+  const [showQuickOptions, setShowQuickOptions] = useState(true);
+  const [messages,         setMessages]         = useState<Message[]>([
+    { sender: "bot", text: "Hi, welcome to Saskia Cleaning ✨ How can I help you today?" },
   ]);
 
+  const bottomRef  = useRef<HTMLDivElement>(null);
+  const inputRef   = useRef<HTMLInputElement>(null);
+
+  // Scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  const getBotReply = (userText: string) => {
-    const text = userText.toLowerCase();
+  // Focus input when chat opens
+  useEffect(() => {
+    if (isOpen) setTimeout(() => inputRef.current?.focus(), 120);
+  }, [isOpen]);
 
-    if (text.includes("quote") || text.includes("price") || text.includes("cost")) {
-      return "Absolutely. Please send your name, location, type of cleaning, number of rooms, and preferred date. I’ll help prepare your quote.";
-    }
+  // Listen for external open event
+  useEffect(() => {
+    const handle = () => setIsOpen(true);
+    window.addEventListener("open-chatbot", handle);
+    return () => window.removeEventListener("open-chatbot", handle);
+  }, []);
 
-    if (text.includes("residential")) {
-      return "Our residential cleaning includes kitchens, bathrooms, bedrooms, floors, dusting, and general home refreshes. Would you like a standard clean or deep clean?";
-    }
-
-    if (text.includes("commercial")) {
-      return "We offer commercial cleaning for offices, salons, studios, and small businesses. How often do you need service?";
-    }
-
-    if (text.includes("airbnb")) {
-      return "Our Airbnb turnover service includes cleaning, restocking, linen changes, and guest-ready preparation. What city is the property in?";
-    }
-
-    if (text.includes("laundry")) {
-      return "Yes, we offer laundry services. Do you need wash-and-fold, linen service, or laundry included with cleaning?";
-
-    }
-
-    return "Thanks for sharing. I can help with residential cleaning, commercial cleaning, Airbnb turnover, laundry, or quotes. What would you like to do next?";
-  };
+  // Close on Escape
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => { if (e.key === "Escape") setIsOpen(false); };
+    window.addEventListener("keydown", handle);
+    return () => window.removeEventListener("keydown", handle);
+  }, []);
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
-
+    setShowQuickOptions(false);
     setMessages((prev) => [...prev, { sender: "user", text }]);
     setInput("");
     setIsTyping(true);
-
     setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        { sender: "bot", text: getBotReply(text) },
-      ]);
+      setMessages((prev) => [...prev, { sender: "bot", text: getBotReply(text) }]);
       setIsTyping(false);
-    }, 700);
+    }, 750);
   };
 
   return (
-    <div data-chatbot>
-      {isOpen && (
-        <div className="fixed bottom-24 right-6 z-[9999] w-[460px] overflow-hidden rounded-[10px] bg-white shadow-2xl ring-1 ring-black/10">
-          <div className="bg-gradient-to-r from-slate-950 to-slate-800 px-5 py-4 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-bold tracking-wide">
-                  Saskia Cleaning Assistant
-                </p>
-                <p className="mt-1 text-xs text-white/70">
-                  Online now • Usually replies quickly
-                </p>
-              </div>
+    <>
+      {/* Keyframe injection */}
+      <style>{`
+        @keyframes chatBounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+          30%            { transform: translateY(-5px); opacity: 1; }
+        }
+        @keyframes chatSlideUp {
+          from { opacity: 0; transform: translateY(16px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)   scale(1);    }
+        }
+        @keyframes chatPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.4); }
+          50%       { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
+        }
+      `}</style>
 
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                aria-label="Close chatbot"
-                className="rounded-full p-2 transition hover:bg-white/10"
-              >
-                <FaTimes />
-              </button>
-            </div>
-          </div>
+      <div data-chatbot>
 
-          <div className="h-[380px] space-y-3 overflow-y-auto bg-[#f7f7f7] p-4">
-            {messages.map((message, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  message.sender === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[82%] rounded-xl px-4 py-2 text-sm leading-6 ${
-                    message.sender === "user"
-                      ? "bg-slate-950 text-white"
-                      : "bg-white text-slate-700 shadow-sm ring-1 ring-slate-100"
-                  }`}
-                >
-                  {message.text}
+        {/* ── Chat window ──────────────────────────────────────────────────── */}
+        {isOpen && (
+          <div
+            style={{
+              position: "fixed",
+              // Full screen on mobile, floating panel on larger screens
+              bottom: 0, right: 0,
+            
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "flex-end",
+              pointerEvents: "none",
+            }}
+
+        className ="    w-[100%] h-[100%] sm:h-[90%]"
+          >
+            {/* Backdrop (mobile only) */}
+            <div
+              onClick={() => setIsOpen(false)}
+              style={{
+                position: "absolute", inset: 0,
+                background: "rgba(0,0,0,0.35)",
+                pointerEvents: "auto",
+              }}
+              className="sm:hidden"
+            />
+
+            {/* Panel */}
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: 440,
+                // On mobile: full height with safe-area. On desktop: floating.
+                height: "100%",
+                maxHeight: "100%",
+                display: "flex",
+                flexDirection: "column",
+                background: K.white,
+                border: `1.5px solid ${K.border}`,
+                borderRadius:"10px",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.16)",
+                animation: "chatSlideUp 0.22s ease-out both",
+                pointerEvents: "auto",
+                overflow: "hidden",
+              }}
+              className="sm:bottom-[88px] sm:right-6 sm:h-auto sm:max-h-[680px] sm:rounded-none"
+            >
+
+              {/* Header */}
+              <div style={{
+                background: K.blue,
+                padding: "14px 16px",
+                flexShrink: 0,
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <Avatar size={48} />
+                    <div>
+                      <p style={{
+                        fontFamily: "Georgia, 'Times New Roman', serif",
+                        fontSize: 15, fontWeight: 700,
+                        color: K.white, lineHeight: 1.2,
+                        letterSpacing: "-0.01em",
+                      }}>
+                        Saskia Assistant
+                      </p>
+                      <p style={{
+                        fontFamily: "Arial, Helvetica, sans-serif",
+                        fontSize: 11, fontWeight: 600,
+                        color: "rgba(255,255,255,0.75)",
+                        marginTop: 3, letterSpacing: "0.02em",
+                      }}>
+                        Online · Usually replies quickly
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    aria-label="Close chat"
+                    style={{
+                      width: 32, height: 32,
+                      background: "rgba(255,255,255,0.15)",
+                      border: "1.5px solid rgba(255,255,255,0.3)",
+                      borderRadius:"10px",
+                      color: K.white,
+                      cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      flexShrink: 0,
+                      transition: "background 0.15s",
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; }}
+                  >
+                    <FaTimes size={14} />
+                  </button>
                 </div>
               </div>
-            ))}
 
-            {isTyping && (
-              <div className="w-fit rounded-xl bg-white px-4 py-2 text-sm text-slate-500 shadow-sm">
-                Saskia is typing...
+              {/* Messages */}
+              <div style={{
+                flex: 1,
+                overflowY: "auto",
+                background: K.bg,
+                padding: "20px 16px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 14,
+                // Smooth scrollbar
+                scrollbarWidth: "thin",
+                scrollbarColor: `${K.border} transparent`,
+              }}>
+                {messages.map((msg, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-end",
+                      gap: 8,
+                      justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
+                    }}
+                  >
+                    {msg.sender === "bot" && <Avatar size={30} />}
+
+                    <div style={{
+                      maxWidth: "76%",
+                      padding: "10px 14px",
+                      borderRadius:"10px",
+                      fontFamily: "Arial, Helvetica, sans-serif",
+                      fontSize: 13, lineHeight: 1.55, fontWeight: 500,
+                      ...(msg.sender === "user"
+                        ? {
+                            background: K.blue,
+                            color: K.white,
+                            borderLeft: `3px solid ${K.blueDark}`,
+                          }
+                        : {
+                            background: K.white,
+                            color: K.text,
+                            border: `1px solid ${K.border}`,
+                            borderLeft: `3px solid ${K.blue}`,
+                            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                          }
+                      ),
+                    }}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+
+                {isTyping && (
+                  <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+                    <Avatar size={30} />
+                    <div style={{
+                      background: K.white,
+                      border: `1px solid ${K.border}`,
+                      borderLeft: `3px solid ${K.blue}`,
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                    }}>
+                      <TypingDots />
+                    </div>
+                  </div>
+                )}
+
+                <div ref={bottomRef} />
               </div>
-            )}
 
-            <div ref={bottomRef} />
-          </div>
+              {/* Footer */}
+              <div style={{
+                background: K.white,
+                borderTop: `1px solid ${K.border}`,
+                padding: "12px 14px",
+                flexShrink: 0,
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}>
 
-          <div className="border-t border-slate-200 bg-white p-4">
-            <div className="mb-3 flex flex-wrap gap-2">
-              {quickOptions.map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => sendMessage(option)}
-                  className="rounded-[10px] border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:border-slate-950 hover:bg-slate-950 hover:text-white"
-                >
-                  {option}
-                </button>
-              ))}
+                {/* Quick options */}
+                <div style={{ border: `1px solid ${K.border}`, background: K.white, borderRadius:"10px" }}>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuickOptions((v) => !v)}
+                    style={{
+                      width: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      padding: "9px 12px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      borderBottom: showQuickOptions ? `1px solid ${K.border}` : "none",
+                    }}
+                  >
+                    <span style={{
+                      fontFamily: "Arial, Helvetica, sans-serif",
+                      fontSize: 10, fontWeight: 700,
+                      textTransform: "uppercase", letterSpacing: "0.13em",
+                      color: K.black,
+                    }}>
+                      Suggested Services
+                    </span>
+                    <span style={{ color: K.muted }}>
+                      {showQuickOptions ? <FaChevronUp size={11} /> : <FaChevronDown size={11} />}
+                    </span>
+                  </button>
+
+                  <div style={{
+                    display: "grid",
+                    gridTemplateRows: showQuickOptions ? "1fr" : "0fr",
+                    transition: "grid-template-rows 0.22s ease",
+                    overflow: "hidden",
+                  }}>
+                    <div style={{ overflow: "hidden" }}>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "10px 12px" }}>
+                        {QUICK_OPTIONS.map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => sendMessage(opt)}
+                            style={{
+                              fontFamily: "Arial, Helvetica, sans-serif",
+                              fontSize: 10, fontWeight: 700,
+                              letterSpacing: "0.08em",
+                              textTransform: "uppercase",
+                              padding: "6px 12px",
+                              border: `1.5px solid ${K.border}`,
+                              background: K.white,
+                              color: K.text,
+                              cursor: "pointer",
+                              borderRadius:"10px",
+                              transition: "all 0.13s",
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = K.blue;
+                              e.currentTarget.style.color = K.white;
+                              e.currentTarget.style.borderColor = K.blue;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = K.white;
+                              e.currentTarget.style.color = K.text;
+                              e.currentTarget.style.borderColor = K.border;
+                            }}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Input row */}
+            {/* Input row */}
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    border: `1.5px solid ${K.border}`,
+    background: K.white,
+    padding: "4px 4px 4px 12px",
+    borderRadius: "10px",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+  }}
+  onFocusCapture={(e) => {
+    e.currentTarget.style.borderColor = K.blue;
+    e.currentTarget.style.boxShadow = `0 0 0 3px ${K.blueLight}`;
+  }}
+  onBlurCapture={(e) => {
+    e.currentTarget.style.borderColor = K.border;
+    e.currentTarget.style.boxShadow = "none";
+  }}
+>
+  <input
+    ref={inputRef}
+    value={input}
+    onChange={(e) => setInput(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter") {
+        sendMessage(input);
+      }
+    }}
+    placeholder="Type your message…"
+    style={{
+      flex: 1,
+      background: "transparent",
+      border: "none",
+      outline: "none",
+      fontFamily: "Arial, Helvetica, sans-serif",
+      fontSize: 13,
+      fontWeight: 500,
+      color: K.text,
+      padding: "8px 0",
+    }}
+  />
+
+  <button
+    type="button"
+    onClick={() => sendMessage(input)}
+    aria-label="Send message"
+    style={{
+      width: 36,
+      height: 36,
+      background: K.blue,
+      border: "none",
+      borderRadius: "10px",
+      color: K.white,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer",
+      flexShrink: 0,
+      transition:
+        "background 0.15s ease, transform 0.15s ease",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.background = K.blueDark;
+      e.currentTarget.style.transform = "scale(1.05)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.background = K.blue;
+      e.currentTarget.style.transform = "scale(1)";
+    }}
+  >
+    <FaPaperPlane size={12} />
+  </button>
+</div>
+
+                {/* Branding */}
+                <p style={{
+                  fontFamily: "Arial, Helvetica, sans-serif",
+                  fontSize: 9, fontWeight: 600,
+                  textTransform: "uppercase", letterSpacing: "0.12em",
+                  color: K.muted,
+                  textAlign: "center",
+                  margin: 0,
+                }}>
+                  Saskia Cleaning · MA & RI
+                </p>
+              </div>
             </div>
-
-            <div className="flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-2">
-              <input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendMessage(input);
-                }}
-                placeholder="Type your message..."
-                className="flex-1 bg-transparent text-sm outline-none"
-              />
-
-              <button
-                type="button"
-                onClick={() => sendMessage(input)}
-                className="rounded-full bg-slate-950 p-2 text-white transition hover:scale-105"
-                aria-label="Send message"
-              >
-                <FaPaperPlane size={13} />
-              </button>
-            </div>
-
-            <a
-              href="https://wa.me/18573528554"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex items-center justify-center gap-2 rounded-[10px] bg-[#25D366] px-4 py-3 text-sm font-bold text-white transition hover:scale-[1.02]"
-            >
-              <FaWhatsapp />
-              Continue on WhatsApp
-            </a>
           </div>
-        </div>
-      )}
+        )}
 
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        aria-label="Open chatbot"
-        className="fixed bottom-6 right-6 z-[9999] flex h-16 w-16 items-center justify-center rounded-full bg-slate-950 text-white shadow-2xl transition hover:scale-110"
-      >
-        {isOpen ? <FaTimes size={24} /> : <FaComments size={28} />}
-      </button>
-    </div>
+        {/* ── FAB trigger ──────────────────────────────────────────────────── */}
+        <button
+          type="button"
+          onClick={() => setIsOpen((v) => !v)}
+          aria-label={isOpen ? "Close chat" : "Chat with us"}
+          style={{
+            position: "fixed",
+            bottom: 24, right: 24,
+            zIndex: 9998,
+            width: 60, height: 60,
+            borderRadius: "50%",
+            border: "none",
+            background: "transparent",
+            padding: 0,
+            cursor: "pointer",
+            animation: isOpen ? "none" : "chatPulse 2.4s ease-in-out infinite",
+            transition: "transform 0.18s",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.07)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+        >
+          {isOpen ? (
+            <div style={{
+              width: 60, height: 60,
+              borderRadius: "50%",
+              background: K.blue,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: K.white,
+              boxShadow: "0 4px 16px rgba(14,165,233,0.4)",
+            }}>
+              <FaTimes size={20} />
+            </div>
+          ) : (
+            <Avatar size={60} />
+          )}
+        </button>
+
+      </div>
+    </>
   );
 }
