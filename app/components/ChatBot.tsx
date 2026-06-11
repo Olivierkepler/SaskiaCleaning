@@ -324,7 +324,8 @@ export default function ChatBot() {
       <div data-chatbot style={{ colorScheme: "light" }}>
         {isOpen && (
           <>
-            <div className="pointer-events-none fixed inset-0 z-[9997] block bg-white md:hidden" />
+            {/* Mobile-only white backdrop — hidden on md+ via md:hidden; does not affect desktop */}
+            <div className="fixed inset-0 z-[9997] bg-white md:hidden" />
 
             <div
             style={{
@@ -351,17 +352,6 @@ export default function ChatBot() {
             }}
             className="md:h-[90%]"
           >
-            <div
-              onClick={() => setIsOpen(false)}
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "rgba(0,0,0,0.35)",
-                pointerEvents: "auto",
-              }}
-              className="md:hidden"
-            />
-
             <div
               style={{
                 position: "relative",
