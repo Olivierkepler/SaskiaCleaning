@@ -29,7 +29,7 @@ export default function Home() {
 
       <Hero2 />
      
-      <SocialCorner sectionId="social-section" />
+      {/* <SocialCorner sectionId="social-section" /> */}
 
       <section
         id="social-section"

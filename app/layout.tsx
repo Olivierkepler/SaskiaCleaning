@@ -8,6 +8,7 @@ import "./globals.css";
 import Footer from "./components/Footer";
 import CustomCursor from "./components/CustomCursor";
 import LeadCaptureTabs from "./components/LeadCaptureTabs";
+import SocialFloat from "./components/SocialFloat";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -53,7 +54,9 @@ export default function RootLayout({
         <LeadCaptureTabs />
         <Footer/>
         {/* <SocialCorner/> */}
-        <WhatsAppFloat/>
+        {/* <WhatsAppFloat/>
+         */}
+         <SocialFloat/>
         </body>
     </html>
   );

@@ -145,13 +145,39 @@ export default function HeroBooking() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus("loading");
-
-    await new Promise((resolve) => setTimeout(resolve, 1200));
-
-    setStatus("success");
-    setTimeout(() => setStatus("idle"), 3500);
+  
+    try {
+      const response = await fetch("/api/booking", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(form),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Failed to submit booking request");
+      }
+  
+      setStatus("success");
+  
+      setForm({
+        name: "",
+        email: "",
+        mobile: "",
+        bedrooms: 1,
+        bathrooms: 1,
+      });
+  
+      setTimeout(() => {
+        setStatus("idle");
+      }, 3500);
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong. Please try again.");
+      setStatus("idle");
+    }
   };
-
   const isLoading = status === "loading";
   const isSuccess = status === "success";
 
