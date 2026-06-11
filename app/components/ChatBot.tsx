@@ -462,32 +462,7 @@ export default function ChatBot() {
                 </div>
               )}
 
-              {isMobileKeyboardOpen && (
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  aria-label="Close chat"
-                  style={{
-                    position: "absolute",
-                    top: 12,
-                    right: 12,
-                    zIndex: 50,
-                    width: 36,
-                    height: 36,
-                    background: K.blue,
-                    border: "none",
-                    borderRadius: "10px",
-                    color: K.white,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
-                  }}
-                >
-                  <FaTimes size={14} />
-                </button>
-              )}
+            
 
               <div
                 style={{

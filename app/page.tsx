@@ -74,6 +74,7 @@ export default function Home() {
       <SectionWrapper>
         <LocationMap />
       </SectionWrapper>
+      
       <ChatBot />
       <footer className="border-t border-stone-100 px-8 py-20">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row" />
