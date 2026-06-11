@@ -89,7 +89,7 @@ export default function Hero() {
           </div>
 
           {/* Right Logo Area */}
-          <div className="flex flex-col items-center justify-center lg:items-end">
+          <div className="hidden flex-col items-center justify-center lg:flex lg:items-end">
             <div className="relative flex items-center justify-center opacity-0 animate-[scaleIn_0.8s_ease-out_0.3s_forwards]">
               <div className="animate-[float_6s_ease-in-out_infinite]">
                 <Image
@@ -108,6 +108,7 @@ export default function Hero() {
               </div>
             </div>
           </div>
+    
         </div>
       </div>
 
