@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { FaTimes, FaPaperPlane, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import {
+  FaTimes,
+  FaPaperPlane,
+  FaChevronDown,
+  FaChevronUp,
+} from "react-icons/fa";
 
-// ── Types ────────────────────────────────────────────────────────────────────
-type Message = { sender: "bot" | "user"; text: string };
+type Message = {
+  sender: "bot" | "user";
+  text: string;
+};
 
-// ── Constants ────────────────────────────────────────────────────────────────
 const QUICK_OPTIONS = [
   "Residential Cleaning",
   "Commercial Cleaning",
@@ -15,45 +21,62 @@ const QUICK_OPTIONS = [
   "Get a Quote",
 ];
 
-// ── Design tokens (matches Macy's editorial system) ──────────────────────────
 const K = {
-  blue:       "#0ea5e9",
-  blueDark:   "#0284c7",
-  blueLight:  "#e0f2fe",
-  black:      "#111111",
-  white:      "#ffffff",
-  border:     "#e5e5e5",
-  bg:         "#fafafa",
-  text:       "#111111",
-  muted:      "#888888",
-  green:      "#22c55e",
+  blue: "#0ea5e9",
+  blueDark: "#0284c7",
+  blueLight: "#e0f2fe",
+  black: "#111111",
+  white: "#ffffff",
+  border: "#e5e5e5",
+  bg: "#fafafa",
+  text: "#111111",
+  muted: "#888888",
+  green: "#22c55e",
 };
 
-// ── Bot reply logic ──────────────────────────────────────────────────────────
 function getBotReply(userText: string): string {
   const t = userText.toLowerCase();
-  if (t.includes("quote") || t.includes("price") || t.includes("cost"))
+
+  if (t.includes("quote") || t.includes("price") || t.includes("cost")) {
     return "Please share your name, location, type of cleaning, number of rooms, and preferred date — I'll prepare your quote right away.";
-  if (t.includes("residential"))
+  }
+
+  if (t.includes("residential")) {
     return "Residential cleaning covers kitchens, bathrooms, bedrooms, floors, dusting, and a full home refresh. Would you prefer a standard clean or deep clean?";
-  if (t.includes("commercial"))
+  }
+
+  if (t.includes("commercial")) {
     return "We clean offices, salons, studios, and small businesses across MA & RI. How often would you need service?";
-  if (t.includes("airbnb"))
+  }
+
+  if (t.includes("airbnb")) {
     return "Our Airbnb turnover includes cleaning, restocking, linen changes, and guest-ready staging. What city is the property in?";
-  if (t.includes("laundry"))
+  }
+
+  if (t.includes("laundry")) {
     return "We offer wash-and-fold, linen service, and laundry bundled with cleaning. Which works best for you?";
+  }
+
   return "I can help with residential cleaning, commercial cleaning, Airbnb turnovers, laundry, or a custom quote. What would you like to explore?";
 }
 
-// ── Typing indicator ─────────────────────────────────────────────────────────
 function TypingDots() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "10px 14px" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 4,
+        padding: "10px 14px",
+      }}
+    >
       {[0, 1, 2].map((i) => (
         <span
           key={i}
           style={{
-            width: 7, height: 7, borderRadius: "50%",
+            width: 7,
+            height: 7,
+            borderRadius: "50%",
             background: "#ccc",
             display: "inline-block",
             animation: "chatBounce 1.1s ease-in-out infinite",
@@ -65,15 +88,22 @@ function TypingDots() {
   );
 }
 
-// ── Avatar ───────────────────────────────────────────────────────────────────
 function Avatar({ size = 36 }: { size?: number }) {
   return (
-    <div style={{ position: "relative", flexShrink: 0, width: size, height: size }}>
+    <div
+      style={{
+        position: "relative",
+        flexShrink: 0,
+        width: size,
+        height: size,
+      }}
+    >
       <img
         src="/images/Designer(14).png"
         alt="Saskia Assistant"
         style={{
-          width: size, height: size,
+          width: size,
+          height: size,
           borderRadius: "50%",
           objectFit: "cover",
           objectPosition: "center 20%",
@@ -81,64 +111,79 @@ function Avatar({ size = 36 }: { size?: number }) {
           boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
         }}
       />
-      <span style={{
-        position: "absolute", bottom: 1, right: 1,
-        width: size * 0.28, height: size * 0.28,
-        borderRadius: "50%",
-        background: K.green,
-        border: `2px solid ${K.white}`,
-      }} />
+
+      <span
+        style={{
+          position: "absolute",
+          bottom: 1,
+          right: 1,
+          width: size * 0.28,
+          height: size * 0.28,
+          borderRadius: "50%",
+          background: K.green,
+          border: `2px solid ${K.white}`,
+        }}
+      />
     </div>
   );
 }
 
-// ── Main component ───────────────────────────────────────────────────────────
 export default function ChatBot() {
-  const [isOpen,           setIsOpen]           = useState(false);
-  const [input,            setInput]            = useState("");
-  const [isTyping,         setIsTyping]         = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const [showQuickOptions, setShowQuickOptions] = useState(true);
-  const [messages,         setMessages]         = useState<Message[]>([
-    { sender: "bot", text: "Hi, welcome to Saskia Cleaning ✨ How can I help you today?" },
-  ]);
   const [isMobileKeyboardOpen, setIsMobileKeyboardOpen] = useState(false);
 
-  const bottomRef  = useRef<HTMLDivElement>(null);
-  const inputRef   = useRef<HTMLInputElement>(null);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      sender: "bot",
+      text: "Hi, welcome to Saskia Cleaning ✨ How can I help you today?",
+    },
+  ]);
 
-  // Tracks the visible viewport on mobile so the panel can shrink above the software keyboard.
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const [visibleViewport, setVisibleViewport] = useState<{
     height: number;
     bottom: number;
   } | null>(null);
 
-  // Scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  // Focus input when chat opens
   useEffect(() => {
-    if (isOpen) setTimeout(() => inputRef.current?.focus(), 120);
+    if (isOpen) {
+      setTimeout(() => inputRef.current?.focus(), 120);
+    }
   }, [isOpen]);
 
-  // Listen for external open event
   useEffect(() => {
     const handle = () => setIsOpen(true);
+
     window.addEventListener("open-chatbot", handle);
-    return () => window.removeEventListener("open-chatbot", handle);
+
+    return () => {
+      window.removeEventListener("open-chatbot", handle);
+    };
   }, []);
 
-  // Close on Escape
   useEffect(() => {
-    const handle = (e: KeyboardEvent) => { if (e.key === "Escape") setIsOpen(false); };
+    const handle = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
     window.addEventListener("keydown", handle);
-    return () => window.removeEventListener("keydown", handle);
+
+    return () => {
+      window.removeEventListener("keydown", handle);
+    };
   }, []);
 
-  // Visual Viewport API: mobile browsers keep 100vh/lvh sized to the layout viewport,
-  // leaving a gap above the software keyboard. resize/scroll on visualViewport gives the
-  // true visible height so the chat can sit flush above the keyboard while typing.
   useLayoutEffect(() => {
     if (!isOpen) {
       setVisibleViewport(null);
@@ -156,9 +201,9 @@ export default function ChatBot() {
       const vv = window.visualViewport;
       const height = vv?.height ?? window.innerHeight;
       const offsetTop = vv?.offsetTop ?? 0;
+
       setVisibleViewport({
         height,
-        // Anchor from layout bottom so the panel sits flush above the keyboard
         bottom: Math.max(0, window.innerHeight - height - offsetTop),
       });
     };
@@ -166,6 +211,7 @@ export default function ChatBot() {
     syncVisibleViewport();
 
     const vv = window.visualViewport;
+
     vv?.addEventListener("resize", syncVisibleViewport);
     vv?.addEventListener("scroll", syncVisibleViewport);
 
@@ -175,13 +221,12 @@ export default function ChatBot() {
     };
   }, [isOpen]);
 
-  // Keep the latest message in view when the keyboard opens or closes.
   useEffect(() => {
     if (!visibleViewport) return;
+
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [visibleViewport]);
 
-  // Detect software keyboard on small screens to swap header for a floating close button.
   useEffect(() => {
     const syncKeyboardOpen = () => {
       if (window.innerWidth > 768) {
@@ -191,12 +236,15 @@ export default function ChatBot() {
 
       const vv = window.visualViewport;
       const visibleHeight = vv?.height ?? window.innerHeight;
-      setIsMobileKeyboardOpen(window.innerHeight - visibleHeight > 120);
+      const keyboardOpen = window.innerHeight - visibleHeight > 120;
+
+      setIsMobileKeyboardOpen(keyboardOpen);
     };
 
     syncKeyboardOpen();
 
     const vv = window.visualViewport;
+
     vv?.addEventListener("resize", syncKeyboardOpen);
     vv?.addEventListener("scroll", syncKeyboardOpen);
     window.addEventListener("resize", syncKeyboardOpen);
@@ -210,33 +258,62 @@ export default function ChatBot() {
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
+
     setShowQuickOptions(false);
     setMessages((prev) => [...prev, { sender: "user", text }]);
     setInput("");
     setIsTyping(true);
+
     setTimeout(() => {
-      setMessages((prev) => [...prev, { sender: "bot", text: getBotReply(text) }]);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "bot",
+          text: getBotReply(text),
+        },
+      ]);
+
       setIsTyping(false);
     }, 750);
   };
 
   return (
     <>
-      {/* Keyframe injection */}
       <style>{`
         @keyframes chatBounce {
-          0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-          30%            { transform: translateY(-5px); opacity: 1; }
+          0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.4;
+          }
+
+          30% {
+            transform: translateY(-5px);
+            opacity: 1;
+          }
         }
+
         @keyframes chatSlideUp {
-          from { opacity: 0; transform: translateY(16px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0)   scale(1);    }
+          from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.97);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
         }
+
         @keyframes chatPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.4); }
-          50%       { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
+          0%, 100% {
+            box-shadow: 0 0 0 0 rgba(14,165,233,0.4);
+          }
+
+          50% {
+            box-shadow: 0 0 0 8px rgba(14,165,233,0);
+          }
         }
-        /* iOS Safari auto-zooms focused inputs below 16px — mobile-only override. */
+
         @media (max-width: 768px) {
           [data-chatbot-input] {
             font-size: 16px !important;
@@ -244,10 +321,7 @@ export default function ChatBot() {
         }
       `}</style>
 
-      {/* color-scheme hints encourage a light keyboard; the OS still controls the native keyboard appearance. */}
       <div data-chatbot style={{ colorScheme: "light" }}>
-
-        {/* ── Chat window ──────────────────────────────────────────────────── */}
         {isOpen && (
           <div
             style={{
@@ -256,7 +330,6 @@ export default function ChatBot() {
               pointerEvents: "none",
               ...(visibleViewport
                 ? {
-                    // Mobile: use visualViewport.height instead of 100vh — no gap above keyboard
                     bottom: visibleViewport.bottom,
                     left: 0,
                     right: 0,
@@ -275,18 +348,17 @@ export default function ChatBot() {
             }}
             className="md:h-[90%]"
           >
-            {/* Backdrop (mobile only) */}
             <div
               onClick={() => setIsOpen(false)}
               style={{
-                position: "absolute", inset: 0,
+                position: "absolute",
+                inset: 0,
                 background: "rgba(0,0,0,0.35)",
                 pointerEvents: "auto",
               }}
               className="md:hidden"
             />
 
-            {/* Panel */}
             <div
               style={{
                 position: "relative",
@@ -299,39 +371,67 @@ export default function ChatBot() {
                 background: K.white,
                 border: visibleViewport ? "none" : `1.5px solid ${K.border}`,
                 borderRadius: visibleViewport ? 0 : "10px",
-                boxShadow: visibleViewport ? "none" : "0 8px 40px rgba(0,0,0,0.16)",
+                boxShadow: visibleViewport
+                  ? "none"
+                  : "0 8px 40px rgba(0,0,0,0.16)",
                 animation: "chatSlideUp 0.22s ease-out both",
                 pointerEvents: "auto",
                 overflow: "hidden",
                 margin: 0,
               }}
-              className="bottom-[0px] md:bottom-[88px] md:right-6 md:h-auto md:max-h-[680px] md:max-w-[440px] md:rounded-[10px] md:border md:shadow-2xl"
+              className="bottom-0 md:bottom-[88px] md:right-6 md:h-auto md:max-h-[680px] md:max-w-[440px] md:rounded-[10px] md:border md:shadow-2xl"
             >
-
               {!isMobileKeyboardOpen && (
-                <div style={{
-                  background: K.blue,
-                  padding: "14px 16px",
-                  flexShrink: 0,
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div
+                  style={{
+                    background: K.blue,
+                    padding: "14px 16px",
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                      }}
+                    >
                       <Avatar size={48} />
+
                       <div>
-                        <p style={{
-                          fontFamily: "Georgia, 'Times New Roman', serif",
-                          fontSize: 15, fontWeight: 700,
-                          color: K.white, lineHeight: 1.2,
-                          letterSpacing: "-0.01em",
-                        }}>
+                        <p
+                          style={{
+                            fontFamily: "Georgia, 'Times New Roman', serif",
+                            fontSize: 15,
+                            fontWeight: 700,
+                            color: K.white,
+                            lineHeight: 1.2,
+                            letterSpacing: "-0.01em",
+                            margin: 0,
+                          }}
+                        >
                           Saskia Assistant
                         </p>
-                        <p style={{
-                          fontFamily: "Arial, Helvetica, sans-serif",
-                          fontSize: 11, fontWeight: 600,
-                          color: "rgba(255,255,255,0.75)",
-                          marginTop: 3, letterSpacing: "0.02em",
-                        }}>
+
+                        <p
+                          style={{
+                            fontFamily: "Arial, Helvetica, sans-serif",
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: "rgba(255,255,255,0.75)",
+                            margin: 0,
+                            marginTop: 3,
+                            letterSpacing: "0.02em",
+                          }}
+                        >
                           Online · Usually replies quickly
                         </p>
                       </div>
@@ -342,18 +442,19 @@ export default function ChatBot() {
                       onClick={() => setIsOpen(false)}
                       aria-label="Close chat"
                       style={{
-                        width: 32, height: 32,
+                        width: 32,
+                        height: 32,
                         background: "rgba(255,255,255,0.15)",
                         border: "1.5px solid rgba(255,255,255,0.3)",
                         borderRadius: "10px",
                         color: K.white,
                         cursor: "pointer",
-                        display: "flex", alignItems: "center", justifyContent: "center",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
                         flexShrink: 0,
                         transition: "background 0.15s",
                       }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; }}
                     >
                       <FaTimes size={14} />
                     </button>
@@ -361,8 +462,7 @@ export default function ChatBot() {
                 </div>
               )}
 
-              {/* On mobile keyboard open, hide the header to save vertical space and keep close accessible. */}
-              {/* {isMobileKeyboardOpen && (
+              {isMobileKeyboardOpen && (
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
@@ -372,8 +472,8 @@ export default function ChatBot() {
                     top: 12,
                     right: 12,
                     zIndex: 50,
-                    width: 32,
-                    height: 32,
+                    width: 36,
+                    height: 36,
                     background: K.blue,
                     border: "none",
                     borderRadius: "10px",
@@ -382,26 +482,29 @@ export default function ChatBot() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                    boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
                   }}
                 >
                   <FaTimes size={14} />
                 </button>
-              )} */}
+              )}
 
-              {/* Messages */}
-              <div style={{
-                flex: 1,
-                minHeight: 0,
-                overflowY: "auto",
-                background: K.bg,
-                padding: "20px 16px",
-                display: "flex",
-                flexDirection: "column",
-                gap: 14,
-                scrollbarWidth: "thin",
-                scrollbarColor: `${K.border} transparent`,
-              }}>
+              <div
+                style={{
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  background: K.bg,
+                  padding: isMobileKeyboardOpen
+                    ? "20px 16px 20px"
+                    : "20px 16px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 14,
+                  scrollbarWidth: "thin",
+                  scrollbarColor: `${K.border} transparent`,
+                }}
+              >
                 {messages.map((msg, i) => (
                   <div
                     key={i}
@@ -409,46 +512,60 @@ export default function ChatBot() {
                       display: "flex",
                       alignItems: "flex-end",
                       gap: 8,
-                      justifyContent: msg.sender === "user" ? "flex-end" : "flex-start",
+                      justifyContent:
+                        msg.sender === "user" ? "flex-end" : "flex-start",
                     }}
                   >
                     {msg.sender === "bot" && <Avatar size={30} />}
 
-                    <div style={{
-                      maxWidth: "76%",
-                      padding: "10px 14px",
-                      borderRadius:"10px",
-                      fontFamily: "Arial, Helvetica, sans-serif",
-                      fontSize: 18, lineHeight: 1.55, fontWeight: 500,
-                      ...(msg.sender === "user"
-                        ? {
-                            background: K.blue,
-                            color: K.white,
-                            borderLeft: `3px solid ${K.blueDark}`,
-                          }
-                        : {
-                            background: K.white,
-                            color: K.text,
-                            border: `1px solid ${K.border}`,
-                            borderLeft: `3px solid ${K.blue}`,
-                            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                          }
-                      ),
-                    }}>
+                    <div
+                      style={{
+                        maxWidth: "76%",
+                        padding: "10px 14px",
+                        borderRadius: "10px",
+                        fontFamily: "Arial, Helvetica, sans-serif",
+                        fontSize: 16,
+                        lineHeight: 1.55,
+                        fontWeight: 500,
+                        ...(msg.sender === "user"
+                          ? {
+                              background: K.blue,
+                              color: K.white,
+                              borderLeft: `3px solid ${K.blueDark}`,
+                            }
+                          : {
+                              background: K.white,
+                              color: K.text,
+                              border: `1px solid ${K.border}`,
+                              borderLeft: `3px solid ${K.blue}`,
+                              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                            }),
+                      }}
+                    >
                       {msg.text}
                     </div>
                   </div>
                 ))}
 
                 {isTyping && (
-                  <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-end",
+                      gap: 8,
+                    }}
+                  >
                     <Avatar size={30} />
-                    <div style={{
-                      background: K.white,
-                      border: `1px solid ${K.border}`,
-                      borderLeft: `3px solid ${K.blue}`,
-                      boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                    }}>
+
+                    <div
+                      style={{
+                        background: K.white,
+                        border: `1px solid ${K.border}`,
+                        borderLeft: `3px solid ${K.blue}`,
+                        borderRadius: "10px",
+                        boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                      }}
+                    >
                       <TypingDots />
                     </div>
                   </div>
@@ -457,28 +574,27 @@ export default function ChatBot() {
                 <div ref={bottomRef} />
               </div>
 
-              {/* Footer — sticky so the input stays at the bottom of the visible chat area */}
-              <div style={{
-                position: "sticky",
-                bottom: 0,
-                zIndex: 2,
-                background: K.white,
-                borderTop: `1px solid ${K.border}`,
-                padding: "12px 14px",
-                flexShrink: 0,
-                display: "flex",
-                flexDirection: "column",
-                gap: 10,
-              }}>
-
-                {/* Quick options */}
-                {/* Hide the quick options box on small screens */}
+              <div
+                style={{
+                  position: "sticky",
+                  bottom: 0,
+                  zIndex: 2,
+                  background: K.white,
+                  borderTop: `1px solid ${K.border}`,
+                  padding: "12px 14px",
+                  flexShrink: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 10,
+                }}
+              >
                 <div
                   className="hidden md:block"
                   style={{
                     border: `1px solid ${K.border}`,
                     background: K.white,
                     borderRadius: "10px",
+                    overflow: "hidden",
                   }}
                 >
                   <button
@@ -493,30 +609,50 @@ export default function ChatBot() {
                       background: "none",
                       border: "none",
                       cursor: "pointer",
-                      borderBottom: showQuickOptions ? `1px solid ${K.border}` : "none",
+                      borderBottom: showQuickOptions
+                        ? `1px solid ${K.border}`
+                        : "none",
                     }}
                   >
-                    <span style={{
-                      fontFamily: "Arial, Helvetica, sans-serif",
-                      fontSize: 10, fontWeight: 700,
-                      textTransform: "uppercase", letterSpacing: "0.13em",
-                      color: K.black,
-                    }}>
+                    <span
+                      style={{
+                        fontFamily: "Arial, Helvetica, sans-serif",
+                        fontSize: 10,
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.13em",
+                        color: K.black,
+                      }}
+                    >
                       Suggested Services
                     </span>
+
                     <span style={{ color: K.muted }}>
-                      {showQuickOptions ? <FaChevronUp size={11} /> : <FaChevronDown size={11} />}
+                      {showQuickOptions ? (
+                        <FaChevronUp size={11} />
+                      ) : (
+                        <FaChevronDown size={11} />
+                      )}
                     </span>
                   </button>
 
-                  <div style={{
-                    display: "grid",
-                    gridTemplateRows: showQuickOptions ? "1fr" : "0fr",
-                    transition: "grid-template-rows 0.22s ease",
-                    overflow: "hidden",
-                  }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateRows: showQuickOptions ? "1fr" : "0fr",
+                      transition: "grid-template-rows 0.22s ease",
+                      overflow: "hidden",
+                    }}
+                  >
                     <div style={{ overflow: "hidden" }}>
-                      <div style={{ display: "flex", flexWrap: "wrap", gap: 6, padding: "10px 12px" }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexWrap: "wrap",
+                          gap: 6,
+                          padding: "10px 12px",
+                        }}
+                      >
                         {QUICK_OPTIONS.map((opt) => (
                           <button
                             key={opt}
@@ -524,7 +660,8 @@ export default function ChatBot() {
                             onClick={() => sendMessage(opt)}
                             style={{
                               fontFamily: "Arial, Helvetica, sans-serif",
-                              fontSize: 10, fontWeight: 700,
+                              fontSize: 10,
+                              fontWeight: 700,
                               letterSpacing: "0.08em",
                               textTransform: "uppercase",
                               padding: "6px 12px",
@@ -553,142 +690,125 @@ export default function ChatBot() {
                     </div>
                   </div>
                 </div>
-        
 
-                {/* Input row */}
-            {/* Input row */}
-<div
-  style={{
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    border: `1.5px solid ${K.border}`,
-    background: K.white,
-    padding: "4px 4px 4px 12px",
-    borderRadius: "10px",
-    transition: "border-color 0.15s, box-shadow 0.15s",
-  }}
-  onFocusCapture={(e) => {
-    e.currentTarget.style.borderColor = K.blue;
-    e.currentTarget.style.boxShadow = `0 0 0 3px ${K.blueLight}`;
-  }}
-  onBlurCapture={(e) => {
-    e.currentTarget.style.borderColor = K.border;
-    e.currentTarget.style.boxShadow = "none";
-  }}
->
-  <input
-    ref={inputRef}
-    data-chatbot-input
-    value={input}
-    onChange={(e) => setInput(e.target.value)}
-    onKeyDown={(e) => {
-      if (e.key === "Enter") {
-        sendMessage(input);
-      }
-    }}
-    placeholder="Type your message…"
-    style={{
-      flex: 1,
-      background: K.white,
-      colorScheme: "light",
-      border: "none",
-      outline: "none",
-      fontFamily: "Arial, Helvetica, sans-serif",
-      fontSize: 13, // desktop size; 16px applied on mobile via CSS (prevents iOS zoom)
-      fontWeight: 500,
-      color: K.text,
-      padding: "8px 0",
-    }}
-  />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    border: `1.5px solid ${K.border}`,
+                    background: K.white,
+                    padding: "4px 4px 4px 12px",
+                    borderRadius: "10px",
+                    transition: "border-color 0.15s, box-shadow 0.15s",
+                  }}
+                  onFocusCapture={(e) => {
+                    e.currentTarget.style.borderColor = K.blue;
+                    e.currentTarget.style.boxShadow = `0 0 0 3px ${K.blueLight}`;
+                  }}
+                  onBlurCapture={(e) => {
+                    e.currentTarget.style.borderColor = K.border;
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                >
+                  <input
+                    ref={inputRef}
+                    data-chatbot-input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        sendMessage(input);
+                      }
+                    }}
+                    placeholder="Type your message…"
+                    style={{
+                      flex: 1,
+                      background: K.white,
+                      colorScheme: "light",
+                      border: "none",
+                      outline: "none",
+                      fontFamily: "Arial, Helvetica, sans-serif",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: K.text,
+                      padding: "8px 0",
+                    }}
+                  />
 
-  <button
-    type="button"
-    onClick={() => sendMessage(input)}
-    aria-label="Send message"
-    style={{
-      width: 36,
-      height: 36,
-      background: K.blue,
-      border: "none",
-      borderRadius: "10px",
-      color: K.white,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer",
-      flexShrink: 0,
-      transition:
-        "background 0.15s ease, transform 0.15s ease",
-    }}
-    onMouseEnter={(e) => {
-      e.currentTarget.style.background = K.blueDark;
-      e.currentTarget.style.transform = "scale(1.05)";
-    }}
-    onMouseLeave={(e) => {
-      e.currentTarget.style.background = K.blue;
-      e.currentTarget.style.transform = "scale(1)";
-    }}
-  >
-    <FaPaperPlane size={12} />
-  </button>
-</div>
+                  <button
+                    type="button"
+                    onClick={() => sendMessage(input)}
+                    aria-label="Send message"
+                    style={{
+                      width: 36,
+                      height: 36,
+                      background: K.blue,
+                      border: "none",
+                      borderRadius: "10px",
+                      color: K.white,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: "pointer",
+                      flexShrink: 0,
+                      transition: "background 0.15s ease, transform 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = K.blueDark;
+                      e.currentTarget.style.transform = "scale(1.05)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = K.blue;
+                      e.currentTarget.style.transform = "scale(1)";
+                    }}
+                  >
+                    <FaPaperPlane size={12} />
+                  </button>
+                </div>
 
-                {/* Branding */}
-                <p style={{
-                  fontFamily: "Arial, Helvetica, sans-serif",
-                  fontSize: 9, fontWeight: 600,
-                  textTransform: "uppercase", letterSpacing: "0.12em",
-                  color: K.muted,
-                  textAlign: "center",
-                  margin: 0,
-                }}  className="pb-20"> 
+                <p
+                  style={{
+                    fontFamily: "Arial, Helvetica, sans-serif",
+                    fontSize: 9,
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.12em",
+                    color: K.muted,
+                    textAlign: "center",
+                    margin: 0,
+                  }}
+                >
                   Saskia Cleaning · MA & RI
                 </p>
               </div>
-
-              {/* Mobile keyboard white extension: creates a clean white area above the native keyboard. */}
-              {isMobileKeyboardOpen && (
-                <div
-                  aria-hidden="true"
-                  style={{
-                    height: `calc(80px + env(safe-area-inset-bottom, 0px))`,
-                    background: K.white,
-                    flexShrink: 0,
-                  }}
-                />
-              )}
             </div>
           </div>
         )}
 
-        {/* ── FAB trigger ──────────────────────────────────────────────────── */}
         <button
-  type="button"
-  onClick={() => setIsOpen((v) => !v)}
-  aria-label={isOpen ? "Close chat" : "Chat with us"}
-  className="fixed bottom-6 right-6 z-[9998] flex items-center justify-center"
->
-  {!isOpen && (
-    <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
-      <p className="text-sm font-semibold text-slate-900">
-        Need help?
-      </p>
-      <p className="text-xs text-slate-500">
-        Chat with Saskia.
-      </p>
-    </div>
-  )}
+          type="button"
+          onClick={() => setIsOpen((v) => !v)}
+          aria-label={isOpen ? "Close chat" : "Chat with us"}
+          className="fixed bottom-6 right-6 z-[9998] flex items-center justify-center"
+        >
+          {!isOpen && (
+            <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
+              <p className="text-sm font-semibold text-slate-900">
+                Need help?
+              </p>
+              <p className="text-xs text-slate-500">Chat with Saskia.</p>
+            </div>
+          )}
 
-  {isOpen ? (
-    <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-sky-500 text-white shadow-lg">
-      <FaTimes size={20} />
-    </div>
-  ) : (
-    <Avatar size={60} />
-  )}
-</button>
-
+          {isOpen ? (
+            <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-sky-500 text-white shadow-lg">
+              <FaTimes size={20} />
+            </div>
+          ) : (
+            <Avatar size={60} />
+          )}
+        </button>
       </div>
     </>
   );
