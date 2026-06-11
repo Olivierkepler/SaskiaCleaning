@@ -9,7 +9,6 @@ interface LeadForm { name: string; phone: string; zip: string }
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const K = {
-  font:      "var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif",
   blue:      "#0ea5e9",
   blueDark:  "#0284c7",
   blueText:  "#082f49",
@@ -18,58 +17,8 @@ const K = {
   border:    "#e5e5e5",
   bg:        "#fafafa",
   muted:     "#888888",
-  secondary: "#64748b",
   green:     "#22c55e",
   red:       "#CC0000",
-  type: {} as {
-    heading: React.CSSProperties;
-    serviceTitle: React.CSSProperties;
-    body: React.CSSProperties;
-    secondary: React.CSSProperties;
-    label: React.CSSProperties;
-    cta: React.CSSProperties;
-  },
-};
-
-K.type = {
-  heading: {
-    fontFamily: K.font,
-    fontSize: 15,
-    fontWeight: 600,
-    letterSpacing: "-0.02em",
-    lineHeight: 1.2,
-  },
-  serviceTitle: {
-    fontFamily: K.font,
-    fontSize: 14,
-    fontWeight: 600,
-    lineHeight: 1.4,
-  },
-  body: {
-    fontFamily: K.font,
-    fontSize: 14,
-    fontWeight: 400,
-    lineHeight: 1.5,
-  },
-  secondary: {
-    fontFamily: K.font,
-    fontSize: 12,
-    fontWeight: 400,
-    lineHeight: 1.5,
-    color: K.secondary,
-  },
-  label: {
-    fontFamily: K.font,
-    fontSize: 11,
-    fontWeight: 500,
-    lineHeight: 1.4,
-  },
-  cta: {
-    fontFamily: K.font,
-    fontSize: 13,
-    fontWeight: 600,
-    lineHeight: 1.4,
-  },
 };
 
 // ─── Services ─────────────────────────────────────────────────────────────────
@@ -224,7 +173,8 @@ export default function FloatingLeadWidget() {
     borderRadius: 0,
     background: K.white,
     padding: "0 12px",
-    ...K.type.body,
+    fontFamily: "Arial, Helvetica, sans-serif",
+    fontSize: 13,
     color: K.black,
     outline: "none",
     boxSizing: "border-box",
@@ -289,8 +239,11 @@ export default function FloatingLeadWidget() {
             <span style={{
               writingMode: "vertical-rl",
               transform: "rotate(180deg)",
-              ...K.type.label,
-              letterSpacing: "0.06em",
+              fontFamily: "Arial, Helvetica, sans-serif",
+              fontSize: 9,
+              fontWeight: 700,
+              textTransform: "uppercase",
+              letterSpacing: "0.18em",
               color: "rgba(255,255,255,0.8)",
               userSelect: "none",
             }}>
@@ -305,8 +258,9 @@ export default function FloatingLeadWidget() {
             {/* MA · RI */}
             <span style={{
               writingMode: "vertical-rl",
-              ...K.type.label,
-              letterSpacing: "0.06em",
+              fontFamily: "Arial, Helvetica, sans-serif",
+              fontSize: 9, fontWeight: 700,
+              letterSpacing: "0.14em",
               color: "rgba(255,255,255,0.6)",
               userSelect: "none",
             }}>
@@ -342,17 +296,18 @@ export default function FloatingLeadWidget() {
                 )}
                 <div>
                   <p style={{
-                    ...K.type.heading,
-                    color: K.black,
-                    margin: 0,
+                    fontFamily: "Georgia, 'Times New Roman', serif",
+                    fontSize: 13, fontWeight: 700,
+                    color: K.black, margin: 0, lineHeight: 1.2,
+                    letterSpacing: "-0.01em",
                   }}>
                     {step === "form" && svc ? svc.label : step === "success" ? "You're all set!" : "Free Quote"}
                   </p>
                   <p style={{
-                    ...K.type.label,
-                    color: K.secondary,
-                    margin: 0,
-                    marginTop: 2,
+                    fontFamily: "Arial, Helvetica, sans-serif",
+                    fontSize: 9, fontWeight: 700,
+                    textTransform: "uppercase", letterSpacing: "0.12em",
+                    color: K.muted, margin: 0, marginTop: 2,
                   }}>
                     {step === "success" ? "We'll text you shortly" : "Reply in under 5 min"}
                   </p>
@@ -382,9 +337,10 @@ export default function FloatingLeadWidget() {
             {step === "menu" && (
               <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
                 <p style={{
-                  ...K.type.label,
-                  color: K.secondary,
-                  margin: "0 0 4px",
+                  fontFamily: "Arial, Helvetica, sans-serif",
+                  fontSize: 9, fontWeight: 700,
+                  textTransform: "uppercase", letterSpacing: "0.14em",
+                  color: K.muted, margin: "0 0 4px",
                 }}>
                   What needs cleaning?
                 </p>
@@ -419,16 +375,16 @@ export default function FloatingLeadWidget() {
                     <span style={{ color: K.blue, display: "flex", flexShrink: 0 }}>{s.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{
-                        ...K.type.serviceTitle,
-                        color: K.black,
-                        margin: 0,
+                        fontFamily: "Arial, Helvetica, sans-serif",
+                        fontSize: 12, fontWeight: 700,
+                        color: K.black, margin: 0,
+                        letterSpacing: "0.02em",
                       }}>
                         {s.label}
                       </p>
                       <p style={{
-                        ...K.type.secondary,
-                        margin: 0,
-                        marginTop: 1,
+                        fontFamily: "Arial, Helvetica, sans-serif",
+                        fontSize: 10, color: K.muted, margin: 0, marginTop: 1,
                       }}>
                         {s.sub}
                       </p>
@@ -457,10 +413,10 @@ export default function FloatingLeadWidget() {
                     ))}
                   </div>
                   <p style={{
-                    ...K.type.secondary,
-                    margin: 0,
+                    fontFamily: "Arial, Helvetica, sans-serif",
+                    fontSize: 10, color: K.muted, margin: 0,
                   }}>
-                    <span style={{ fontWeight: 600, color: K.black }}>1,500+</span> homeowners trust us
+                    <span style={{ fontWeight: 700, color: K.black }}>1,500+</span> homeowners trust us
                   </p>
                 </div>
               </div>
@@ -470,9 +426,8 @@ export default function FloatingLeadWidget() {
             {step === "form" && (
               <form onSubmit={handleSubmit} style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 }}>
                 <p style={{
-                  ...K.type.body,
-                  color: K.secondary,
-                  margin: 0,
+                  fontFamily: "Arial, Helvetica, sans-serif",
+                  fontSize: 11, color: K.muted, margin: 0,
                 }}>
                   3-field form — we'll text your price in 5 min.
                 </p>
@@ -518,7 +473,9 @@ export default function FloatingLeadWidget() {
                     border: "none",
                     borderRadius: 0,
                     color: K.white,
-                    ...K.type.cta,
+                    fontFamily: "Arial, Helvetica, sans-serif",
+                    fontSize: 10, fontWeight: 700,
+                    textTransform: "uppercase", letterSpacing: "0.14em",
                     cursor: isSubmitting ? "not-allowed" : "pointer",
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                     marginTop: 2,
@@ -540,10 +497,10 @@ export default function FloatingLeadWidget() {
                 </button>
 
                 <p style={{
-                  ...K.type.label,
-                  color: K.secondary,
-                  textAlign: "center",
-                  margin: 0,
+                  fontFamily: "Arial, Helvetica, sans-serif",
+                  fontSize: 9, color: K.muted,
+                  textAlign: "center", margin: 0,
+                  letterSpacing: "0.06em",
                 }}>
                   No spam. No commitment.
                 </p>
@@ -566,19 +523,18 @@ export default function FloatingLeadWidget() {
                   <IconCheck />
                 </div>
                 <p style={{
-                  ...K.type.heading,
-                  fontSize: 16,
-                  color: K.black,
-                  margin: 0,
+                  fontFamily: "Georgia, 'Times New Roman', serif",
+                  fontSize: 15, fontWeight: 700,
+                  color: K.black, margin: 0,
                 }}>
                   Request received!
                 </p>
                 <p style={{
-                  ...K.type.body,
-                  color: K.secondary,
-                  margin: 0,
+                  fontFamily: "Arial, Helvetica, sans-serif",
+                  fontSize: 12, color: K.muted,
+                  lineHeight: 1.5, margin: 0,
                 }}>
-                  We'll text <span style={{ color: K.black, fontWeight: 600 }}>{form.phone}</span> your price in under 5 minutes.
+                  We'll text <span style={{ color: K.black, fontWeight: 700 }}>{form.phone}</span> your price in under 5 minutes.
                 </p>
                 {svc && (
                   <div style={{
@@ -591,7 +547,9 @@ export default function FloatingLeadWidget() {
                   }}>
                     <span style={{ color: K.blue }}>{svc.icon}</span>
                     <span style={{
-                      ...K.type.serviceTitle,
+                      fontFamily: "Arial, Helvetica, sans-serif",
+                      fontSize: 10, fontWeight: 700,
+                      textTransform: "uppercase", letterSpacing: "0.1em",
                       color: K.blue,
                     }}>
                       {svc.label}
@@ -602,12 +560,11 @@ export default function FloatingLeadWidget() {
                   type="button"
                   onClick={handleClose}
                   style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    ...K.type.label,
-                    color: K.secondary,
-                    marginTop: 8,
+                    background: "none", border: "none", cursor: "pointer",
+                    fontFamily: "Arial, Helvetica, sans-serif",
+                    fontSize: 10, fontWeight: 700,
+                    textTransform: "uppercase", letterSpacing: "0.1em",
+                    color: K.muted, marginTop: 8,
                   }}
                 >
                   Close
@@ -618,7 +575,7 @@ export default function FloatingLeadWidget() {
         </div>
       </div>
 
-      {/* ── Trigger tab — the visible ticket edge when closed ─────────────── */}
+      {/* ── Trigger tab ───────────────────────────────────────────────────── */}
       <button
         type="button"
         onClick={() => setStep(step === "closed" ? "menu" : "closed")}
@@ -633,64 +590,45 @@ export default function FloatingLeadWidget() {
           cursor: "pointer",
         }}
       >
-        {/* Sky stub tab */}
-        <div style={{
-          width: STUB,
-          background: K.blue,
-          padding: "10px 0",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 5,
-          borderRight: `1.5px dashed rgba(255,255,255,0.35)`,
-          transition: "background 0.15s",
-        }}
+        {/* Sky stub — always visible, only thing shown when collapsed */}
+        <div
+          style={{
+            width: STUB,
+            background: K.blue,
+            color: K.white,
+            padding: "12px 0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "background 0.15s",
+          }}
           onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = K.blueDark; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = K.blue; }}
         >
-          <IconStar />
+          {step !== "closed" ? <IconClose /> : <IconStar />}
         </div>
 
-        {/* White label area */}
-        <div style={{
-          width: 300 - STUB,
-          background: K.white,
-          borderTop: `1.5px solid ${K.border}`,
-          borderLeft: "none",
-          padding: "10px 12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          boxShadow: "-2px 0 8px rgba(0,0,0,0.06)",
-        }}>
-          <div>
-            <p style={{
-              ...K.type.heading,
-              color: K.black,
-              margin: 0,
-            }}>
-              {step !== "closed" ? "Close" : "Get a free quote"}
-            </p>
-            <p style={{
-              ...K.type.label,
-              color: K.secondary,
-              margin: 0,
-              marginTop: 2,
-            }}>
-              MA & RI · Reply in 5 min
-            </p>
-          </div>
+        {/* White label area — only when open */}
+        {step !== "closed" && (
           <div style={{
-            width: 24, height: 24,
-            background: step !== "closed" ? K.muted : K.blue,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            color: K.white, borderRadius: 0,
-            transition: "background 0.15s",
+            width: 300 - STUB,
+            background: K.white,
+            borderTop: `1.5px solid ${K.border}`,
+            padding: "10px 12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            boxShadow: "-2px 0 8px rgba(0,0,0,0.06)",
           }}>
-            {step !== "closed" ? <IconClose /> : <IconArrow />}
+            <p style={{
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              fontSize: 13, fontWeight: 700,
+              color: K.black, margin: 0,
+            }}>
+              Close
+            </p>
           </div>
-        </div>
+        )}
       </button>
 
       <style>{`
