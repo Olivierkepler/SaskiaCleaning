@@ -2,6 +2,7 @@
 
 import { sql } from "../lib/db";
 import { redirect } from "next/navigation";
+import DashboardTable from "./DashboardTable";
 
 type BookingRequest = {
   id: number;
@@ -24,7 +25,6 @@ export default async function DashboardPage({
 }: DashboardPageProps) {
   const params = await searchParams;
 
-  // Protect dashboard with secret key
   if (params.key !== process.env.DASHBOARD_KEY) {
     redirect("/");
   }
@@ -46,74 +46,7 @@ export default async function DashboardPage({
           Total bookings: {bookings.length}
         </p>
 
-        <div className="overflow-hidden rounded-xl bg-white shadow">
-          <table className="w-full border-collapse text-left">
-            <thead className="bg-sky-500 text-white">
-              <tr>
-                <th className="p-4">Name</th>
-                <th className="p-4">Email</th>
-                <th className="p-4">Mobile</th>
-                <th className="p-4">Bedrooms</th>
-                <th className="p-4">Bathrooms</th>
-                <th className="p-4">Date (Boston Time)</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {bookings.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="p-6 text-center text-slate-500"
-                  >
-                    No booking requests yet.
-                  </td>
-                </tr>
-              ) : (
-                bookings.map((booking) => (
-                  <tr
-                    key={booking.id}
-                    className="border-b border-slate-200 hover:bg-slate-50"
-                  >
-                    <td className="p-4 font-medium text-slate-900">
-                      {booking.name}
-                    </td>
-
-                    <td className="p-4 text-slate-700">
-                      {booking.email}
-                    </td>
-
-                    <td className="p-4 text-slate-700">
-                      {booking.mobile || "—"}
-                    </td>
-
-                    <td className="p-4 text-slate-700">
-                      {booking.bedrooms}
-                    </td>
-
-                    <td className="p-4 text-slate-700">
-                      {booking.bathrooms}
-                    </td>
-
-                    <td className="p-4 text-slate-500">
-                      {new Intl.DateTimeFormat("en-US", {
-                        timeZone: "America/New_York",
-                        month: "numeric",
-                        day: "numeric",
-                        year: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit",
-                        second: "2-digit",
-                        hour12: true,
-                        timeZoneName: "short",
-                      }).format(new Date(booking.created_at))}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                <DashboardTable bookings={bookings as unknown as BookingRequest[]} dashboardKey={params.key!} />
       </div>
     </main>
   );
