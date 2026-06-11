@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FaTimes, FaPaperPlane, FaChevronDown, FaChevronUp } from "react-icons/fa";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ export default function ChatBot() {
   // Tracks the visible viewport on mobile so the panel can shrink above the software keyboard.
   const [visibleViewport, setVisibleViewport] = useState<{
     height: number;
-    offsetTop: number;
+    bottom: number;
   } | null>(null);
 
   // Scroll to bottom on new message
@@ -135,16 +135,16 @@ export default function ChatBot() {
     return () => window.removeEventListener("keydown", handle);
   }, []);
 
-  // Visual Viewport API: on mobile, the software keyboard shrinks the visible area.
-  // Listening to resize/scroll keeps the chat panel pinned to that area so the
-  // input stays above the keyboard (ChatGPT-style) without affecting desktop layout.
-  useEffect(() => {
+  // Visual Viewport API: mobile browsers keep 100vh/lvh sized to the layout viewport,
+  // leaving a gap above the software keyboard. resize/scroll on visualViewport gives the
+  // true visible height so the chat can sit flush above the keyboard while typing.
+  useLayoutEffect(() => {
     if (!isOpen) {
       setVisibleViewport(null);
       return;
     }
 
-    const mobileQuery = window.matchMedia("(max-width: 639px)");
+    const mobileQuery = window.matchMedia("(max-width: 768px)");
 
     const syncVisibleViewport = () => {
       if (!mobileQuery.matches) {
@@ -153,9 +153,12 @@ export default function ChatBot() {
       }
 
       const vv = window.visualViewport;
+      const height = vv?.height ?? window.innerHeight;
+      const offsetTop = vv?.offsetTop ?? 0;
       setVisibleViewport({
-        height: vv?.height ?? window.innerHeight,
-        offsetTop: vv?.offsetTop ?? 0,
+        height,
+        // Anchor from layout bottom so the panel sits flush above the keyboard
+        bottom: Math.max(0, window.innerHeight - height - offsetTop),
       });
     };
 
@@ -164,12 +167,10 @@ export default function ChatBot() {
     const vv = window.visualViewport;
     vv?.addEventListener("resize", syncVisibleViewport);
     vv?.addEventListener("scroll", syncVisibleViewport);
-    window.addEventListener("resize", syncVisibleViewport);
 
     return () => {
       vv?.removeEventListener("resize", syncVisibleViewport);
       vv?.removeEventListener("scroll", syncVisibleViewport);
-      window.removeEventListener("resize", syncVisibleViewport);
     };
   }, [isOpen]);
 
@@ -208,7 +209,7 @@ export default function ChatBot() {
           50%       { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
         }
         /* iOS Safari auto-zooms focused inputs below 16px — mobile-only override. */
-        @media (max-width: 639px) {
+        @media (max-width: 768px) {
           [data-chatbot-input] {
             font-size: 16px !important;
           }
@@ -223,25 +224,27 @@ export default function ChatBot() {
             style={{
               position: "fixed",
               zIndex: 9999,
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "flex-end",
               pointerEvents: "none",
-              // Desktop: unchanged floating overlay. Mobile: fit the visible viewport
-              // when the keyboard is open (height/offsetTop from Visual Viewport API).
               ...(visibleViewport
                 ? {
-                    top: visibleViewport.offsetTop,
+                    // Mobile: use visualViewport.height instead of 100vh — no gap above keyboard
+                    bottom: visibleViewport.bottom,
                     left: 0,
                     right: 0,
                     height: visibleViewport.height,
+                    width: "100%",
+                    display: "flex",
+                    flexDirection: "column",
                   }
                 : {
+                    display: "flex",
+                    alignItems: "flex-end",
+                    justifyContent: "flex-end",
                     bottom: 0,
                     right: 0,
                   }),
             }}
-            className="w-[100%] h-[100%] sm:h-[90%]"
+            className="md:h-[90%]"
           >
             {/* Backdrop (mobile only) */}
             <div
@@ -251,7 +254,7 @@ export default function ChatBot() {
                 background: "rgba(0,0,0,0.35)",
                 pointerEvents: "auto",
               }}
-              className="sm:hidden"
+              className="md:hidden"
             />
 
             {/* Panel */}
@@ -259,21 +262,21 @@ export default function ChatBot() {
               style={{
                 position: "relative",
                 width: "100%",
-                maxWidth: 440,
-                // On mobile: full height with safe-area. On desktop: floating.
-                height: "100%",
-                maxHeight: "100%",
+                maxWidth: visibleViewport ? "100%" : 440,
+                height: visibleViewport ? visibleViewport.height : "100%",
+                maxHeight: visibleViewport ? visibleViewport.height : "100%",
                 display: "flex",
                 flexDirection: "column",
                 background: K.white,
-                border: `1.5px solid ${K.border}`,
-                borderRadius:"10px",
-                boxShadow: "0 8px 40px rgba(0,0,0,0.16)",
+                border: visibleViewport ? "none" : `1.5px solid ${K.border}`,
+                borderRadius: visibleViewport ? 0 : "10px",
+                boxShadow: visibleViewport ? "none" : "0 8px 40px rgba(0,0,0,0.16)",
                 animation: "chatSlideUp 0.22s ease-out both",
                 pointerEvents: "auto",
                 overflow: "hidden",
+                margin: 0,
               }}
-              className="sm:bottom-[88px] sm:right-6 sm:h-auto sm:max-h-[680px] sm:rounded-none"
+              className="md:bottom-[88px] md:right-6 md:h-auto md:max-h-[680px] md:max-w-[440px] md:rounded-[10px] md:border md:shadow-2xl"
             >
 
               {/* Header */}
@@ -331,13 +334,13 @@ export default function ChatBot() {
               {/* Messages */}
               <div style={{
                 flex: 1,
+                minHeight: 0,
                 overflowY: "auto",
                 background: K.bg,
                 padding: "20px 16px",
                 display: "flex",
                 flexDirection: "column",
                 gap: 14,
-                // Smooth scrollbar
                 scrollbarWidth: "thin",
                 scrollbarColor: `${K.border} transparent`,
               }}>
@@ -396,8 +399,11 @@ export default function ChatBot() {
                 <div ref={bottomRef} />
               </div>
 
-              {/* Footer */}
+              {/* Footer — sticky so the input stays at the bottom of the visible chat area */}
               <div style={{
+                position: "sticky",
+                bottom: 0,
+                zIndex: 2,
                 background: K.white,
                 borderTop: `1px solid ${K.border}`,
                 padding: "12px 14px",
@@ -410,14 +416,11 @@ export default function ChatBot() {
                 {/* Quick options */}
                 {/* Hide the quick options box on small screens */}
                 <div
+                  className="hidden md:block"
                   style={{
                     border: `1px solid ${K.border}`,
                     background: K.white,
                     borderRadius: "10px",
-                    // Hide on screens less than 640px wide
-                    display: typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 639px)").matches
-                      ? "none"
-                      : "block",
                   }}
                 >
                   <button
