@@ -642,7 +642,7 @@ export default function ChatBot() {
                   color: K.muted,
                   textAlign: "center",
                   margin: 0,
-                }}>
+                }}  className="pb-20"> 
                   Saskia Cleaning · MA & RI
                 </p>
               </div>
