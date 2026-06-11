@@ -133,9 +133,11 @@ export default function ChatBot() {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showQuickOptions, setShowQuickOptions] = useState(true);
-  const [isMobileKeyboardOpen, setIsMobileKeyboardOpen] = useState(false);
+
   const [isMobileScreen, setIsMobileScreen] = useState(false);
+  const [isMobileKeyboardOpen, setIsMobileKeyboardOpen] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
+  const [stableHeight, setStableHeight] = useState<number | null>(null);
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -193,6 +195,7 @@ export default function ChatBot() {
     if (!isOpen) {
       setIsMobileScreen(false);
       setKeyboardOffset(0);
+      setStableHeight(null);
       setIsMobileKeyboardOpen(false);
       return;
     }
@@ -205,9 +208,12 @@ export default function ChatBot() {
 
       if (!isMobile) {
         setKeyboardOffset(0);
+        setStableHeight(null);
         setIsMobileKeyboardOpen(false);
         return;
       }
+
+      setStableHeight((prev) => prev ?? window.innerHeight);
 
       const vv = window.visualViewport;
       const visibleHeight = vv?.height ?? window.innerHeight;
@@ -312,7 +318,7 @@ export default function ChatBot() {
                       right: 0,
                       bottom: 0,
                       width: "100%",
-                      height: "100dvh",
+                      height: stableHeight ? `${stableHeight}px` : "100vh",
                       display: "flex",
                       flexDirection: "column",
                     }
@@ -435,7 +441,9 @@ export default function ChatBot() {
                     minHeight: 0,
                     overflowY: "auto",
                     background: K.bg,
-                    padding: "20px 16px",
+                    padding: isMobileScreen
+                      ? `20px 16px ${keyboardOffset + 100}px`
+                      : "20px 16px",
                     display: "flex",
                     flexDirection: "column",
                     gap: 14,
@@ -639,11 +647,12 @@ export default function ChatBot() {
                       padding: "4px 4px 4px 12px",
                       borderRadius: "10px",
                       transform:
-                        isMobileKeyboardOpen && keyboardOffset > 0
+                        isMobileScreen && keyboardOffset > 0
                           ? `translateY(-${keyboardOffset}px)`
                           : "translateY(0)",
                       transition:
-                        "transform 0.2s ease, border-color 0.15s, box-shadow 0.15s",
+                        "transform 260ms cubic-bezier(0.22, 1, 0.36, 1), border-color 0.15s, box-shadow 0.15s",
+                      willChange: "transform",
                     }}
                     onFocusCapture={(e) => {
                       e.currentTarget.style.borderColor = K.blue;
