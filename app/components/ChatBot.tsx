@@ -105,6 +105,12 @@ export default function ChatBot() {
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
 
+  // Tracks the visible viewport on mobile so the panel can shrink above the software keyboard.
+  const [visibleViewport, setVisibleViewport] = useState<{
+    height: number;
+    offsetTop: number;
+  } | null>(null);
+
   // Scroll to bottom on new message
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -128,6 +134,50 @@ export default function ChatBot() {
     window.addEventListener("keydown", handle);
     return () => window.removeEventListener("keydown", handle);
   }, []);
+
+  // Visual Viewport API: on mobile, the software keyboard shrinks the visible area.
+  // Listening to resize/scroll keeps the chat panel pinned to that area so the
+  // input stays above the keyboard (ChatGPT-style) without affecting desktop layout.
+  useEffect(() => {
+    if (!isOpen) {
+      setVisibleViewport(null);
+      return;
+    }
+
+    const mobileQuery = window.matchMedia("(max-width: 639px)");
+
+    const syncVisibleViewport = () => {
+      if (!mobileQuery.matches) {
+        setVisibleViewport(null);
+        return;
+      }
+
+      const vv = window.visualViewport;
+      setVisibleViewport({
+        height: vv?.height ?? window.innerHeight,
+        offsetTop: vv?.offsetTop ?? 0,
+      });
+    };
+
+    syncVisibleViewport();
+
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", syncVisibleViewport);
+    vv?.addEventListener("scroll", syncVisibleViewport);
+    window.addEventListener("resize", syncVisibleViewport);
+
+    return () => {
+      vv?.removeEventListener("resize", syncVisibleViewport);
+      vv?.removeEventListener("scroll", syncVisibleViewport);
+      window.removeEventListener("resize", syncVisibleViewport);
+    };
+  }, [isOpen]);
+
+  // Keep the latest message in view when the keyboard opens or closes.
+  useEffect(() => {
+    if (!visibleViewport) return;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [visibleViewport]);
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
@@ -157,6 +207,12 @@ export default function ChatBot() {
           0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.4); }
           50%       { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
         }
+        /* iOS Safari auto-zooms focused inputs below 16px — mobile-only override. */
+        @media (max-width: 639px) {
+          [data-chatbot-input] {
+            font-size: 16px !important;
+          }
+        }
       `}</style>
 
       <div data-chatbot>
@@ -166,17 +222,26 @@ export default function ChatBot() {
           <div
             style={{
               position: "fixed",
-              // Full screen on mobile, floating panel on larger screens
-              bottom: 0, right: 0,
-            
               zIndex: 9999,
               display: "flex",
               alignItems: "flex-end",
               justifyContent: "flex-end",
               pointerEvents: "none",
+              // Desktop: unchanged floating overlay. Mobile: fit the visible viewport
+              // when the keyboard is open (height/offsetTop from Visual Viewport API).
+              ...(visibleViewport
+                ? {
+                    top: visibleViewport.offsetTop,
+                    left: 0,
+                    right: 0,
+                    height: visibleViewport.height,
+                  }
+                : {
+                    bottom: 0,
+                    right: 0,
+                  }),
             }}
-
-        className ="    w-[100%] h-[100%] sm:h-[90%]"
+            className="w-[100%] h-[100%] sm:h-[90%]"
           >
             {/* Backdrop (mobile only) */}
             <div
@@ -441,6 +506,7 @@ export default function ChatBot() {
 >
   <input
     ref={inputRef}
+    data-chatbot-input
     value={input}
     onChange={(e) => setInput(e.target.value)}
     onKeyDown={(e) => {
@@ -455,7 +521,7 @@ export default function ChatBot() {
       border: "none",
       outline: "none",
       fontFamily: "Arial, Helvetica, sans-serif",
-      fontSize: 13,
+      fontSize: 13, // desktop size; 16px applied on mobile via CSS (prevents iOS zoom)
       fontWeight: 500,
       color: K.text,
       padding: "8px 0",
