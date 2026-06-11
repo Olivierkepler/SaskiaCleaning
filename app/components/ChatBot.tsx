@@ -101,6 +101,7 @@ export default function ChatBot() {
   const [messages,         setMessages]         = useState<Message[]>([
     { sender: "bot", text: "Hi, welcome to Saskia Cleaning ✨ How can I help you today?" },
   ]);
+  const [isMobileKeyboardOpen, setIsMobileKeyboardOpen] = useState(false);
 
   const bottomRef  = useRef<HTMLDivElement>(null);
   const inputRef   = useRef<HTMLInputElement>(null);
@@ -179,6 +180,33 @@ export default function ChatBot() {
     if (!visibleViewport) return;
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [visibleViewport]);
+
+  // Detect software keyboard on small screens to swap header for a floating close button.
+  useEffect(() => {
+    const syncKeyboardOpen = () => {
+      if (window.innerWidth > 768) {
+        setIsMobileKeyboardOpen(false);
+        return;
+      }
+
+      const vv = window.visualViewport;
+      const visibleHeight = vv?.height ?? window.innerHeight;
+      setIsMobileKeyboardOpen(window.innerHeight - visibleHeight > 120);
+    };
+
+    syncKeyboardOpen();
+
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", syncKeyboardOpen);
+    vv?.addEventListener("scroll", syncKeyboardOpen);
+    window.addEventListener("resize", syncKeyboardOpen);
+
+    return () => {
+      vv?.removeEventListener("resize", syncKeyboardOpen);
+      vv?.removeEventListener("scroll", syncKeyboardOpen);
+      window.removeEventListener("resize", syncKeyboardOpen);
+    };
+  }, []);
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
@@ -279,57 +307,86 @@ export default function ChatBot() {
               className="bottom-[0px] md:bottom-[88px] md:right-6 md:h-auto md:max-h-[680px] md:max-w-[440px] md:rounded-[10px] md:border md:shadow-2xl"
             >
 
-              {/* Header */}
-              <div style={{
-                background: K.blue,
-                padding: "14px 16px",
-                flexShrink: 0,
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <Avatar size={48} />
-                    <div>
-                      <p style={{
-                        fontFamily: "Georgia, 'Times New Roman', serif",
-                        fontSize: 15, fontWeight: 700,
-                        color: K.white, lineHeight: 1.2,
-                        letterSpacing: "-0.01em",
-                      }}>
-                        Saskia Assistant
-                      </p>
-                      <p style={{
-                        fontFamily: "Arial, Helvetica, sans-serif",
-                        fontSize: 11, fontWeight: 600,
-                        color: "rgba(255,255,255,0.75)",
-                        marginTop: 3, letterSpacing: "0.02em",
-                      }}>
-                        Online · Usually replies quickly
-                      </p>
+              {!isMobileKeyboardOpen && (
+                <div style={{
+                  background: K.blue,
+                  padding: "14px 16px",
+                  flexShrink: 0,
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <Avatar size={48} />
+                      <div>
+                        <p style={{
+                          fontFamily: "Georgia, 'Times New Roman', serif",
+                          fontSize: 15, fontWeight: 700,
+                          color: K.white, lineHeight: 1.2,
+                          letterSpacing: "-0.01em",
+                        }}>
+                          Saskia Assistant
+                        </p>
+                        <p style={{
+                          fontFamily: "Arial, Helvetica, sans-serif",
+                          fontSize: 11, fontWeight: 600,
+                          color: "rgba(255,255,255,0.75)",
+                          marginTop: 3, letterSpacing: "0.02em",
+                        }}>
+                          Online · Usually replies quickly
+                        </p>
+                      </div>
                     </div>
-                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => setIsOpen(false)}
-                    aria-label="Close chat"
-                    style={{
-                      width: 32, height: 32,
-                      background: "rgba(255,255,255,0.15)",
-                      border: "1.5px solid rgba(255,255,255,0.3)",
-                      borderRadius:"10px",
-                      color: K.white,
-                      cursor: "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
-                      transition: "background 0.15s",
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; }}
-                  >
-                    <FaTimes size={14} />
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      aria-label="Close chat"
+                      style={{
+                        width: 32, height: 32,
+                        background: "rgba(255,255,255,0.15)",
+                        border: "1.5px solid rgba(255,255,255,0.3)",
+                        borderRadius: "10px",
+                        color: K.white,
+                        cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        flexShrink: 0,
+                        transition: "background 0.15s",
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.25)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; }}
+                    >
+                      <FaTimes size={14} />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* On mobile keyboard open, hide the header to save vertical space and keep close accessible. */}
+              {isMobileKeyboardOpen && (
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close chat"
+                  style={{
+                    position: "absolute",
+                    top: 12,
+                    right: 12,
+                    zIndex: 50,
+                    width: 32,
+                    height: 32,
+                    background: K.blue,
+                    border: "none",
+                    borderRadius: "10px",
+                    color: K.white,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 2px 8px rgba(0,0,0,0.18)",
+                  }}
+                >
+                  <FaTimes size={14} />
+                </button>
+              )}
 
               {/* Messages */}
               <div style={{
