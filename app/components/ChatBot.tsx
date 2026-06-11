@@ -361,7 +361,7 @@ export default function ChatBot() {
               )}
 
               {/* On mobile keyboard open, hide the header to save vertical space and keep close accessible. */}
-              {isMobileKeyboardOpen && (
+              {/* {isMobileKeyboardOpen && (
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
@@ -386,7 +386,7 @@ export default function ChatBot() {
                 >
                   <FaTimes size={14} />
                 </button>
-              )}
+              )} */}
 
               {/* Messages */}
               <div style={{
