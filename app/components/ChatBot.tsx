@@ -244,7 +244,8 @@ export default function ChatBot() {
         }
       `}</style>
 
-      <div data-chatbot>
+      {/* color-scheme hints encourage a light keyboard; the OS still controls the native keyboard appearance. */}
+      <div data-chatbot style={{ colorScheme: "light" }}>
 
         {/* ── Chat window ──────────────────────────────────────────────────── */}
         {isOpen && (
@@ -589,7 +590,8 @@ export default function ChatBot() {
     placeholder="Type your message…"
     style={{
       flex: 1,
-      background: "transparent",
+      background: K.white,
+      colorScheme: "light",
       border: "none",
       outline: "none",
       fontFamily: "Arial, Helvetica, sans-serif",
