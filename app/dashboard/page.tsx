@@ -24,6 +24,7 @@ export default async function DashboardPage({
 }: DashboardPageProps) {
   const params = await searchParams;
 
+  // Protect dashboard with secret key
   if (params.key !== process.env.DASHBOARD_KEY) {
     redirect("/");
   }
@@ -54,14 +55,17 @@ export default async function DashboardPage({
                 <th className="p-4">Mobile</th>
                 <th className="p-4">Bedrooms</th>
                 <th className="p-4">Bathrooms</th>
-                <th className="p-4">Date</th>
+                <th className="p-4">Date (Boston Time)</th>
               </tr>
             </thead>
 
             <tbody>
               {bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-500">
+                  <td
+                    colSpan={6}
+                    className="p-6 text-center text-slate-500"
+                  >
                     No booking requests yet.
                   </td>
                 </tr>
@@ -74,14 +78,35 @@ export default async function DashboardPage({
                     <td className="p-4 font-medium text-slate-900">
                       {booking.name}
                     </td>
-                    <td className="p-4 text-slate-700">{booking.email}</td>
+
+                    <td className="p-4 text-slate-700">
+                      {booking.email}
+                    </td>
+
                     <td className="p-4 text-slate-700">
                       {booking.mobile || "—"}
                     </td>
-                    <td className="p-4 text-slate-700">{booking.bedrooms}</td>
-                    <td className="p-4 text-slate-700">{booking.bathrooms}</td>
+
+                    <td className="p-4 text-slate-700">
+                      {booking.bedrooms}
+                    </td>
+
+                    <td className="p-4 text-slate-700">
+                      {booking.bathrooms}
+                    </td>
+
                     <td className="p-4 text-slate-500">
-                      {new Date(booking.created_at).toLocaleString()}
+                      {new Intl.DateTimeFormat("en-US", {
+                        timeZone: "America/New_York",
+                        month: "numeric",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: true,
+                        timeZoneName: "short",
+                      }).format(new Date(booking.created_at))}
                     </td>
                   </tr>
                 ))
