@@ -323,7 +323,10 @@ export default function ChatBot() {
 
       <div data-chatbot style={{ colorScheme: "light" }}>
         {isOpen && (
-          <div
+          <>
+            <div className="pointer-events-none fixed inset-0 z-[9997] block bg-white md:hidden" />
+
+            <div
             style={{
               position: "fixed",
               zIndex: 9999,
@@ -759,6 +762,7 @@ export default function ChatBot() {
               </div>
             </div>
           </div>
+          </>
         )}
 
         <button
