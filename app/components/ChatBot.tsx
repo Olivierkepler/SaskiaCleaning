@@ -706,7 +706,7 @@ export default function ChatBot() {
           {!isOpen && (
             <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
               <p className="text-sm font-semibold text-slate-900">Need help?</p>
-              <p className="text-xs text-slate-500">Chat with Saskia.</p>
+              <p className="text-xs text-slate-500">Chat with Saskia</p>
             </div>
           )}
 
