@@ -7,7 +7,7 @@ import {
   FaChevronDown,
   FaChevronUp,
 } from "react-icons/fa";
-import WhiteOverlay from "./WhiteOverlay";
+
 
 type Message = {
   sender: "bot" | "user";
@@ -114,9 +114,12 @@ function Avatar({ size = 36 }: { size?: number }) {
     </div>
   );
 }
-
-export default function ChatBot() {
-  const [isOpen, setIsOpen] = useState(false);
+type ChatBotProps = {
+    isOpen: boolean;
+    setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  };
+  
+  export default function ChatBot({ isOpen, setIsOpen }: ChatBotProps) {
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showQuickOptions, setShowQuickOptions] = useState(true);
@@ -305,7 +308,7 @@ export default function ChatBot() {
       <div data-chatbot style={{ colorScheme: "light" }}>
         {isOpen && (
           <>
-            <WhiteOverlay />
+     
 
             <div
               style={{
@@ -706,7 +709,7 @@ export default function ChatBot() {
           {!isOpen && (
             <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
               <p className="text-sm font-semibold text-slate-900">Need help?</p>
-              <p className="text-xs text-slate-500">Chat with Saskia</p>
+              <p className="text-xs text-slate-500">Chat with Saskia!</p>
             </div>
           )}
 
