@@ -767,7 +767,7 @@ export default function ChatBot() {
               <p className="text-sm font-semibold text-slate-900">
                 Need help?
               </p>
-              <p className="text-xs text-slate-500">Chat with Saskia</p>
+              <p className="text-xs text-slate-500">Chat with Saskia.</p>
             </div>
           )}
 
