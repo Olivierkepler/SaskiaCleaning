@@ -7,6 +7,7 @@ import {
   FaChevronDown,
   FaChevronUp,
 } from "react-icons/fa";
+import WhiteOverlay from "./WhiteOverlay";
 
 type Message = {
   sender: "bot" | "user";
@@ -62,14 +63,7 @@ function getBotReply(userText: string): string {
 
 function TypingDots() {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 4,
-        padding: "10px 14px",
-      }}
-    >
+    <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "10px 14px" }}>
       {[0, 1, 2].map((i) => (
         <span
           key={i}
@@ -90,14 +84,7 @@ function TypingDots() {
 
 function Avatar({ size = 36 }: { size?: number }) {
   return (
-    <div
-      style={{
-        position: "relative",
-        flexShrink: 0,
-        width: size,
-        height: size,
-      }}
-    >
+    <div style={{ position: "relative", flexShrink: 0, width: size, height: size }}>
       <img
         src="/images/Designer(14).png"
         alt="Saskia Assistant"
@@ -162,7 +149,6 @@ export default function ChatBot() {
 
   useEffect(() => {
     const handle = () => setIsOpen(true);
-
     window.addEventListener("open-chatbot", handle);
 
     return () => {
@@ -183,6 +169,14 @@ export default function ChatBot() {
       window.removeEventListener("keydown", handle);
     };
   }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
 
   useLayoutEffect(() => {
     if (!isOpen) {
@@ -211,7 +205,6 @@ export default function ChatBot() {
     syncVisibleViewport();
 
     const vv = window.visualViewport;
-
     vv?.addEventListener("resize", syncVisibleViewport);
     vv?.addEventListener("scroll", syncVisibleViewport);
 
@@ -223,7 +216,6 @@ export default function ChatBot() {
 
   useEffect(() => {
     if (!visibleViewport) return;
-
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [visibleViewport]);
 
@@ -244,7 +236,6 @@ export default function ChatBot() {
     syncKeyboardOpen();
 
     const vv = window.visualViewport;
-
     vv?.addEventListener("resize", syncKeyboardOpen);
     vv?.addEventListener("scroll", syncKeyboardOpen);
     window.addEventListener("resize", syncKeyboardOpen);
@@ -304,16 +295,6 @@ export default function ChatBot() {
           }
         }
 
-        @keyframes chatPulse {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(14,165,233,0.4);
-          }
-
-          50% {
-            box-shadow: 0 0 0 8px rgba(14,165,233,0);
-          }
-        }
-
         @media (max-width: 768px) {
           [data-chatbot-input] {
             font-size: 16px !important;
@@ -324,15 +305,12 @@ export default function ChatBot() {
       <div data-chatbot style={{ colorScheme: "light" }}>
         {isOpen && (
           <>
-            <div
-              className="fixed inset-0 z-[9997] bg-white md:hidden"
-              aria-hidden="true"
-            />
+            <WhiteOverlay />
 
             <div
               style={{
                 position: "fixed",
-                zIndex: 9999,
+                zIndex: 10000,
                 pointerEvents: "none",
                 ...(visibleViewport
                   ? {
@@ -392,13 +370,7 @@ export default function ChatBot() {
                         gap: 12,
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                        }}
-                      >
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         <Avatar size={48} />
 
                         <div>
@@ -448,7 +420,6 @@ export default function ChatBot() {
                           alignItems: "center",
                           justifyContent: "center",
                           flexShrink: 0,
-                          transition: "background 0.15s",
                         }}
                       >
                         <FaTimes size={14} />
@@ -638,17 +609,6 @@ export default function ChatBot() {
                                 color: K.text,
                                 cursor: "pointer",
                                 borderRadius: "10px",
-                                transition: "all 0.13s",
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = K.blue;
-                                e.currentTarget.style.color = K.white;
-                                e.currentTarget.style.borderColor = K.blue;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = K.white;
-                                e.currentTarget.style.color = K.text;
-                                e.currentTarget.style.borderColor = K.border;
                               }}
                             >
                               {opt}
@@ -668,15 +628,6 @@ export default function ChatBot() {
                       background: K.white,
                       padding: "4px 4px 4px 12px",
                       borderRadius: "10px",
-                      transition: "border-color 0.15s, box-shadow 0.15s",
-                    }}
-                    onFocusCapture={(e) => {
-                      e.currentTarget.style.borderColor = K.blue;
-                      e.currentTarget.style.boxShadow = `0 0 0 3px ${K.blueLight}`;
-                    }}
-                    onBlurCapture={(e) => {
-                      e.currentTarget.style.borderColor = K.border;
-                      e.currentTarget.style.boxShadow = "none";
                     }}
                   >
                     <input
@@ -720,16 +671,6 @@ export default function ChatBot() {
                         justifyContent: "center",
                         cursor: "pointer",
                         flexShrink: 0,
-                        transition:
-                          "background 0.15s ease, transform 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = K.blueDark;
-                        e.currentTarget.style.transform = "scale(1.05)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = K.blue;
-                        e.currentTarget.style.transform = "scale(1)";
                       }}
                     >
                       <FaPaperPlane size={12} />
@@ -760,13 +701,11 @@ export default function ChatBot() {
           type="button"
           onClick={() => setIsOpen((v) => !v)}
           aria-label={isOpen ? "Close chat" : "Chat with us"}
-          className="fixed bottom-6 right-6 z-[9998] flex items-center justify-center"
+          className="fixed bottom-6 right-6 z-[10001] flex items-center justify-center"
         >
           {!isOpen && (
             <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
-              <p className="text-sm font-semibold text-slate-900">
-                Need help?
-              </p>
+              <p className="text-sm font-semibold text-slate-900">Need help?</p>
               <p className="text-xs text-slate-500">Chat with Saskia.</p>
             </div>
           )}
