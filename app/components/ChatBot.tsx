@@ -15,21 +15,21 @@ const QUICK_OPTIONS = [
   "Get a Quote",
 ];
 
-// ── Design tokens ─────────────────────────────────────────────────────────────
+// ── Design tokens (matches Macy's editorial system) ──────────────────────────
 const K = {
-  blue:      "#0ea5e9",
-  blueDark:  "#0284c7",
-  blueLight: "#e0f2fe",
-  black:     "#111111",
-  white:     "#ffffff",
-  border:    "#e5e5e5",
-  bg:        "#fafafa",
-  text:      "#111111",
-  muted:     "#888888",
-  green:     "#22c55e",
+  blue:       "#0ea5e9",
+  blueDark:   "#0284c7",
+  blueLight:  "#e0f2fe",
+  black:      "#111111",
+  white:      "#ffffff",
+  border:     "#e5e5e5",
+  bg:         "#fafafa",
+  text:       "#111111",
+  muted:      "#888888",
+  green:      "#22c55e",
 };
 
-// ── Bot reply logic ───────────────────────────────────────────────────────────
+// ── Bot reply logic ──────────────────────────────────────────────────────────
 function getBotReply(userText: string): string {
   const t = userText.toLowerCase();
   if (t.includes("quote") || t.includes("price") || t.includes("cost"))
@@ -45,7 +45,7 @@ function getBotReply(userText: string): string {
   return "I can help with residential cleaning, commercial cleaning, Airbnb turnovers, laundry, or a custom quote. What would you like to explore?";
 }
 
-// ── Typing indicator ──────────────────────────────────────────────────────────
+// ── Typing indicator ─────────────────────────────────────────────────────────
 function TypingDots() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 4, padding: "10px 14px" }}>
@@ -65,7 +65,7 @@ function TypingDots() {
   );
 }
 
-// ── Avatar ────────────────────────────────────────────────────────────────────
+// ── Avatar ───────────────────────────────────────────────────────────────────
 function Avatar({ size = 36 }: { size?: number }) {
   return (
     <div style={{ position: "relative", flexShrink: 0, width: size, height: size }}>
@@ -92,7 +92,7 @@ function Avatar({ size = 36 }: { size?: number }) {
   );
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ── Main component ───────────────────────────────────────────────────────────
 export default function ChatBot() {
   const [isOpen,           setIsOpen]           = useState(false);
   const [input,            setInput]            = useState("");
@@ -102,16 +102,13 @@ export default function ChatBot() {
     { sender: "bot", text: "Hi, welcome to Saskia Cleaning ✨ How can I help you today?" },
   ]);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef  = useRef<HTMLInputElement>(null);
+  const bottomRef  = useRef<HTMLDivElement>(null);
+  const inputRef   = useRef<HTMLInputElement>(null);
 
-  // ── CHANGE 1: `top` instead of `bottom` in state shape ───────────────────
-  // `top` = visualViewport.offsetTop = distance from layout-viewport top to
-  // the visible-viewport top. We pin the panel with `top + bottom: 0` so the
-  // browser resolves height purely via CSS geometry — no JS arithmetic gap.
+  // Tracks the visible viewport on mobile so the panel can shrink above the software keyboard.
   const [visibleViewport, setVisibleViewport] = useState<{
-    height: number; // visible area height (shrinks when keyboard opens)
-    top: number;    // layout-top offset of the visible viewport
+    height: number;
+    bottom: number;
   } | null>(null);
 
   // Scroll to bottom on new message
@@ -138,7 +135,9 @@ export default function ChatBot() {
     return () => window.removeEventListener("keydown", handle);
   }, []);
 
-  // ── CHANGE 2: syncVisibleViewport stores `top` instead of `bottom` ────────
+  // Visual Viewport API: mobile browsers keep 100vh/lvh sized to the layout viewport,
+  // leaving a gap above the software keyboard. resize/scroll on visualViewport gives the
+  // true visible height so the chat can sit flush above the keyboard while typing.
   useLayoutEffect(() => {
     if (!isOpen) {
       setVisibleViewport(null);
@@ -154,19 +153,12 @@ export default function ChatBot() {
       }
 
       const vv = window.visualViewport;
-      // visualViewport.height  = visible area height after keyboard shrinks it.
-      // visualViewport.offsetTop = scroll offset of visual viewport within the
-      //   layout viewport (non-zero on some Android browsers when the page
-      //   scrolls up to keep the focused input visible).
-      const height    = vv?.height    ?? window.innerHeight;
+      const height = vv?.height ?? window.innerHeight;
       const offsetTop = vv?.offsetTop ?? 0;
-
       setVisibleViewport({
         height,
-        // top: where the visible area starts inside the layout viewport.
-        // Panel will use `top: offsetTop` + `bottom: 0` — browser handles
-        // all sizing, no gap from mismatched reference frames.
-        top: offsetTop,
+        // Anchor from layout bottom so the panel sits flush above the keyboard
+        bottom: Math.max(0, window.innerHeight - height - offsetTop),
       });
     };
 
@@ -182,7 +174,7 @@ export default function ChatBot() {
     };
   }, [isOpen]);
 
-  // Keep latest message in view when keyboard opens / closes
+  // Keep the latest message in view when the keyboard opens or closes.
   useEffect(() => {
     if (!visibleViewport) return;
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -202,16 +194,7 @@ export default function ChatBot() {
 
   return (
     <>
-      {/* ── CHANGE 4: CSS keyframes + 100dvh mobile fallback ─────────────────
-          100dvh vs 100vh:
-          - 100vh on iOS Safari is frozen to the *initial* viewport height and
-            does not shrink when the software keyboard opens, causing overflow
-            or a gap below the input.
-          - 100dvh (dynamic viewport height) updates in real time as the
-            keyboard appears/disappears, matching the Visual Viewport API.
-          - Used as a CSS-only fallback on [data-chatbot-panel-mobile] so
-            there is no visible flash before the first JS state update fires.
-      ──────────────────────────────────────────────────────────────────────── */}
+      {/* Keyframe injection */}
       <style>{`
         @keyframes chatBounce {
           0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
@@ -225,16 +208,10 @@ export default function ChatBot() {
           0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0.4); }
           50%       { box-shadow: 0 0 0 8px rgba(14,165,233,0); }
         }
+        /* iOS Safari auto-zooms focused inputs below 16px — mobile-only override. */
         @media (max-width: 768px) {
-          /* Prevent iOS Safari auto-zoom on inputs smaller than 16px */
           [data-chatbot-input] {
             font-size: 16px !important;
-          }
-          /* dvh fallback: correct visible-area height before JS fires.
-             Overridden immediately once visibleViewport state populates. */
-          [data-chatbot-panel-mobile] {
-            height: 100dvh;
-            max-height: 100dvh;
           }
         }
       `}</style>
@@ -243,12 +220,6 @@ export default function ChatBot() {
 
         {/* ── Chat window ──────────────────────────────────────────────────── */}
         {isOpen && (
-
-          // ── CHANGE 3a: outer wrapper ────────────────────────────────────
-          // Mobile: `inset: 0` makes the wrapper a full-screen fixed layer.
-          // The panel inside is then positioned with top + bottom: 0, so
-          // the browser resolves its height via CSS box-model geometry.
-          // Desktop: unchanged — bottom-right flex anchor.
           <div
             style={{
               position: "fixed",
@@ -256,7 +227,12 @@ export default function ChatBot() {
               pointerEvents: "none",
               ...(visibleViewport
                 ? {
-                    inset: 0,
+                    // Mobile: use visualViewport.height instead of 100vh — no gap above keyboard
+                    bottom: visibleViewport.bottom,
+                    left: 0,
+                    right: 0,
+                    height: visibleViewport.height,
+                    width: "100%",
                     display: "flex",
                     flexDirection: "column",
                   }
@@ -268,6 +244,7 @@ export default function ChatBot() {
                     right: 0,
                   }),
             }}
+            className="md:h-[90%]"
           >
             {/* Backdrop (mobile only) */}
             <div
@@ -280,44 +257,14 @@ export default function ChatBot() {
               className="md:hidden"
             />
 
-            {/* ── CHANGE 3b: panel — top + bottom:0 instead of height ─────────
-                WHY top + bottom instead of height:
-                The previous code set both `bottom: layoutViewportHeight - vpHeight`
-                and `height: vpHeight`. On some browsers these are measured from
-                different reference frames (layout vs visual viewport), so their
-                sum leaves a gap between the input and the keyboard.
-
-                Setting `top: visualViewport.offsetTop` and `bottom: 0` tells
-                the browser: "start here, end at the layout-bottom edge." Because
-                the software keyboard lives *outside* the layout viewport, bottom:0
-                lands flush against the top of the keyboard automatically.
-
-                Desktop: position:relative inside the flex wrapper — unchanged.
-            ──────────────────────────────────────────────────────────────── */}
+            {/* Panel */}
             <div
-              {...(visibleViewport ? { "data-chatbot-panel-mobile": "" } : {})}
               style={{
-                ...(visibleViewport
-                  ? {
-                      position: "fixed" as const,
-                      // Pin to where the visual viewport starts (handles Android
-                      // browsers that scroll the page up when input is focused).
-                      top: visibleViewport.top,
-                      // bottom:0 = flush with layout-viewport bottom edge =
-                      // flush against the top of the software keyboard.
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      // Explicit px height as JS override; dvh CSS above covers
-                      // the flash window before the first state update.
-                      height: `${visibleViewport.height}px`,
-                      maxHeight: `${visibleViewport.height}px`,
-                    }
-                  : {
-                      position: "relative" as const,
-                      width: "100%",
-                      maxWidth: 440,
-                    }),
+                position: "relative",
+                width: "100%",
+                maxWidth: visibleViewport ? "100%" : 440,
+                height: visibleViewport ? visibleViewport.height : "100%",
+                maxHeight: visibleViewport ? visibleViewport.height : "100%",
                 display: "flex",
                 flexDirection: "column",
                 background: K.white,
@@ -329,11 +276,15 @@ export default function ChatBot() {
                 overflow: "hidden",
                 margin: 0,
               }}
-              className="md:bottom-[88px] md:right-6 md:h-auto md:max-h-[680px] md:max-w-[440px] md:rounded-[10px] md:border md:shadow-2xl"
+              className="bottom-[0px] md:bottom-[88px] md:right-6 md:h-auto md:max-h-[680px] md:max-w-[440px] md:rounded-[10px] md:border md:shadow-2xl"
             >
 
               {/* Header */}
-              <div style={{ background: K.blue, padding: "14px 16px", flexShrink: 0 }}>
+              <div style={{
+                background: K.blue,
+                padding: "14px 16px",
+                flexShrink: 0,
+              }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <Avatar size={48} />
@@ -365,7 +316,7 @@ export default function ChatBot() {
                       width: 32, height: 32,
                       background: "rgba(255,255,255,0.15)",
                       border: "1.5px solid rgba(255,255,255,0.3)",
-                      borderRadius: "10px",
+                      borderRadius:"10px",
                       color: K.white,
                       cursor: "pointer",
                       display: "flex", alignItems: "center", justifyContent: "center",
@@ -380,9 +331,7 @@ export default function ChatBot() {
                 </div>
               </div>
 
-              {/* Messages — flex:1 + minHeight:0 makes this the only scrollable
-                  region. The panel height is fully owned by top+bottom on mobile,
-                  so this div expands to fill all space between header and footer. */}
+              {/* Messages */}
               <div style={{
                 flex: 1,
                 minHeight: 0,
@@ -406,12 +355,13 @@ export default function ChatBot() {
                     }}
                   >
                     {msg.sender === "bot" && <Avatar size={30} />}
+
                     <div style={{
                       maxWidth: "76%",
                       padding: "10px 14px",
-                      borderRadius: "10px",
+                      borderRadius:"10px",
                       fontFamily: "Arial, Helvetica, sans-serif",
-                      fontSize: 13, lineHeight: 1.55, fontWeight: 500,
+                      fontSize: 18, lineHeight: 1.55, fontWeight: 500,
                       ...(msg.sender === "user"
                         ? {
                             background: K.blue,
@@ -424,7 +374,8 @@ export default function ChatBot() {
                             border: `1px solid ${K.border}`,
                             borderLeft: `3px solid ${K.blue}`,
                             boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-                          }),
+                          }
+                      ),
                     }}>
                       {msg.text}
                     </div>
@@ -448,10 +399,7 @@ export default function ChatBot() {
                 <div ref={bottomRef} />
               </div>
 
-              {/* Footer — position:sticky + bottom:0 keeps the input row pinned
-                  to the bottom of the panel. On mobile the panel is already flush
-                  against the keyboard, so this just prevents the message list
-                  from ever pushing the footer off-screen. */}
+              {/* Footer — sticky so the input stays at the bottom of the visible chat area */}
               <div style={{
                 position: "sticky",
                 bottom: 0,
@@ -465,7 +413,8 @@ export default function ChatBot() {
                 gap: 10,
               }}>
 
-                {/* Quick options — desktop only */}
+                {/* Quick options */}
+                {/* Hide the quick options box on small screens */}
                 <div
                   className="hidden md:block"
                   style={{
@@ -546,77 +495,85 @@ export default function ChatBot() {
                     </div>
                   </div>
                 </div>
+        
 
                 {/* Input row */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    border: `1.5px solid ${K.border}`,
-                    background: K.white,
-                    padding: "4px 4px 4px 12px",
-                    borderRadius: "10px",
-                    transition: "border-color 0.15s, box-shadow 0.15s",
-                  }}
-                  onFocusCapture={(e) => {
-                    e.currentTarget.style.borderColor = K.blue;
-                    e.currentTarget.style.boxShadow = `0 0 0 3px ${K.blueLight}`;
-                  }}
-                  onBlurCapture={(e) => {
-                    e.currentTarget.style.borderColor = K.border;
-                    e.currentTarget.style.boxShadow = "none";
-                  }}
-                >
-                  <input
-                    ref={inputRef}
-                    data-chatbot-input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") sendMessage(input); }}
-                    placeholder="Type your message…"
-                    style={{
-                      flex: 1,
-                      background: "transparent",
-                      border: "none",
-                      outline: "none",
-                      fontFamily: "Arial, Helvetica, sans-serif",
-                      fontSize: 13, // 16px override applied on mobile via CSS (prevents iOS zoom)
-                      fontWeight: 500,
-                      color: K.text,
-                      padding: "8px 0",
-                    }}
-                  />
+            {/* Input row */}
+<div
+  style={{
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    border: `1.5px solid ${K.border}`,
+    background: K.white,
+    padding: "4px 4px 4px 12px",
+    borderRadius: "10px",
+    transition: "border-color 0.15s, box-shadow 0.15s",
+  }}
+  onFocusCapture={(e) => {
+    e.currentTarget.style.borderColor = K.blue;
+    e.currentTarget.style.boxShadow = `0 0 0 3px ${K.blueLight}`;
+  }}
+  onBlurCapture={(e) => {
+    e.currentTarget.style.borderColor = K.border;
+    e.currentTarget.style.boxShadow = "none";
+  }}
+>
+  <input
+    ref={inputRef}
+    data-chatbot-input
+    value={input}
+    onChange={(e) => setInput(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter") {
+        sendMessage(input);
+      }
+    }}
+    placeholder="Type your message…"
+    style={{
+      flex: 1,
+      background: "transparent",
+      border: "none",
+      outline: "none",
+      fontFamily: "Arial, Helvetica, sans-serif",
+      fontSize: 13, // desktop size; 16px applied on mobile via CSS (prevents iOS zoom)
+      fontWeight: 500,
+      color: K.text,
+      padding: "8px 0",
+    }}
+  />
 
-                  <button
-                    type="button"
-                    onClick={() => sendMessage(input)}
-                    aria-label="Send message"
-                    style={{
-                      width: 36, height: 36,
-                      background: K.blue,
-                      border: "none",
-                      borderRadius: "10px",
-                      color: K.white,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      cursor: "pointer",
-                      flexShrink: 0,
-                      transition: "background 0.15s ease, transform 0.15s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = K.blueDark;
-                      e.currentTarget.style.transform = "scale(1.05)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = K.blue;
-                      e.currentTarget.style.transform = "scale(1)";
-                    }}
-                  >
-                    <FaPaperPlane size={12} />
-                  </button>
-                </div>
+  <button
+    type="button"
+    onClick={() => sendMessage(input)}
+    aria-label="Send message"
+    style={{
+      width: 36,
+      height: 36,
+      background: K.blue,
+      border: "none",
+      borderRadius: "10px",
+      color: K.white,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      cursor: "pointer",
+      flexShrink: 0,
+      transition:
+        "background 0.15s ease, transform 0.15s ease",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.background = K.blueDark;
+      e.currentTarget.style.transform = "scale(1.05)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.background = K.blue;
+      e.currentTarget.style.transform = "scale(1)";
+    }}
+  >
+    <FaPaperPlane size={12} />
+  </button>
+</div>
 
                 {/* Branding */}
                 <p style={{
@@ -636,26 +593,30 @@ export default function ChatBot() {
 
         {/* ── FAB trigger ──────────────────────────────────────────────────── */}
         <button
-          type="button"
-          onClick={() => setIsOpen((v) => !v)}
-          aria-label={isOpen ? "Close chat" : "Chat with us"}
-          className="fixed bottom-6 right-6 z-[9998] flex items-center justify-center"
-        >
-          {!isOpen && (
-            <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
-              <p className="text-sm font-semibold text-slate-900">Need help?</p>
-              <p className="text-xs text-slate-500">Chat with Saskia.</p>
-            </div>
-          )}
+  type="button"
+  onClick={() => setIsOpen((v) => !v)}
+  aria-label={isOpen ? "Close chat" : "Chat with us"}
+  className="fixed bottom-6 right-6 z-[9998] flex items-center justify-center"
+>
+  {!isOpen && (
+    <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
+      <p className="text-sm font-semibold text-slate-900">
+        Need help?
+      </p>
+      <p className="text-xs text-slate-500">
+        Chat with Saskia.
+      </p>
+    </div>
+  )}
 
-          {isOpen ? (
-            <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-sky-500 text-white shadow-lg">
-              <FaTimes size={20} />
-            </div>
-          ) : (
-            <Avatar size={60} />
-          )}
-        </button>
+  {isOpen ? (
+    <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-sky-500 text-white shadow-lg">
+      <FaTimes size={20} />
+    </div>
+  ) : (
+    <Avatar size={60} />
+  )}
+</button>
 
       </div>
     </>
