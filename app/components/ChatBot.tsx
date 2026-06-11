@@ -276,7 +276,7 @@ export default function ChatBot() {
                 overflow: "hidden",
                 margin: 0,
               }}
-              className="md:bottom-[88px] md:right-6 md:h-auto md:max-h-[680px] md:max-w-[440px] md:rounded-[10px] md:border md:shadow-2xl"
+              className="bottom-[0px] md:bottom-[88px] md:right-6 md:h-auto md:max-h-[680px] md:max-w-[440px] md:rounded-[10px] md:border md:shadow-2xl"
             >
 
               {/* Header */}
