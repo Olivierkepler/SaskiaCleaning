@@ -408,7 +408,18 @@ export default function ChatBot() {
               }}>
 
                 {/* Quick options */}
-                <div style={{ border: `1px solid ${K.border}`, background: K.white, borderRadius:"10px" }}>
+                {/* Hide the quick options box on small screens */}
+                <div
+                  style={{
+                    border: `1px solid ${K.border}`,
+                    background: K.white,
+                    borderRadius: "10px",
+                    // Hide on screens less than 640px wide
+                    display: typeof window !== "undefined" && window.matchMedia && window.matchMedia("(max-width: 639px)").matches
+                      ? "none"
+                      : "block",
+                  }}
+                >
                   <button
                     type="button"
                     onClick={() => setShowQuickOptions((v) => !v)}
@@ -460,7 +471,7 @@ export default function ChatBot() {
                               background: K.white,
                               color: K.text,
                               cursor: "pointer",
-                              borderRadius:"10px",
+                              borderRadius: "10px",
                               transition: "all 0.13s",
                             }}
                             onMouseEnter={(e) => {
@@ -481,6 +492,7 @@ export default function ChatBot() {
                     </div>
                   </div>
                 </div>
+        
 
                 {/* Input row */}
             {/* Input row */}
@@ -578,42 +590,30 @@ export default function ChatBot() {
 
         {/* ── FAB trigger ──────────────────────────────────────────────────── */}
         <button
-          type="button"
-          onClick={() => setIsOpen((v) => !v)}
-          aria-label={isOpen ? "Close chat" : "Chat with us"}
-          style={{
-            position: "fixed",
-            bottom: 24, right: 24,
-            zIndex: 9998,
-            width: 60, height: 60,
-            borderRadius: "50%",
-            border: "none",
-            background: "transparent",
-            padding: 0,
-            cursor: "pointer",
-            animation: isOpen ? "none" : "chatPulse 2.4s ease-in-out infinite",
-            transition: "transform 0.18s",
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.07)"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-        >
-          {isOpen ? (
-            <div style={{
-              width: 60, height: 60,
-              borderRadius: "50%",
-              background: K.blue,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: K.white,
-              boxShadow: "0 4px 16px rgba(14,165,233,0.4)",
-            }}>
-              <FaTimes size={20} />
-            </div>
-          ) : (
-            <Avatar size={60} />
-          )}
-        </button>
+  type="button"
+  onClick={() => setIsOpen((v) => !v)}
+  aria-label={isOpen ? "Close chat" : "Chat with us"}
+  className="fixed bottom-6 right-6 z-[9998] flex items-center justify-center"
+>
+  {!isOpen && (
+    <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
+      <p className="text-sm font-semibold text-slate-900">
+        Need help?
+      </p>
+      <p className="text-xs text-slate-500">
+        Chat with Saskia
+      </p>
+    </div>
+  )}
+
+  {isOpen ? (
+    <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-sky-500 text-white shadow-lg">
+      <FaTimes size={20} />
+    </div>
+  ) : (
+    <Avatar size={60} />
+  )}
+</button>
 
       </div>
     </>
