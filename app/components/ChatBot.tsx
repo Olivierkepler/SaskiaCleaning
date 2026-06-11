@@ -646,6 +646,18 @@ export default function ChatBot() {
                   Saskia Cleaning · MA & RI
                 </p>
               </div>
+
+              {/* Mobile keyboard white extension: creates a clean white area above the native keyboard. */}
+              {isMobileKeyboardOpen && (
+                <div
+                  aria-hidden="true"
+                  style={{
+                    height: `calc(80px + env(safe-area-inset-bottom, 0px))`,
+                    background: K.white,
+                    flexShrink: 0,
+                  }}
+                />
+              )}
             </div>
           </div>
         )}
