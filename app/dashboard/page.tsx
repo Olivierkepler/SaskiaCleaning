@@ -1,6 +1,7 @@
 // app/dashboard/page.tsx
 
 import { sql } from "../lib/db";
+import { redirect } from "next/navigation";
 
 type BookingRequest = {
   id: number;
@@ -12,7 +13,21 @@ type BookingRequest = {
   created_at: string;
 };
 
-export default async function DashboardPage() {
+type DashboardPageProps = {
+  searchParams: Promise<{
+    key?: string;
+  }>;
+};
+
+export default async function DashboardPage({
+  searchParams,
+}: DashboardPageProps) {
+  const params = await searchParams;
+
+  if (params.key !== process.env.DASHBOARD_KEY) {
+    redirect("/");
+  }
+
   const bookings = await sql`
     SELECT *
     FROM booking_requests
@@ -22,9 +37,13 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-6xl">
-        <h1 className="mb-6 text-3xl font-bold text-slate-900">
+        <h1 className="mb-2 text-3xl font-bold text-slate-900">
           Booking Requests
         </h1>
+
+        <p className="mb-6 text-slate-600">
+          Total bookings: {bookings.length}
+        </p>
 
         <div className="overflow-hidden rounded-xl bg-white shadow">
           <table className="w-full border-collapse text-left">
@@ -47,7 +66,7 @@ export default async function DashboardPage() {
                   </td>
                 </tr>
               ) : (
-                bookings.map((booking: any) => (
+                bookings.map((booking) => (
                   <tr
                     key={booking.id}
                     className="border-b border-slate-200 hover:bg-slate-50"
@@ -59,12 +78,8 @@ export default async function DashboardPage() {
                     <td className="p-4 text-slate-700">
                       {booking.mobile || "—"}
                     </td>
-                    <td className="p-4 text-slate-700">
-                      {booking.bedrooms}
-                    </td>
-                    <td className="p-4 text-slate-700">
-                      {booking.bathrooms}
-                    </td>
+                    <td className="p-4 text-slate-700">{booking.bedrooms}</td>
+                    <td className="p-4 text-slate-700">{booking.bathrooms}</td>
                     <td className="p-4 text-slate-500">
                       {new Date(booking.created_at).toLocaleString()}
                     </td>
