@@ -134,6 +134,8 @@ export default function ChatBot() {
   const [isTyping, setIsTyping] = useState(false);
   const [showQuickOptions, setShowQuickOptions] = useState(true);
   const [isMobileKeyboardOpen, setIsMobileKeyboardOpen] = useState(false);
+  const [isMobileScreen, setIsMobileScreen] = useState(false);
+  const [keyboardOffset, setKeyboardOffset] = useState(0);
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -144,11 +146,6 @@ export default function ChatBot() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const [visibleViewport, setVisibleViewport] = useState<{
-    height: number;
-    bottom: number;
-  } | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -184,77 +181,61 @@ export default function ChatBot() {
     };
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = isOpen ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   useLayoutEffect(() => {
     if (!isOpen) {
-      setVisibleViewport(null);
+      setIsMobileScreen(false);
+      setKeyboardOffset(0);
+      setIsMobileKeyboardOpen(false);
       return;
     }
 
     const mobileQuery = window.matchMedia("(max-width: 768px)");
 
-    const syncVisibleViewport = () => {
-      if (!mobileQuery.matches) {
-        setVisibleViewport(null);
-        return;
-      }
+    const syncViewport = () => {
+      const isMobile = mobileQuery.matches;
+      setIsMobileScreen(isMobile);
 
-      const vv = window.visualViewport;
-      const height = vv?.height ?? window.innerHeight;
-      const offsetTop = vv?.offsetTop ?? 0;
-
-      setVisibleViewport({
-        height,
-        bottom: Math.max(0, window.innerHeight - height - offsetTop),
-      });
-    };
-
-    syncVisibleViewport();
-
-    const vv = window.visualViewport;
-
-    vv?.addEventListener("resize", syncVisibleViewport);
-    vv?.addEventListener("scroll", syncVisibleViewport);
-
-    return () => {
-      vv?.removeEventListener("resize", syncVisibleViewport);
-      vv?.removeEventListener("scroll", syncVisibleViewport);
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!visibleViewport) return;
-
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [visibleViewport]);
-
-  useEffect(() => {
-    const syncKeyboardOpen = () => {
-      if (window.innerWidth > 768) {
+      if (!isMobile) {
+        setKeyboardOffset(0);
         setIsMobileKeyboardOpen(false);
         return;
       }
 
       const vv = window.visualViewport;
       const visibleHeight = vv?.height ?? window.innerHeight;
-      const keyboardOpen = window.innerHeight - visibleHeight > 120;
+      const offsetTop = vv?.offsetTop ?? 0;
 
-      setIsMobileKeyboardOpen(keyboardOpen);
+      const keyboardHeight = Math.max(
+        0,
+        window.innerHeight - visibleHeight - offsetTop
+      );
+
+      setKeyboardOffset(keyboardHeight);
+      setIsMobileKeyboardOpen(keyboardHeight > 120);
     };
 
-    syncKeyboardOpen();
+    syncViewport();
 
     const vv = window.visualViewport;
 
-    vv?.addEventListener("resize", syncKeyboardOpen);
-    vv?.addEventListener("scroll", syncKeyboardOpen);
-    window.addEventListener("resize", syncKeyboardOpen);
+    vv?.addEventListener("resize", syncViewport);
+    vv?.addEventListener("scroll", syncViewport);
+    window.addEventListener("resize", syncViewport);
 
     return () => {
-      vv?.removeEventListener("resize", syncKeyboardOpen);
-      vv?.removeEventListener("scroll", syncKeyboardOpen);
-      window.removeEventListener("resize", syncKeyboardOpen);
+      vv?.removeEventListener("resize", syncViewport);
+      vv?.removeEventListener("scroll", syncViewport);
+      window.removeEventListener("resize", syncViewport);
     };
-  }, []);
+  }, [isOpen]);
 
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
@@ -304,16 +285,6 @@ export default function ChatBot() {
           }
         }
 
-        @keyframes chatPulse {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(14,165,233,0.4);
-          }
-
-          50% {
-            box-shadow: 0 0 0 8px rgba(14,165,233,0);
-          }
-        }
-
         @media (max-width: 768px) {
           [data-chatbot-input] {
             font-size: 16px !important;
@@ -325,22 +296,23 @@ export default function ChatBot() {
         {isOpen && (
           <>
             <div
-              className="fixed inset-0 z-[9997] bg-white md:hidden"
+              className="fixed inset-0 z-[9000] bg-white md:hidden"
               aria-hidden="true"
             />
 
             <div
               style={{
                 position: "fixed",
-                zIndex: 9999,
+                zIndex: 10000,
                 pointerEvents: "none",
-                ...(visibleViewport
+                ...(isMobileScreen
                   ? {
-                      bottom: visibleViewport.bottom,
+                      top: 0,
                       left: 0,
                       right: 0,
-                      height: visibleViewport.height,
+                      bottom: 0,
                       width: "100%",
+                      height: "100dvh",
                       display: "flex",
                       flexDirection: "column",
                     }
@@ -358,15 +330,15 @@ export default function ChatBot() {
                 style={{
                   position: "relative",
                   width: "100%",
-                  maxWidth: visibleViewport ? "100%" : 440,
-                  height: visibleViewport ? visibleViewport.height : "100%",
-                  maxHeight: visibleViewport ? visibleViewport.height : "100%",
+                  maxWidth: isMobileScreen ? "100%" : 440,
+                  height: isMobileScreen ? "100%" : "100%",
+                  maxHeight: isMobileScreen ? "100%" : "100%",
                   display: "flex",
                   flexDirection: "column",
                   background: K.white,
-                  border: visibleViewport ? "none" : `1.5px solid ${K.border}`,
-                  borderRadius: visibleViewport ? 0 : "10px",
-                  boxShadow: visibleViewport
+                  border: isMobileScreen ? "none" : `1.5px solid ${K.border}`,
+                  borderRadius: isMobileScreen ? 0 : "10px",
+                  boxShadow: isMobileScreen
                     ? "none"
                     : "0 8px 40px rgba(0,0,0,0.16)",
                   animation: "chatSlideUp 0.22s ease-out both",
@@ -463,9 +435,7 @@ export default function ChatBot() {
                     minHeight: 0,
                     overflowY: "auto",
                     background: K.bg,
-                    padding: isMobileKeyboardOpen
-                      ? "20px 16px 20px"
-                      : "20px 16px",
+                    padding: "20px 16px",
                     display: "flex",
                     flexDirection: "column",
                     gap: 14,
@@ -544,7 +514,7 @@ export default function ChatBot() {
 
                 <div
                   style={{
-                    position: "sticky",
+                    position: "relative",
                     bottom: 0,
                     zIndex: 2,
                     background: K.white,
@@ -668,7 +638,12 @@ export default function ChatBot() {
                       background: K.white,
                       padding: "4px 4px 4px 12px",
                       borderRadius: "10px",
-                      transition: "border-color 0.15s, box-shadow 0.15s",
+                      transform:
+                        isMobileKeyboardOpen && keyboardOffset > 0
+                          ? `translateY(-${keyboardOffset}px)`
+                          : "translateY(0)",
+                      transition:
+                        "transform 0.2s ease, border-color 0.15s, box-shadow 0.15s",
                     }}
                     onFocusCapture={(e) => {
                       e.currentTarget.style.borderColor = K.blue;
@@ -760,7 +735,7 @@ export default function ChatBot() {
           type="button"
           onClick={() => setIsOpen((v) => !v)}
           aria-label={isOpen ? "Close chat" : "Chat with us"}
-          className="fixed bottom-6 right-6 z-[9998] flex items-center justify-center"
+          className="fixed bottom-6 right-6 z-[10001] flex items-center justify-center"
         >
           {!isOpen && (
             <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
