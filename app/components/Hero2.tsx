@@ -25,7 +25,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-[600px] overflow-hidden bg-white pt-30 text-white">
+    <section className="relative min-h-[600px] overflow-hidden bg-white pt-20 text-white">
       {/* Background image carousel */}
       <AnimatePresence initial={false}>
         <motion.div
