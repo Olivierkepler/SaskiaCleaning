@@ -499,7 +499,7 @@ export default function ChatBot() {
                         padding: "10px 14px",
                         borderRadius: "10px",
                         fontFamily: "Arial, Helvetica, sans-serif",
-                        fontSize: 16,
+                        fontSize: 18,
                         lineHeight: 1.55,
                         fontWeight: 500,
                         ...(msg.sender === "user"
