@@ -204,7 +204,7 @@ export default function FloatingLeadWidget() {
         alignItems: "flex-start",
       }}
 
-      className="bottom-30 md:bottom-[450]"
+      className="bottom-30 md:bottom-[150]"
     >
       <div
         style={{
@@ -576,9 +576,10 @@ export default function FloatingLeadWidget() {
       </div>
 
       {/* Collapsed/Open Trigger */}
-      <button
-        type="button"
+      <div
         onClick={() => setStep(step === "closed" ? "menu" : "closed")}
+        role="button"
+        tabIndex={0}
         aria-label={
           step !== "closed" ? "Close quote widget" : "Get a free cleaning quote"
         }
@@ -589,30 +590,36 @@ export default function FloatingLeadWidget() {
           border: "none",
           padding: 0,
           cursor: "pointer",
+          outline: "none",
+          userSelect: "none",
+        }}
+        onKeyPress={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            setStep(step === "closed" ? "menu" : "closed");
+          }
         }}
       >
-        <div
-          style={{
-            width: STUB,
-            minHeight: step === "closed" ? 158 : 46,
-            background: K.blue,
-            color: K.white,
-            padding: "14px 0",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            transition: "all 0.2s ease",
-            overflow: "hidden",
-          }}
-        >
+        <div>
           {step !== "closed" ? (
             <IconClose />
           ) : (
-            <>
+            <div
+              style={{
+                width: STUB,
+                minHeight: step === "closed" ? 158 : 46,
+                background: K.blue,
+                color: K.white,
+                padding: "14px 0",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                transition: "all 0.2s ease",
+                overflow: "hidden",
+              }}
+            >
               <IconStar />
-
               <span
                 style={{
                   writingMode: "vertical-rl",
@@ -631,9 +638,9 @@ export default function FloatingLeadWidget() {
                   overflow: "hidden",
                 }}
               >
-                Free Quote.
+                Free Quote
               </span>
-            </>
+            </div>
           )}
         </div>
 
@@ -647,6 +654,7 @@ export default function FloatingLeadWidget() {
               display: "flex",
               alignItems: "center",
               boxShadow: "-2px 0 8px rgba(0,0,0,0.06)",
+              cursor: "pointer",
             }}
           >
             <p
@@ -663,7 +671,8 @@ export default function FloatingLeadWidget() {
             </p>
           </div>
         )}
-      </button>
+      </div>
+ 
 
       <style>{`
         @keyframes spin {
