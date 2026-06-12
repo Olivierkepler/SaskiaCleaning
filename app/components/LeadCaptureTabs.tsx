@@ -204,7 +204,7 @@ export default function FloatingLeadWidget() {
         alignItems: "flex-start",
       }}
 
-      className="bottom-110 md:bottom-[500]"
+      className="bottom-30 md:bottom-[500]"
     >
       <div
         style={{
