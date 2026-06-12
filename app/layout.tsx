@@ -51,7 +51,7 @@ export default function RootLayout({
     
           {/*   <Navbar /> */}
         {children}
-        <LeadCaptureTabs />
+        {/* <LeadCaptureTabs /> */}
         <Footer/>
         {/* <SocialCorner/> */}
         {/* <WhatsAppFloat/>
