@@ -181,6 +181,7 @@ export default function HeroBooking() {
             className={inputClassName}
           />
 
+
           <Counter
             label="Bedrooms"
             value={form.bedrooms}

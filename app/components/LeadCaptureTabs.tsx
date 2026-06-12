@@ -80,7 +80,7 @@ function TicketNotches() {
     <div
       style={{
         position: "absolute",
-        left: 40,
+        right: 40,
         top: 0,
         bottom: 0,
         width: 0,
@@ -132,7 +132,6 @@ export default function FloatingLeadWidget() {
   const panelRef = useRef<HTMLDivElement>(null);
 
   const STUB = 40;
-
   const svc = SERVICES.find((s) => s.id === selectedService);
 
   useEffect(() => {
@@ -196,15 +195,13 @@ export default function FloatingLeadWidget() {
       ref={panelRef}
       style={{
         position: "fixed",
-        
-        left: 0,
+        right: 0,
         zIndex: 50,
         display: "flex",
         flexDirection: "column",
-        alignItems: "flex-start",
+        alignItems: "flex-end",
       }}
-
-      className="bottom-30 md:bottom-[150]"
+      className="bottom-30 md:bottom-[150px]"
     >
       <div
         style={{
@@ -212,8 +209,8 @@ export default function FloatingLeadWidget() {
           background: K.white,
           border: `1.5px solid ${K.border}`,
           borderBottom: "none",
-          borderRight: "none",
-          boxShadow: "-4px -4px 24px rgba(0,0,0,0.10)",
+          borderLeft: "none",
+          boxShadow: "4px -4px 24px rgba(0,0,0,0.10)",
           position: "relative",
           overflow: "visible",
           transition: "opacity 0.22s ease, transform 0.22s ease",
@@ -224,13 +221,19 @@ export default function FloatingLeadWidget() {
       >
         <TicketNotches />
 
-        <div style={{ display: "flex", minHeight: 340 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "row-reverse",
+            minHeight: 340,
+          }}
+        >
           <div
             style={{
               width: STUB,
               flexShrink: 0,
               background: K.blue,
-              borderRight: `1.5px dashed rgba(255,255,255,0.35)`,
+              borderLeft: `1.5px dashed rgba(255,255,255,0.35)`,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
@@ -585,6 +588,7 @@ export default function FloatingLeadWidget() {
         }
         style={{
           display: "flex",
+          flexDirection: "row-reverse",
           alignItems: "center",
           background: "none",
           border: "none",
@@ -653,7 +657,8 @@ export default function FloatingLeadWidget() {
               padding: "12px 14px",
               display: "flex",
               alignItems: "center",
-              boxShadow: "-2px 0 8px rgba(0,0,0,0.06)",
+              justifyContent: "flex-end",
+              boxShadow: "2px 0 8px rgba(0,0,0,0.06)",
               cursor: "pointer",
             }}
           >
@@ -672,7 +677,6 @@ export default function FloatingLeadWidget() {
           </div>
         )}
       </div>
- 
 
       <style>{`
         @keyframes spin {
