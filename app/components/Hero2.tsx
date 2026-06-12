@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import HeroQuoteForm from "./HeroQuoteForm";
+import CleaningOrbit from "./CleaningOrbit";
 
 const heroImages = [
   "/images/house.jpg",
@@ -90,7 +91,7 @@ export default function Hero() {
 
           {/* Right Logo Area */}
           <div className="hidden flex-col items-center justify-center lg:flex lg:items-end">
-            <div className="relative flex items-center justify-center opacity-0 animate-[scaleIn_0.8s_ease-out_0.3s_forwards]">
+            {/* <div className="relative flex items-center justify-center opacity-0 animate-[scaleIn_0.8s_ease-out_0.3s_forwards]">
               <div className="animate-[float_6s_ease-in-out_infinite]">
                 <Image
                   src="/images/whitelogo2.png"
@@ -106,7 +107,8 @@ export default function Hero() {
                   className="relative z-10 object-contain drop-shadow-[0_0_35px_rgba(127,182,231,0.3)] transition duration-500 hover:drop-shadow-[0_0_50px_rgba(127,182,231,0.5)]"
                 />
               </div>
-            </div>
+            </div> */}
+             <CleaningOrbit />  
           </div>
     
         </div>
