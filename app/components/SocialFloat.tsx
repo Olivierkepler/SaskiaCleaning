@@ -17,37 +17,38 @@ export default function SocialFloat() {
   const [open, setOpen] = useState(false);
 
   const socials = [
+   
+    // {
+    //   icon: <FaInstagram size={24} />,
+    //   href: "https://instagram.com/yourusername",
+    //   color:
+    //     "bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400",
+    //   label: "Instagram",
+    // },
+    // {
+    //   icon: <FaFacebookF size={22} />,
+    //   href: "https://facebook.com/yourpage",
+    //   color: "bg-[#1877F2]",
+    //   label: "Facebook",
+    // },
+    // {
+    //   icon: <FaLinkedinIn size={22} />,
+    //   href: "https://linkedin.com/in/yourprofile",
+    //   color: "bg-[#0A66C2]",
+    //   label: "LinkedIn",
+    // },
+    // {
+    //   icon: <FaTiktok size={22} />,
+    //   href: "https://tiktok.com/@yourusername",
+    //   color: "bg-black",
+    //   label: "TikTok",
+    // },
     {
-      icon: <FaWhatsapp size={24} />,
-      href: "https://wa.me/18573528554",
-      color: "bg-[#25D366]",
-      label: "WhatsApp",
-    },
-    {
-      icon: <FaInstagram size={24} />,
-      href: "https://instagram.com/yourusername",
-      color:
-        "bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400",
-      label: "Instagram",
-    },
-    {
-      icon: <FaFacebookF size={22} />,
-      href: "https://facebook.com/yourpage",
-      color: "bg-[#1877F2]",
-      label: "Facebook",
-    },
-    {
-      icon: <FaLinkedinIn size={22} />,
-      href: "https://linkedin.com/in/yourprofile",
-      color: "bg-[#0A66C2]",
-      label: "LinkedIn",
-    },
-    {
-      icon: <FaTiktok size={22} />,
-      href: "https://tiktok.com/@yourusername",
-      color: "bg-black",
-      label: "TikTok",
-    },
+        icon: <FaWhatsapp size={24} />,
+        href: "https://wa.me/18573528554",
+        color: "bg-[#25D366]",
+        label: "WhatsApp",
+      },
   ];
 
   return (
