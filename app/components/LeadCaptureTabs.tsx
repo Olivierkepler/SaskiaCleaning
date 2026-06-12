@@ -605,7 +605,7 @@ export default function FloatingLeadWidget() {
                   whiteSpace: "nowrap",
                 }}
               >
-                Free Quote
+                Free Quote.
               </span>
             </>
           )}
