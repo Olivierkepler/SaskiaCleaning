@@ -1,10 +1,8 @@
-// components/FloatingLeadWidget.tsx
-
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-type ServiceType = "residential" | "commercial" | "moveout" | null;
+type ServiceType = "residential" | "commercial" | "moveout";
 type Step = "closed" | "menu" | "form" | "success";
 
 interface LeadForm {
@@ -13,132 +11,63 @@ interface LeadForm {
   zip: string;
 }
 
-const K = {
-  blue: "#0ea5e9",
-  blueDark: "#0284c7",
-  white: "#ffffff",
-  black: "#111111",
-  border: "#e5e5e5",
-  bg: "#fafafa",
-  muted: "#888888",
-  green: "#22c55e",
-};
+const BRAND = "#0ea5e9";
+const BRAND_DARK = "#0284c7";
+const FONT = "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
 
-const IconClose = () => (
-  <svg width={12} height={12} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-    <path d="M1 1l10 10M11 1L1 11" />
-  </svg>
-);
-
-const IconStar = () => (
-  <svg width={14} height={14} viewBox="0 0 14 14" fill="none" stroke="white" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M7 1.5l1.5 3 3.5.5-2.5 2.5.6 3.5L7 9.5l-3.1 1.5.6-3.5L2 5l3.5-.5z" />
-  </svg>
-);
-
-const IconArrow = () => (
-  <svg width={12} height={12} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 6h8M6 3l3 3-3 3" />
-  </svg>
-);
-
-const IconBack = () => (
-  <svg width={12} height={12} viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10 6H2M6 3L3 6l3 3" />
-  </svg>
-);
-
-const IconCheck = () => (
-  <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 12l5 5L20 7" />
-  </svg>
-);
-
-const SERVICES = [
+const SERVICES: {
+  id: ServiceType;
+  label: string;
+  sub: string;
+  icon: string;
+}[] = [
   {
-    id: "residential" as ServiceType,
+    id: "residential",
     label: "Residential",
     sub: "Home, apartment, condo",
-    icon: <IconStar />,
+    icon: "ti-home",
   },
   {
-    id: "commercial" as ServiceType,
+    id: "commercial",
     label: "Commercial",
     sub: "Office, retail, workspace",
-    icon: <IconStar />,
+    icon: "ti-building",
   },
   {
-    id: "moveout" as ServiceType,
+    id: "moveout",
     label: "Move-Out",
     sub: "Deep clean before handover",
-    icon: <IconStar />,
+    icon: "ti-door",
   },
 ];
 
-function TicketNotches() {
-  return (
-    <div
-      style={{
-        position: "absolute",
-        right: 40,
-        top: 0,
-        bottom: 0,
-        width: 0,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "space-between",
-        pointerEvents: "none",
-        zIndex: 10,
-      }}
-    >
-      <div
-        style={{
-          width: 14,
-          height: 7,
-          background: "#f1f5f9",
-          borderRadius: "0 0 100px 100px",
-          marginTop: -1,
-          border: `1px solid ${K.border}`,
-          borderTop: "none",
-        }}
-      />
-
-      <div
-        style={{
-          width: 14,
-          height: 7,
-          background: "#f1f5f9",
-          borderRadius: "100px 100px 0 0",
-          marginBottom: -1,
-          border: `1px solid ${K.border}`,
-          borderBottom: "none",
-        }}
-      />
-    </div>
-  );
-}
+const initialForm: LeadForm = {
+  name: "",
+  phone: "",
+  zip: "",
+};
 
 export default function FloatingLeadWidget() {
   const [step, setStep] = useState<Step>("closed");
-  const [selectedService, setSelectedService] = useState<ServiceType>(null);
-  const [form, setForm] = useState<LeadForm>({
-    name: "",
-    phone: "",
-    zip: "",
-  });
+  const [selectedService, setSelectedService] = useState<ServiceType | null>(
+    null
+  );
+  const [form, setForm] = useState<LeadForm>(initialForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hoveredService, setHoveredService] = useState<ServiceType | null>(null);
 
   const panelRef = useRef<HTMLDivElement>(null);
 
-  const STUB = 40;
-  const svc = SERVICES.find((s) => s.id === selectedService);
+  const selected = SERVICES.find((service) => service.id === selectedService);
 
   useEffect(() => {
     if (step === "closed") return;
 
-    const handleClickOutside = (e: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        panelRef.current &&
+        !panelRef.current.contains(event.target as Node)
+      ) {
         setStep("closed");
       }
     };
@@ -148,51 +77,79 @@ export default function FloatingLeadWidget() {
   }, [step]);
 
   useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setStep("closed");
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setStep("closed");
     };
 
     document.addEventListener("keydown", handleEscape);
     return () => document.removeEventListener("keydown", handleEscape);
   }, []);
 
-  const handleServiceSelect = (id: ServiceType) => {
-    setSelectedService(id);
+  const openMenu = () => setStep("menu");
+
+  const closeWidget = () => {
+    setStep("closed");
+    setSelectedService(null);
+    setForm(initialForm);
+    setHoveredService(null);
+  };
+
+  const selectService = (service: ServiceType) => {
+    setSelectedService(service);
     setStep("form");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleKeyboardAction = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+    action: () => void
+  ) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      action();
+    }
+  };
+
+  const updateField =
+    (field: keyof LeadForm) => (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value =
+        field === "zip"
+          ? event.target.value.replace(/\D/g, "")
+          : event.target.value;
+
+      setForm((current) => ({
+        ...current,
+        [field]: value,
+      }));
+    };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
 
     setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 900));
+    await new Promise((resolve) => setTimeout(resolve, 900));
     setIsSubmitting(false);
     setStep("success");
   };
 
-  const handleClose = () => {
-    setStep("closed");
-    setSelectedService(null);
-    setForm({ name: "", phone: "", zip: "" });
-  };
-
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    height: 44,
-    border: `1.5px solid ${K.border}`,
-    borderRadius: 0,
-    background: K.white,
-    padding: "0 14px",
-    fontFamily: "Arial, Helvetica, sans-serif",
-    fontSize: 15,
-    color: K.black,
+    height: 40,
+    border: "1px solid #e2e8f0",
+    borderRadius: 8,
+    background: "#ffffff",
+    padding: "0 12px",
+    fontFamily: FONT,
+    fontSize: 14,
+    color: "#111827",
     outline: "none",
     boxSizing: "border-box",
+    transition: "border-color 0.15s ease, box-shadow 0.15s ease",
   };
 
   return (
     <div
       ref={panelRef}
+      className="bottom-50 md:bottom-[400px]"
       style={{
         position: "fixed",
         right: 0,
@@ -201,78 +158,66 @@ export default function FloatingLeadWidget() {
         flexDirection: "column",
         alignItems: "flex-end",
       }}
-      className="bottom-30 md:bottom-[150px]"
     >
       <div
         style={{
           width: 300,
-          background: K.white,
-          border: `1.5px solid ${K.border}`,
+          background: "#ffffff",
+          border: "1px solid #e2e8f0",
+          borderRight: "none",
           borderBottom: "none",
-          borderLeft: "none",
-          boxShadow: "4px -4px 24px rgba(0,0,0,0.10)",
-          position: "relative",
-          overflow: "visible",
-          transition: "opacity 0.22s ease, transform 0.22s ease",
+          borderRadius: "12px 0 0 0",
+          boxShadow: "0 4px 24px rgba(0,0,0,0.09)",
+          overflow: "hidden",
           opacity: step !== "closed" ? 1 : 0,
-          transform: step !== "closed" ? "translateY(0)" : "translateY(12px)",
+          transform: step !== "closed" ? "translateY(0)" : "translateY(10px)",
           pointerEvents: step !== "closed" ? "auto" : "none",
+          transition: "opacity 0.2s ease, transform 0.2s ease",
         }}
       >
-        <TicketNotches />
-
         <div
           style={{
             display: "flex",
             flexDirection: "row-reverse",
-            minHeight: 340,
+            minHeight: 300,
           }}
         >
           <div
             style={{
-              width: STUB,
+              width: 40,
               flexShrink: 0,
-              background: K.blue,
-              borderLeft: `1.5px dashed rgba(255,255,255,0.35)`,
+              background: BRAND,
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "space-between",
               padding: "16px 0",
-              overflow: "hidden",
             }}
           >
             <span
               style={{
                 writingMode: "vertical-rl",
                 transform: "rotate(180deg)",
-                fontFamily: "Arial, Helvetica, sans-serif",
+                fontFamily: FONT,
                 fontSize: 10,
-                fontWeight: 700,
+                fontWeight: 600,
+                letterSpacing: "0.14em",
                 textTransform: "uppercase",
-                letterSpacing: "0.12em",
-                color: "rgba(255,255,255,0.8)",
+                color: "rgba(255,255,255,0.85)",
                 whiteSpace: "nowrap",
-                lineHeight: 1.2,
               }}
             >
               Saskia Cleaning
             </span>
 
-            <div style={{ color: "rgba(255,255,255,0.9)" }}>
-              {svc ? svc.icon : <IconStar />}
-            </div>
-
             <span
               style={{
                 writingMode: "vertical-rl",
-                fontFamily: "Arial, Helvetica, sans-serif",
+                fontFamily: FONT,
                 fontSize: 10,
-                fontWeight: 700,
+                fontWeight: 600,
                 letterSpacing: "0.1em",
-                color: "rgba(255,255,255,0.6)",
-                whiteSpace: "nowrap",
-                lineHeight: 1.2,
+                color: "rgba(255,255,255,0.5)",
               }}
             >
               MA · RI
@@ -285,61 +230,58 @@ export default function FloatingLeadWidget() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                padding: "12px 14px",
-                borderBottom: `1px solid ${K.border}`,
-                background: K.bg,
+                padding: "11px 14px",
+                borderBottom: "1px solid #f1f5f9",
+                background: "#f8fafc",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 {step === "form" && (
                   <button
                     type="button"
                     onClick={() => setStep("menu")}
+                    aria-label="Back"
                     style={{
                       background: "none",
                       border: "none",
                       cursor: "pointer",
-                      color: K.muted,
-                      padding: 4,
-                      minWidth: 32,
-                      minHeight: 32,
+                      color: "#64748b",
+                      fontSize: 18,
                       display: "flex",
                       alignItems: "center",
-                      justifyContent: "center",
+                      padding: 2,
                     }}
                   >
-                    <IconBack />
+                    <i className="ti ti-arrow-left" />
                   </button>
                 )}
 
                 <div>
                   <p
                     style={{
-                      fontFamily: "Georgia, 'Times New Roman', serif",
-                      fontSize: 15,
-                      fontWeight: 700,
-                      color: K.black,
+                      fontFamily: FONT,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "#0f172a",
                       margin: 0,
                       lineHeight: 1.25,
                     }}
                   >
-                    {step === "form" && svc
-                      ? svc.label
+                    {step === "form" && selected
+                      ? selected.label
                       : step === "success"
-                      ? "You're all set!"
-                      : "Free Quote"}
+                        ? "You're all set!"
+                        : "Free quote"}
                   </p>
 
                   <p
                     style={{
-                      fontFamily: "Arial, Helvetica, sans-serif",
+                      fontFamily: FONT,
                       fontSize: 11,
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.1em",
-                      color: K.muted,
+                      color: "#64748b",
                       margin: 0,
-                      marginTop: 3,
+                      marginTop: 2,
+                      letterSpacing: "0.03em",
                     }}
                   >
                     {step === "success"
@@ -351,107 +293,147 @@ export default function FloatingLeadWidget() {
 
               <button
                 type="button"
-                onClick={handleClose}
+                onClick={closeWidget}
+                aria-label="Close"
                 style={{
                   width: 28,
                   height: 28,
                   background: "none",
-                  border: `1.5px solid ${K.border}`,
+                  border: "1px solid #e2e8f0",
+                  borderRadius: 6,
                   cursor: "pointer",
-                  color: K.muted,
+                  color: "#64748b",
+                  fontSize: 15,
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                   flexShrink: 0,
                 }}
               >
-                <IconClose />
+                <i className="ti ti-x" />
               </button>
             </div>
 
             {step === "menu" && (
-              <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div
+                style={{
+                  padding: "12px 14px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
                 <p
                   style={{
-                    fontFamily: "Arial, Helvetica, sans-serif",
+                    fontFamily: FONT,
                     fontSize: 11,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     textTransform: "uppercase",
                     letterSpacing: "0.12em",
-                    color: K.muted,
-                    margin: "0 0 6px",
+                    color: "#94a3b8",
+                    margin: "0 0 4px",
                   }}
                 >
                   What needs cleaning?
                 </p>
 
-                {SERVICES.map((s) => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => handleServiceSelect(s.id)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      padding: "12px 12px",
-                      minHeight: 52,
-                      background: K.white,
-                      border: `1.5px solid ${K.border}`,
-                      cursor: "pointer",
-                      textAlign: "left",
-                      width: "100%",
-                    }}
-                  >
-                    <span style={{ color: K.blue, display: "flex" }}>
-                      {s.icon}
-                    </span>
+                {SERVICES.map((service) => {
+                  const isHovered = hoveredService === service.id;
 
-                    <div style={{ flex: 1 }}>
-                      <p
+                  return (
+                    <button
+                      key={service.id}
+                      type="button"
+                      onClick={() => selectService(service.id)}
+                      onMouseEnter={() => setHoveredService(service.id)}
+                      onMouseLeave={() => setHoveredService(null)}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 12,
+                        padding: "10px 12px",
+                        background: isHovered ? "#f8fafc" : "#ffffff",
+                        border: `1px solid ${isHovered ? BRAND : "#e2e8f0"}`,
+                        borderRadius: 8,
+                        cursor: "pointer",
+                        textAlign: "left",
+                        width: "100%",
+                        transition:
+                          "border-color 0.15s ease, background 0.15s ease",
+                      }}
+                    >
+                      <div
                         style={{
-                          fontFamily: "Arial, Helvetica, sans-serif",
-                          fontSize: 14,
-                          fontWeight: 700,
-                          color: K.black,
-                          margin: 0,
-                          lineHeight: 1.3,
+                          width: 32,
+                          height: 32,
+                          background: "#e0f2fe",
+                          borderRadius: 8,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          flexShrink: 0,
+                          color: BRAND,
+                          fontSize: 17,
                         }}
                       >
-                        {s.label}
-                      </p>
+                        <i className={`ti ${service.icon}`} aria-hidden="true" />
+                      </div>
 
-                      <p
-                        style={{
-                          fontFamily: "Arial, Helvetica, sans-serif",
-                          fontSize: 12,
-                          color: K.muted,
-                          margin: 0,
-                          marginTop: 2,
-                          lineHeight: 1.35,
-                        }}
-                      >
-                        {s.sub}
-                      </p>
-                    </div>
+                      <div style={{ flex: 1 }}>
+                        <p
+                          style={{
+                            fontFamily: FONT,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: "#0f172a",
+                            margin: 0,
+                            lineHeight: 1.3,
+                          }}
+                        >
+                          {service.label}
+                        </p>
 
-                    <IconArrow />
-                  </button>
-                ))}
+                        <p
+                          style={{
+                            fontFamily: FONT,
+                            fontSize: 12,
+                            color: "#64748b",
+                            margin: 0,
+                            marginTop: 2,
+                          }}
+                        >
+                          {service.sub}
+                        </p>
+                      </div>
+
+                      <i
+                        className="ti ti-chevron-right"
+                        style={{ color: "#94a3b8", fontSize: 14 }}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  );
+                })}
               </div>
             )}
 
             {step === "form" && (
-              <form onSubmit={handleSubmit} style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+              <form
+                onSubmit={handleSubmit}
+                style={{
+                  padding: "12px 14px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
                 <input
                   style={inputStyle}
                   type="text"
                   placeholder="Your name"
                   required
                   value={form.name}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, name: e.target.value }))
-                  }
+                  onChange={updateField("name")}
                 />
 
                 <input
@@ -460,9 +442,7 @@ export default function FloatingLeadWidget() {
                   placeholder="Phone number"
                   required
                   value={form.phone}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, phone: e.target.value }))
-                  }
+                  onChange={updateField("phone")}
                 />
 
                 <input
@@ -472,29 +452,35 @@ export default function FloatingLeadWidget() {
                   required
                   maxLength={5}
                   value={form.zip}
-                  onChange={(e) =>
-                    setForm((f) => ({
-                      ...f,
-                      zip: e.target.value.replace(/\D/g, ""),
-                    }))
-                  }
+                  onChange={updateField("zip")}
                 />
 
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   style={{
-                    height: 44,
-                    background: isSubmitting ? K.muted : K.blue,
+                    height: 40,
+                    background: isSubmitting ? "#94a3b8" : BRAND,
                     border: "none",
-                    color: K.white,
-                    fontFamily: "Arial, Helvetica, sans-serif",
-                    fontSize: 12,
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.12em",
+                    borderRadius: 8,
+                    color: "#ffffff",
+                    fontFamily: FONT,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    letterSpacing: "0.05em",
                     cursor: isSubmitting ? "not-allowed" : "pointer",
-                    marginTop: 2,
+                    marginTop: 4,
+                    transition: "background 0.15s ease",
+                  }}
+                  onMouseEnter={(event) => {
+                    if (!isSubmitting) {
+                      event.currentTarget.style.background = BRAND_DARK;
+                    }
+                  }}
+                  onMouseLeave={(event) => {
+                    if (!isSubmitting) {
+                      event.currentTarget.style.background = BRAND;
+                    }
                   }}
                 >
                   {isSubmitting ? "Sending…" : "Text me my price"}
@@ -508,65 +494,67 @@ export default function FloatingLeadWidget() {
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
-                  padding: "24px 16px",
+                  padding: "28px 16px",
                   textAlign: "center",
-                  gap: 8,
+                  gap: 10,
                 }}
               >
                 <div
                   style={{
                     width: 44,
                     height: 44,
-                    background: K.green,
+                    background: "#22c55e",
+                    borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
+                    color: "#ffffff",
+                    fontSize: 22,
                   }}
                 >
-                  <IconCheck />
+                  <i className="ti ti-check" />
                 </div>
 
                 <p
                   style={{
-                    fontFamily: "Georgia, 'Times New Roman', serif",
-                    fontSize: 17,
-                    fontWeight: 700,
-                    color: K.black,
+                    fontFamily: FONT,
+                    fontSize: 15,
+                    fontWeight: 600,
+                    color: "#0f172a",
                     margin: 0,
-                    lineHeight: 1.25,
                   }}
                 >
-                  Request received!
+                  Request received
                 </p>
 
                 <p
                   style={{
-                    fontFamily: "Arial, Helvetica, sans-serif",
-                    fontSize: 14,
-                    color: K.muted,
+                    fontFamily: FONT,
+                    fontSize: 13,
+                    color: "#64748b",
                     margin: 0,
-                    lineHeight: 1.45,
+                    lineHeight: 1.5,
                   }}
                 >
                   We'll text{" "}
-                  <strong style={{ color: K.black }}>{form.phone}</strong> your
-                  price shortly.
+                  <strong style={{ color: "#0f172a" }}>{form.phone}</strong>{" "}
+                  your price within 5 minutes.
                 </p>
 
                 <button
                   type="button"
-                  onClick={handleClose}
+                  onClick={closeWidget}
                   style={{
                     background: "none",
                     border: "none",
                     cursor: "pointer",
-                    fontFamily: "Arial, Helvetica, sans-serif",
+                    fontFamily: FONT,
                     fontSize: 12,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     textTransform: "uppercase",
                     letterSpacing: "0.08em",
-                    color: K.muted,
-                    marginTop: 10,
+                    color: "#94a3b8",
+                    marginTop: 8,
                     padding: "6px 10px",
                   }}
                 >
@@ -578,113 +566,84 @@ export default function FloatingLeadWidget() {
         </div>
       </div>
 
-      {/* Collapsed/Open Trigger */}
-      <div
-        onClick={() => setStep(step === "closed" ? "menu" : "closed")}
-        role="button"
-        tabIndex={0}
-        aria-label={
-          step !== "closed" ? "Close quote widget" : "Get a free cleaning quote"
-        }
-        style={{
-          display: "flex",
-          flexDirection: "row-reverse",
-          alignItems: "center",
-          background: "none",
-          border: "none",
-          padding: 0,
-          cursor: "pointer",
-          outline: "none",
-          userSelect: "none",
-        }}
-        onKeyPress={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            setStep(step === "closed" ? "menu" : "closed");
-          }
-        }}
-      >
-        <div>
-          {step !== "closed" ? (
-            <IconClose />
-          ) : (
-            <div
-              style={{
-                width: STUB,
-                minHeight: step === "closed" ? 158 : 46,
-                background: K.blue,
-                color: K.white,
-                padding: "14px 0",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 10,
-                transition: "all 0.2s ease",
-                overflow: "hidden",
-              }}
-            >
-              <IconStar />
-              <span
-                style={{
-                  writingMode: "vertical-rl",
-                  transform: "rotate(180deg)",
-                  fontFamily: "Arial, Helvetica, sans-serif",
-                  fontSize: 10,
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.12em",
-                  color: "rgba(255,255,255,0.9)",
-                  userSelect: "none",
-                  whiteSpace: "nowrap",
-                  lineHeight: 1.2,
-                  textAlign: "center",
-                  maxHeight: "100%",
-                  overflow: "hidden",
-                }}
-              >
-                Free Quote
-              </span>
-            </div>
-          )}
-        </div>
+      {step === "closed" && (
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Get a free cleaning quote"
+          onClick={openMenu}
+          onKeyDown={(event) => handleKeyboardAction(event, openMenu)}
+          style={{
+            width: 40,
+            background: BRAND,
+            borderRadius: "0 0 0 10px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            padding: "18px 0",
+            cursor: "pointer",
+            color: "#ffffff",
+            fontSize: 20,
+            boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
+            userSelect: "none",
+          }}
+        >
+          <i className="ti ti-sparkles" aria-hidden="true" />
 
-        {step !== "closed" && (
-          <div
+          <span
             style={{
-              width: 300 - STUB,
-              background: K.white,
-              borderTop: `1.5px solid ${K.border}`,
-              padding: "12px 14px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-end",
-              boxShadow: "2px 0 8px rgba(0,0,0,0.06)",
-              cursor: "pointer",
+              writingMode: "vertical-rl",
+              transform: "rotate(180deg)",
+              fontFamily: FONT,
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "rgba(255,255,255,0.9)",
+              whiteSpace: "nowrap",
             }}
           >
-            <p
-              style={{
-                fontFamily: "Georgia, 'Times New Roman', serif",
-                fontSize: 15,
-                fontWeight: 700,
-                color: K.black,
-                margin: 0,
-                lineHeight: 1.25,
-              }}
-            >
-              Close
-            </p>
-          </div>
-        )}
-      </div>
+            Free Quote
+          </span>
+        </div>
+      )}
 
-      <style>{`
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-      `}</style>
+      {step !== "closed" && (
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Close quote widget"
+          onClick={closeWidget}
+          onKeyDown={(event) => handleKeyboardAction(event, closeWidget)}
+          style={{
+            width: 300,
+            background: "#ffffff",
+            borderTop: "1px solid #f1f5f9",
+            borderLeft: "1px solid #e2e8f0",
+            padding: "10px 14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            cursor: "pointer",
+            userSelect: "none",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: FONT,
+              fontSize: 12,
+              fontWeight: 600,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              color: "#94a3b8",
+            }}
+          >
+            Close
+          </span>
+        </div>
+      )}
     </div>
   );
 }
