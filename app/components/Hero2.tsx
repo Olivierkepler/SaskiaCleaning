@@ -108,7 +108,9 @@ export default function Hero() {
                 />
               </div>
             </div> */}
+             <div className="relative z-10 p-10 ">
              <CleaningOrbit />  
+             </div>
           </div>
     
         </div>

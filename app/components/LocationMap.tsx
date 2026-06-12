@@ -11,7 +11,7 @@ export default function LocationMapSection() {
   const encodedAddress = encodeURIComponent(address);
 
   return (
-    <section className="bg-white px-6 py-24">
+    <section id="location" className="bg-white px-6 py-24">
       <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[0.9fr_1.1fr]">
         {/* Left Text */}
         <motion.div
