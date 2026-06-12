@@ -179,13 +179,13 @@ export default function FloatingLeadWidget() {
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
-    height: 38,
+    height: 44,
     border: `1.5px solid ${K.border}`,
     borderRadius: 0,
     background: K.white,
-    padding: "0 12px",
+    padding: "0 14px",
     fontFamily: "Arial, Helvetica, sans-serif",
-    fontSize: 13,
+    fontSize: 15,
     color: K.black,
     outline: "none",
     boxSizing: "border-box",
@@ -204,7 +204,7 @@ export default function FloatingLeadWidget() {
         alignItems: "flex-start",
       }}
 
-      className="bottom-30 md:bottom-[500]"
+      className="bottom-30 md:bottom-[450]"
     >
       <div
         style={{
@@ -224,7 +224,7 @@ export default function FloatingLeadWidget() {
       >
         <TicketNotches />
 
-        <div style={{ display: "flex", minHeight: 320 }}>
+        <div style={{ display: "flex", minHeight: 340 }}>
           <div
             style={{
               width: STUB,
@@ -235,7 +235,8 @@ export default function FloatingLeadWidget() {
               flexDirection: "column",
               alignItems: "center",
               justifyContent: "space-between",
-              padding: "14px 0",
+              padding: "16px 0",
+              overflow: "hidden",
             }}
           >
             <span
@@ -243,11 +244,13 @@ export default function FloatingLeadWidget() {
                 writingMode: "vertical-rl",
                 transform: "rotate(180deg)",
                 fontFamily: "Arial, Helvetica, sans-serif",
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: 700,
                 textTransform: "uppercase",
-                letterSpacing: "0.18em",
+                letterSpacing: "0.12em",
                 color: "rgba(255,255,255,0.8)",
+                whiteSpace: "nowrap",
+                lineHeight: 1.2,
               }}
             >
               Saskia Cleaning
@@ -261,10 +264,12 @@ export default function FloatingLeadWidget() {
               style={{
                 writingMode: "vertical-rl",
                 fontFamily: "Arial, Helvetica, sans-serif",
-                fontSize: 9,
+                fontSize: 10,
                 fontWeight: 700,
-                letterSpacing: "0.14em",
+                letterSpacing: "0.1em",
                 color: "rgba(255,255,255,0.6)",
+                whiteSpace: "nowrap",
+                lineHeight: 1.2,
               }}
             >
               MA · RI
@@ -277,7 +282,7 @@ export default function FloatingLeadWidget() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                padding: "10px 12px",
+                padding: "12px 14px",
                 borderBottom: `1px solid ${K.border}`,
                 background: K.bg,
               }}
@@ -292,8 +297,12 @@ export default function FloatingLeadWidget() {
                       border: "none",
                       cursor: "pointer",
                       color: K.muted,
-                      padding: 2,
+                      padding: 4,
+                      minWidth: 32,
+                      minHeight: 32,
                       display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     <IconBack />
@@ -304,10 +313,11 @@ export default function FloatingLeadWidget() {
                   <p
                     style={{
                       fontFamily: "Georgia, 'Times New Roman', serif",
-                      fontSize: 13,
+                      fontSize: 15,
                       fontWeight: 700,
                       color: K.black,
                       margin: 0,
+                      lineHeight: 1.25,
                     }}
                   >
                     {step === "form" && svc
@@ -320,13 +330,13 @@ export default function FloatingLeadWidget() {
                   <p
                     style={{
                       fontFamily: "Arial, Helvetica, sans-serif",
-                      fontSize: 9,
+                      fontSize: 11,
                       fontWeight: 700,
                       textTransform: "uppercase",
-                      letterSpacing: "0.12em",
+                      letterSpacing: "0.1em",
                       color: K.muted,
                       margin: 0,
-                      marginTop: 2,
+                      marginTop: 3,
                     }}
                   >
                     {step === "success"
@@ -340,8 +350,8 @@ export default function FloatingLeadWidget() {
                 type="button"
                 onClick={handleClose}
                 style={{
-                  width: 24,
-                  height: 24,
+                  width: 28,
+                  height: 28,
                   background: "none",
                   border: `1.5px solid ${K.border}`,
                   cursor: "pointer",
@@ -349,6 +359,7 @@ export default function FloatingLeadWidget() {
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  flexShrink: 0,
                 }}
               >
                 <IconClose />
@@ -356,16 +367,16 @@ export default function FloatingLeadWidget() {
             </div>
 
             {step === "menu" && (
-              <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6 }}>
+              <div style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
                 <p
                   style={{
                     fontFamily: "Arial, Helvetica, sans-serif",
-                    fontSize: 9,
+                    fontSize: 11,
                     fontWeight: 700,
                     textTransform: "uppercase",
-                    letterSpacing: "0.14em",
+                    letterSpacing: "0.12em",
                     color: K.muted,
-                    margin: "0 0 4px",
+                    margin: "0 0 6px",
                   }}
                 >
                   What needs cleaning?
@@ -379,8 +390,9 @@ export default function FloatingLeadWidget() {
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 10,
-                      padding: "9px 10px",
+                      gap: 12,
+                      padding: "12px 12px",
+                      minHeight: 52,
                       background: K.white,
                       border: `1.5px solid ${K.border}`,
                       cursor: "pointer",
@@ -396,10 +408,11 @@ export default function FloatingLeadWidget() {
                       <p
                         style={{
                           fontFamily: "Arial, Helvetica, sans-serif",
-                          fontSize: 12,
+                          fontSize: 14,
                           fontWeight: 700,
                           color: K.black,
                           margin: 0,
+                          lineHeight: 1.3,
                         }}
                       >
                         {s.label}
@@ -408,9 +421,11 @@ export default function FloatingLeadWidget() {
                       <p
                         style={{
                           fontFamily: "Arial, Helvetica, sans-serif",
-                          fontSize: 10,
+                          fontSize: 12,
                           color: K.muted,
                           margin: 0,
+                          marginTop: 2,
+                          lineHeight: 1.35,
                         }}
                       >
                         {s.sub}
@@ -424,7 +439,7 @@ export default function FloatingLeadWidget() {
             )}
 
             {step === "form" && (
-              <form onSubmit={handleSubmit} style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 7 }}>
+              <form onSubmit={handleSubmit} style={{ padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
                 <input
                   style={inputStyle}
                   type="text"
@@ -466,16 +481,17 @@ export default function FloatingLeadWidget() {
                   type="submit"
                   disabled={isSubmitting}
                   style={{
-                    height: 38,
+                    height: 44,
                     background: isSubmitting ? K.muted : K.blue,
                     border: "none",
                     color: K.white,
                     fontFamily: "Arial, Helvetica, sans-serif",
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: 700,
                     textTransform: "uppercase",
-                    letterSpacing: "0.14em",
+                    letterSpacing: "0.12em",
                     cursor: isSubmitting ? "not-allowed" : "pointer",
+                    marginTop: 2,
                   }}
                 >
                   {isSubmitting ? "Sending…" : "Text me my price"}
@@ -510,10 +526,11 @@ export default function FloatingLeadWidget() {
                 <p
                   style={{
                     fontFamily: "Georgia, 'Times New Roman', serif",
-                    fontSize: 15,
+                    fontSize: 17,
                     fontWeight: 700,
                     color: K.black,
                     margin: 0,
+                    lineHeight: 1.25,
                   }}
                 >
                   Request received!
@@ -522,9 +539,10 @@ export default function FloatingLeadWidget() {
                 <p
                   style={{
                     fontFamily: "Arial, Helvetica, sans-serif",
-                    fontSize: 12,
+                    fontSize: 14,
                     color: K.muted,
                     margin: 0,
+                    lineHeight: 1.45,
                   }}
                 >
                   We'll text{" "}
@@ -540,12 +558,13 @@ export default function FloatingLeadWidget() {
                     border: "none",
                     cursor: "pointer",
                     fontFamily: "Arial, Helvetica, sans-serif",
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: 700,
                     textTransform: "uppercase",
-                    letterSpacing: "0.1em",
+                    letterSpacing: "0.08em",
                     color: K.muted,
-                    marginTop: 8,
+                    marginTop: 10,
+                    padding: "6px 10px",
                   }}
                 >
                   Close
@@ -575,16 +594,17 @@ export default function FloatingLeadWidget() {
         <div
           style={{
             width: STUB,
-            minHeight: step === "closed" ? 150 : 42,
+            minHeight: step === "closed" ? 158 : 46,
             background: K.blue,
             color: K.white,
-            padding: "12px 0",
+            padding: "14px 0",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            gap: 8,
+            gap: 10,
             transition: "all 0.2s ease",
+            overflow: "hidden",
           }}
         >
           {step !== "closed" ? (
@@ -598,13 +618,17 @@ export default function FloatingLeadWidget() {
                   writingMode: "vertical-rl",
                   transform: "rotate(180deg)",
                   fontFamily: "Arial, Helvetica, sans-serif",
-                  fontSize: 9,
+                  fontSize: 10,
                   fontWeight: 700,
                   textTransform: "uppercase",
-                  letterSpacing: "0.18em",
+                  letterSpacing: "0.12em",
                   color: "rgba(255,255,255,0.9)",
                   userSelect: "none",
                   whiteSpace: "nowrap",
+                  lineHeight: 1.2,
+                  textAlign: "center",
+                  maxHeight: "100%",
+                  overflow: "hidden",
                 }}
               >
                 Free Quote.
@@ -619,7 +643,7 @@ export default function FloatingLeadWidget() {
               width: 300 - STUB,
               background: K.white,
               borderTop: `1.5px solid ${K.border}`,
-              padding: "10px 12px",
+              padding: "12px 14px",
               display: "flex",
               alignItems: "center",
               boxShadow: "-2px 0 8px rgba(0,0,0,0.06)",
@@ -628,10 +652,11 @@ export default function FloatingLeadWidget() {
             <p
               style={{
                 fontFamily: "Georgia, 'Times New Roman', serif",
-                fontSize: 13,
+                fontSize: 15,
                 fontWeight: 700,
                 color: K.black,
                 margin: 0,
+                lineHeight: 1.25,
               }}
             >
               Close
