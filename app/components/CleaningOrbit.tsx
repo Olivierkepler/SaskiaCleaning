@@ -193,7 +193,7 @@ export default function ServicesOrbit() {
                 priority
                 className="
                   h-full w-full object-contain
-                  drop-shadow-[0_20px_38px_rgba(15,23,42,0.2)]
+             rounded-full shadow-lg
                 "
                 style={{ objectPosition: "bottom" }}
               />
@@ -245,13 +245,13 @@ export default function ServicesOrbit() {
             }}
             whileHover={{ scale: 1.04, y: -4 }}
           >
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full border border-sky-400 bg-sky-50 text-sky-500">
+            <div className="flex h-10 w-10  flex-shrink-0 items-center justify-center rounded-full border border-sky-400 bg-sky-50 text-sky-500">
               <Image
                 src={service.image}
                 alt=""
                 width={28}
                 height={28}
-                className="h-7 w-7 object-contain rounded-full"
+                className="h-7 w-7 object-contain rounded-full "
               />
             </div>
 
