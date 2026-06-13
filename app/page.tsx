@@ -38,7 +38,7 @@ export default function Home() {
       >
          
         
-        <div className="hidden bg-white sm:block">
+        <div className=" bg-white">
           {/* <InfoBar /> */}
           <AdCardGrid />
         </div>

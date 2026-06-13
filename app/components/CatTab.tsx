@@ -1481,6 +1481,8 @@ function handleFrequencyField() {
             tracking-tight
             sm:text-4xl
             lg:text-5xl
+            text-black
+            dark:text-black
           "
           style={{
             fontWeight: 300,
@@ -1489,6 +1491,8 @@ function handleFrequencyField() {
         >
           See Your Cleaning Price <span style={{ color: K.blue }}>Instantly</span>
         </motion.h2>
+   
+        
         <motion.p
           variants={fadeUp}
           className="my-4 mx-auto w-[80%] text-[16px] font-medium uppercase tracking-[0.09em] text-slate-600"

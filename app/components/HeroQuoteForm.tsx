@@ -166,7 +166,7 @@ export default function HeroBooking() {
           Professional Home Cleaning You Can Trust.
         </h1>
 
-        <p className="text-[18px] font-medium uppercase tracking-[0.09em] text-white/90 sm:text-[20px]">
+        <p className="text-[16px] font-medium uppercase tracking-[0.09em] text-white/90 sm:text-[18px]">
           Get a free estimate in under a minute.
         </p>
 
