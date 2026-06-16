@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
@@ -67,21 +68,26 @@ const cardVariants = {
 };
 
 function AdCard({ card, index }: { card: AdCardItem; index: number }) {
-  const tagColor = card.isRedTag ? "bg-red-700" : "bg-sky-500";
+  const [isMobile, setIsMobile] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
 
-  return (
-    <motion.article
-      variants={cardVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, amount: 0.25 }}
-      transition={{
-        duration: 0.55,
-        delay: index * 0.08,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className="group flex h-full flex-col overflow-hidden rounded-xl border border-sky-500 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
-    >
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const updateIsMobile = () => setIsMobile(mediaQuery.matches);
+
+    updateIsMobile();
+    setHasMounted(true);
+    mediaQuery.addEventListener("change", updateIsMobile);
+
+    return () => mediaQuery.removeEventListener("change", updateIsMobile);
+  }, []);
+
+  const tagColor = card.isRedTag ? "bg-red-700" : "bg-sky-500";
+  const className =
+    "group flex h-full flex-col overflow-hidden rounded-xl border border-sky-500 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl";
+
+  const cardContent = (
+    <>
       <div className="relative aspect-[4/3] w-full overflow-hidden">
         <Image
           src={card.imageUrl}
@@ -122,6 +128,27 @@ function AdCard({ card, index }: { card: AdCardItem; index: number }) {
           {card.ctaLabel}
         </a>
       </div>
+    </>
+  );
+
+  if (!hasMounted || isMobile) {
+    return <article className={className}>{cardContent}</article>;
+  }
+
+  return (
+    <motion.article
+      variants={cardVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{
+        duration: 0.55,
+        delay: index * 0.08,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className={className}
+    >
+      {cardContent}
     </motion.article>
   );
 }
