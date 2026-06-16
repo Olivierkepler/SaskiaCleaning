@@ -2,6 +2,7 @@
 
 import { sql } from "../lib/db";
 import { redirect } from "next/navigation";
+import type { BookingStatus } from "../lib/booking-status";
 import DashboardTable from "./DashboardTable";
 
 type BookingRequest = {
@@ -11,6 +12,8 @@ type BookingRequest = {
   mobile: string | null;
   bedrooms: number;
   bathrooms: number;
+  status: BookingStatus;
+  seen: boolean;
   created_at: string;
 };
 
@@ -36,17 +39,25 @@ export default async function DashboardPage({
   `;
 
   return (
-    <main className="min-h-screen bg-slate-100 p-6">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="mb-2 text-3xl font-bold text-slate-900">
-          Booking Requests
-        </h1>
+    <main className="min-h-screen bg-slate-100 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
+          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+            Booking Requests
+          </h1>
 
-        <p className="mb-6 text-slate-600">
-          Total bookings: {bookings.length}
-        </p>
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">
+            Total bookings:{" "}
+            <span className="font-semibold text-slate-900">
+              {bookings.length}
+            </span>
+          </p>
+        </div>
 
-                <DashboardTable bookings={bookings as unknown as BookingRequest[]} dashboardKey={params.key!} />
+        <DashboardTable
+          bookings={bookings as unknown as BookingRequest[]}
+          dashboardKey={params.key!}
+        />
       </div>
     </main>
   );

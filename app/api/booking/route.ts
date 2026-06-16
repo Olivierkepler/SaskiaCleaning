@@ -15,14 +15,16 @@ export async function POST(req: Request) {
         email,
         mobile,
         bedrooms,
-        bathrooms
+        bathrooms,
+        seen
       )
       VALUES (
         ${name},
         ${email},
         ${mobile || null},
         ${bedrooms},
-        ${bathrooms}
+        ${bathrooms},
+        false
       )
       RETURNING *;
     `;
