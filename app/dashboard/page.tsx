@@ -1,9 +1,9 @@
 // app/dashboard/page.tsx
-
 import { sql } from "../lib/db";
 import { redirect } from "next/navigation";
 import type { BookingStatus } from "../lib/booking-status";
 import DashboardTable from "./DashboardTable";
+import Navbar from "./components/Navbar";
 
 type BookingRequest = {
   id: number;
@@ -38,14 +38,33 @@ export default async function DashboardPage({
     ORDER BY created_at DESC;
   `;
 
+  const typedBookings = bookings as unknown as BookingRequest[];
+  const unseenBookings = typedBookings
+    .filter((booking) => !booking.seen)
+    .slice(0, 10)
+    .map(({ id, name, email, created_at }) => ({
+      id,
+      name,
+      email,
+      created_at,
+    }));
+  const unseenCount = typedBookings.filter((booking) => !booking.seen).length;
+
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-6 sm:px-6 lg:px-8">
+      <Navbar
+        dashboardKey={params.key!}
+        unseenCount={unseenCount}
+        unseenBookings={unseenBookings}
+      />
       <div className="mx-auto max-w-7xl">
+       
+  
         <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
             Booking Requests
           </h1>
-
+  
           <p className="mt-2 text-sm text-slate-600 sm:text-base">
             Total bookings:{" "}
             <span className="font-semibold text-slate-900">
@@ -53,9 +72,9 @@ export default async function DashboardPage({
             </span>
           </p>
         </div>
-
+  
         <DashboardTable
-          bookings={bookings as unknown as BookingRequest[]}
+          bookings={typedBookings}
           dashboardKey={params.key!}
         />
       </div>
