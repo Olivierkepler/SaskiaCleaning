@@ -2,6 +2,7 @@
 
 import { NextResponse } from "next/server";
 import { sql } from "../../lib/db";
+import { normalizeReferralCode, type ReferralCodeRow } from "../../lib/referrals";
 
 function parseNonNegativeInteger(value: unknown): number | null {
   const parsed = Number(value);
@@ -43,6 +44,7 @@ export async function POST(req: Request) {
       estimateMid,
       estimateHigh,
       notes,
+      referralCode,
     } = body;
 
     if (!name || !email) {
@@ -84,6 +86,32 @@ export async function POST(req: Request) {
 
     const extrasArray = Array.isArray(extras) ? extras : [];
 
+    const normalizedReferralCode =
+      referralCode != null && String(referralCode).trim() !== ""
+        ? normalizeReferralCode(String(referralCode))
+        : null;
+
+    let activeReferralCode: ReferralCodeRow | null = null;
+
+    if (normalizedReferralCode) {
+      const referralRows = await sql`
+        SELECT *
+        FROM referral_codes
+        WHERE code = ${normalizedReferralCode}
+          AND is_active = true
+        LIMIT 1
+      `;
+
+      activeReferralCode = (referralRows[0] as ReferralCodeRow | undefined) ?? null;
+
+      if (!activeReferralCode) {
+        return NextResponse.json(
+          { error: "Invalid referral code." },
+          { status: 400 }
+        );
+      }
+    }
+
     const result = await sql`
       INSERT INTO booking_requests (
         name,
@@ -100,6 +128,7 @@ export async function POST(req: Request) {
         estimate_mid,
         estimate_high,
         notes,
+        referral_code,
         seen
       )
       VALUES (
@@ -117,14 +146,59 @@ export async function POST(req: Request) {
         ${estimateMid ?? null},
         ${estimateHigh ?? null},
         ${notes || null},
+        ${normalizedReferralCode},
         false
       )
       RETURNING *;
     `;
 
+    const booking = result[0];
+
+    if (activeReferralCode && booking) {
+      try {
+        await sql`
+          INSERT INTO referrals (
+            referral_code_id,
+            code,
+            booking_request_id,
+            referred_name,
+            referred_email,
+            reward_amount,
+            friend_discount_amount,
+            status
+          )
+          VALUES (
+            ${activeReferralCode.id},
+            ${activeReferralCode.code},
+            ${booking.id},
+            ${name},
+            ${email},
+            ${activeReferralCode.reward_amount},
+            ${activeReferralCode.friend_discount_amount},
+            'pending'
+          )
+        `;
+
+        await sql`
+          UPDATE referral_codes
+          SET
+            usage_count = usage_count + 1,
+            updated_at = now()
+          WHERE id = ${activeReferralCode.id}
+        `;
+      } catch (referralError) {
+        console.error("Referral tracking failed after booking insert:", referralError);
+
+        return NextResponse.json(
+          { error: "Failed to save booking referral tracking." },
+          { status: 500 }
+        );
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      booking: result[0],
+      booking,
     });
   } catch (error) {
     console.error(error);
