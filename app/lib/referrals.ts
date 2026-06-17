@@ -158,18 +158,31 @@ export function generateReferralCodeWithRewardSuffix(name: string): string {
   return `${referralNameBase(name)}20`;
 }
 
-export const PUBLIC_REFERRAL_BOOKING_URL = "https://saskiaservices.com/#quote";
+export const PUBLIC_REFERRAL_SITE_ORIGIN = "https://saskiaservices.com";
 
-export function isValidReferralEmail(email: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-export function buildReferralLink(): string {
-  return PUBLIC_REFERRAL_BOOKING_URL;
+export function buildReferralLink(code: string): string {
+  const normalizedCode = normalizeReferralCode(code);
+  return `${PUBLIC_REFERRAL_SITE_ORIGIN}/?ref=${encodeURIComponent(normalizedCode)}#quote`;
 }
 
 export function buildReferralShareMessage(code: string): string {
-  return `Use my Saskia Cleaning referral code ${code} for $20 off your first cleaning: ${PUBLIC_REFERRAL_BOOKING_URL}`;
+  const normalizedCode = normalizeReferralCode(code);
+  return `Use my Saskia Cleaning referral code ${normalizedCode} for $20 off your first cleaning: ${buildReferralLink(normalizedCode)}`;
+}
+
+export function parseReferralCodeFromSearchParams(search: string): string | null {
+  const params = new URLSearchParams(
+    search.startsWith("?") ? search : `?${search}`,
+  );
+  const ref = params.get("ref");
+  if (!ref?.trim()) return null;
+
+  const normalized = normalizeReferralCode(ref);
+  return normalized || null;
+}
+
+export function isValidReferralEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 export function generatePublicReferralCodeCandidates(name: string): string[] {

@@ -7,7 +7,7 @@ import { Calendar, ChevronDown, MapPin, SlidersHorizontal } from "lucide-react";
 import { MASSACHUSETTS_LOCATIONS } from "@/app/data/massachusettsLocations";
 import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
 import BookingSummary from "@/app/components/BookingSummary";
-import { normalizeReferralCode } from "@/app/lib/referrals";
+import { normalizeReferralCode, parseReferralCodeFromSearchParams } from "@/app/lib/referrals";
 import { IoChatbubblesOutline } from "react-icons/io5";
 const K = {
   blue:         "#38BDF8",
@@ -1232,6 +1232,7 @@ export default function CleaningEstimator() {
   const [contactNotes, setContactNotes] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [referralCodeError, setReferralCodeError] = useState("");
+  const urlPrefilledReferralCode = useRef<string | null>(null);
   const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(new Set());
 
   const handleStandardAddonsChange = useCallback((addons: Set<string>) => {
@@ -1304,6 +1305,16 @@ export default function CleaningEstimator() {
   const mobileSearchSummary = `${locCity}, ${locState} · ${date ? formatDate(date) : "Select date"} · ${optionsOpen ? "Details open" : "Customize"}`;
 
   useEffect(() => {
+    const prefilledReferralCode = parseReferralCodeFromSearchParams(
+      window.location.search,
+    );
+    if (!prefilledReferralCode) return;
+
+    urlPrefilledReferralCode.current = prefilledReferralCode;
+    setReferralCode(prefilledReferralCode);
+  }, []);
+
+  useEffect(() => {
     function handle(e: MouseEvent) {
       if (!rootRef.current?.contains(e.target as Node)) {
         setLocOpen(false);
@@ -1353,7 +1364,7 @@ export default function CleaningEstimator() {
     setBookingFormOpen(false);
     setBookingStatus("idle");
     setBookingErrorMessage("");
-    setReferralCode("");
+    setReferralCode(urlPrefilledReferralCode.current ?? "");
     setReferralCodeError("");
   }
 
@@ -1427,7 +1438,7 @@ export default function CleaningEstimator() {
       setContactEmail("");
       setContactMobile("");
       setContactNotes("");
-      setReferralCode("");
+      setReferralCode(urlPrefilledReferralCode.current ?? "");
       setReferralCodeError("");
     } catch (error) {
       setBookingStatus("error");

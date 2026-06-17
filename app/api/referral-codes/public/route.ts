@@ -92,7 +92,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       referralCode,
-      referralLink: buildReferralLink(),
+      referralLink: buildReferralLink(created.code),
     });
   } catch (error) {
     console.error(error);
