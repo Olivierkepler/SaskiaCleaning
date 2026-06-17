@@ -17,7 +17,7 @@ interface AdCardItem {
   isRedTag?: boolean;
 }
 
-const cards: AdCardItem[] = [
+const fallbackCards: AdCardItem[] = [
   {
     id: 1,
     tag: "REFERRAL",
@@ -154,8 +154,38 @@ function AdCard({ card, index }: { card: AdCardItem; index: number }) {
 }
 
 
- 
+type PromoCardsResponse = {
+  success?: boolean;
+  cards?: AdCardItem[];
+};
+
 export default function AdCardGrid() {
+  const [cards, setCards] = useState<AdCardItem[]>(fallbackCards);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPromoCards() {
+      try {
+        const response = await fetch("/api/promo-cards");
+        if (!response.ok) return;
+
+        const data = (await response.json()) as PromoCardsResponse;
+        if (cancelled || !data.success || !data.cards?.length) return;
+
+        setCards(data.cards);
+      } catch {
+        // Keep fallbackCards on network or parse errors.
+      }
+    }
+
+    loadPromoCards();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <section className="relative z-20 w-full bg-white py-8">
       <div className="mx-auto max-w-7xl">
