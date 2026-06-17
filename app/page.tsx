@@ -21,6 +21,7 @@ import CatTab from "./components/CatTab";
 import LocationMap from "./components/LocationMap";
 import AdCardGrid from "./components/AdCardGrid";
 import ChatBackdrop from "./components/ChatBackdrop";
+import Footer from "./components/Footer";
 export default function Home() {
   return (
     <main className="relative overflow-x-hidden bg-white">
@@ -76,9 +77,10 @@ export default function Home() {
       </SectionWrapper>
       
       <ChatBot />
-      <footer className="border-t border-stone-100 px-8 py-20">
+      {/* <footer className="border-t border-stone-100 px-8 py-20">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row" />
-      </footer>
+      </footer> */}
+      <Footer/>
     </main>
   );
 }

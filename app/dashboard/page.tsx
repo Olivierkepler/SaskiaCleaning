@@ -15,6 +15,15 @@ type BookingRequest = {
   status: BookingStatus;
   seen: boolean;
   created_at: string;
+  service: string | null;
+  frequency: string | null;
+  location: string | null;
+  booking_date: string | Date | null;
+  extras: string[] | string | null;
+  estimate_low: number | null;
+  estimate_mid: number | null;
+  estimate_high: number | null;
+  notes: string | null;
 };
 
 type DashboardPageProps = {
@@ -42,22 +51,24 @@ export default async function DashboardPage({
   const unseenBookings = typedBookings
     .filter((booking) => !booking.seen)
     .slice(0, 10)
-    .map(({ id, name, email, created_at }) => ({
+    .map(({ id, name, email, created_at, service, location }) => ({
       id,
       name,
       email,
       created_at,
+      service,
+      location,
     }));
   const unseenCount = typedBookings.filter((booking) => !booking.seen).length;
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-6 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-slate-100  py-6 ">
       <Navbar
         dashboardKey={params.key!}
         unseenCount={unseenCount}
         unseenBookings={unseenBookings}
       />
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-full px-20">
        
   
         <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">

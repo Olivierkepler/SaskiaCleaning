@@ -8,6 +8,8 @@ export type UnseenBooking = {
   name: string;
   email: string;
   created_at: string;
+  service: string | null;
+  location: string | null;
 };
 
 type NavbarProps = {
@@ -186,6 +188,13 @@ export default function Navbar({
                           <p className="mt-0.5 truncate text-xs text-slate-500">
                             {booking.email}
                           </p>
+                          {(booking.service || booking.location) && (
+                            <p className="mt-1 truncate text-xs font-medium text-sky-700">
+                              {[booking.service, booking.location]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </p>
+                          )}
                           <p className="mt-1 text-xs text-slate-400">
                             {formatDate(booking.created_at)}
                           </p>

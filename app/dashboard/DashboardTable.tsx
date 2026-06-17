@@ -40,7 +40,108 @@ type BookingRequest = {
   status: BookingStatus;
   seen: boolean;
   created_at: string;
+  service: string | null;
+  frequency: string | null;
+  location: string | null;
+  booking_date: string | Date | null;
+  extras: string[] | string | null;
+  estimate_low: number | null;
+  estimate_mid: number | null;
+  estimate_high: number | null;
+  notes: string | null;
 };
+
+function normalizeExtras(extras: BookingRequest["extras"]): string[] {
+  if (!extras) return [];
+  if (Array.isArray(extras)) return extras.map(String);
+  if (typeof extras === "string") {
+    try {
+      const parsed = JSON.parse(extras) as unknown;
+      return Array.isArray(parsed) ? parsed.map(String) : [];
+    } catch {
+      return extras ? [extras] : [];
+    }
+  }
+  return [];
+}
+
+function formatRequestedDate(date: string | Date | null): string {
+  if (!date) return "—";
+
+  const dateOnly =
+    date instanceof Date
+      ? date.toISOString().slice(0, 10)
+      : String(date).slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return "—";
+
+  const [year, month, day] = dateOnly.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
+function formatEstimate(
+  low: number | null,
+  mid: number | null,
+  high: number | null,
+): string {
+  if (low != null && high != null) {
+    return `$${low.toLocaleString("en-US")}–$${high.toLocaleString("en-US")}`;
+  }
+  if (mid != null) return `$${mid.toLocaleString("en-US")}`;
+  return "—";
+}
+
+function formatExtrasList(extras: BookingRequest["extras"]): string {
+  const items = normalizeExtras(extras);
+  return items.length > 0 ? items.join(", ") : "—";
+}
+
+function BookingDetails({
+  extras,
+  notes,
+  compact = false,
+}: {
+  extras: BookingRequest["extras"];
+  notes: string | null;
+  compact?: boolean;
+}) {
+  const items = normalizeExtras(extras);
+  const hasExtras = items.length > 0;
+  const hasNotes = Boolean(notes?.trim());
+
+  if (!hasExtras && !hasNotes) {
+    return <span className="text-slate-400">—</span>;
+  }
+
+  return (
+    <div className={compact ? "space-y-1" : "space-y-2"}>
+      {hasExtras && (
+        <div className="flex flex-wrap gap-1">
+          {items.map((item) => (
+            <span
+              key={item}
+              className="inline-flex max-w-full truncate rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      )}
+      {hasNotes && (
+        <p
+          className={`text-slate-600 ${compact ? "line-clamp-2 text-xs" : "text-sm"}`}
+          title={notes ?? undefined}
+        >
+          {notes}
+        </p>
+      )}
+    </div>
+  );
+}
 
 export default function DashboardTable({
   bookings,
@@ -74,6 +175,13 @@ export default function DashboardTable({
           booking.name.toLowerCase().includes(query) ||
           booking.email.toLowerCase().includes(query) ||
           (booking.mobile?.toLowerCase().includes(query) ?? false) ||
+          (booking.service?.toLowerCase().includes(query) ?? false) ||
+          (booking.frequency?.toLowerCase().includes(query) ?? false) ||
+          (booking.location?.toLowerCase().includes(query) ?? false) ||
+          (booking.notes?.toLowerCase().includes(query) ?? false) ||
+          normalizeExtras(booking.extras).some((extra) =>
+            extra.toLowerCase().includes(query),
+          ) ||
           statusLabel.includes(query) ||
           statusValue.includes(query);
         if (!matchesSearch) return false;
@@ -296,18 +404,42 @@ export default function DashboardTable({
       "Name",
       "Email",
       "Mobile",
+      "Service",
+      "Frequency",
+      "Location",
+      "Requested Date",
       "Bedrooms",
       "Bathrooms",
+      "Estimate Low",
+      "Estimate Mid",
+      "Estimate High",
+      "Extras",
+      "Notes",
       "Status",
-      "Date",
+      "Submitted",
     ];
     const rows = filteredBookings.map((booking) =>
       [
         escapeCsvValue(booking.name),
         escapeCsvValue(booking.email),
         escapeCsvValue(booking.mobile ?? ""),
+        escapeCsvValue(booking.service ?? ""),
+        escapeCsvValue(booking.frequency ?? ""),
+        escapeCsvValue(booking.location ?? ""),
+        escapeCsvValue(formatRequestedDate(booking.booking_date)),
         escapeCsvValue(String(booking.bedrooms)),
         escapeCsvValue(String(booking.bathrooms)),
+        escapeCsvValue(
+          booking.estimate_low != null ? String(booking.estimate_low) : "",
+        ),
+        escapeCsvValue(
+          booking.estimate_mid != null ? String(booking.estimate_mid) : "",
+        ),
+        escapeCsvValue(
+          booking.estimate_high != null ? String(booking.estimate_high) : "",
+        ),
+        escapeCsvValue(formatExtrasList(booking.extras)),
+        escapeCsvValue(booking.notes ?? ""),
         escapeCsvValue(
           BOOKING_STATUS_LABELS[getBookingStatus(booking.status)]
         ),
@@ -402,7 +534,7 @@ export default function DashboardTable({
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, email, mobile, or status..."
+                  placeholder="Search name, email, service, location, extras, notes..."
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                 />
               </div>
@@ -537,17 +669,20 @@ export default function DashboardTable({
             <>
           {/* Desktop / tablet table */}
           <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[1050px] border-collapse text-left">
+            <table className="w-full min-w-[1280px] border-collapse text-left text-sm">
               <thead className="bg-sky-500 text-sm text-white">
                 <tr>
-                  <th className="p-4 font-semibold">Name</th>
-                  <th className="p-4 font-semibold">Email</th>
-                  <th className="p-4 font-semibold">Mobile</th>
-                  <th className="p-4 font-semibold">Bedrooms</th>
-                  <th className="p-4 font-semibold">Bathrooms</th>
-                  <th className="p-4 font-semibold">Status</th>
-                  <th className="p-4 font-semibold">Date</th>
-                  <th className="p-4 font-semibold">Action</th>
+                  <th className="p-3 font-semibold">Name</th>
+                  <th className="p-3 font-semibold">Contact</th>
+                  <th className="p-3 font-semibold">Service</th>
+                  <th className="p-3 font-semibold">Location</th>
+                  <th className="p-3 font-semibold">Requested</th>
+                  <th className="p-3 font-semibold">Rooms</th>
+                  <th className="p-3 font-semibold">Estimate</th>
+                  <th className="min-w-[180px] p-3 font-semibold">Extras / Notes</th>
+                  <th className="p-3 font-semibold">Status</th>
+                  <th className="p-3 font-semibold">Submitted</th>
+                  <th className="p-3 font-semibold">Action</th>
                 </tr>
               </thead>
 
@@ -555,17 +690,22 @@ export default function DashboardTable({
                 {paginatedBookings.map((booking) => {
                   const bookingStatus = getBookingStatus(booking.status);
                   const isUnseen = !booking.seen;
+                  const estimateLabel = formatEstimate(
+                    booking.estimate_low,
+                    booking.estimate_mid,
+                    booking.estimate_high,
+                  );
 
                   return (
                   <tr
                     key={booking.id}
-                    className={`transition ${
+                    className={`align-top transition ${
                       isUnseen
                         ? "bg-sky-50 hover:bg-sky-100"
                         : "hover:bg-slate-50"
                     }`}
                   >
-                    <td className="p-4 font-medium text-slate-900">
+                    <td className="p-3 font-medium text-slate-900">
                       <div className="flex items-center gap-2">
                         <span>{booking.name}</span>
                         {isUnseen && (
@@ -574,14 +714,50 @@ export default function DashboardTable({
                           </span>
                         )}
                       </div>
+                      {booking.frequency && (
+                        <p className="mt-1 text-xs text-slate-500">
+                          {booking.frequency}
+                        </p>
+                      )}
                     </td>
-                    <td className="p-4 text-slate-700">{booking.email}</td>
-                    <td className="p-4 text-slate-700">
-                      {booking.mobile || "—"}
+                    <td className="p-3 text-slate-700">
+                      <p className="break-all">{booking.email}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {booking.mobile || "—"}
+                      </p>
                     </td>
-                    <td className="p-4 text-slate-700">{booking.bedrooms}</td>
-                    <td className="p-4 text-slate-700">{booking.bathrooms}</td>
-                    <td className="p-4">
+                    <td className="p-3 text-slate-700">
+                      {booking.service || "—"}
+                    </td>
+                    <td className="max-w-[140px] p-3 text-slate-700">
+                      <span className="line-clamp-2" title={booking.location ?? undefined}>
+                        {booking.location || "—"}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap p-3 text-slate-700">
+                      {formatRequestedDate(booking.booking_date)}
+                    </td>
+                    <td className="whitespace-nowrap p-3 text-slate-700">
+                      {booking.bedrooms} bed / {booking.bathrooms} bath
+                    </td>
+                    <td
+                      className="whitespace-nowrap p-3 font-medium text-slate-800"
+                      title={
+                        booking.estimate_mid != null
+                          ? `Mid estimate: $${booking.estimate_mid.toLocaleString("en-US")}`
+                          : undefined
+                      }
+                    >
+                      {estimateLabel}
+                    </td>
+                    <td className="max-w-[220px] p-3">
+                      <BookingDetails
+                        extras={booking.extras}
+                        notes={booking.notes}
+                        compact
+                      />
+                    </td>
+                    <td className="p-3">
                       <select
                         value={bookingStatus}
                         onChange={(e) =>
@@ -599,14 +775,14 @@ export default function DashboardTable({
                         ))}
                       </select>
                     </td>
-                    <td className="p-4 text-sm text-slate-500">
+                    <td className="whitespace-nowrap p-3 text-xs text-slate-500">
                       {formatDate(booking.created_at)}
                     </td>
-                    <td className="p-4">
+                    <td className="p-3">
                       <button
                         type="button"
                         onClick={() => handleDelete(booking.id)}
-                        className="rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-600 active:scale-95"
+                        className="rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600 active:scale-95"
                       >
                         Delete
                       </button>
@@ -623,6 +799,11 @@ export default function DashboardTable({
             {paginatedBookings.map((booking) => {
               const bookingStatus = getBookingStatus(booking.status);
               const isUnseen = !booking.seen;
+              const estimateLabel = formatEstimate(
+                booking.estimate_low,
+                booking.estimate_mid,
+                booking.estimate_high,
+              );
 
               return (
               <div
@@ -648,6 +829,13 @@ export default function DashboardTable({
                     <p className="break-all text-sm text-slate-500">
                       {booking.email}
                     </p>
+                    {(booking.service || booking.frequency) && (
+                      <p className="mt-1 text-sm font-medium text-sky-700">
+                        {[booking.service, booking.frequency]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </p>
+                    )}
                   </div>
 
                   <button
@@ -694,21 +882,45 @@ export default function DashboardTable({
                   </div>
 
                   <div className="flex justify-between gap-4">
-                    <span className="text-slate-500">Bedrooms</span>
-                    <span className="font-medium text-slate-800">
-                      {booking.bedrooms}
+                    <span className="text-slate-500">Location</span>
+                    <span className="text-right font-medium text-slate-800">
+                      {booking.location || "—"}
                     </span>
                   </div>
 
                   <div className="flex justify-between gap-4">
-                    <span className="text-slate-500">Bathrooms</span>
+                    <span className="text-slate-500">Requested date</span>
                     <span className="font-medium text-slate-800">
-                      {booking.bathrooms}
+                      {formatRequestedDate(booking.booking_date)}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between gap-4">
+                    <span className="text-slate-500">Rooms</span>
+                    <span className="font-medium text-slate-800">
+                      {booking.bedrooms} bed / {booking.bathrooms} bath
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between gap-4">
+                    <span className="text-slate-500">Estimate</span>
+                    <span className="font-medium text-slate-800">
+                      {estimateLabel}
                     </span>
                   </div>
 
                   <div className="border-t border-slate-100 pt-3">
-                    <span className="block text-slate-500">Date</span>
+                    <span className="mb-2 block text-slate-500">
+                      Extras / Notes
+                    </span>
+                    <BookingDetails
+                      extras={booking.extras}
+                      notes={booking.notes}
+                    />
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-3">
+                    <span className="block text-slate-500">Submitted</span>
                     <span className="font-medium text-slate-800">
                       {formatDate(booking.created_at)}
                     </span>
