@@ -7,6 +7,7 @@ import { Calendar, ChevronDown, MapPin, SlidersHorizontal } from "lucide-react";
 import { MASSACHUSETTS_LOCATIONS } from "@/app/data/massachusettsLocations";
 import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
 import BookingSummary from "@/app/components/BookingSummary";
+import { normalizeReferralCode } from "@/app/lib/referrals";
 import { IoChatbubblesOutline } from "react-icons/io5";
 const K = {
   blue:         "#38BDF8",
@@ -1229,6 +1230,8 @@ export default function CleaningEstimator() {
   const [contactEmail, setContactEmail] = useState("");
   const [contactMobile, setContactMobile] = useState("");
   const [contactNotes, setContactNotes] = useState("");
+  const [referralCode, setReferralCode] = useState("");
+  const [referralCodeError, setReferralCodeError] = useState("");
   const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(new Set());
 
   const handleStandardAddonsChange = useCallback((addons: Set<string>) => {
@@ -1342,6 +1345,7 @@ export default function CleaningEstimator() {
     setBookingFormOpen(true);
     setBookingStatus("idle");
     setBookingErrorMessage("");
+    setReferralCodeError("");
   }
 
   function closeBookingForm() {
@@ -1349,12 +1353,15 @@ export default function CleaningEstimator() {
     setBookingFormOpen(false);
     setBookingStatus("idle");
     setBookingErrorMessage("");
+    setReferralCode("");
+    setReferralCodeError("");
   }
 
   async function handleBookingSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBookingStatus("loading");
     setBookingErrorMessage("");
+    setReferralCodeError("");
 
     const { bedrooms, bathrooms } = getBookingRoomCounts(
       serviceIdx,
@@ -1371,6 +1378,10 @@ export default function CleaningEstimator() {
         ? Array.from(moveOutSelectedAddons)
         : Array.from(commercialSelectedAddons);
 
+    const normalizedReferralCode = referralCode.trim()
+      ? normalizeReferralCode(referralCode)
+      : "";
+
     const payload = {
       name: contactName.trim(),
       email: contactEmail.trim(),
@@ -1386,6 +1397,7 @@ export default function CleaningEstimator() {
       estimateMid: prices.mid,
       estimateHigh: prices.high,
       notes: contactNotes.trim() || undefined,
+      ...(normalizedReferralCode ? { referralCode: normalizedReferralCode } : {}),
     };
 
     try {
@@ -1398,6 +1410,15 @@ export default function CleaningEstimator() {
       const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
+        if (
+          response.status === 400 &&
+          data.error === "Invalid referral code."
+        ) {
+          setReferralCodeError("Invalid referral code.");
+          setBookingStatus("idle");
+          return;
+        }
+
         throw new Error(data.error || "Failed to submit booking request.");
       }
 
@@ -1406,6 +1427,8 @@ export default function CleaningEstimator() {
       setContactEmail("");
       setContactMobile("");
       setContactNotes("");
+      setReferralCode("");
+      setReferralCodeError("");
     } catch (error) {
       setBookingStatus("error");
       setBookingErrorMessage(
@@ -1993,6 +2016,45 @@ export default function CleaningEstimator() {
 
                   <div>
                     <label
+                      htmlFor="booking-referral-code"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Referral code
+                    </label>
+                    <input
+                      id="booking-referral-code"
+                      type="text"
+                      value={referralCode}
+                      onChange={(event) => {
+                        setReferralCode(event.target.value);
+                        if (referralCodeError) {
+                          setReferralCodeError("");
+                        }
+                      }}
+                      className={`${bookingInputClassName}${
+                        referralCodeError
+                          ? " border-red-300 focus:border-red-400 focus:ring-red-100"
+                          : ""
+                      }`}
+                      placeholder="Have a referral code?"
+                      autoComplete="off"
+                      aria-invalid={referralCodeError ? true : undefined}
+                      aria-describedby={
+                        referralCodeError ? "booking-referral-code-error" : undefined
+                      }
+                    />
+                    {referralCodeError && (
+                      <p
+                        id="booking-referral-code-error"
+                        className="mt-1.5 text-sm font-medium text-red-600"
+                      >
+                        {referralCodeError}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label
                       htmlFor="booking-notes"
                       className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
                     >
@@ -2008,7 +2070,7 @@ export default function CleaningEstimator() {
                     />
                   </div>
 
-                  {bookingStatus === "error" && (
+                  {bookingStatus === "error" && bookingErrorMessage && (
                     <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
                       {bookingErrorMessage}
                     </div>
