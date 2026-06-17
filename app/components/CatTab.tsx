@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useMemo, type ReactNode } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, type FormEvent, type ReactNode } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, ChevronDown, MapPin, Repeat } from "lucide-react";
+import { Calendar, ChevronDown, MapPin, SlidersHorizontal } from "lucide-react";
 import { MASSACHUSETTS_LOCATIONS } from "@/app/data/massachusettsLocations";
 import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
 import BookingSummary from "@/app/components/BookingSummary";
-import { ImOpera } from "react-icons/im";
 import { IoChatbubblesOutline } from "react-icons/io5";
 const K = {
   blue:         "#38BDF8",
@@ -37,9 +36,12 @@ const LOCATIONS = {
   } as const;
 
 type StateKey = keyof typeof LOCATIONS;
+type PriceRange = ReturnType<typeof calc>;
+type ServiceIndex = 0 | 1 | 2 | 3;
 
 const BED_BASE  = [90, 120, 150, 180, 210];
 const BATH_VALS = [1, 1.5, 2, 2.5, 3];
+const STANDARD_BEDROOM_VALUES = [0, 1, 2, 3, 4] as const;
 const DEEP_BASE = [160, 220, 300, 400];
 const DEEP_COND = [0, 40, 80];
 const MO_BASE   = [180, 240, 320, 420];
@@ -49,6 +51,35 @@ function calc(mid: number) {
   return { low: Math.round(mid * 0.85), mid, high: Math.round(mid * 1.18) };
 }
 
+type BookingSubmitStatus = "idle" | "loading" | "success" | "error";
+
+function formatBookingDateForApi(date: Date | null): string | undefined {
+  if (!date) return undefined;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function getBookingRoomCounts(
+  serviceIdx: ServiceIndex,
+  standardBedIdx: number,
+  standardBathIdx: number,
+) {
+  if (serviceIdx !== 0) {
+    return { bedrooms: 0, bathrooms: 0 };
+  }
+
+  return {
+    bedrooms: STANDARD_BEDROOM_VALUES[standardBedIdx] ?? 0,
+    bathrooms: Math.ceil(BATH_VALS[standardBathIdx] ?? 1),
+  };
+}
+
+const bookingInputClassName =
+  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+
 const MONTHS       = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const DOW          = ["Su","Mo","Tu","We","Th","Fr","Sa"];
@@ -56,6 +87,17 @@ const DOW_SHORT    = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
 function formatDate(d: Date) {
   return `${DOW_SHORT[d.getDay()]} ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}`;
+}
+
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function toggleInSet<T>(set: Set<T>, value: T) {
+  const next = new Set(set);
+  if (next.has(value)) next.delete(value);
+  else next.add(value);
+  return next;
 }
 
 const SCROLL_VIEWPORT = { once: false, amount: 0.2 };
@@ -134,13 +176,11 @@ function Dropdown({ open, children, minWidth = 260 }: { open: boolean; children:
           exit={{ opacity: 0, y: 6, scale: 0.98 }}
           transition={{ duration: 0.15 }}
           onClick={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
           style={{
             position: "absolute", top: "calc(100% + 4px)", left: 0,
             background: K.white,
-            borderTop:    `1.5px solid ${K.border}`,
-            borderRight:  `1.5px solid ${K.border}`,
-            borderBottom: `1.5px solid ${K.border}`,
-            borderLeft:   `1.5px solid ${K.border}`,
+            border: `1.5px solid ${K.border}`,
             borderRadius: 12,
             boxShadow: "0 8px 32px rgba(14,165,233,0.1)",
             zIndex: 99999, minWidth, overflow: "hidden",
@@ -163,12 +203,17 @@ function LocationDropdown({
 }) {
   return (
     <Dropdown open={open} minWidth={280}>
-      {/* State tabs — fixed: no border shorthand + borderBottom conflict */}
+      {/* State tabs */}
       <div style={{ display: "flex", borderBottom: `1px solid ${K.borderLight}` }}>
         {(["MA", "RI"] as StateKey[]).map((s) => (
           <button
             key={s}
-            onClick={() => onStateChange(s)}
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onStateChange(s);
+            }}
             style={{
               flex: 1, padding: 10, fontSize: 11, fontWeight: 700, cursor: "pointer",
               color: state === s ? K.blue : K.muted,
@@ -197,7 +242,10 @@ function LocationDropdown({
           return (
             <div
               key={loc.city}
-              onClick={() => onCitySelect(loc.city, state)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onCitySelect(loc.city, state);
+              }}
               style={{
                 display: "flex", alignItems: "center", gap: 10,
                 padding: "9px 12px", borderRadius: 8, cursor: "pointer",
@@ -245,26 +293,26 @@ function CalendarDropdown({
       <div style={{ padding: 16 }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
           <button
-            onClick={() => changeMonth(-1)}
+            onClick={(e) => {
+              e.stopPropagation();
+              changeMonth(-1);
+            }}
             style={{
               width: 28, height: 28, borderRadius: 6,
-              borderTop:    `1.5px solid ${K.border}`,
-              borderRight:  `1.5px solid ${K.border}`,
-              borderBottom: `1.5px solid ${K.border}`,
-              borderLeft:   `1.5px solid ${K.border}`,
+              border: `1.5px solid ${K.border}`,
               background: K.white, cursor: "pointer", fontSize: 14,
               color: K.textSub, display: "flex", alignItems: "center", justifyContent: "center",
             }}
           >‹</button>
           <span style={{ fontSize: 14, fontWeight: 800, color: K.text }}>{MONTHS[month]} {year}</span>
           <button
-            onClick={() => changeMonth(1)}
+            onClick={(e) => {
+              e.stopPropagation();
+              changeMonth(1);
+            }}
             style={{
               width: 28, height: 28, borderRadius: 6,
-              borderTop:    `1.5px solid ${K.border}`,
-              borderRight:  `1.5px solid ${K.border}`,
-              borderBottom: `1.5px solid ${K.border}`,
-              borderLeft:   `1.5px solid ${K.border}`,
+              border: `1.5px solid ${K.border}`,
               background: K.white, cursor: "pointer", fontSize: 14,
               color: K.textSub, display: "flex", alignItems: "center", justifyContent: "center",
             }}
@@ -287,7 +335,10 @@ function CalendarDropdown({
               <button
                 key={d}
                 disabled={isPast}
-                onClick={() => onSelect(date)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSelect(date);
+                }}
                 style={{
                   width: "100%", aspectRatio: "1", display: "flex",
                   alignItems: "center", justifyContent: "center",
@@ -324,32 +375,31 @@ function SF({
     <div
       data-cursor-pointer="pointer"
       onClick={onClick}
-      className={[
-        "relative flex w-full min-w-0 cursor-pointer items-center gap-4 self-stretch px-5 py-4 transition-colors duration-200",
-        "sm:min-h-0 sm:h-full sm:px-6 sm:py-0",
-        "max-sm:rounded-2xl max-sm:border  max-sm:border-gray-200 max-sm:shadow-sm",
-        last ? "" : "sm:border-r sm:border-gray-200",
-        active ? "bg-sky-50" : "bg-transparent hover:bg-slate-50/80 ",
-      ].join(" ")}
+      className={cx(
+        "relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 self-stretch bg-white px-3.5 py-3 transition-colors duration-200",
+        "sm:min-h-0 sm:h-full sm:px-4 sm:py-0",
+        "max-sm:rounded-xl  max-sm:shadow-sm",
+        active ? "sm:bg-white" : "hover:bg-slate-50/80",
+      )}
       style={{ flex }}
     >
       <div
-        className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-50 ${
+        className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50 ${
           active ? "text-sky-500" : "text-slate-900"
         }`}
       >
         {icon}
       </div>
-      <div className="flex min-w-0 flex-col justify-center gap-0.5">
+      <div className="flex min-w-0 flex-col justify-center gap-0">
         <span
-          className={`block text-[11px] font-semibold uppercase tracking-[0.12em] leading-none sm:text-xs ${
+          className={`block text-[10px] font-semibold uppercase tracking-[0.08em] leading-none sm:text-[10px] ${
             active ? "text-sky-500" : "text-slate-400"
           }`}
         >
           {label}
         </span>
         <span
-  className={`block whitespace-normal text-base font-semibold leading-tight tracking-tight sm:truncate sm:text-lg ${
+  className={`block whitespace-normal text-sm font-semibold leading-tight tracking-tight sm:truncate sm:text-sm ${
     placeholder ? "text-slate-400" : "text-slate-900"
   }`}
 >
@@ -368,12 +418,12 @@ function Chip({ label, selected, onClick }: { label: string; selected?: boolean;
         onClick={onClick}
         whileHover={{ scale: selected ? 1 : 1.03, y: selected ? 0 : -1 }}
         whileTap={{ scale: 0.97 }}
-        className={[
+        className={cx(
           "cursor-pointer rounded-[5px] px-4 py-2.5 text-xs font-bold uppercase tracking-[0.08em] outline-none transition-all duration-200",
           selected
-            ? "border border-sky-500 bg-sky-50 text-sky-600 shadow-sm"
-            : "border border-neutral-200 bg-white text-slate-500 shadow-sm hover:border-sky-300 hover:text-sky-500 hover:shadow-md",
-        ].join(" ")}
+            ? " bg-sky-50 text-sky-600 shadow-sm"
+            : "border border-neutral-200 bg-white text-slate-500 shadow-sm  hover:text-sky-500 hover:shadow-md",
+        )}
       >
         {label}
       </motion.button>
@@ -398,12 +448,12 @@ function Addon({
         onClick={onClick}
         whileHover={{ y: -1 }}
         whileTap={{ scale: 0.98 }}
-        className={[
-          "flex w-full cursor-pointer items-center gap-3 rounded- px-4 py-3 text-left outline-none transition-all duration-200",
+        className={cx(
+          "flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-left outline-none transition-all duration-200",
           selected
-            ? "border border-sky-500 bg-sky-50 shadow-sm"
-            : "border border-neutral-200 bg-white shadow-sm hover:border-sky-300 hover:shadow-md",
-        ].join(" ")}
+            ? " bg-sky-50 shadow-sm"
+            : " bg-white shadow-sm hover:shadow-md",
+        )}
       >
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-white">
           <Image
@@ -438,6 +488,63 @@ function Addon({
   }
 
 // ── Price pill ────────────────────────────────────────────────────────────────
+
+
+type PricedAddon<L extends string = string> = {
+  label: L;
+  price: number;
+  image: string;
+};
+
+function ChipGroup({
+  options,
+  selectedIndex,
+  onSelect,
+  className = "grid grid-cols-2 gap-2 sm:flex sm:flex-wrap",
+}: {
+  options: readonly string[];
+  selectedIndex: number;
+  onSelect: (index: number) => void;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      {options.map((option, index) => (
+        <Chip
+          key={option}
+          label={option}
+          selected={selectedIndex === index}
+          onClick={() => onSelect(index)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function AddonGrid<L extends string>({
+  addons,
+  selectedAddons,
+  onToggle,
+}: {
+  addons: readonly PricedAddon<L>[];
+  selectedAddons: Set<string>;
+  onToggle: (label: L) => void;
+}) {
+  return (
+    <div className="grid gap-2 sm:grid-cols-2">
+      {addons.map((addon) => (
+        <Addon
+          key={addon.label}
+          label={addon.label}
+          image={addon.image}
+          selected={selectedAddons.has(addon.label)}
+          onClick={() => onToggle(addon.label)}
+        />
+      ))}
+    </div>
+  );
+}
+
 function PricePill({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   const display = "$" + value.toLocaleString("en-US");
   return (
@@ -480,10 +587,7 @@ function Notice({ text }: { text: React.ReactNode }) {
   return (
     <div style={{
       background: K.noticeBg,
-      borderTop:    `1.5px solid ${K.noticeBorder}`,
-      borderRight:  `1.5px solid ${K.noticeBorder}`,
-      borderBottom: `1.5px solid ${K.noticeBorder}`,
-      borderLeft:   `1.5px solid ${K.noticeBorder}`,
+      border: `1.5px solid ${K.noticeBorder}`,
       borderRadius: 10, padding: "12px 16px",
       display: "flex", gap: 10, alignItems: "flex-start",
     }}>
@@ -493,12 +597,6 @@ function Notice({ text }: { text: React.ReactNode }) {
   );
 }
 
-// ── Layout helpers ────────────────────────────────────────────────────────────
-const twoCol:     React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr",     gap: 20 };
-const threeCol:   React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 20 };
-const addonsGrid: React.CSSProperties = { display: "grid", gridTemplateColumns: "1fr 1fr",     gap: 6  };
-const sec:        React.CSSProperties = { fontSize: 14, fontWeight: 600, color: K.text, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 0 };
-const chipsRow:   React.CSSProperties = { display: "flex", flexWrap: "wrap", gap: 6 };
 function useIsLargeScreen() {
     const [isLarge, setIsLarge] = useState(false);
   
@@ -537,18 +635,18 @@ function useIsLargeScreen() {
     }, [isLargeScreen, defaultOpen]);
   
     return (
-      <section className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm transition-all duration-300 hover:shadow-md">
+      <section className="overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06),0_4px_10px_rgba(15,23,42,0.04)] transition-shadow duration-200 hover:shadow-[0_2px_4px_rgba(15,23,42,0.08),0_8px_16px_rgba(15,23,42,0.06)]">
         <button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="flex w-full cursor-pointer items-center justify-between gap-4 px-5 py-4 text-left"
+          className="flex w-full cursor-pointer items-center justify-between gap-4 px-4 py-3.5 text-left"
         >
-          <span className="text-[12px] font-black uppercase tracking-[0.14em] text-slate-900">
+          <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-900">
             {title}
           </span>
   
           <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-            <ChevronDown size={18} className="text-sky-500" />
+            <ChevronDown size={16} className="text-sky-500" />
           </motion.div>
         </button>
   
@@ -561,7 +659,7 @@ function useIsLargeScreen() {
               transition={{ duration: 0.22, ease: "easeOut" }}
               className="overflow-hidden"
             >
-              <div className="px-5 pb-5">{children}</div>
+              <div className="px-4 pb-4">{children}</div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -829,15 +927,21 @@ function StandardPanel({
     onFrequencyChange,
     selectedAddons,
     onSelectedAddonsChange,
+    bedIdx,
+    bathIdx,
+    onBedIdxChange,
+    onBathIdxChange,
   }: {
-    onPrice: (p: ReturnType<typeof calc>) => void;
+    onPrice: (p: PriceRange) => void;
     frequency: string;
     onFrequencyChange: (frequency: string) => void;
     selectedAddons: Set<string>;
     onSelectedAddonsChange: (addons: Set<string>) => void;
+    bedIdx: number;
+    bathIdx: number;
+    onBedIdxChange: (index: number) => void;
+    onBathIdxChange: (index: number) => void;
   }) {
-  const [bedIdx,  setBedIdx]  = useState(1);
-  const [bathIdx, setBathIdx] = useState(0);
   const FREQS = [
     { label: "One-time",  discount: 0  },
     { label: "Bi-weekly", discount: 10 },
@@ -853,10 +957,7 @@ function StandardPanel({
 
   const toggle = useCallback(
     (label: StandardAddonLabel) => {
-      const next = new Set(selectedAddons);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      onSelectedAddonsChange(next);
+      onSelectedAddonsChange(toggleInSet(selectedAddons, label));
     },
     [selectedAddons, onSelectedAddonsChange],
   );
@@ -890,41 +991,19 @@ function StandardPanel({
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <CollapsibleGroup title="Bedrooms" defaultOpen>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {BEDS.map((b, i) => (
-            <Chip key={b} label={b} selected={bedIdx === i} onClick={() => setBedIdx(i)} />
-          ))}
-        </div>
+<ChipGroup options={BEDS} selectedIndex={bedIdx} onSelect={onBedIdxChange} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Bathrooms" defaultOpen>
-        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap">
-          {[1, 1.5, 2, 2.5, 3].map((b, i) => (
-            <Chip key={b} label={String(b)} selected={bathIdx === i} onClick={() => setBathIdx(i)} />
-          ))}
-        </div>
+<ChipGroup options={BATH_VALS.map(String)} selectedIndex={bathIdx} onSelect={onBathIdxChange} className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap" />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Frequency">
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {FREQS.map((f) => (
-            <Chip key={f.label} label={f.label} selected={frequency === f.label} onClick={() => onFrequencyChange(f.label)} />
-          ))}
-        </div>
+<ChipGroup options={FREQS.map((f) => f.label)} selectedIndex={freqIdx} onSelect={(index) => onFrequencyChange(FREQS[index].label)} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Add-ons">
-        <div className="grid gap-2 sm:grid-cols-2">
-          {STANDARD_ADDONS.map((a) => (
-            <Addon
-              key={a.label}
-              label={a.label}
-              image={a.image}
-              selected={selectedAddons.has(a.label)}
-              onClick={() => toggle(a.label)}
-            />
-          ))}
-        </div>
+<AddonGrid addons={STANDARD_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} />
       </CollapsibleGroup>
     </div>
   );
@@ -935,7 +1014,7 @@ function DeepCleanPanel({
   selectedAddons,
   onSelectedAddonsChange,
 }: {
-  onPrice: (p: ReturnType<typeof calc>) => void;
+  onPrice: (p: PriceRange) => void;
   selectedAddons: Set<string>;
   onSelectedAddonsChange: (addons: Set<string>) => void;
 }) {
@@ -946,10 +1025,7 @@ function DeepCleanPanel({
 
   const toggle = useCallback(
     (label: DeepCleanAddonLabel) => {
-      const next = new Set(selectedAddons);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      onSelectedAddonsChange(next);
+      onSelectedAddonsChange(toggleInSet(selectedAddons, label));
     },
     [selectedAddons, onSelectedAddonsChange],
   );
@@ -963,43 +1039,15 @@ function DeepCleanPanel({
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <CollapsibleGroup title="Home size" defaultOpen>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {SIZES.map((s, i) => (
-            <Chip
-              key={s}
-              label={s}
-              selected={sizeIdx === i}
-              onClick={() => setSize(i)}
-            />
-          ))}
-        </div>
+<ChipGroup options={SIZES} selectedIndex={sizeIdx} onSelect={setSize} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Condition" defaultOpen>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {CONDS.map((c, i) => (
-            <Chip
-              key={c}
-              label={c}
-              selected={condIdx === i}
-              onClick={() => setCond(i)}
-            />
-          ))}
-        </div>
+<ChipGroup options={CONDS} selectedIndex={condIdx} onSelect={setCond} className="grid grid-cols-1 gap-2 sm:grid-cols-3" />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Deep clean extras">
-        <div className="grid gap-2 sm:grid-cols-2">
-          {DEEP_CLEAN_ADDONS.map((a) => (
-            <Addon
-              key={a.label}
-              label={a.label}
-              image={a.image}
-              selected={selectedAddons.has(a.label)}
-              onClick={() => toggle(a.label)}
-            />
-          ))}
-        </div>
+<AddonGrid addons={DEEP_CLEAN_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="What's included">
@@ -1025,7 +1073,7 @@ function MoveOutPanel({
   selectedAddons,
   onSelectedAddonsChange,
 }: {
-  onPrice: (p: ReturnType<typeof calc>) => void;
+  onPrice: (p: PriceRange) => void;
   selectedAddons: Set<string>;
   onSelectedAddonsChange: (addons: Set<string>) => void;
 }) {
@@ -1036,10 +1084,7 @@ function MoveOutPanel({
 
   const toggle = useCallback(
     (label: MoveOutAddonLabel) => {
-      const next = new Set(selectedAddons);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      onSelectedAddonsChange(next);
+      onSelectedAddonsChange(toggleInSet(selectedAddons, label));
     },
     [selectedAddons, onSelectedAddonsChange],
   );
@@ -1053,47 +1098,19 @@ function MoveOutPanel({
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <CollapsibleGroup title="Property type" defaultOpen>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {TYPES.map((t, i) => (
-            <Chip
-              key={t}
-              label={t}
-              selected={typeIdx === i}
-              onClick={() => setType(i)}
-            />
-          ))}
-        </div>
+<ChipGroup options={TYPES} selectedIndex={typeIdx} onSelect={setType} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Square footage" defaultOpen>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {SQFTS.map((s, i) => (
-            <Chip
-              key={s}
-              label={s}
-              selected={sqftIdx === i}
-              onClick={() => setSqft(i)}
-            />
-          ))}
-        </div>
+<ChipGroup options={SQFTS} selectedIndex={sqftIdx} onSelect={setSqft} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Move-out extras">
-        <div className="grid gap-2 sm:grid-cols-2">
-          {MOVE_OUT_ADDONS.map((a) => (
-            <Addon
-              key={a.label}
-              label={a.label}
-              image={a.image}
-              selected={selectedAddons.has(a.label)}
-              onClick={() => toggle(a.label)}
-            />
-          ))}
-        </div>
+<AddonGrid addons={MOVE_OUT_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Deposit Protection">
-        <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
+        <div className="rounded-2xl  bg-sky-50 p-4">
           <Notice
             text={
               <>
@@ -1117,7 +1134,7 @@ function CommercialPanel({
   selectedAddons,
   onSelectedAddonsChange,
 }: {
-  onPrice: (p: ReturnType<typeof calc>) => void;
+  onPrice: (p: PriceRange) => void;
   selectedAddons: Set<string>;
   onSelectedAddonsChange: (addons: Set<string>) => void;
 }) {
@@ -1135,10 +1152,7 @@ function CommercialPanel({
 
   const toggle = useCallback(
     (label: CommercialAddonLabel) => {
-      const next = new Set(selectedAddons);
-      if (next.has(label)) next.delete(label);
-      else next.add(label);
-      onSelectedAddonsChange(next);
+      onSelectedAddonsChange(toggleInSet(selectedAddons, label));
     },
     [selectedAddons, onSelectedAddonsChange],
   );
@@ -1155,82 +1169,27 @@ function CommercialPanel({
   return (
     <div className="grid gap-4 lg:grid-cols-2 ">
       <CollapsibleGroup title="Space type" defaultOpen>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {TYPES.map((t, i) => (
-            <Chip
-              key={t}
-              label={t}
-              selected={typeIdx === i}
-              onClick={() => setType(i)}
-            />
-          ))}
-        </div>
+<ChipGroup options={TYPES} selectedIndex={typeIdx} onSelect={setType} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Square footage" defaultOpen>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {SQFTS.map((s, i) => (
-            <Chip
-              key={s}
-              label={s}
-              selected={sqftIdx === i}
-              onClick={() => setSqft(i)}
-            />
-          ))}
-        </div>
+<ChipGroup options={SQFTS} selectedIndex={sqftIdx} onSelect={setSqft} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Schedule" defaultOpen>
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {SCHEDS.map((s, i) => (
-            <Chip
-              key={s.label}
-              label={s.label}
-              selected={schedIdx === i}
-              onClick={() => setSched(i)}
-            />
-          ))}
-        </div>
+<ChipGroup options={SCHEDS.map((s) => s.label)} selectedIndex={schedIdx} onSelect={setSched} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Add-ons">
-        <div className="grid gap-2 sm:grid-cols-2">
-          {COMMERCIAL_ADDONS.map((a) => (
-            <Addon
-              key={a.label}
-              label={a.label}
-              image={a.image}
-              selected={selectedAddons.has(a.label)}
-              onClick={() => toggle(a.label)}
-            />
-          ))}
-        </div>
+<AddonGrid addons={COMMERCIAL_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Timing">
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {TIMINGS.map((t, i) => (
-            <Chip
-              key={t}
-              label={t}
-              selected={timingIdx === i}
-              onClick={() => setTiming(i)}
-            />
-          ))}
-        </div>
+<ChipGroup options={TIMINGS} selectedIndex={timingIdx} onSelect={setTiming} className="grid grid-cols-1 gap-2 sm:grid-cols-3" />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Contract">
-        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-          {CONTRACTS.map((c, i) => (
-            <Chip
-              key={c}
-              label={c}
-              selected={contractIdx === i}
-              onClick={() => setContract(i)}
-            />
-          ))}
-        </div>
+<ChipGroup options={CONTRACTS} selectedIndex={contractIdx} onSelect={setContract} />
       </CollapsibleGroup>
     </div>
   );
@@ -1243,59 +1202,9 @@ const SERVICES = [
   { image: "/images/moveout/moveout.png",          label: "Move-out",   photo: "/images/boston.jpg", headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,        bookLabel: "Book move-out clean" },
   { image: "/images/commercial/commercial.png",        label: "Commercial", photo: "/images/boston.jpg", headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,      bookLabel: "Get a quote"         },
 ];
-function FrequencyDropdown({
-    open,
-    selected,
-    onSelect,
-  }: {
-    open: boolean;
-    selected: string;
-    onSelect: (frequency: string) => void;
-  }) {
-    const options = ["One-time", "Weekly", "Bi-weekly", "Monthly"];
-  
-    return (
-      <Dropdown open={open} minWidth={220}>
-        <div style={{ padding: 6 }}>
-          {options.map((option) => {
-            const active = option === selected;
-  
-            return (
-              <button
-                key={option}
-                type="button"
-                onClick={() => onSelect(option)}
-                style={{
-                  width: "100%",
-                  padding: "11px 12px",
-                  border: "none",
-                  borderRadius: 8,
-                  background: active ? K.blueLight : "transparent",
-                  color: active ? K.blue : K.text,
-                  cursor: "pointer",
-                  textAlign: "left",
-                  fontSize: 13,
-                  fontWeight: 700,
-                  transition: "background .12s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!active) e.currentTarget.style.background = K.blueFaint;
-                }}
-                onMouseLeave={(e) => {
-                  if (!active) e.currentTarget.style.background = "transparent";
-                }}
-              >
-                {option}
-              </button>
-            );
-          })}
-        </div>
-      </Dropdown>
-    );
-  }
 // ── Root ──────────────────────────────────────────────────────────────────────
 export default function CleaningEstimator() {
-  const [serviceIdx, setServiceIdx] = useState(0);
+  const [serviceIdx, setServiceIdx] = useState<ServiceIndex>(0);
   const [prices,     setPrices]     = useState({ low: 144, mid: 180, high: 216 });
 
   const [locState, setLocState] = useState<StateKey>("MA");
@@ -1309,8 +1218,17 @@ export default function CleaningEstimator() {
   const rootRef = useRef<HTMLElement>(null);
 
   const [frequency, setFrequency] = useState("One-time");
-  const [frequencyOpen, setFrequencyOpen] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [standardBedIdx, setStandardBedIdx] = useState(1);
+  const [standardBathIdx, setStandardBathIdx] = useState(0);
+  const [bookingFormOpen, setBookingFormOpen] = useState(false);
+  const [bookingStatus, setBookingStatus] = useState<BookingSubmitStatus>("idle");
+  const [bookingErrorMessage, setBookingErrorMessage] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactMobile, setContactMobile] = useState("");
+  const [contactNotes, setContactNotes] = useState("");
   const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(new Set());
 
   const handleStandardAddonsChange = useCallback((addons: Set<string>) => {
@@ -1359,28 +1277,51 @@ export default function CleaningEstimator() {
   );
   const isCommercialDefaultGalleryOnly = commercialGalleryImages.length === 1;
 
-  const mobileSearchSummary = `${locCity}, ${locState} · ${date ? formatDate(date) : "Select date"} · ${frequency}`;
+  const activeGallery = useMemo(() => {
+    const galleries = [
+      { galleryKey: "standard-gallery", images: standardGalleryImages, isDefaultOnly: isDefaultGalleryOnly },
+      { galleryKey: "deep-clean-gallery", images: deepCleanGalleryImages, isDefaultOnly: isDeepCleanDefaultGalleryOnly },
+      { galleryKey: "move-out-gallery", images: moveOutGalleryImages, isDefaultOnly: isMoveOutDefaultGalleryOnly },
+      { galleryKey: "commercial-gallery", images: commercialGalleryImages, isDefaultOnly: isCommercialDefaultGalleryOnly },
+    ];
+
+    return galleries[serviceIdx]!;
+  }, [
+    serviceIdx,
+    standardGalleryImages,
+    isDefaultGalleryOnly,
+    deepCleanGalleryImages,
+    isDeepCleanDefaultGalleryOnly,
+    moveOutGalleryImages,
+    isMoveOutDefaultGalleryOnly,
+    commercialGalleryImages,
+    isCommercialDefaultGalleryOnly,
+  ]);
+
+  const mobileSearchSummary = `${locCity}, ${locState} · ${date ? formatDate(date) : "Select date"} · ${optionsOpen ? "Details open" : "Customize"}`;
 
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (!rootRef.current?.contains(e.target as Node)) {
         setLocOpen(false);
         setDateOpen(false);
-        setFrequencyOpen(false);   
       }
     }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
+    // Use "click" instead of "mousedown" so this fires in the same phase as
+    // the row/day onClick handlers inside the dropdowns. Mixing mousedown
+    // (here) with click (selection rows) created a race where the outside
+    // handler could interfere before the selection click ever registered,
+    // which is what made city/date selection appear to do nothing.
+    document.addEventListener("click", handle);
+    return () => document.removeEventListener("click", handle);
   }, []);
 
   function handleLocField() {
     setDateOpen(false);
-    setFrequencyOpen(false);
     setLocOpen((value) => !value);
   }
   function handleDateField() {
     setLocOpen(false);
-    setFrequencyOpen(false);
     setDateOpen((value) => !value);
   }
   function handleCitySelect(city: string, state: StateKey) {
@@ -1388,7 +1329,6 @@ export default function CleaningEstimator() {
     setLocState(state);
     setLocOpen(false);
     setDateOpen(false);
-    setFrequencyOpen(false);
   }
   
   
@@ -1396,21 +1336,86 @@ export default function CleaningEstimator() {
     setDate(d);
     setLocOpen(false);
     setDateOpen(false);
-    setFrequencyOpen(false);
   }
 
+  function openBookingForm() {
+    setBookingFormOpen(true);
+    setBookingStatus("idle");
+    setBookingErrorMessage("");
+  }
 
-function handleFrequencyField() {
-    setLocOpen(false);
-    setDateOpen(false);
-    setFrequencyOpen((value) => !value);
+  function closeBookingForm() {
+    if (bookingStatus === "loading") return;
+    setBookingFormOpen(false);
+    setBookingStatus("idle");
+    setBookingErrorMessage("");
   }
-  function handleFrequencySelect(value: string) {
-    setFrequency(value);
-    setLocOpen(false);
-    setDateOpen(false);
-    setFrequencyOpen(false);
+
+  async function handleBookingSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBookingStatus("loading");
+    setBookingErrorMessage("");
+
+    const { bedrooms, bathrooms } = getBookingRoomCounts(
+      serviceIdx,
+      standardBedIdx,
+      standardBathIdx,
+    );
+
+    const extras =
+      serviceIdx === 0
+        ? Array.from(standardSelectedAddons)
+        : serviceIdx === 1
+        ? Array.from(deepCleanSelectedAddons)
+        : serviceIdx === 2
+        ? Array.from(moveOutSelectedAddons)
+        : Array.from(commercialSelectedAddons);
+
+    const payload = {
+      name: contactName.trim(),
+      email: contactEmail.trim(),
+      mobile: contactMobile.trim() || undefined,
+      bedrooms,
+      bathrooms,
+      service: svc.label,
+      frequency,
+      location: `${locCity}, ${locState}`,
+      bookingDate: formatBookingDateForApi(date),
+      extras,
+      estimateLow: prices.low,
+      estimateMid: prices.mid,
+      estimateHigh: prices.high,
+      notes: contactNotes.trim() || undefined,
+    };
+
+    try {
+      const response = await fetch("/api/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = (await response.json()) as { error?: string };
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit booking request.");
+      }
+
+      setBookingStatus("success");
+      setContactName("");
+      setContactEmail("");
+      setContactMobile("");
+      setContactNotes("");
+    } catch (error) {
+      setBookingStatus("error");
+      setBookingErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit booking request.",
+      );
+    }
   }
+
   const panels = [
 
     
@@ -1421,6 +1426,10 @@ function handleFrequencyField() {
     onFrequencyChange={setFrequency}
     selectedAddons={standardSelectedAddons}
     onSelectedAddonsChange={handleStandardAddonsChange}
+    bedIdx={standardBedIdx}
+    bathIdx={standardBathIdx}
+    onBedIdxChange={setStandardBedIdx}
+    onBathIdxChange={setStandardBathIdx}
   /> ,
     <DeepCleanPanel
     key="deep"
@@ -1511,217 +1520,223 @@ function handleFrequencyField() {
             whileInView="visible"
             viewport={SCROLL_VIEWPORT}
             variants={staggerContainer}
-            className="
-              -mb-px flex snap-x snap-mandatory gap-2 overflow-x-auto pb-2 scroll-smooth
-              [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
-              sm:pb-px lg:gap-2
-            "
+            className="overflow-x-auto pb-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {SERVICES.map((s, i) => {
-              const active = serviceIdx === i;
+            <div className="mx-auto flex w-max min-w-full snap-x snap-mandatory justify-start gap-8 scroll-smooth px-2 sm:px-0">
+              {SERVICES.map((s, i) => {
+                const active = serviceIdx === i;
 
-              return (
-                <motion.button
-                  key={s.label}
-                  type="button"
-                  variants={staggerItem}
-                  onClick={() => setServiceIdx(i)}
-                  whileHover={active ? undefined : { y: -2 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={[
-                    "group relative flex min-w-[145px] shrink-0 snap-start items-center gap-3",
-                    "rounded-2xl px-3.5 py-3 text-left transition-all duration-300",
-                    "sm:min-w-[118px] sm:flex-col sm:items-center sm:gap-2.5",
-                    "sm:rounded-b-none sm:rounded-t-[20px] sm:px-4 sm:py-3.5",
-                    active
-                      ? "z-[2] border-x border-t border-neutral-200 bg-white shadow-[0_-4px_20px_rgba(12,26,46,0.06)]"
-                      : "z-[1] border border-transparent bg-slate-50 hover:bg-white hover:shadow-md",
-                  ].join(" ")}
-                  style={{
-                    cursor: "pointer",
-                    marginBottom: active ? -1 : 0,
-                  }}
-                >
-                  <div
-                    className={[
-                      "grid h-14 w-14 shrink-0 place-items-center rounded-2xl transition-all duration-300",
-                      active
-                        ? " ring-1 ring-sky-100"
-                        : " group-hover:ring-1 group-hover:ring-sky-100",
-                    ].join(" ")}
+                return (
+                  <motion.button
+                    key={s.label}
+                    type="button"
+                    variants={staggerItem}
+                    onClick={() => setServiceIdx(i as ServiceIndex)}
+                    whileTap={{ scale: 0.98 }}
+                    className="group flex w-[96px] shrink-0 snap-center flex-col items-center gap-3.5 border-none bg-transparent p-0"
+                    style={{ cursor: "pointer" }}
                   >
-                    <Image
-                      src={s.image}
-                      alt={s.label}
-                      width={42}
-                      height={42}
-                      className="transition-transform duration-300 group-hover:scale-105"
-                      style={{ objectFit: "contain" }}
-                    />
-                  </div>
-              
-                  <span
-                    className={[
-                      "truncate text-sm font-black uppercase tracking-[0.08em] transition-colors duration-200",
-                      "sm:whitespace-nowrap sm:text-[12px]",
-                      active ? "text-slate-950" : "text-slate-500 group-hover:text-slate-900",
-                    ].join(" ")}
-                  >
-                    {s.label}
-                  </span>
-              
-                  {active && (
-                    <motion.div
-                      layoutId="service-active-line"
-                      className="absolute bottom-0 left-4 right-4 hidden h-[3px] rounded-full bg-sky-500 sm:block"
-                      transition={{ duration: 0.25 }}
-                    />
-                  )}
-                </motion.button>
-              );
-            })}
+                    <div
+                      className={[
+                        "grid h-24 w-24 place-items-center rounded-3xl  transition-all duration-200",
+                        active
+                          ? "bg-sky-50 shadow-sm"
+                          : " bg-white ",
+                      ].join(" ")}
+                    >
+                      <Image
+                        src={s.image}
+                        alt={s.label}
+                        width={52}
+                        height={52}
+                        className="transition-transform duration-200 group-hover:scale-105"
+                        style={{ objectFit: "contain" }}
+                      />
+                    </div>
+
+                    <span
+                      className={[
+                        "text-center text-sm font-semibold leading-tight transition-colors duration-200",
+                        active ? "text-sky-600" : "text-slate-500 group-hover:text-slate-600",
+                      ].join(" ")}
+                    >
+                      {s.label}
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </div>
           </motion.div>
-  
+
           {/* Main Card */}
           <motion.div
             initial="hidden"
             whileInView="visible"
             viewport={SCROLL_VIEWPORT}
             variants={slideLeft}
-            className="relative z-[1] overflow-visible rounded-b-[24px] rounded-tr-[24px] border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(12,26,46,.04),0_18px_55px_rgba(12,26,46,.08)]"    >
+            className="relative z-[1] overflow-visible rounded-[24px] border border-neutral-200 bg-white shadow-[0_1px_3px_rgba(12,26,46,.04),0_18px_55px_rgba(12,26,46,.08)]"
+          >
             {/* Search Bar */}
-<div className="border-b border-gray-200 bg-white">
-  <button
-    type="button"
-    className="flex w-full items-center justify-between gap-3 rounded-none border-none bg-slate-50 px-4 py-4 text-left sm:hidden"
-    onClick={() => setMobileSearchOpen((value) => !value)}
-  >
-    <span className="whitespace-normal text-base font-semibold leading-snug tracking-tight text-slate-900">
-      {mobileSearchSummary}
-    </span>
+            <div className="p-3 sm:p-5">
+              <button
+                type="button"
+                className="mb-3 flex w-full items-center justify-between gap-3 rounded-xl  bg-white px-4 py-4 text-left shadow-sm sm:hidden"
+                onClick={() => setMobileSearchOpen((value) => !value)}
+              >
+                <span className="whitespace-normal text-base font-semibold leading-snug tracking-tight text-slate-900">
+                  {mobileSearchSummary}
+                </span>
 
-    <motion.div
-      animate={{ rotate: mobileSearchOpen ? 180 : 0 }}
-      transition={{ duration: 0.2 }}
-      className="shrink-0 text-slate-400"
-    >
-      <ChevronDown size={20} />
-    </motion.div>
-  </button>
-
-  <div
-    className={`relative z-50 flex-col gap-2 p-3 sm:gap-0 sm:p-0 ${
-      mobileSearchOpen ? "flex" : "hidden"
-    } sm:flex sm:h-[88px] sm:flex-row sm:items-stretch`}
-  >
-    {/* Location */}
-    <div
-      className="relative flex w-full items-stretch sm:min-h-0 sm:flex-[1.33]"
-      style={{ zIndex: locOpen ? 99999 : undefined }}
-    >
-      <SF
-        icon={<MapPin size={20} />}
-        label="Location"
-        value={`${locCity}, ${locState}`}
-        active={locOpen}
-        onClick={handleLocField}
-      />
-
-      <motion.div
-        animate={{ rotate: locOpen ? 180 : 0 }}
-        transition={{ duration: 0.2 }}
-        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 sm:right-5"
-        style={{ color: locOpen ? K.blue : K.hint }}
-      >
-        <ChevronDown size={20} strokeWidth={2.2} />
-      </motion.div>
-
-      <LocationDropdown
-        open={locOpen}
-        state={locState}
-        city={locCity}
-        onStateChange={setLocState}
-        onCitySelect={handleCitySelect}
-      />
-    </div>
-
-    {/* Date */}
-    <div
-      className="relative flex w-full items-stretch sm:min-h-0 sm:flex-1"
-      style={{ zIndex: dateOpen ? 99999 : undefined }}
-    >
-      <SF
-        icon={<Calendar size={20} />}
-        label="Date"
-        value={date ? formatDate(date) : "Select date"}
-        active={dateOpen}
-        onClick={handleDateField}
-        placeholder={!frequency}
-      />
-
-      <motion.div
-        animate={{ rotate: dateOpen ? 180 : 0 }}
-        transition={{ duration: 0.2 }}
-        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 sm:right-5"
-        style={{ color: dateOpen ? K.blue : K.hint }}
-      >
-        <ChevronDown size={20} strokeWidth={2.2} />
-      </motion.div>
-
-      <CalendarDropdown
-        open={dateOpen}
-        selected={date}
-        onSelect={handleDateSelect}
-      />
-    </div>
-
-    {/* Frequency */}
-    <div
-      className="relative flex w-full items-stretch sm:min-h-0 sm:flex-1"
-      style={{ zIndex: frequencyOpen ? 99999 : undefined }}
-    >
-      <SF
-        icon={<Repeat size={20} />}
-        label="Frequency"
-        value={frequency || "Select frequency"}
-        active={frequencyOpen}
-        onClick={handleFrequencyField}
-        flex={1}
-        last
-      />
-
-      <motion.div
-        animate={{ rotate: frequencyOpen ? 180 : 0 }}
-        transition={{ duration: 0.2 }}
-        className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 sm:right-5"
-        style={{ color: frequencyOpen ? K.blue : K.hint }}
-      >
-        <ChevronDown size={20} strokeWidth={2.2} />
-      </motion.div>
-
-      <FrequencyDropdown
-        open={frequencyOpen}
-        selected={frequency}
-        onSelect={handleFrequencySelect}
-      />
-    </div>
-  </div>
-</div>
-  
-            {/* Active Panel */}
-            <div className="bg-slate-50/80 p-4 sm:p-6">
-              <AnimatePresence mode="wait">
                 <motion.div
-                  key={serviceIdx}
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -12 }}
-                  transition={{ duration: 0.28, ease: MOTION_EASE }}
+                  animate={{ rotate: mobileSearchOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="shrink-0 text-slate-400"
                 >
-                  {panels[serviceIdx]}
+                  <ChevronDown size={20} />
                 </motion.div>
-              </AnimatePresence>
+              </button>
+
+              <div
+                className={`relative z-50 ${
+                  mobileSearchOpen ? "flex" : "hidden"
+                } sm:flex`}
+              >
+                <div className="flex w-full flex-col gap-2 sm:min-h-[64px] sm:flex-row sm:items-stretch sm:gap-0 sm:rounded-xl  sm:bg-white sm:p-1 sm:shadow-[0_4px_18px_rgba(15,23,42,0.06)]">
+                  {/* Location */}
+                  <div
+                    className="relative flex w-full items-stretch sm:min-h-0 sm:flex-[1.33] sm:rounded-lg sm:bg-white"
+                    style={{ zIndex: locOpen ? 99999 : undefined }}
+                  >
+                    <SF
+                      icon={<MapPin size={18} />}
+                      label="Location"
+                      value={`${locCity}, ${locState}`}
+                      active={locOpen}
+                      onClick={handleLocField}
+                      last
+                    />
+
+                    <motion.div
+                      animate={{ rotate: locOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 sm:right-4"
+                      style={{ color: locOpen ? K.blue : K.hint }}
+                    >
+                      <ChevronDown size={16} strokeWidth={2.2} />
+                    </motion.div>
+
+                    <LocationDropdown
+                      open={locOpen}
+                      state={locState}
+                      city={locCity}
+                      onStateChange={setLocState}
+                      onCitySelect={handleCitySelect}
+                    />
+                  </div>
+
+                  <div
+                    aria-hidden="true"
+                    className="hidden w-px shrink-0 self-stretch bg-slate-200 sm:my-2 sm:block"
+                  />
+
+                  {/* Date */}
+                  <div
+                    className="relative flex w-full items-stretch sm:min-h-0 sm:flex-1 sm:rounded-lg sm:bg-white"
+                    style={{ zIndex: dateOpen ? 99999 : undefined }}
+                  >
+                    <SF
+                      icon={<Calendar size={18} />}
+                      label="Date"
+                      value={date ? formatDate(date) : "Select date"}
+                      active={dateOpen}
+                      onClick={handleDateField}
+                      placeholder={!date}
+                      last
+                    />
+
+                    <motion.div
+                      animate={{ rotate: dateOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 sm:right-4"
+                      style={{ color: dateOpen ? K.blue : K.hint }}
+                    >
+                      <ChevronDown size={16} strokeWidth={2.2} />
+                    </motion.div>
+
+                    <CalendarDropdown
+                      open={dateOpen}
+                      selected={date}
+                      onSelect={handleDateSelect}
+                    />
+                  </div>
+
+                  <div
+                    aria-hidden="true"
+                    className="hidden w-px shrink-0 self-stretch bg-slate-200 sm:my-2 sm:block"
+                  />
+
+                  {/* Options toggle */}
+                  <div className="relative flex w-full items-center justify-center p-2 sm:min-h-0 sm:w-auto sm:flex-initial sm:p-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLocOpen(false);
+                        setDateOpen(false);
+                        setOptionsOpen((value) => !value);
+                      }}
+                      className={[
+                        "flex w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-3 text-xs font-bold text-white shadow-sm transition-all duration-200",
+                        "max-sm:border-0 sm:h-full sm:min-h-[48px] sm:px-5",
+                        optionsOpen
+                          ? "bg-sky-500 hover:bg-sky-600"
+                          : "bg-sky-500 hover:bg-sky-600",
+                      ].join(" ")}
+                 
+                    >
+                      <SlidersHorizontal size={15} strokeWidth={2.25} />
+                      <span>Customize</span>
+                      <motion.div
+                        animate={{ rotate: optionsOpen ? 180 : 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="shrink-0"
+                      >
+                        <ChevronDown size={15} strokeWidth={2.25} />
+                      </motion.div>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
+  
+            {/* Active Panel: hidden by default, opened from the Options button */}
+            <AnimatePresence initial={false}>
+              {optionsOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.25, ease: "easeOut" }}
+                  className="overflow-hidden bg-white shadow-[inset_0_1px_0_rgba(15,23,42,0.06)]"
+                >
+                  <div className="px-4 py-5 sm:px-6 sm:py-6">
+                    <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                      Customize your clean
+                    </p>
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={serviceIdx}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -12 }}
+                        transition={{ duration: 0.28, ease: MOTION_EASE }}
+                      >
+                        {panels[serviceIdx]}
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
   
             {/* Price Strip */}
             <motion.div
@@ -1729,7 +1744,7 @@ function handleFrequencyField() {
               whileInView="visible"
               viewport={SCROLL_VIEWPORT}
               variants={fadeUp}
-              className="flex flex-col gap-5 border-t border-gray-200 bg-gradient-to-b from-slate-50 to-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6 lg:px-8"
+              className="flex flex-col gap-5 to-white px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6 lg:px-8"
             >
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-5 lg:hidden">
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-black">
@@ -1757,22 +1772,34 @@ function handleFrequencyField() {
                 Chat with our Assistant
               </button>
   
-              <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
-                {/* <div className="flex items-center justify-center gap-1.5 rounded-[] bg-emerald-50 px-3 py-1.5 sm:justify-start">
-                  <div className="h-1.5 w-1.5 rounded-[] bg-emerald-600" />
-                  <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
-                    Licensed & insured
-                  </span>
-                </div> */}
-  
-                <motion.button
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.97 }}
-                  className="w-full cursor-pointer  border-none bg-sky-400 px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(56,189,248,.35)] transition-colors duration-200 hover:bg-sky-500 sm:w-auto"
-                >
-                  {svc.bookLabel}
-                </motion.button>
-              </div>
+              <AnimatePresence initial={false}>
+                {optionsOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.25, ease: MOTION_EASE }}
+                    className="flex w-full flex-col gap-3 overflow-hidden sm:w-auto sm:flex-row sm:items-center sm:gap-4"
+                  >
+                    {/* <div className="flex items-center justify-center gap-1.5 rounded-[] bg-emerald-50 px-3 py-1.5 sm:justify-start">
+                      <div className="h-1.5 w-1.5 rounded-[] bg-emerald-600" />
+                      <span className="text-[10px] font-semibold uppercase tracking-wide text-emerald-700">
+                        Licensed & insured
+                      </span>
+                    </div> */}
+
+                    <motion.button
+                      type="button"
+                      whileHover={{ scale: 1.02, y: -1 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={openBookingForm}
+                      className="w-full cursor-pointer  border-none bg-sky-400 px-7 py-3.5 text-sm font-bold text-white shadow-[0_8px_24px_rgba(56,189,248,.35)] transition-colors duration-200 hover:bg-sky-500 sm:w-auto"
+                    >
+                      {svc.bookLabel}
+                    </motion.button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           </motion.div>
         </div>
@@ -1780,23 +1807,27 @@ function handleFrequencyField() {
 
   {/* right side */}
   <div className="hidden flex-col gap-6 lg:flex">
- {/* Booking Summary */}
- <motion.div
-  initial="hidden"
-  whileInView="visible"
-  viewport={SCROLL_VIEWPORT}
-  variants={slideRight}
-  className="hidden lg:block"
->
-  <BookingSummary
-    service={svc.label}
-    frequency={frequency}
-    location={`${locCity}, ${locState}`}
-    date={date}
-    extras={summaryExtras}
-    total={prices.mid}
-  />
-</motion.div>
+ {/* Booking Summary — hidden until "Customize" is opened */}
+ <AnimatePresence initial={false}>
+   {optionsOpen && (
+     <motion.div
+       initial={{ opacity: 0, height: 0, y: -8 }}
+       animate={{ opacity: 1, height: "auto", y: 0 }}
+       exit={{ opacity: 0, height: 0, y: -8 }}
+       transition={{ duration: 0.3, ease: MOTION_EASE }}
+       className="hidden overflow-hidden lg:block"
+     >
+       <BookingSummary
+         service={svc.label}
+         frequency={frequency}
+         location={`${locCity}, ${locState}`}
+         date={date}
+         extras={summaryExtras}
+         total={prices.mid}
+       />
+     </motion.div>
+   )}
+ </AnimatePresence>
 
 
           {/* Right Image Card */}
@@ -1807,55 +1838,47 @@ function handleFrequencyField() {
   variants={slideRight}
   className="hidden min-h-[440px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] lg:flex"
 >
-  {/* Estimate Header */}
-  <div className="border-b border-slate-200/80 bg-gradient-to-r from-slate-50 via-white to-slate-50 px-5 py-4 lg:px-6">
-    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <div>
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
-          Estimate Range
-        </p>
-       
-      </div>
+  {/* Estimate Header — hidden until "Customize" is opened */}
+  <AnimatePresence initial={false}>
+    {optionsOpen && (
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.25, ease: MOTION_EASE }}
+        className="overflow-hidden border-b border-slate-200/80 bg-gradient-to-r from-slate-50 via-white to-slate-50"
+      >
+        <div className="px-5 py-4 lg:px-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
+                Estimate Range
+              </p>
+             
+            </div>
 
-      <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-slate-200 py-2 bg-white shadow-sm">
-        <PricePill label="Low" value={prices.low} />
-        <div className="border-x border-slate-200 px-2">
-          <PricePill label="Mid" value={prices.mid} accent />
+            <div className="grid grid-cols-3 overflow-hidden rounded-xl  py-2 ">
+              <PricePill label="Low" value={prices.low} />
+              <div className=" px-2">
+                <PricePill label="Mid" value={prices.mid} accent />
+              </div>
+              <PricePill label="High" value={prices.high} />
+            </div>
+          </div>
         </div>
-        <PricePill label="High" value={prices.high} />
-      </div>
-    </div>
-  </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
 
   {/* Gallery Area */}
   <div className="relative flex min-h-0 flex-1 flex-col bg-gradient-to-b from-white to-slate-50/70 p-5 lg:p-6">
-    <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm">
+    <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl ">
       <AnimatePresence mode="wait">
-        {serviceIdx === 0 ? (
-          <DynamicServiceGallery
-            galleryKey="standard-gallery"
-            images={standardGalleryImages}
-            isDefaultOnly={isDefaultGalleryOnly}
-          />
-        ) : serviceIdx === 1 ? (
-          <DynamicServiceGallery
-            galleryKey="deep-clean-gallery"
-            images={deepCleanGalleryImages}
-            isDefaultOnly={isDeepCleanDefaultGalleryOnly}
-          />
-        ) : serviceIdx === 2 ? (
-          <DynamicServiceGallery
-            galleryKey="move-out-gallery"
-            images={moveOutGalleryImages}
-            isDefaultOnly={isMoveOutDefaultGalleryOnly}
-          />
-        ) : (
-          <DynamicServiceGallery
-            galleryKey="commercial-gallery"
-            images={commercialGalleryImages}
-            isDefaultOnly={isCommercialDefaultGalleryOnly}
-          />
-        )}
+        <DynamicServiceGallery
+          galleryKey={activeGallery.galleryKey}
+          images={activeGallery.images}
+          isDefaultOnly={activeGallery.isDefaultOnly}
+        />
       </AnimatePresence>
     </div>
   </div>
@@ -1863,6 +1886,159 @@ function handleFrequencyField() {
        
   </div>
       </div>
+
+      <AnimatePresence>
+        {bookingFormOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 p-4"
+            onClick={closeBookingForm}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200"
+              onClick={(event) => event.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="booking-form-title"
+            >
+              <div className="mb-5">
+                <h3
+                  id="booking-form-title"
+                  className="text-xl font-bold text-slate-900"
+                >
+                  {svc.bookLabel}
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Share your contact details and we&apos;ll confirm your{" "}
+                  {svc.label.toLowerCase()} request.
+                </p>
+              </div>
+
+              {bookingStatus === "success" ? (
+                <div className="space-y-4">
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                    Thanks! Your booking request was submitted successfully.
+                  </div>
+                  <button
+                    type="button"
+                    onClick={closeBookingForm}
+                    className="w-full rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-600"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : (
+                <form onSubmit={handleBookingSubmit} className="space-y-4">
+                  <div>
+                    <label
+                      htmlFor="booking-name"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Full name
+                    </label>
+                    <input
+                      id="booking-name"
+                      type="text"
+                      required
+                      value={contactName}
+                      onChange={(event) => setContactName(event.target.value)}
+                      className={bookingInputClassName}
+                      placeholder="Your name"
+                      autoComplete="name"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="booking-email"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Email
+                    </label>
+                    <input
+                      id="booking-email"
+                      type="email"
+                      required
+                      value={contactEmail}
+                      onChange={(event) => setContactEmail(event.target.value)}
+                      className={bookingInputClassName}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="booking-mobile"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Mobile
+                    </label>
+                    <input
+                      id="booking-mobile"
+                      type="tel"
+                      value={contactMobile}
+                      onChange={(event) => setContactMobile(event.target.value)}
+                      className={bookingInputClassName}
+                      placeholder="Phone number"
+                      autoComplete="tel"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="booking-notes"
+                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                    >
+                      Notes (optional)
+                    </label>
+                    <textarea
+                      id="booking-notes"
+                      rows={3}
+                      value={contactNotes}
+                      onChange={(event) => setContactNotes(event.target.value)}
+                      className={`${bookingInputClassName} resize-none`}
+                      placeholder="Access instructions, pets, special requests..."
+                    />
+                  </div>
+
+                  {bookingStatus === "error" && (
+                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                      {bookingErrorMessage}
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                    <button
+                      type="button"
+                      onClick={closeBookingForm}
+                      disabled={bookingStatus === "loading"}
+                      className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={bookingStatus === "loading"}
+                      className="rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(56,189,248,.35)] transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {bookingStatus === "loading"
+                        ? "Submitting..."
+                        : "Submit request"}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.section>
   );
 }
