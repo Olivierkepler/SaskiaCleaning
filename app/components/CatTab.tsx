@@ -54,6 +54,12 @@ function calc(mid: number) {
 
 type BookingSubmitStatus = "idle" | "loading" | "success" | "error";
 
+type ReferralValidationState =
+  | { status: "idle" }
+  | { status: "checking" }
+  | { status: "valid"; code: string; friendDiscountAmount: number }
+  | { status: "invalid" };
+
 function formatBookingDateForApi(date: Date | null): string | undefined {
   if (!date) return undefined;
 
@@ -1232,6 +1238,8 @@ export default function CleaningEstimator() {
   const [contactNotes, setContactNotes] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [referralCodeError, setReferralCodeError] = useState("");
+  const [referralValidation, setReferralValidation] =
+    useState<ReferralValidationState>({ status: "idle" });
   const urlPrefilledReferralCode = useRef<string | null>(null);
   const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(new Set());
 
@@ -1313,6 +1321,58 @@ export default function CleaningEstimator() {
     urlPrefilledReferralCode.current = prefilledReferralCode;
     setReferralCode(prefilledReferralCode);
   }, []);
+
+  useEffect(() => {
+    const trimmed = referralCode.trim();
+    if (!trimmed) {
+      setReferralValidation({ status: "idle" });
+      return;
+    }
+
+    const normalizedCode = normalizeReferralCode(referralCode);
+    if (!normalizedCode) {
+      setReferralValidation({ status: "idle" });
+      return;
+    }
+
+    setReferralValidation({ status: "checking" });
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await fetch("/api/referral-codes/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ referralCode: normalizedCode }),
+        });
+
+        const data = (await response.json()) as {
+          valid?: boolean;
+          code?: string;
+          friendDiscountAmount?: number;
+        };
+
+        if (!response.ok) {
+          setReferralValidation({ status: "idle" });
+          return;
+        }
+
+        if (data.valid && data.code && data.friendDiscountAmount != null) {
+          setReferralValidation({
+            status: "valid",
+            code: data.code,
+            friendDiscountAmount: data.friendDiscountAmount,
+          });
+          return;
+        }
+
+        setReferralValidation({ status: "invalid" });
+      } catch {
+        setReferralValidation({ status: "idle" });
+      }
+    }, 400);
+
+    return () => window.clearTimeout(timer);
+  }, [referralCode]);
 
   useEffect(() => {
     function handle(e: MouseEvent) {
@@ -1494,6 +1554,12 @@ export default function CleaningEstimator() {
     : serviceIdx === 2
     ? Array.from(moveOutSelectedAddons)
     : Array.from(commercialSelectedAddons);
+
+  const referralDiscountAmount =
+    referralValidation.status === "valid"
+      ? referralValidation.friendDiscountAmount
+      : 0;
+  const estimatedTotalAfterDiscount = Math.max(0, prices.mid - referralDiscountAmount);
 
 
   return (
@@ -2043,17 +2109,37 @@ export default function CleaningEstimator() {
                         }
                       }}
                       className={`${bookingInputClassName}${
-                        referralCodeError
+                        referralCodeError || referralValidation.status === "invalid"
                           ? " border-red-300 focus:border-red-400 focus:ring-red-100"
-                          : ""
+                          : referralValidation.status === "valid"
+                            ? " border-emerald-300 focus:border-emerald-400 focus:ring-emerald-100"
+                            : ""
                       }`}
                       placeholder="Have a referral code?"
                       autoComplete="off"
-                      aria-invalid={referralCodeError ? true : undefined}
+                      aria-invalid={
+                        referralCodeError || referralValidation.status === "invalid"
+                          ? true
+                          : undefined
+                      }
                       aria-describedby={
-                        referralCodeError ? "booking-referral-code-error" : undefined
+                        referralCodeError
+                          ? "booking-referral-code-error"
+                          : referralValidation.status === "invalid"
+                            ? "booking-referral-code-validation"
+                            : referralValidation.status === "valid"
+                              ? "booking-referral-code-success"
+                              : undefined
                       }
                     />
+                    {referralValidation.status === "invalid" && !referralCodeError && (
+                      <p
+                        id="booking-referral-code-validation"
+                        className="mt-1.5 text-sm font-medium text-red-600"
+                      >
+                        Invalid referral code.
+                      </p>
+                    )}
                     {referralCodeError && (
                       <p
                         id="booking-referral-code-error"
@@ -2061,6 +2147,35 @@ export default function CleaningEstimator() {
                       >
                         {referralCodeError}
                       </p>
+                    )}
+                    {referralValidation.status === "valid" && (
+                      <div
+                        id="booking-referral-code-success"
+                        className="mt-3 space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm"
+                      >
+                        <p className="font-medium text-emerald-800">
+                          Referral applied: ${referralDiscountAmount} off your
+                          first cleaning.
+                        </p>
+                        <div className="space-y-1 text-slate-700">
+                          <div className="flex items-center justify-between gap-4">
+                            <span>Original estimate</span>
+                            <span className="font-semibold text-slate-900">
+                              ${prices.mid}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-4 text-emerald-700">
+                            <span>Referral discount</span>
+                            <span className="font-semibold">
+                              -${referralDiscountAmount}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between gap-4 border-t border-emerald-200 pt-2 font-bold text-slate-900">
+                            <span>Estimated total after discount</span>
+                            <span>${estimatedTotalAfterDiscount}</span>
+                          </div>
+                        </div>
+                      </div>
                     )}
                   </div>
 
