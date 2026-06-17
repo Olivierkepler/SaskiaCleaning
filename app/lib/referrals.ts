@@ -158,6 +158,56 @@ export function generateReferralCodeWithRewardSuffix(name: string): string {
   return `${referralNameBase(name)}20`;
 }
 
+export const PUBLIC_REFERRAL_BOOKING_URL = "https://saskiaservices.com/#quote";
+
+export function isValidReferralEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function buildReferralLink(): string {
+  return PUBLIC_REFERRAL_BOOKING_URL;
+}
+
+export function buildReferralShareMessage(code: string): string {
+  return `Use my Saskia Cleaning referral code ${code} for $20 off your first cleaning: ${PUBLIC_REFERRAL_BOOKING_URL}`;
+}
+
+export function generatePublicReferralCodeCandidates(name: string): string[] {
+  return [
+    generateReferralCodeWithRewardSuffix(name),
+    generateReferralCode(name),
+    generateReferralCode(name),
+    generateReferralCode(name),
+  ];
+}
+
+export function parsePublicReferralCodeInput(body: unknown):
+  | { data: { referrerName: string; referrerEmail: string | null } }
+  | { error: string } {
+  if (!body || typeof body !== "object") {
+    return { error: "Invalid JSON body." };
+  }
+
+  const record = body as Record<string, unknown>;
+  const referrerName = readString(record, "referrerName", "referrer_name");
+  const referrerEmailRaw = readString(record, "referrerEmail", "referrer_email");
+
+  if (!referrerName) {
+    return { error: "Your name is required." };
+  }
+
+  if (referrerEmailRaw && !isValidReferralEmail(referrerEmailRaw)) {
+    return { error: "Please enter a valid email address." };
+  }
+
+  return {
+    data: {
+      referrerName,
+      referrerEmail: referrerEmailRaw ?? null,
+    },
+  };
+}
+
 export function serializeReferralCode(row: ReferralCodeRow): ReferralCode {
   return {
     id: row.id,
