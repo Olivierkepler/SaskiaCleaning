@@ -108,19 +108,23 @@ export default function Navbar({
 
         <div className="flex flex-wrap items-center gap-2">
           <a
+            href={`/dashboard?key=${dashboardKey}`}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Bookings
+          </a>
+          <a
+            href={`/dashboard/promos?key=${dashboardKey}`}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Promo Cards
+          </a>
+          <a
             href={`/?key=${dashboardKey}`}
             className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-sky-600"
           >
             Home
           </a>
-     
-
-          {/* <a
-            href={`/dashboard?key=${dashboardKey}`}
-            className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-sky-600"
-          >
-            Bookings
-          </a> */}
 
           <div className="relative" ref={dropdownRef}>
             <button
