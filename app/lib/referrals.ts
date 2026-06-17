@@ -47,6 +47,85 @@ export type ReferralCode = {
   updatedAt: string;
 };
 
+export type ReferralTrackingRow = {
+  id: number;
+  code: string;
+  status: ReferralStatus;
+  reward_amount: number;
+  friend_discount_amount: number;
+  referred_name: string;
+  referred_email: string;
+  booking_request_id: number;
+  booking_created_at: string | null;
+  booking_service: string | null;
+  booking_estimate_mid: number | null;
+  referrer_name: string | null;
+  referrer_email: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ReferralTracking = {
+  id: number;
+  code: string;
+  status: ReferralStatus;
+  rewardAmount: number;
+  friendDiscountAmount: number;
+  referredName: string;
+  referredEmail: string;
+  bookingRequestId: number;
+  bookingCreatedAt: string | null;
+  bookingService: string | null;
+  bookingEstimateMid: number | null;
+  referrerName: string | null;
+  referrerEmail: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ReferralCodeInput = {
+  code?: string;
+  referrerName: string;
+  referrerEmail: string | null;
+  rewardAmount: number;
+  friendDiscountAmount: number;
+  isActive: boolean;
+};
+
+export type ReferralCodePatch = Partial<ReferralCodeInput>;
+
+export type ReferralDashboardMetrics = {
+  totalCodes: number;
+  activeCodes: number;
+  pendingReferrals: number;
+  rewardedReferrals: number;
+  totalPendingRewards: number;
+  totalRewardedAmount: number;
+};
+
+export const EMPTY_REFERRAL_CODE_FORM: ReferralCodeInput = {
+  referrerName: "",
+  referrerEmail: null,
+  rewardAmount: 20,
+  friendDiscountAmount: 20,
+  isActive: true,
+};
+
+export function parseReferralId(id: string): number | null {
+  if (!/^\d+$/.test(id)) return null;
+  const parsed = Number.parseInt(id, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
+export function isDuplicateReferralCodeError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    (error.message.includes("referral_codes_code_key") ||
+      error.message.includes("duplicate key"))
+  );
+}
+
 export function isDashboardAuthorized(key: string | null): boolean {
   return key === process.env.DASHBOARD_KEY;
 }
@@ -91,6 +170,79 @@ export function serializeReferralCode(row: ReferralCodeRow): ReferralCode {
     usageCount: row.usage_count,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+  };
+}
+
+export function serializeReferralTracking(
+  row: ReferralTrackingRow,
+): ReferralTracking {
+  return {
+    id: row.id,
+    code: row.code,
+    status: row.status,
+    rewardAmount: row.reward_amount,
+    friendDiscountAmount: row.friend_discount_amount,
+    referredName: row.referred_name,
+    referredEmail: row.referred_email,
+    bookingRequestId: row.booking_request_id,
+    bookingCreatedAt: row.booking_created_at,
+    bookingService: row.booking_service,
+    bookingEstimateMid: row.booking_estimate_mid,
+    referrerName: row.referrer_name,
+    referrerEmail: row.referrer_email,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function computeReferralMetrics(
+  codes: ReferralCode[],
+  referrals: ReferralTracking[],
+): ReferralDashboardMetrics {
+  return {
+    totalCodes: codes.length,
+    activeCodes: codes.filter((code) => code.isActive).length,
+    pendingReferrals: referrals.filter((referral) => referral.status === "pending")
+      .length,
+    rewardedReferrals: referrals.filter((referral) => referral.status === "rewarded")
+      .length,
+    totalPendingRewards: referrals
+      .filter((referral) => referral.status === "pending")
+      .reduce((sum, referral) => sum + referral.rewardAmount, 0),
+    totalRewardedAmount: referrals
+      .filter((referral) => referral.status === "rewarded")
+      .reduce((sum, referral) => sum + referral.rewardAmount, 0),
+  };
+}
+
+function toReferralCodeInput(row: ReferralCodeRow): ReferralCodeInput {
+  return {
+    code: row.code,
+    referrerName: row.referrer_name,
+    referrerEmail: row.referrer_email,
+    rewardAmount: row.reward_amount,
+    friendDiscountAmount: row.friend_discount_amount,
+    isActive: row.is_active,
+  };
+}
+
+export function mergeReferralCodeInput(
+  existing: ReferralCodeRow,
+  patch: ReferralCodePatch,
+): ReferralCodeInput {
+  const current = toReferralCodeInput(existing);
+
+  return {
+    code: patch.code ?? current.code,
+    referrerName: patch.referrerName ?? current.referrerName,
+    referrerEmail:
+      patch.referrerEmail !== undefined
+        ? patch.referrerEmail
+        : current.referrerEmail,
+    rewardAmount: patch.rewardAmount ?? current.rewardAmount,
+    friendDiscountAmount:
+      patch.friendDiscountAmount ?? current.friendDiscountAmount,
+    isActive: patch.isActive ?? current.isActive,
   };
 }
 
@@ -177,4 +329,98 @@ export function parseReferralCodeInput(body: unknown):
       isActive: isActive ?? true,
     },
   };
+}
+
+export function parseReferralCodePatch(body: unknown):
+  | { data: ReferralCodePatch }
+  | { error: string } {
+  if (!body || typeof body !== "object") {
+    return { error: "Invalid JSON body." };
+  }
+
+  const record = body as Record<string, unknown>;
+  const patch: ReferralCodePatch = {};
+
+  if (record.referrerName !== undefined || record.referrer_name !== undefined) {
+    const referrerName = readString(record, "referrerName", "referrer_name");
+    if (!referrerName) {
+      return { error: "referrerName cannot be empty." };
+    }
+    patch.referrerName = referrerName;
+  }
+
+  if (record.referrerEmail !== undefined || record.referrer_email !== undefined) {
+    const referrerEmail = readString(record, "referrerEmail", "referrer_email");
+    patch.referrerEmail = referrerEmail ?? null;
+  }
+
+  if (record.code !== undefined) {
+    const codeRaw = readString(record, "code", "code");
+    if (!codeRaw || normalizeReferralCode(codeRaw).length === 0) {
+      return { error: "code cannot be empty." };
+    }
+    patch.code = normalizeReferralCode(codeRaw);
+  }
+
+  if (record.rewardAmount !== undefined || record.reward_amount !== undefined) {
+    const rewardAmount = readPositiveInteger(
+      record,
+      "rewardAmount",
+      "reward_amount",
+    );
+    if (rewardAmount === undefined) {
+      return { error: "rewardAmount must be a non-negative integer." };
+    }
+    patch.rewardAmount = rewardAmount;
+  }
+
+  if (
+    record.friendDiscountAmount !== undefined ||
+    record.friend_discount_amount !== undefined
+  ) {
+    const friendDiscountAmount = readPositiveInteger(
+      record,
+      "friendDiscountAmount",
+      "friend_discount_amount",
+    );
+    if (friendDiscountAmount === undefined) {
+      return {
+        error: "friendDiscountAmount must be a non-negative integer.",
+      };
+    }
+    patch.friendDiscountAmount = friendDiscountAmount;
+  }
+
+  if (record.isActive !== undefined || record.is_active !== undefined) {
+    const isActive = readBoolean(record, "isActive", "is_active");
+    if (isActive === undefined) {
+      return { error: "isActive must be a boolean." };
+    }
+    patch.isActive = isActive;
+  }
+
+  if (Object.keys(patch).length === 0) {
+    return { error: "No valid fields to update." };
+  }
+
+  return { data: patch };
+}
+
+export function parseReferralStatusUpdate(body: unknown):
+  | { data: { status: ReferralStatus } }
+  | { error: string } {
+  if (!body || typeof body !== "object") {
+    return { error: "Invalid JSON body." };
+  }
+
+  const record = body as Record<string, unknown>;
+  const statusRaw = readString(record, "status", "status");
+
+  if (!statusRaw || !isReferralStatus(statusRaw)) {
+    return {
+      error: "status must be one of: pending, completed, rewarded, cancelled.",
+    };
+  }
+
+  return { data: { status: statusRaw } };
 }

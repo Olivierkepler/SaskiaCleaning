@@ -120,6 +120,12 @@ export default function Navbar({
             Promo Cards
           </a>
           <a
+            href={`/dashboard/referrals?key=${dashboardKey}`}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Referrals
+          </a>
+          <a
             href={`/?key=${dashboardKey}`}
             className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-sky-600"
           >
