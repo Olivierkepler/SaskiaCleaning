@@ -13,13 +13,23 @@ import {
   type ReferralTracking,
   type TopReferrerStats,
 } from "../../lib/referrals";
-import {
-  formatReferralNotificationType,
-  type ReferralNotification,
-  type ReferralNotificationStatus,
+import type {
+  ReferralNotification,
+  ReferralNotificationStatus,
 } from "../../lib/referral-notifications";
 
 const escapeCsvValue = (value: string) => `"${value.replace(/"/g, '""')}"`;
+
+function formatReferralNotificationType(
+  type: ReferralNotification["type"],
+): string {
+  switch (type) {
+    case "referral_completed":
+      return "Referral completed";
+    case "referral_rewarded":
+      return "Referral rewarded";
+  }
+}
 
 type AnalyticsFilter =
   | "all"
