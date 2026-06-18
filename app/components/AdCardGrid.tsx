@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  buildReferralLink,
   buildReferralShareMessage,
   type ReferralCode,
 } from "@/app/lib/referrals";
@@ -287,6 +288,9 @@ function ReferralModal({
   const shareMessage = generatedCode
     ? buildReferralShareMessage(generatedCode.code)
     : "";
+  const referralLink = generatedCode
+    ? buildReferralLink(generatedCode.code)
+    : "";
 
   return (
     <AnimatePresence>
@@ -347,6 +351,38 @@ function ReferralModal({
                   </p>
                 </div>
 
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Your referral link
+                  </p>
+                  <p className="mt-2 break-all text-sm font-medium leading-relaxed text-sky-700">
+                    {referralLink}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => copyText("Link", referralLink)}
+                    className="mt-3 w-full rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-600"
+                  >
+                    Copy link
+                  </button>
+                </div>
+
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Message to send
+                  </p>
+                  <p className="mt-2 break-words text-sm leading-relaxed text-slate-700">
+                    {shareMessage}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => copyText("Message", shareMessage)}
+                    className="mt-3 w-full rounded-lg border border-sky-500 bg-white px-4 py-3 text-sm font-bold text-sky-600 transition hover:bg-sky-50"
+                  >
+                    Copy message
+                  </button>
+                </div>
+
                 {copyFeedback && (
                   <p className="text-center text-sm font-medium text-emerald-700">
                     {copyFeedback === "Copy failed"
@@ -356,20 +392,6 @@ function ReferralModal({
                 )}
 
                 <div className="grid gap-2">
-                  <button
-                    type="button"
-                    onClick={() => copyText("Code", generatedCode.code)}
-                    className="rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-600"
-                  >
-                    Copy code
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => copyText("Message", shareMessage)}
-                    className="rounded-lg border border-sky-500 bg-white px-4 py-3 text-sm font-bold text-sky-600 transition hover:bg-sky-50"
-                  >
-                    Copy message
-                  </button>
                   <button
                     type="button"
                     onClick={handleBookCleaning}
