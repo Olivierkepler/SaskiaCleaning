@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { sql } from "../../../lib/db";
 import {
+  applyReferralUpdate,
   isDashboardAuthorized,
   parseReferralId,
-  parseReferralStatusUpdate,
+  parseReferralUpdate,
   serializeReferralTracking,
   type ReferralRow,
   type ReferralTrackingRow,
@@ -17,6 +18,10 @@ async function loadReferralTracking(id: number) {
       r.status,
       r.reward_amount,
       r.friend_discount_amount,
+      r.payout_amount,
+      r.payout_method,
+      r.payout_notes,
+      r.rewarded_at,
       r.referred_name,
       r.referred_email,
       r.booking_request_id,
@@ -65,7 +70,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid JSON body." }, { status: 400 });
     }
 
-    const parsed = parseReferralStatusUpdate(body);
+    const parsed = parseReferralUpdate(body);
     if ("error" in parsed) {
       return NextResponse.json({ error: parsed.error }, { status: 400 });
     }
@@ -81,13 +86,33 @@ export async function PATCH(
       return NextResponse.json({ error: "Referral not found." }, { status: 404 });
     }
 
-    await sql`
-      UPDATE referrals
-      SET
-        status = ${parsed.data.status},
-        updated_at = now()
-      WHERE id = ${referralId}
-    `;
+    const next = applyReferralUpdate(existing, parsed.data);
+
+    if (next.useRewardedAtNow) {
+      await sql`
+        UPDATE referrals
+        SET
+          status = ${next.status},
+          payout_amount = ${next.payout_amount},
+          payout_method = ${next.payout_method},
+          payout_notes = ${next.payout_notes},
+          rewarded_at = now(),
+          updated_at = now()
+        WHERE id = ${referralId}
+      `;
+    } else {
+      await sql`
+        UPDATE referrals
+        SET
+          status = ${next.status},
+          payout_amount = ${next.payout_amount},
+          payout_method = ${next.payout_method},
+          payout_notes = ${next.payout_notes},
+          rewarded_at = ${next.rewarded_at},
+          updated_at = now()
+        WHERE id = ${referralId}
+      `;
+    }
 
     const referral = await loadReferralTracking(referralId);
     if (!referral) {
@@ -102,7 +127,7 @@ export async function PATCH(
     console.error(error);
 
     return NextResponse.json(
-      { error: "Failed to update referral status." },
+      { error: "Failed to update referral." },
       { status: 500 },
     );
   }

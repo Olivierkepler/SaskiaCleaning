@@ -30,6 +30,10 @@ export type ReferralRow = {
   reward_amount: number;
   friend_discount_amount: number;
   status: ReferralStatus;
+  payout_amount: number | null;
+  payout_method: string | null;
+  payout_notes: string | null;
+  rewarded_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -53,6 +57,10 @@ export type ReferralTrackingRow = {
   status: ReferralStatus;
   reward_amount: number;
   friend_discount_amount: number;
+  payout_amount: number | null;
+  payout_method: string | null;
+  payout_notes: string | null;
+  rewarded_at: string | null;
   referred_name: string;
   referred_email: string;
   booking_request_id: number;
@@ -71,6 +79,10 @@ export type ReferralTracking = {
   status: ReferralStatus;
   rewardAmount: number;
   friendDiscountAmount: number;
+  payoutAmount: number | null;
+  payoutMethod: string | null;
+  payoutNotes: string | null;
+  rewardedAt: string | null;
   referredName: string;
   referredEmail: string;
   bookingRequestId: number;
@@ -81,6 +93,14 @@ export type ReferralTracking = {
   referrerEmail: string | null;
   createdAt: string;
   updatedAt: string;
+};
+
+export type ReferralUpdatePatch = {
+  status?: ReferralStatus;
+  payoutAmount?: number | null;
+  payoutMethod?: string | null;
+  payoutNotes?: string | null;
+  rewardedAt?: string | null;
 };
 
 export type ReferralCodeInput = {
@@ -101,6 +121,8 @@ export type ReferralDashboardMetrics = {
   rewardedReferrals: number;
   totalPendingRewards: number;
   totalRewardedAmount: number;
+  totalPaidAmount: number;
+  rewardsOwed: number;
 };
 
 export const EMPTY_REFERRAL_CODE_FORM: ReferralCodeInput = {
@@ -245,6 +267,10 @@ export function serializeReferralTracking(
     status: row.status,
     rewardAmount: row.reward_amount,
     friendDiscountAmount: row.friend_discount_amount,
+    payoutAmount: row.payout_amount,
+    payoutMethod: row.payout_method,
+    payoutNotes: row.payout_notes,
+    rewardedAt: row.rewarded_at,
     referredName: row.referred_name,
     referredEmail: row.referred_email,
     bookingRequestId: row.booking_request_id,
@@ -274,6 +300,16 @@ export function computeReferralMetrics(
       .reduce((sum, referral) => sum + referral.rewardAmount, 0),
     totalRewardedAmount: referrals
       .filter((referral) => referral.status === "rewarded")
+      .reduce((sum, referral) => sum + referral.rewardAmount, 0),
+    totalPaidAmount: referrals
+      .filter((referral) => referral.status === "rewarded")
+      .reduce(
+        (sum, referral) =>
+          sum + (referral.payoutAmount ?? referral.rewardAmount),
+        0,
+      ),
+    rewardsOwed: referrals
+      .filter((referral) => referral.status === "completed")
       .reduce((sum, referral) => sum + referral.rewardAmount, 0),
   };
 }
@@ -469,21 +505,134 @@ export function parseReferralCodePatch(body: unknown):
   return { data: patch };
 }
 
-export function parseReferralStatusUpdate(body: unknown):
-  | { data: { status: ReferralStatus } }
+export function parseReferralUpdate(body: unknown):
+  | { data: ReferralUpdatePatch }
   | { error: string } {
   if (!body || typeof body !== "object") {
     return { error: "Invalid JSON body." };
   }
 
   const record = body as Record<string, unknown>;
-  const statusRaw = readString(record, "status", "status");
+  const patch: ReferralUpdatePatch = {};
 
-  if (!statusRaw || !isReferralStatus(statusRaw)) {
-    return {
-      error: "status must be one of: pending, completed, rewarded, cancelled.",
-    };
+  if ("status" in record) {
+    const statusRaw = readString(record, "status", "status");
+    if (!statusRaw || !isReferralStatus(statusRaw)) {
+      return {
+        error: "status must be one of: pending, completed, rewarded, cancelled.",
+      };
+    }
+    patch.status = statusRaw;
   }
 
-  return { data: { status: statusRaw } };
+  if ("payoutAmount" in record) {
+    const payoutAmount = record.payoutAmount;
+    if (payoutAmount === null) {
+      patch.payoutAmount = null;
+    } else if (
+      typeof payoutAmount === "number" &&
+      Number.isInteger(payoutAmount) &&
+      payoutAmount >= 0
+    ) {
+      patch.payoutAmount = payoutAmount;
+    } else {
+      return { error: "payoutAmount must be a non-negative integer or null." };
+    }
+  }
+
+  if ("payoutMethod" in record) {
+    const payoutMethod = record.payoutMethod;
+    if (payoutMethod === null) {
+      patch.payoutMethod = null;
+    } else if (typeof payoutMethod === "string") {
+      const trimmed = payoutMethod.trim();
+      patch.payoutMethod = trimmed.length > 0 ? trimmed : null;
+    } else {
+      return { error: "payoutMethod must be a string or null." };
+    }
+  }
+
+  if ("payoutNotes" in record) {
+    const payoutNotes = record.payoutNotes;
+    if (payoutNotes === null) {
+      patch.payoutNotes = null;
+    } else if (typeof payoutNotes === "string") {
+      const trimmed = payoutNotes.trim();
+      patch.payoutNotes = trimmed.length > 0 ? trimmed : null;
+    } else {
+      return { error: "payoutNotes must be a string or null." };
+    }
+  }
+
+  if ("rewardedAt" in record) {
+    const rewardedAt = record.rewardedAt;
+    if (rewardedAt === null) {
+      patch.rewardedAt = null;
+    } else if (typeof rewardedAt === "string") {
+      const parsed = Date.parse(rewardedAt);
+      if (Number.isNaN(parsed)) {
+        return { error: "rewardedAt must be a valid ISO date string or null." };
+      }
+      patch.rewardedAt = rewardedAt;
+    } else {
+      return { error: "rewardedAt must be an ISO date string or null." };
+    }
+  }
+
+  if (Object.keys(patch).length === 0) {
+    return { error: "No valid fields to update." };
+  }
+
+  return { data: patch };
+}
+
+export function applyReferralUpdate(
+  existing: ReferralRow,
+  patch: ReferralUpdatePatch,
+): {
+  status: ReferralStatus;
+  payout_amount: number | null;
+  payout_method: string | null;
+  payout_notes: string | null;
+  rewarded_at: string | null;
+  useRewardedAtNow: boolean;
+} {
+  const transitioningToRewarded =
+    patch.status === "rewarded" && existing.status !== "rewarded";
+
+  let payout_amount =
+    patch.payoutAmount !== undefined
+      ? patch.payoutAmount
+      : existing.payout_amount;
+  const payout_method =
+    patch.payoutMethod !== undefined
+      ? patch.payoutMethod
+      : existing.payout_method;
+  const payout_notes =
+    patch.payoutNotes !== undefined
+      ? patch.payoutNotes
+      : existing.payout_notes;
+  let rewarded_at =
+    patch.rewardedAt !== undefined ? patch.rewardedAt : existing.rewarded_at;
+
+  if (transitioningToRewarded) {
+    if (patch.payoutAmount === undefined && payout_amount == null) {
+      payout_amount = existing.reward_amount;
+    }
+    if (patch.rewardedAt === undefined && rewarded_at == null) {
+      rewarded_at = null;
+    }
+  }
+
+  return {
+    status: patch.status ?? existing.status,
+    payout_amount,
+    payout_method,
+    payout_notes,
+    rewarded_at,
+    useRewardedAtNow:
+      transitioningToRewarded &&
+      patch.rewardedAt === undefined &&
+      rewarded_at == null,
+  };
 }

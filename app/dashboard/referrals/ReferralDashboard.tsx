@@ -58,6 +58,12 @@ function toForm(code: ReferralCode): ReferralCodeInput {
   };
 }
 
+type ReferralPayoutDraft = {
+  payoutAmount: number;
+  payoutMethod: string;
+  payoutNotes: string;
+};
+
 function ReferralCodeForm({
   form,
   onChange,
@@ -227,6 +233,42 @@ export default function ReferralDashboard({
   const [statusFilter, setStatusFilter] = useState<ReferralStatus | "all">(
     "all",
   );
+  const [payoutDrafts, setPayoutDrafts] = useState<
+    Record<number, ReferralPayoutDraft>
+  >({});
+
+  function getPayoutDraft(referral: ReferralTracking): ReferralPayoutDraft {
+    const draft = payoutDrafts[referral.id];
+    if (draft) return draft;
+
+    return {
+      payoutAmount: referral.payoutAmount ?? referral.rewardAmount,
+      payoutMethod: referral.payoutMethod ?? "",
+      payoutNotes: referral.payoutNotes ?? "",
+    };
+  }
+
+  function updatePayoutDraft(
+    referralId: number,
+    referral: ReferralTracking,
+    patch: Partial<ReferralPayoutDraft>,
+  ) {
+    setPayoutDrafts((current) => ({
+      ...current,
+      [referralId]: {
+        ...getPayoutDraft(referral),
+        ...patch,
+      },
+    }));
+  }
+
+  function clearPayoutDraft(referralId: number) {
+    setPayoutDrafts((current) => {
+      const next = { ...current };
+      delete next[referralId];
+      return next;
+    });
+  }
 
   const filteredCodes = useMemo(() => {
     const query = codeSearch.trim().toLowerCase();
@@ -428,31 +470,31 @@ export default function ReferralDashboard({
     }
   }
 
-  async function handleStatusChange(
-    referral: ReferralTracking,
-    status: ReferralStatus,
+  async function patchReferral(
+    referralId: number,
+    body: Record<string, unknown>,
+    successMessage: string,
   ) {
-    if (referral.status === status) return;
-
     setIsSubmitting(true);
     setMessage(null);
 
     try {
       const response = await fetch(
-        `/api/referrals/${referral.id}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/referrals/${referralId}?key=${encodeURIComponent(dashboardKey)}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status }),
+          body: JSON.stringify(body),
         },
       );
       const data = (await response.json()) as { error?: string };
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to update referral status.");
+        throw new Error(data.error || "Failed to update referral.");
       }
 
-      setMessage({ type: "success", text: "Referral status updated." });
+      clearPayoutDraft(referralId);
+      setMessage({ type: "success", text: successMessage });
       router.refresh();
     } catch (error) {
       setMessage({
@@ -460,11 +502,52 @@ export default function ReferralDashboard({
         text:
           error instanceof Error
             ? error.message
-            : "Failed to update referral status.",
+            : "Failed to update referral.",
       });
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  async function handleStatusChange(
+    referral: ReferralTracking,
+    status: ReferralStatus,
+  ) {
+    if (referral.status === status) return;
+    await patchReferral(referral.id, { status }, "Referral status updated.");
+  }
+
+  async function handleSavePayout(referral: ReferralTracking) {
+    const draft = getPayoutDraft(referral);
+
+    await patchReferral(
+      referral.id,
+      {
+        payoutAmount: draft.payoutAmount,
+        payoutMethod: draft.payoutMethod.trim() || null,
+        payoutNotes: draft.payoutNotes.trim() || null,
+      },
+      "Payout details saved.",
+    );
+  }
+
+  async function handleMarkRewarded(referral: ReferralTracking) {
+    if (referral.status === "rewarded") return;
+
+    const draft = getPayoutDraft(referral);
+    const body: Record<string, unknown> = { status: "rewarded" };
+
+    if (draft.payoutMethod.trim()) {
+      body.payoutMethod = draft.payoutMethod.trim();
+    }
+    if (draft.payoutNotes.trim()) {
+      body.payoutNotes = draft.payoutNotes.trim();
+    }
+    if (draft.payoutAmount !== referral.rewardAmount) {
+      body.payoutAmount = draft.payoutAmount;
+    }
+
+    await patchReferral(referral.id, body, "Referral marked as rewarded.");
   }
 
   function startEdit(code: ReferralCode) {
@@ -476,7 +559,7 @@ export default function ReferralDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Total referral codes" value={metrics.totalCodes} />
         <MetricCard label="Active codes" value={metrics.activeCodes} />
         <MetricCard label="Pending referrals" value={metrics.pendingReferrals} />
@@ -491,6 +574,16 @@ export default function ReferralDashboard({
         <MetricCard
           label="Total rewarded amount"
           value={formatMoney(metrics.totalRewardedAmount)}
+        />
+        <MetricCard
+          label="Total paid amount"
+          value={formatMoney(metrics.totalPaidAmount)}
+          hint="Sum of payout amounts for rewarded referrals"
+        />
+        <MetricCard
+          label="Rewards owed"
+          value={formatMoney(metrics.rewardsOwed)}
+          hint="Completed referrals not yet rewarded"
         />
       </div>
 
@@ -725,12 +818,23 @@ export default function ReferralDashboard({
                     Rewards
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Payout
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                     Status
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredReferrals.map((referral) => (
+                {filteredReferrals.map((referral) => {
+                  const payoutDraft = getPayoutDraft(referral);
+                  const hasPayoutInfo =
+                    referral.payoutAmount != null ||
+                    referral.payoutMethod ||
+                    referral.payoutNotes ||
+                    referral.rewardedAt;
+
+                  return (
                   <tr key={referral.id} className="align-top">
                     <td className="px-4 py-4">
                       <p className="font-semibold text-slate-900">
@@ -780,6 +884,107 @@ export default function ReferralDashboard({
                       </p>
                     </td>
                     <td className="px-4 py-4">
+                      <div className="min-w-[12rem] space-y-2">
+                        {hasPayoutInfo && (
+                          <div className="rounded-lg border border-emerald-100 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                            {referral.payoutAmount != null && (
+                              <p>
+                                <span className="font-semibold">Paid:</span>{" "}
+                                {formatMoney(referral.payoutAmount)}
+                              </p>
+                            )}
+                            {referral.payoutMethod && (
+                              <p className="mt-1">
+                                <span className="font-semibold">Method:</span>{" "}
+                                {referral.payoutMethod}
+                              </p>
+                            )}
+                            {referral.rewardedAt && (
+                              <p className="mt-1">
+                                <span className="font-semibold">Rewarded:</span>{" "}
+                                {formatDate(referral.rewardedAt)}
+                              </p>
+                            )}
+                            {referral.payoutNotes && (
+                              <p className="mt-1 whitespace-pre-wrap">
+                                <span className="font-semibold">Notes:</span>{" "}
+                                {referral.payoutNotes}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        <div>
+                          <label className={labelClassName}>Payout amount</label>
+                          <input
+                            type="number"
+                            min={0}
+                            className={inputClassName}
+                            value={payoutDraft.payoutAmount}
+                            disabled={isSubmitting}
+                            onChange={(e) =>
+                              updatePayoutDraft(referral.id, referral, {
+                                payoutAmount: Number.parseInt(
+                                  e.target.value || "0",
+                                  10,
+                                ),
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label className={labelClassName}>Payout method</label>
+                          <input
+                            className={inputClassName}
+                            value={payoutDraft.payoutMethod}
+                            disabled={isSubmitting}
+                            placeholder="Venmo, Zelle, cash..."
+                            onChange={(e) =>
+                              updatePayoutDraft(referral.id, referral, {
+                                payoutMethod: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div>
+                          <label className={labelClassName}>Payout notes</label>
+                          <textarea
+                            className={`${inputClassName} min-h-[4.5rem] resize-y`}
+                            value={payoutDraft.payoutNotes}
+                            disabled={isSubmitting}
+                            placeholder="Internal notes..."
+                            onChange={(e) =>
+                              updatePayoutDraft(referral.id, referral, {
+                                payoutNotes: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={() => handleSavePayout(referral)}
+                            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            Save payout
+                          </button>
+                          {referral.status !== "rewarded" && (
+                            <button
+                              type="button"
+                              disabled={
+                                isSubmitting ||
+                                referral.status === "cancelled"
+                              }
+                              onClick={() => handleMarkRewarded(referral)}
+                              className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Mark rewarded
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
                       <span
                         className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${statusBadgeClass(referral.status)}`}
                       >
@@ -804,7 +1009,8 @@ export default function ReferralDashboard({
                       </select>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
