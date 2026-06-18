@@ -9,6 +9,10 @@ import {
   type ReferralCodeRow,
   type ReferralTrackingRow,
 } from "../../lib/referrals";
+import {
+  serializeReferralNotification,
+  type ReferralNotificationRow,
+} from "../../lib/referral-notifications";
 import Navbar from "../components/Navbar";
 import ReferralDashboard from "./ReferralDashboard";
 
@@ -27,7 +31,8 @@ export default async function ReferralsDashboardPage({
     redirect("/");
   }
 
-  const [codeRows, referralRows, bookingRows] = await Promise.all([
+  const [codeRows, referralRows, bookingRows, notificationRows] =
+    await Promise.all([
     sql`
       SELECT *
       FROM referral_codes
@@ -64,6 +69,28 @@ export default async function ReferralsDashboardPage({
       FROM booking_requests
       ORDER BY created_at DESC
     `,
+    sql`
+      SELECT
+        rn.id,
+        rn.referral_id,
+        rn.type,
+        rn.recipient_email,
+        rn.subject,
+        rn.status,
+        rn.provider_message_id,
+        rn.error_message,
+        rn.created_at,
+        rn.sent_at,
+        r.code,
+        r.referred_name,
+        r.referred_email,
+        rc.referrer_name,
+        rc.referrer_email
+      FROM referral_notifications rn
+      JOIN referrals r ON r.id = rn.referral_id
+      LEFT JOIN referral_codes rc ON rc.id = r.referral_code_id
+      ORDER BY rn.created_at DESC, rn.id DESC
+    `,
   ]);
 
   const referralCodes = (codeRows as ReferralCodeRow[]).map(serializeReferralCode);
@@ -74,6 +101,9 @@ export default async function ReferralsDashboardPage({
   const funnel = computeReferralFunnel(referralCodes, referrals);
   const topReferrers = computeTopReferrers(referralCodes, referrals, 10);
   const referrerExportRows = computeTopReferrers(referralCodes, referrals);
+  const notifications = (notificationRows as ReferralNotificationRow[]).map(
+    serializeReferralNotification,
+  );
 
   const unseenBookings = bookingRows
     .filter((booking) => !booking.seen)
@@ -109,6 +139,7 @@ export default async function ReferralsDashboardPage({
         <ReferralDashboard
           referralCodes={referralCodes}
           referrals={referrals}
+          notifications={notifications}
           analytics={analytics}
           funnel={funnel}
           topReferrers={topReferrers}

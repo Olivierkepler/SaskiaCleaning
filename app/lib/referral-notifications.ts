@@ -22,6 +22,75 @@ export type ReferralNotificationResult = {
   skippedReason?: string;
 };
 
+export type ReferralNotificationRow = {
+  id: number;
+  referral_id: number;
+  type: ReferralNotificationType;
+  recipient_email: string;
+  subject: string;
+  status: ReferralNotificationStatus;
+  provider_message_id: string | null;
+  error_message: string | null;
+  created_at: string;
+  sent_at: string | null;
+  code: string;
+  referred_name: string;
+  referred_email: string;
+  referrer_name: string | null;
+  referrer_email: string | null;
+};
+
+export type ReferralNotification = {
+  id: number;
+  referralId: number;
+  type: ReferralNotificationType;
+  recipientEmail: string;
+  subject: string;
+  status: ReferralNotificationStatus;
+  providerMessageId: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  sentAt: string | null;
+  code: string;
+  referredName: string;
+  referredEmail: string;
+  referrerName: string | null;
+  referrerEmail: string | null;
+};
+
+export function serializeReferralNotification(
+  row: ReferralNotificationRow,
+): ReferralNotification {
+  return {
+    id: row.id,
+    referralId: row.referral_id,
+    type: row.type,
+    recipientEmail: row.recipient_email,
+    subject: row.subject,
+    status: row.status,
+    providerMessageId: row.provider_message_id,
+    errorMessage: row.error_message,
+    createdAt: row.created_at,
+    sentAt: row.sent_at,
+    code: row.code,
+    referredName: row.referred_name,
+    referredEmail: row.referred_email,
+    referrerName: row.referrer_name,
+    referrerEmail: row.referrer_email,
+  };
+}
+
+export function formatReferralNotificationType(
+  type: ReferralNotificationType,
+): string {
+  switch (type) {
+    case "referral_completed":
+      return "Referral completed";
+    case "referral_rewarded":
+      return "Referral rewarded";
+  }
+}
+
 type ReferralEmailContext = ReturnType<typeof serializeReferralTracking>;
 
 async function loadReferralNotificationContext(

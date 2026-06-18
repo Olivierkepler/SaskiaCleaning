@@ -13,6 +13,11 @@ import {
   type ReferralTracking,
   type TopReferrerStats,
 } from "../../lib/referrals";
+import {
+  formatReferralNotificationType,
+  type ReferralNotification,
+  type ReferralNotificationStatus,
+} from "../../lib/referral-notifications";
 
 const escapeCsvValue = (value: string) => `"${value.replace(/"/g, '""')}"`;
 
@@ -21,6 +26,8 @@ type AnalyticsFilter =
   | "active_codes"
   | "rewarded_only"
   | "outstanding_payouts";
+
+type NotificationStatusFilter = "all" | "sent" | "failed" | "skipped";
 
 const inputClassName =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
@@ -53,6 +60,19 @@ function statusBadgeClass(status: ReferralStatus) {
     case "rewarded":
       return "bg-emerald-100 text-emerald-800";
     case "cancelled":
+      return "bg-slate-200 text-slate-600";
+  }
+}
+
+function notificationStatusBadgeClass(status: ReferralNotificationStatus) {
+  switch (status) {
+    case "sent":
+      return "bg-emerald-100 text-emerald-800";
+    case "failed":
+      return "bg-red-100 text-red-800";
+    case "skipped":
+      return "bg-amber-100 text-amber-800";
+    case "pending":
       return "bg-slate-200 text-slate-600";
   }
 }
@@ -328,9 +348,252 @@ function TopReferrersTable({ referrers }: { referrers: TopReferrerStats[] }) {
   );
 }
 
+function CopyableMessageId({ messageId }: { messageId: string }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(messageId);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setCopied(false);
+    }
+  }
+
+  return (
+    <div className="space-y-1">
+      <code className="block break-all rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-700">
+        {messageId}
+      </code>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="text-xs font-semibold text-sky-600 transition hover:text-sky-700"
+      >
+        {copied ? "Copied" : "Copy message ID"}
+      </button>
+      <p className="text-[11px] text-slate-400">
+        Search this ID in the Resend dashboard to view delivery details.
+      </p>
+    </div>
+  );
+}
+
+function NotificationHistorySection({
+  notifications,
+  statusFilter,
+  onStatusFilterChange,
+  search,
+  onSearchChange,
+  onExportCsv,
+  isExpanded,
+  onToggleExpanded,
+}: {
+  notifications: ReferralNotification[];
+  statusFilter: NotificationStatusFilter;
+  onStatusFilterChange: (value: NotificationStatusFilter) => void;
+  search: string;
+  onSearchChange: (value: string) => void;
+  onExportCsv: () => void;
+  isExpanded: boolean;
+  onToggleExpanded: () => void;
+}) {
+  return (
+    <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+      <div className="border-b border-slate-200 p-4 sm:p-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <button
+            type="button"
+            onClick={onToggleExpanded}
+            className="flex items-start gap-2 text-left"
+          >
+            <span className="mt-0.5 text-slate-400">{isExpanded ? "▾" : "▸"}</span>
+            <span>
+              <h2 className="text-lg font-bold text-slate-900">
+                Notification history
+              </h2>
+              <p className="text-sm text-slate-500">
+                {notifications.length} notification
+                {notifications.length === 1 ? "" : "s"}
+              </p>
+            </span>
+          </button>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <button
+              type="button"
+              onClick={onExportCsv}
+              disabled={notifications.length === 0}
+              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Export notifications CSV
+            </button>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <input
+              className={inputClassName}
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder="Search recipient, code, subject, names..."
+            />
+            <select
+              className={inputClassName}
+              value={statusFilter}
+              onChange={(e) =>
+                onStatusFilterChange(e.target.value as NotificationStatusFilter)
+              }
+            >
+              <option value="all">All</option>
+              <option value="sent">Sent</option>
+              <option value="failed">Failed</option>
+              <option value="skipped">Skipped</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      {isExpanded &&
+        (notifications.length === 0 ? (
+          <div className="p-8 text-center text-slate-500">
+            No notification attempts match your filters.
+          </div>
+        ) : (
+          <>
+            <div className="space-y-3 p-4 md:hidden">
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className="rounded-xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${notificationStatusBadgeClass(notification.status)}`}
+                    >
+                      {notification.status}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-600">
+                      {formatReferralNotificationType(notification.type)}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-500">
+                    {formatDate(notification.createdAt)}
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-sky-700">
+                    {notification.code}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-800">
+                    {notification.recipientEmail || "—"}
+                  </p>
+                  <p className="mt-2 text-sm text-slate-700">{notification.subject}</p>
+                  {(notification.referrerName || notification.referredName) && (
+                    <p className="mt-2 text-xs text-slate-500">
+                      {notification.referrerName ?? "—"} → {notification.referredName}
+                    </p>
+                  )}
+                  {notification.providerMessageId && (
+                    <div className="mt-3">
+                      <CopyableMessageId messageId={notification.providerMessageId} />
+                    </div>
+                  )}
+                  {notification.errorMessage && (
+                    <p className="mt-2 text-xs text-red-700">
+                      {notification.errorMessage}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="hidden overflow-x-auto md:block">
+              <table className="min-w-full divide-y divide-slate-200 text-sm">
+                <thead className="bg-slate-50">
+                  <tr>
+                    {[
+                      "Date",
+                      "Type",
+                      "Code",
+                      "Recipient",
+                      "Subject",
+                      "Status",
+                      "Message ID",
+                      "Error",
+                    ].map((label) => (
+                      <th
+                        key={label}
+                        className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                      >
+                        {label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {notifications.map((notification) => (
+                    <tr key={notification.id} className="align-top">
+                      <td className="px-4 py-4 text-slate-700">
+                        {formatDate(notification.createdAt)}
+                      </td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {formatReferralNotificationType(notification.type)}
+                      </td>
+                      <td className="px-4 py-4">
+                        <p className="font-semibold text-sky-700">
+                          {notification.code}
+                        </p>
+                        {notification.referrerName && (
+                          <p className="mt-1 text-xs text-slate-500">
+                            {notification.referrerName}
+                          </p>
+                        )}
+                        {notification.referredName && (
+                          <p className="text-xs text-slate-400">
+                            Referred: {notification.referredName}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {notification.recipientEmail || "—"}
+                      </td>
+                      <td className="px-4 py-4 text-slate-700">
+                        {notification.subject}
+                      </td>
+                      <td className="px-4 py-4">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${notificationStatusBadgeClass(notification.status)}`}
+                        >
+                          {notification.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4">
+                        {notification.providerMessageId ? (
+                          <CopyableMessageId
+                            messageId={notification.providerMessageId}
+                          />
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-xs text-red-700">
+                        {notification.errorMessage ?? "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ))}
+    </div>
+  );
+}
+
 export default function ReferralDashboard({
   referralCodes,
   referrals,
+  notifications,
   analytics,
   funnel,
   topReferrers,
@@ -339,6 +602,7 @@ export default function ReferralDashboard({
 }: {
   referralCodes: ReferralCode[];
   referrals: ReferralTracking[];
+  notifications: ReferralNotification[];
   analytics: ReferralAnalyticsMetrics;
   funnel: ReferralFunnelStep[];
   topReferrers: TopReferrerStats[];
@@ -369,6 +633,11 @@ export default function ReferralDashboard({
   const [payoutDrafts, setPayoutDrafts] = useState<
     Record<number, ReferralPayoutDraft>
   >({});
+  const [notificationSearch, setNotificationSearch] = useState("");
+  const [notificationStatusFilter, setNotificationStatusFilter] =
+    useState<NotificationStatusFilter>("all");
+  const [notificationHistoryExpanded, setNotificationHistoryExpanded] =
+    useState(true);
 
   function getPayoutDraft(referral: ReferralTracking): ReferralPayoutDraft {
     const draft = payoutDrafts[referral.id];
@@ -470,6 +739,36 @@ export default function ReferralDashboard({
     activeReferralCodes,
   ]);
 
+  const filteredNotifications = useMemo(() => {
+    const query = notificationSearch.trim().toLowerCase();
+
+    return notifications.filter((notification) => {
+      if (
+        notificationStatusFilter !== "all" &&
+        notification.status !== notificationStatusFilter
+      ) {
+        return false;
+      }
+
+      if (!query) return true;
+
+      const haystack = [
+        notification.recipientEmail,
+        notification.code,
+        notification.subject,
+        notification.referredName,
+        notification.referredEmail,
+        notification.referrerName ?? "",
+        notification.referrerEmail ?? "",
+        formatReferralNotificationType(notification.type),
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [notifications, notificationSearch, notificationStatusFilter]);
+
   function handleExportAnalyticsCsv() {
     const headers = [
       "Referrer Name",
@@ -501,6 +800,41 @@ export default function ReferralDashboard({
     const link = document.createElement("a");
     link.href = url;
     link.download = "referral-analytics.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleExportNotificationsCsv() {
+    const headers = [
+      "Created At",
+      "Type",
+      "Status",
+      "Referral Code",
+      "Recipient Email",
+      "Subject",
+      "Provider Message ID",
+      "Error Message",
+    ];
+
+    const rows = filteredNotifications.map((notification) =>
+      [
+        escapeCsvValue(notification.createdAt),
+        escapeCsvValue(formatReferralNotificationType(notification.type)),
+        escapeCsvValue(notification.status),
+        escapeCsvValue(notification.code),
+        escapeCsvValue(notification.recipientEmail),
+        escapeCsvValue(notification.subject),
+        escapeCsvValue(notification.providerMessageId ?? ""),
+        escapeCsvValue(notification.errorMessage ?? ""),
+      ].join(","),
+    );
+
+    const csv = [headers.map(escapeCsvValue).join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "referral-notifications.csv";
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -1281,6 +1615,19 @@ export default function ReferralDashboard({
           </div>
         )}
       </div>
+
+      <NotificationHistorySection
+        notifications={filteredNotifications}
+        statusFilter={notificationStatusFilter}
+        onStatusFilterChange={setNotificationStatusFilter}
+        search={notificationSearch}
+        onSearchChange={setNotificationSearch}
+        onExportCsv={handleExportNotificationsCsv}
+        isExpanded={notificationHistoryExpanded}
+        onToggleExpanded={() =>
+          setNotificationHistoryExpanded((value) => !value)
+        }
+      />
     </div>
   );
 }
