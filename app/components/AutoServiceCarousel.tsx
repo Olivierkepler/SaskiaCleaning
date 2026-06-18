@@ -331,6 +331,19 @@ function ServiceModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
+  const handleRequestService = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>) => {
+      event.preventDefault();
+      onClose();
+      requestAnimationFrame(() => {
+        document
+          .getElementById("quote")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    },
+    [onClose]
+  );
+
   return createPortal(
     <div
       className="
@@ -429,18 +442,20 @@ function ServiceModal({
           </div>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <button
-              type="button"
+            <a
+              href="#quote"
+              onClick={handleRequestService}
               className="
-                min-h-[48px] flex-1 rounded-full bg-sky-500
-                px-5 text-[10px] font-semibold uppercase tracking-[0.16em]
-                text-white shadow-[0_10px_30px_rgba(14,165,233,0.25)]
+                inline-flex min-h-[48px] flex-1 items-center justify-center
+                rounded-full bg-sky-500 px-5 text-[10px] font-semibold
+                uppercase tracking-[0.16em] text-white
+                shadow-[0_10px_30px_rgba(14,165,233,0.25)]
                 transition hover:bg-slate-950 focus-visible:outline-none
                 focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2
               "
             >
               Request This Service
-            </button>
+            </a>
 
             <button
               type="button"

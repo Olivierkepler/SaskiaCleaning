@@ -4,7 +4,6 @@ import { motion, useReducedMotion, type Variants } from "framer-motion";
 import {
   ArrowUpRight,
   Building2,
-  Icon,
   Sparkles,
   Wind,
   type LucideIcon,
@@ -64,6 +63,13 @@ const DEFAULT_PLANS: Plan[] = [
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+function scrollToQuote() {
+  document.getElementById("quote")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}
+
 export default function CommercialCleaningPlans({
   title = "Commercial Cleaning ",
   description = [
@@ -77,6 +83,16 @@ export default function CommercialCleaningPlans({
   backgroundImageSrc = "/images/kitchen.jpg",
 }: CommercialCleaningPlansProps) {
   const prefersReducedMotion = useReducedMotion();
+
+  const handleContactClick = () => {
+    onContactClick?.();
+    scrollToQuote();
+  };
+
+  const handlePlanClick = (planId: string) => {
+    onPlanClick?.(planId);
+    scrollToQuote();
+  };
 
   const sectionVariants: Variants = {
     hidden: {},
@@ -150,10 +166,9 @@ export default function CommercialCleaningPlans({
       {/* <div aria-hidden="true" className="absolute inset-0 bg-slate-950/55" /> */}
 
    {/* Blue overlay */}
-   <div className="absolute inset-0 bg-gradient-to-r from-[#172b45]/60 via-[#29496b]/40 to-[#7fb6e7]/20" />
-
+ 
       <div className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8">
-        <motion.div
+        {/* <motion.div
           variants={fadeUpVariants}
           className="
             rounded-[0.75rem]
@@ -190,7 +205,7 @@ export default function CommercialCleaningPlans({
 
             <motion.button
               type="button"
-              onClick={onContactClick}
+              onClick={handleContactClick}
               whileHover={prefersReducedMotion ? undefined : { y: -2 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               className="
@@ -215,7 +230,7 @@ export default function CommercialCleaningPlans({
               />
             </motion.button>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         <br />
 
@@ -228,14 +243,14 @@ export default function CommercialCleaningPlans({
             aria-hidden="true"
             className="pointer-events-none absolute -right-10 bottom-10 h-36 w-36 rounded-full bg-slate-100 blur-3xl"
           />
-          <svg
+          {/* <svg
             aria-hidden="true"
             className="pointer-events-none absolute -top-6 right-16 h-8 w-8 text-sky-200"
             viewBox="0 0 24 24"
             fill="currentColor"
           >
             <path d="M12 2l2.9 6.9H22l-5.5 4.5 2.1 6.9L12 17.8l-6.6 3.5 2.1-6.9L2 8.9h7.1z" />
-          </svg>
+          </svg> */}
 
           <motion.div
             variants={gridVariants}
@@ -247,7 +262,7 @@ export default function CommercialCleaningPlans({
                 plan={plan}
                 variants={fadeUpVariants}
                 reduced={prefersReducedMotion ?? false}
-                onClick={onPlanClick}
+                onClick={handlePlanClick}
               />
             ))}
           </motion.div>
