@@ -438,13 +438,18 @@ export default function DashboardTable({
     [bookings]
   );
 
-  const hasActiveFilters =
-    search.trim() !== "" ||
-    sort !== "newest" ||
-    bedroomFilter !== "all" ||
-    bathroomFilter !== "all" ||
-    statusFilter !== "all" ||
-    referralFilter !== "all";
+  const hasSearchQuery = search.trim().length > 0;
+
+  const hasActiveFilters = Boolean(
+    hasSearchQuery ||
+      sort !== "newest" ||
+      bedroomFilter !== "all" ||
+      bathroomFilter !== "all" ||
+      statusFilter !== "all" ||
+      referralFilter !== "all",
+  );
+
+  const isClearFiltersDisabled = !hasActiveFilters;
 
   const clearFilters = () => {
     setSearch("");
@@ -706,7 +711,7 @@ export default function DashboardTable({
                 <button
                   type="button"
                   onClick={clearFilters}
-                  disabled={!hasActiveFilters}
+                  disabled={isClearFiltersDisabled}
                   className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Clear filters
