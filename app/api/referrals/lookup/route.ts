@@ -1,8 +1,16 @@
 import { NextResponse } from "next/server";
 import {
+  createReferralPortalToken,
+  buildReferralPortalMagicLink,
+  sendReferralPortalMagicLink,
+} from "../../../lib/referral-portal-auth";
+import {
   lookupReferrerPortal,
   parseReferralLookupInput,
 } from "../../../lib/referral-portal";
+
+const GENERIC_LOOKUP_MESSAGE =
+  "If referral rewards exist for that email, we sent a secure access link.";
 
 export async function POST(req: Request) {
   try {
@@ -20,24 +28,28 @@ export async function POST(req: Request) {
 
     const result = await lookupReferrerPortal(parsed.data);
 
-    if (!result.found) {
-      return NextResponse.json({
-        success: true,
-        found: false,
-        message: result.message,
-      });
+    if (result.found) {
+      try {
+        const { token } = await createReferralPortalToken(
+          parsed.data.email,
+          parsed.data.code,
+        );
+        const magicLink = buildReferralPortalMagicLink(token);
+        await sendReferralPortalMagicLink(parsed.data.email, magicLink);
+      } catch (error) {
+        console.error("Failed to send referral portal magic link:", error);
+      }
     }
 
     return NextResponse.json({
       success: true,
-      found: true,
-      codes: result.codes,
+      message: GENERIC_LOOKUP_MESSAGE,
     });
   } catch (error) {
     console.error(error);
 
     return NextResponse.json(
-      { error: "Failed to look up referral status." },
+      { error: "Failed to process referral portal request." },
       { status: 500 },
     );
   }
