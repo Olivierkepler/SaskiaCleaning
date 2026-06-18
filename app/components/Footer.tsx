@@ -123,6 +123,13 @@ export default function Footer() {
       Terms & Conditions
     </Link>
 
+    <Link
+      href="/referrals"
+      className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
+    >
+      Referral Rewards
+    </Link>
+
     <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
       Boston Area
     </span>

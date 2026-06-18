@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   buildReferralLink,
@@ -392,6 +393,12 @@ function ReferralModal({
                 )}
 
                 <div className="grid gap-2">
+                  <Link
+                    href="/referrals"
+                    className="rounded-lg border border-sky-500 bg-white px-4 py-3 text-center text-sm font-semibold text-sky-600 transition hover:bg-sky-50"
+                  >
+                    Check your referral rewards
+                  </Link>
                   <button
                     type="button"
                     onClick={handleBookCleaning}
