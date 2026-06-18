@@ -220,15 +220,11 @@ function ReferralModal({
   useEffect(() => {
     if (!open) return;
 
-    const previousBodyOverflow = document.body.style.overflow;
-    const previousHtmlOverflow = document.documentElement.style.overflow;
-
+    const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    document.documentElement.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousOverflow;
     };
   }, [open]);
 
@@ -324,54 +320,22 @@ function ReferralModal({
     <AnimatePresence>
       {open ? (
         <motion.div
-          key="referral-modal-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 999999,
-            width: "100vw",
-            height: "100dvh",
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "rgba(255, 0, 0, 0.45)",
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            padding: "16px",
-            outline: "6px solid red",
-          }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md"
           role="dialog"
           aria-modal="true"
           aria-labelledby="referral-modal-title"
           onClick={handleClose}
         >
-          <div
-            style={{
-              position: "fixed",
-              top: 12,
-              left: 12,
-              zIndex: 1000000,
-              color: "white",
-              background: "black",
-              padding: "6px 10px",
-              borderRadius: 8,
-              fontSize: 12,
-            }}
-          >
-            REFERRAL MODAL OVERLAY ACTIVE
-          </div>
           <motion.div
-            key="referral-modal-panel"
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.18 }}
-            className="relative max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-[0_30px_90px_rgba(15,23,42,0.25)] ring-1 ring-slate-200 md:p-8"
+            className="max-h-[90dvh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-6 shadow-[0_30px_90px_rgba(15,23,42,0.20)] ring-1 ring-slate-200 md:p-8"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="mb-5">
@@ -559,11 +523,6 @@ function ReferralModal({
 export default function AdCardGrid() {
   const [cards, setCards] = useState<AdCardItem[]>(fallbackCards);
   const [referralModalOpen, setReferralModalOpen] = useState(false);
-  const [portalReady, setPortalReady] = useState(false);
-
-  useEffect(() => {
-    setPortalReady(true);
-  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -622,7 +581,7 @@ export default function AdCardGrid() {
       </section>
 
       <ReferralModal
-        open={portalReady && referralModalOpen}
+        open={referralModalOpen}
         onClose={() => setReferralModalOpen(false)}
       />
     </>
