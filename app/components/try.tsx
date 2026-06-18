@@ -794,14 +794,16 @@ function DynamicServiceGallery({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3, ease: MOTION_EASE }}
-      className="flex min-h-0 flex-1 flex-col"
+      className={`flex min-h-0 flex-1 flex-col ${
+        isDefaultOnly ? "justify-center" : "justify-start"
+      }`}
     >
       <div
         className={
           isDefaultOnly
-            ? "mx-auto flex w-full max-w-[520px] items-center justify-center gap-6"
-            : "grid w-full grid-cols-2 items-start gap-x-6 gap-y-5 overflow-y-auto pr-1"
-        }
+          ? "mx-auto flex w-full max-w-[520px] items-center justify-center gap-6"
+          : "grid w-full grid-cols-2 items-start gap-x-6 gap-y-5 overflow-y-auto pr-1"
+      }
       >
         <AnimatePresence mode="popLayout">
           {images.map((img) => (
@@ -912,6 +914,8 @@ const COMMERCIAL_PREVIEW_IMAGES = {
     {
       src: "/images/commercial/commercial.png",
       alt: "Commercial cleaning service",
+      width: 280,
+      height: 220,
     },
   ] satisfies StandardPreviewImage[],
   addons: {
@@ -1207,7 +1211,7 @@ function CommercialPanel({
 <ChipGroup options={SCHEDS.map((s) => s.label)} selectedIndex={schedIdx} onSelect={setSched} />
       </CollapsibleGroup>
   
-      <CollapsibleGroup title="Add-ons">
+      <CollapsibleGroup title="Add-ons" defaultOpen>
 <AddonGrid addons={COMMERCIAL_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} />
       </CollapsibleGroup>
   
@@ -1642,7 +1646,7 @@ export default function CleaningEstimator() {
     () => buildCommercialGalleryImages(commercialSelectedAddons),
     [commercialSelectedAddons],
   );
-  const isCommercialDefaultGalleryOnly = commercialGalleryImages.length === 1;
+  const isCommercialDefaultGalleryOnly = false;
 
   const activeGallery = useMemo(() => {
     const galleries = [

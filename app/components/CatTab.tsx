@@ -801,9 +801,9 @@ function DynamicServiceGallery({
       <div
         className={
           isDefaultOnly
-          ? "mx-auto flex w-full max-w-[520px] items-center justify-center gap-6"
-          : "grid w-full grid-cols-2 items-start gap-x-6 gap-y-5 overflow-y-auto pr-1"
-      }
+            ? "mx-auto flex w-full max-w-[320px] flex-col gap-3"
+            : "grid w-full grid-cols-2 items-start gap-x-6 gap-y-5 overflow-y-auto pr-1"
+          }
       >
         <AnimatePresence mode="popLayout">
           {images.map((img) => (
