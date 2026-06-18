@@ -1,16 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import {
   EMPTY_REFERRAL_CODE_FORM,
   REFERRAL_STATUSES,
+  type ReferralAnalyticsMetrics,
   type ReferralCode,
   type ReferralCodeInput,
-  type ReferralDashboardMetrics,
+  type ReferralFunnelStep,
   type ReferralStatus,
   type ReferralTracking,
+  type TopReferrerStats,
 } from "../../lib/referrals";
+
+const escapeCsvValue = (value: string) => `"${value.replace(/"/g, '""')}"`;
+
+type AnalyticsFilter =
+  | "all"
+  | "active_codes"
+  | "rewarded_only"
+  | "outstanding_payouts";
 
 const inputClassName =
   "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
@@ -203,15 +213,136 @@ function MetricCard({
   );
 }
 
+function AnalyticsSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
+      <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-700">
+        {title}
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{children}</div>
+    </div>
+  );
+}
+
+function ReferralFunnel({ steps }: { steps: ReferralFunnelStep[] }) {
+  return (
+    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
+      <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-700">
+        Referral funnel
+      </h2>
+      <div className="space-y-3">
+        {steps.map((step, index) => (
+          <div key={step.key}>
+            <div className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm font-semibold text-slate-800">{step.label}</p>
+              <p className="text-sm text-slate-600">
+                <span className="font-bold text-slate-900">{step.count}</span>
+                {step.conversionPercent != null && (
+                  <span className="ml-2 text-sky-700">
+                    ({step.conversionPercent}%)
+                  </span>
+                )}
+              </p>
+            </div>
+            {index < steps.length - 1 && (
+              <p className="py-1 text-center text-lg text-slate-300">↓</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TopReferrersTable({ referrers }: { referrers: TopReferrerStats[] }) {
+  return (
+    <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+      <div className="border-b border-slate-200 p-4 sm:p-5">
+        <h2 className="text-lg font-bold text-slate-900">Top referrers</h2>
+        <p className="text-sm text-slate-500">
+          Ranked by completed referrals (top 10)
+        </p>
+      </div>
+      {referrers.length === 0 ? (
+        <div className="p-8 text-center text-slate-500">No referral usage yet.</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50">
+              <tr>
+                {[
+                  "Referrer",
+                  "Code",
+                  "Referrals",
+                  "Completed",
+                  "Rewarded",
+                  "Earned",
+                  "Paid",
+                ].map((label) => (
+                  <th
+                    key={label}
+                    className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {referrers.map((referrer) => (
+                <tr key={referrer.referralCode} className="align-top">
+                  <td className="px-4 py-3 font-medium text-slate-900">
+                    {referrer.referrerName}
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-sky-700">
+                    {referrer.referralCode}
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">
+                    {referrer.referralsCount}
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">
+                    {referrer.completedReferrals}
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">
+                    {referrer.rewardedReferrals}
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">
+                    {formatMoney(referrer.totalRewardsEarned)}
+                  </td>
+                  <td className="px-4 py-3 text-slate-700">
+                    {formatMoney(referrer.totalRewardsPaid)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ReferralDashboard({
   referralCodes,
   referrals,
-  metrics,
+  analytics,
+  funnel,
+  topReferrers,
+  referrerExportRows,
   dashboardKey,
 }: {
   referralCodes: ReferralCode[];
   referrals: ReferralTracking[];
-  metrics: ReferralDashboardMetrics;
+  analytics: ReferralAnalyticsMetrics;
+  funnel: ReferralFunnelStep[];
+  topReferrers: TopReferrerStats[];
+  referrerExportRows: TopReferrerStats[];
   dashboardKey: string;
 }) {
   const router = useRouter();
@@ -233,6 +364,8 @@ export default function ReferralDashboard({
   const [statusFilter, setStatusFilter] = useState<ReferralStatus | "all">(
     "all",
   );
+  const [analyticsFilter, setAnalyticsFilter] =
+    useState<AnalyticsFilter>("all");
   const [payoutDrafts, setPayoutDrafts] = useState<
     Record<number, ReferralPayoutDraft>
   >({});
@@ -286,11 +419,31 @@ export default function ReferralDashboard({
     });
   }, [referralCodes, codeSearch]);
 
+  const activeReferralCodes = useMemo(
+    () => new Set(referralCodes.filter((code) => code.isActive).map((c) => c.code)),
+    [referralCodes],
+  );
+
   const filteredReferrals = useMemo(() => {
     const query = referralSearch.trim().toLowerCase();
 
     return referrals.filter((referral) => {
       if (statusFilter !== "all" && referral.status !== statusFilter) {
+        return false;
+      }
+
+      if (analyticsFilter === "active_codes" && !activeReferralCodes.has(referral.code)) {
+        return false;
+      }
+
+      if (analyticsFilter === "rewarded_only" && referral.status !== "rewarded") {
+        return false;
+      }
+
+      if (
+        analyticsFilter === "outstanding_payouts" &&
+        referral.status !== "completed"
+      ) {
         return false;
       }
 
@@ -309,7 +462,48 @@ export default function ReferralDashboard({
 
       return haystack.includes(query);
     });
-  }, [referrals, referralSearch, statusFilter]);
+  }, [
+    referrals,
+    referralSearch,
+    statusFilter,
+    analyticsFilter,
+    activeReferralCodes,
+  ]);
+
+  function handleExportAnalyticsCsv() {
+    const headers = [
+      "Referrer Name",
+      "Referral Code",
+      "Usage Count",
+      "Completed Referrals",
+      "Rewarded Referrals",
+      "Pending Rewards",
+      "Paid Rewards",
+      "Outstanding Rewards",
+    ];
+
+    const rows = referrerExportRows.map((referrer) =>
+      [
+        escapeCsvValue(referrer.referrerName),
+        escapeCsvValue(referrer.referralCode),
+        escapeCsvValue(String(referrer.referralsCount)),
+        escapeCsvValue(String(referrer.completedReferrals)),
+        escapeCsvValue(String(referrer.rewardedReferrals)),
+        escapeCsvValue(String(referrer.pendingRewards)),
+        escapeCsvValue(String(referrer.totalRewardsPaid)),
+        escapeCsvValue(String(referrer.outstandingRewards)),
+      ].join(","),
+    );
+
+    const csv = [headers.map(escapeCsvValue).join(","), ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "referral-analytics.csv";
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   async function handleCreate() {
     setIsSubmitting(true);
@@ -559,32 +753,91 @@ export default function ReferralDashboard({
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Total referral codes" value={metrics.totalCodes} />
-        <MetricCard label="Active codes" value={metrics.activeCodes} />
-        <MetricCard label="Pending referrals" value={metrics.pendingReferrals} />
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">Referral analytics</h2>
+          <p className="text-sm text-slate-500">
+            Performance, revenue impact, and reward liability
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleExportAnalyticsCsv}
+          disabled={referrerExportRows.length === 0}
+          className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Export analytics CSV
+        </button>
+      </div>
+
+      <AnalyticsSection title="Referral codes">
+        <MetricCard label="Total referral codes" value={analytics.totalCodes} />
+        <MetricCard label="Active codes" value={analytics.activeCodes} />
+        <MetricCard label="Inactive codes" value={analytics.inactiveCodes} />
+      </AnalyticsSection>
+
+      <AnalyticsSection title="Referral usage">
+        <MetricCard label="Total referrals" value={analytics.totalReferrals} />
+        <MetricCard label="Pending referrals" value={analytics.pendingReferrals} />
         <MetricCard
-          label="Rewarded referrals"
-          value={metrics.rewardedReferrals}
+          label="Completed referrals"
+          value={analytics.completedReferrals}
         />
         <MetricCard
+          label="Rewarded referrals"
+          value={analytics.rewardedReferrals}
+        />
+        <MetricCard
+          label="Cancelled referrals"
+          value={analytics.cancelledReferrals}
+        />
+      </AnalyticsSection>
+
+      <AnalyticsSection title="Reward tracking">
+        <MetricCard
           label="Total pending rewards"
-          value={formatMoney(metrics.totalPendingRewards)}
+          value={formatMoney(analytics.totalPendingRewards)}
         />
         <MetricCard
           label="Total rewarded amount"
-          value={formatMoney(metrics.totalRewardedAmount)}
+          value={formatMoney(analytics.totalRewardedAmount)}
         />
         <MetricCard
           label="Total paid amount"
-          value={formatMoney(metrics.totalPaidAmount)}
+          value={formatMoney(analytics.totalPaidAmount)}
           hint="Sum of payout amounts for rewarded referrals"
         />
         <MetricCard
+          label="Outstanding reward liability"
+          value={formatMoney(analytics.outstandingRewardLiability)}
+          hint="Pending + completed owed + any underpaid rewarded"
+        />
+        <MetricCard
           label="Rewards owed"
-          value={formatMoney(metrics.rewardsOwed)}
+          value={formatMoney(analytics.rewardsOwed)}
           hint="Completed referrals not yet rewarded"
         />
+      </AnalyticsSection>
+
+      <AnalyticsSection title="Revenue">
+        <MetricCard
+          label="Referral bookings"
+          value={analytics.referralBookingsCount}
+        />
+        <MetricCard
+          label="Estimated referral revenue"
+          value={formatMoney(analytics.estimatedReferralRevenue)}
+          hint="Sum of linked booking mid estimates"
+        />
+        <MetricCard
+          label="Average referral booking"
+          value={formatMoney(analytics.averageReferralBookingValue)}
+        />
+      </AnalyticsSection>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <ReferralFunnel steps={funnel} />
+        <TopReferrersTable referrers={topReferrers} />
       </div>
 
       {message && (
@@ -791,6 +1044,18 @@ export default function ReferralDashboard({
                     {status}
                   </option>
                 ))}
+              </select>
+              <select
+                className={inputClassName}
+                value={analyticsFilter}
+                onChange={(e) =>
+                  setAnalyticsFilter(e.target.value as AnalyticsFilter)
+                }
+              >
+                <option value="all">All referrals</option>
+                <option value="active_codes">Active codes only</option>
+                <option value="rewarded_only">Rewarded only</option>
+                <option value="outstanding_payouts">Outstanding payouts only</option>
               </select>
             </div>
           </div>

@@ -1,7 +1,9 @@
 import { sql } from "../../lib/db";
 import { redirect } from "next/navigation";
 import {
-  computeReferralMetrics,
+  computeReferralAnalytics,
+  computeReferralFunnel,
+  computeTopReferrers,
   serializeReferralCode,
   serializeReferralTracking,
   type ReferralCodeRow,
@@ -68,7 +70,10 @@ export default async function ReferralsDashboardPage({
   const referrals = (referralRows as ReferralTrackingRow[]).map(
     serializeReferralTracking,
   );
-  const metrics = computeReferralMetrics(referralCodes, referrals);
+  const analytics = computeReferralAnalytics(referralCodes, referrals);
+  const funnel = computeReferralFunnel(referralCodes, referrals);
+  const topReferrers = computeTopReferrers(referralCodes, referrals, 10);
+  const referrerExportRows = computeTopReferrers(referralCodes, referrals);
 
   const unseenBookings = bookingRows
     .filter((booking) => !booking.seen)
@@ -104,7 +109,10 @@ export default async function ReferralsDashboardPage({
         <ReferralDashboard
           referralCodes={referralCodes}
           referrals={referrals}
-          metrics={metrics}
+          analytics={analytics}
+          funnel={funnel}
+          topReferrers={topReferrers}
+          referrerExportRows={referrerExportRows}
           dashboardKey={params.key!}
         />
       </div>

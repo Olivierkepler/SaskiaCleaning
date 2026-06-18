@@ -125,6 +125,36 @@ export type ReferralDashboardMetrics = {
   rewardsOwed: number;
 };
 
+export type ReferralAnalyticsMetrics = ReferralDashboardMetrics & {
+  inactiveCodes: number;
+  totalReferrals: number;
+  completedReferrals: number;
+  cancelledReferrals: number;
+  outstandingRewardLiability: number;
+  referralBookingsCount: number;
+  estimatedReferralRevenue: number;
+  averageReferralBookingValue: number;
+};
+
+export type ReferralFunnelStep = {
+  key: string;
+  label: string;
+  count: number;
+  conversionPercent: number | null;
+};
+
+export type TopReferrerStats = {
+  referrerName: string;
+  referralCode: string;
+  referralsCount: number;
+  completedReferrals: number;
+  rewardedReferrals: number;
+  totalRewardsEarned: number;
+  totalRewardsPaid: number;
+  pendingRewards: number;
+  outstandingRewards: number;
+};
+
 export const EMPTY_REFERRAL_CODE_FORM: ReferralCodeInput = {
   referrerName: "",
   referrerEmail: null,
@@ -312,6 +342,177 @@ export function computeReferralMetrics(
       .filter((referral) => referral.status === "completed")
       .reduce((sum, referral) => sum + referral.rewardAmount, 0),
   };
+}
+
+function conversionPercent(current: number, previous: number): number | null {
+  if (previous <= 0) return null;
+  return Math.round((current / previous) * 100);
+}
+
+export function computeReferralAnalytics(
+  codes: ReferralCode[],
+  referrals: ReferralTracking[],
+): ReferralAnalyticsMetrics {
+  const base = computeReferralMetrics(codes, referrals);
+  const inactiveCodes = codes.filter((code) => !code.isActive).length;
+  const completedReferrals = referrals.filter(
+    (referral) => referral.status === "completed",
+  ).length;
+  const cancelledReferrals = referrals.filter(
+    (referral) => referral.status === "cancelled",
+  ).length;
+  const underpaidRewarded = referrals
+    .filter((referral) => referral.status === "rewarded")
+    .reduce(
+      (sum, referral) =>
+        sum +
+        Math.max(
+          0,
+          referral.rewardAmount - (referral.payoutAmount ?? referral.rewardAmount),
+        ),
+      0,
+    );
+  const outstandingRewardLiability =
+    base.rewardsOwed + base.totalPendingRewards + underpaidRewarded;
+
+  const revenueReferrals = referrals.filter(
+    (referral) =>
+      referral.status !== "cancelled" && referral.bookingEstimateMid != null,
+  );
+  const estimatedReferralRevenue = revenueReferrals.reduce(
+    (sum, referral) => sum + (referral.bookingEstimateMid ?? 0),
+    0,
+  );
+  const referralBookingsCount = referrals.filter(
+    (referral) => referral.status !== "cancelled",
+  ).length;
+
+  return {
+    ...base,
+    inactiveCodes,
+    totalReferrals: referrals.length,
+    completedReferrals,
+    cancelledReferrals,
+    outstandingRewardLiability,
+    referralBookingsCount,
+    estimatedReferralRevenue,
+    averageReferralBookingValue:
+      revenueReferrals.length > 0
+        ? Math.round(estimatedReferralRevenue / revenueReferrals.length)
+        : 0,
+  };
+}
+
+export function computeReferralFunnel(
+  codes: ReferralCode[],
+  referrals: ReferralTracking[],
+): ReferralFunnelStep[] {
+  const codesCreated = codes.length;
+  const codesUsed = codes.filter(
+    (code) =>
+      code.usageCount > 0 ||
+      referrals.some((referral) => referral.code === code.code),
+  ).length;
+  const completedReferrals = referrals.filter(
+    (referral) => referral.status === "completed",
+  ).length;
+  const rewardedReferrals = referrals.filter(
+    (referral) => referral.status === "rewarded",
+  ).length;
+  const paidRewards = referrals.filter(
+    (referral) =>
+      referral.status === "rewarded" &&
+      (referral.payoutAmount != null || referral.rewardedAt != null),
+  ).length;
+
+  const steps = [
+    { key: "created", label: "Codes Created", count: codesCreated },
+    { key: "used", label: "Codes Used", count: codesUsed },
+    {
+      key: "completed",
+      label: "Completed Referrals",
+      count: completedReferrals,
+    },
+    {
+      key: "rewarded",
+      label: "Rewarded Referrals",
+      count: rewardedReferrals,
+    },
+    { key: "paid", label: "Paid Rewards", count: paidRewards },
+  ];
+
+  return steps.map((step, index) => ({
+    ...step,
+    conversionPercent:
+      index === 0 ? null : conversionPercent(step.count, steps[index - 1].count),
+  }));
+}
+
+export function computeTopReferrers(
+  codes: ReferralCode[],
+  referrals: ReferralTracking[],
+  limit = 10,
+): TopReferrerStats[] {
+  const statsByCode = new Map<string, TopReferrerStats>();
+
+  for (const code of codes) {
+    statsByCode.set(code.code, {
+      referrerName: code.referrerName,
+      referralCode: code.code,
+      referralsCount: 0,
+      completedReferrals: 0,
+      rewardedReferrals: 0,
+      totalRewardsEarned: 0,
+      totalRewardsPaid: 0,
+      pendingRewards: 0,
+      outstandingRewards: 0,
+    });
+  }
+
+  for (const referral of referrals) {
+    const existing = statsByCode.get(referral.code);
+    const stat: TopReferrerStats = existing ?? {
+      referrerName: referral.referrerName ?? "—",
+      referralCode: referral.code,
+      referralsCount: 0,
+      completedReferrals: 0,
+      rewardedReferrals: 0,
+      totalRewardsEarned: 0,
+      totalRewardsPaid: 0,
+      pendingRewards: 0,
+      outstandingRewards: 0,
+    };
+
+    stat.referralsCount += 1;
+
+    if (referral.status === "pending") {
+      stat.pendingRewards += referral.rewardAmount;
+      stat.outstandingRewards += referral.rewardAmount;
+    } else if (referral.status === "completed") {
+      stat.completedReferrals += 1;
+      stat.totalRewardsEarned += referral.rewardAmount;
+      stat.outstandingRewards += referral.rewardAmount;
+    } else if (referral.status === "rewarded") {
+      stat.rewardedReferrals += 1;
+      stat.totalRewardsEarned += referral.rewardAmount;
+      stat.totalRewardsPaid +=
+        referral.payoutAmount ?? referral.rewardAmount;
+    }
+
+    if (!existing) {
+      statsByCode.set(referral.code, stat);
+    }
+  }
+
+  return [...statsByCode.values()]
+    .filter((stat) => stat.referralsCount > 0)
+    .sort(
+      (a, b) =>
+        b.completedReferrals - a.completedReferrals ||
+        b.rewardedReferrals - a.rewardedReferrals ||
+        b.referralsCount - a.referralsCount,
+    )
+    .slice(0, limit);
 }
 
 function toReferralCodeInput(row: ReferralCodeRow): ReferralCodeInput {
