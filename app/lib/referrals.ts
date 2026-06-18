@@ -237,6 +237,30 @@ export function isValidReferralEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+export function normalizeReferralLookupEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+export function maskEmail(email: string): string {
+  const trimmed = email.trim();
+  const atIndex = trimmed.indexOf("@");
+  if (atIndex <= 0) return "***";
+
+  const local = trimmed.slice(0, atIndex);
+  const domain = trimmed.slice(atIndex + 1);
+  if (!domain) return "***";
+
+  const visible = local.slice(0, 1);
+  return `${visible}***@${domain}`;
+}
+
+export function getPublicReferredLabel(name: string, email: string): string {
+  const firstName = name.trim().split(/\s+/)[0];
+  if (firstName) return firstName;
+
+  return maskEmail(email);
+}
+
 export function generatePublicReferralCodeCandidates(name: string): string[] {
   return [
     generateReferralCodeWithRewardSuffix(name),
