@@ -21,6 +21,7 @@ type SortOption =
 type BedroomFilter = "all" | "1" | "2" | "3" | "4" | "5+";
 type BathroomFilter = "all" | "1" | "2" | "3" | "4" | "5+";
 type StatusFilter = "all" | BookingStatus;
+type ReferralFilter = "all" | "referral";
 type ItemsPerPage = 5 | 10 | 25 | 50;
 
 const ITEMS_PER_PAGE_OPTIONS: ItemsPerPage[] = [5, 10, 25, 50];
@@ -49,6 +50,8 @@ type BookingRequest = {
   estimate_mid: number | null;
   estimate_high: number | null;
   notes: string | null;
+  referral_code: string | null;
+  friend_discount_amount: number | null;
 };
 
 function normalizeExtras(extras: BookingRequest["extras"]): string[] {
@@ -98,6 +101,34 @@ function formatEstimate(
 function formatExtrasList(extras: BookingRequest["extras"]): string {
   const items = normalizeExtras(extras);
   return items.length > 0 ? items.join(", ") : "—";
+}
+
+function hasReferralCode(booking: BookingRequest): boolean {
+  return Boolean(booking.referral_code?.trim());
+}
+
+function ReferralBadge({
+  code,
+  friendDiscountAmount,
+}: {
+  code: string | null;
+  friendDiscountAmount: number | null;
+}) {
+  const trimmed = code?.trim();
+  if (!trimmed) return null;
+
+  return (
+    <div className="mt-1">
+      <p className="text-xs font-medium text-emerald-700">
+        🏷️ Referral: {trimmed}
+      </p>
+      {friendDiscountAmount != null && friendDiscountAmount > 0 && (
+        <p className="text-xs text-emerald-600">
+          -${friendDiscountAmount} friend discount
+        </p>
+      )}
+    </div>
+  );
 }
 
 function BookingDetails({
@@ -156,6 +187,7 @@ export default function DashboardTable({
   const [bedroomFilter, setBedroomFilter] = useState<BedroomFilter>("all");
   const [bathroomFilter, setBathroomFilter] = useState<BathroomFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [referralFilter, setReferralFilter] = useState<ReferralFilter>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<ItemsPerPage>(10);
 
@@ -179,6 +211,7 @@ export default function DashboardTable({
           (booking.frequency?.toLowerCase().includes(query) ?? false) ||
           (booking.location?.toLowerCase().includes(query) ?? false) ||
           (booking.notes?.toLowerCase().includes(query) ?? false) ||
+          (booking.referral_code?.toLowerCase().includes(query) ?? false) ||
           normalizeExtras(booking.extras).some((extra) =>
             extra.toLowerCase().includes(query),
           ) ||
@@ -214,6 +247,10 @@ export default function DashboardTable({
         return false;
       }
 
+      if (referralFilter === "referral" && !hasReferralCode(booking)) {
+        return false;
+      }
+
       return true;
     });
 
@@ -240,11 +277,11 @@ export default function DashboardTable({
     });
 
     return result;
-  }, [bookings, search, sort, bedroomFilter, bathroomFilter, statusFilter]);
+  }, [bookings, search, sort, bedroomFilter, bathroomFilter, statusFilter, referralFilter]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, sort, bedroomFilter, bathroomFilter, statusFilter, itemsPerPage]);
+  }, [search, sort, bedroomFilter, bathroomFilter, statusFilter, referralFilter, itemsPerPage]);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredBookings.length / itemsPerPage)),
@@ -319,7 +356,8 @@ export default function DashboardTable({
     sort !== "newest" ||
     bedroomFilter !== "all" ||
     bathroomFilter !== "all" ||
-    statusFilter !== "all";
+    statusFilter !== "all" ||
+    referralFilter !== "all";
 
   const clearFilters = () => {
     setSearch("");
@@ -327,6 +365,7 @@ export default function DashboardTable({
     setBedroomFilter("all");
     setBathroomFilter("all");
     setStatusFilter("all");
+    setReferralFilter("all");
   };
 
   const handleDelete = async (id: number) => {
@@ -415,6 +454,8 @@ export default function DashboardTable({
       "Estimate High",
       "Extras",
       "Notes",
+      "Referral Code",
+      "Friend Discount Amount",
       "Status",
       "Submitted",
     ];
@@ -440,6 +481,12 @@ export default function DashboardTable({
         ),
         escapeCsvValue(formatExtrasList(booking.extras)),
         escapeCsvValue(booking.notes ?? ""),
+        escapeCsvValue(booking.referral_code ?? ""),
+        escapeCsvValue(
+          booking.friend_discount_amount != null
+            ? String(booking.friend_discount_amount)
+            : "",
+        ),
         escapeCsvValue(
           BOOKING_STATUS_LABELS[getBookingStatus(booking.status)]
         ),
@@ -534,7 +581,7 @@ export default function DashboardTable({
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search name, email, service, location, extras, notes..."
+                  placeholder="Search name, email, service, location, referral code..."
                   className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                 />
               </div>
@@ -560,7 +607,7 @@ export default function DashboardTable({
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
               <div>
                 <label
                   htmlFor="booking-sort"
@@ -654,6 +701,26 @@ export default function DashboardTable({
                   ))}
                 </select>
               </div>
+
+              <div>
+                <label
+                  htmlFor="referral-filter"
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Referral
+                </label>
+                <select
+                  id="referral-filter"
+                  value={referralFilter}
+                  onChange={(e) =>
+                    setReferralFilter(e.target.value as ReferralFilter)
+                  }
+                  className={selectClassName}
+                >
+                  <option value="all">All bookings</option>
+                  <option value="referral">Referral bookings only</option>
+                </select>
+              </div>
             </div>
 
             <p className="text-sm text-slate-500">
@@ -719,6 +786,10 @@ export default function DashboardTable({
                           {booking.frequency}
                         </p>
                       )}
+                      <ReferralBadge
+                        code={booking.referral_code}
+                        friendDiscountAmount={booking.friend_discount_amount}
+                      />
                     </td>
                     <td className="p-3 text-slate-700">
                       <p className="break-all">{booking.email}</p>
@@ -836,6 +907,10 @@ export default function DashboardTable({
                           .join(" · ")}
                       </p>
                     )}
+                    <ReferralBadge
+                      code={booking.referral_code}
+                      friendDiscountAmount={booking.friend_discount_amount}
+                    />
                   </div>
 
                   <button

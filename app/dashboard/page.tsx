@@ -24,6 +24,12 @@ type BookingRequest = {
   estimate_mid: number | null;
   estimate_high: number | null;
   notes: string | null;
+  referral_code: string | null;
+  friend_discount_amount: number | null;
+};
+
+type BookingRow = Omit<BookingRequest, "friend_discount_amount"> & {
+  referral_friend_discount_amount: number | null;
 };
 
 type DashboardPageProps = {
@@ -42,12 +48,20 @@ export default async function DashboardPage({
   }
 
   const bookings = await sql`
-    SELECT *
-    FROM booking_requests
-    ORDER BY created_at DESC;
+    SELECT
+      br.*,
+      ref.friend_discount_amount AS referral_friend_discount_amount
+    FROM booking_requests br
+    LEFT JOIN referrals ref ON ref.booking_request_id = br.id
+    ORDER BY br.created_at DESC;
   `;
 
-  const typedBookings = bookings as unknown as BookingRequest[];
+  const typedBookings = (bookings as unknown as BookingRow[]).map(
+    ({ referral_friend_discount_amount, ...booking }) => ({
+      ...booking,
+      friend_discount_amount: referral_friend_discount_amount,
+    }),
+  );
   const unseenBookings = typedBookings
     .filter((booking) => !booking.seen)
     .slice(0, 10)
