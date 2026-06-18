@@ -28,6 +28,10 @@ function formatReferralNotificationType(
       return "Referral completed";
     case "referral_rewarded":
       return "Referral rewarded";
+    case "admin_reward_eligible":
+      return "Admin: reward eligible";
+    case "admin_rewards_summary":
+      return "Admin: rewards summary";
   }
 }
 
@@ -648,6 +652,7 @@ export default function ReferralDashboard({
     useState<NotificationStatusFilter>("all");
   const [notificationHistoryExpanded, setNotificationHistoryExpanded] =
     useState(true);
+  const [isSendingSummary, setIsSendingSummary] = useState(false);
 
   function getPayoutDraft(referral: ReferralTracking): ReferralPayoutDraft {
     const draft = payoutDrafts[referral.id];
@@ -847,6 +852,61 @@ export default function ReferralDashboard({
     link.download = "referral-notifications.csv";
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function handleSendOutstandingSummary() {
+    setIsSendingSummary(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/referrals/admin-reminders?key=${encodeURIComponent(dashboardKey)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "summary" }),
+        },
+      );
+      const data = (await response.json()) as {
+        error?: string;
+        notification?: { status?: string; errorMessage?: string | null };
+      };
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to send outstanding rewards summary.");
+      }
+
+      const status = data.notification?.status;
+      if (status === "sent") {
+        setMessage({
+          type: "success",
+          text: "Outstanding rewards summary email sent to admin.",
+        });
+      } else if (status === "skipped") {
+        setMessage({
+          type: "success",
+          text:
+            data.notification?.errorMessage ??
+            "Summary email skipped. Check ADMIN_NOTIFICATION_EMAIL configuration.",
+        });
+      } else {
+        throw new Error(
+          data.notification?.errorMessage || "Failed to send summary email.",
+        );
+      }
+
+      router.refresh();
+    } catch (error) {
+      setMessage({
+        type: "error",
+        text:
+          error instanceof Error
+            ? error.message
+            : "Failed to send outstanding rewards summary.",
+      });
+    } finally {
+      setIsSendingSummary(false);
+    }
   }
 
   async function handleCreate() {
@@ -1104,14 +1164,26 @@ export default function ReferralDashboard({
             Performance, revenue impact, and reward liability
           </p>
         </div>
-        <button
-          type="button"
-          onClick={handleExportAnalyticsCsv}
-          disabled={referrerExportRows.length === 0}
-          className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Export analytics CSV
-        </button>
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={handleSendOutstandingSummary}
+            disabled={isSendingSummary || isSubmitting}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isSendingSummary
+              ? "Sending summary..."
+              : "Send Outstanding Rewards Summary"}
+          </button>
+          <button
+            type="button"
+            onClick={handleExportAnalyticsCsv}
+            disabled={referrerExportRows.length === 0}
+            className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Export analytics CSV
+          </button>
+        </div>
       </div>
 
       <AnalyticsSection title="Referral codes">

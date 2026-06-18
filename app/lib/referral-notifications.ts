@@ -4,7 +4,9 @@ import { serializeReferralTracking, type ReferralTrackingRow } from "./referrals
 
 export type ReferralNotificationType =
   | "referral_completed"
-  | "referral_rewarded";
+  | "referral_rewarded"
+  | "admin_reward_eligible"
+  | "admin_rewards_summary";
 
 export type ReferralNotificationStatus =
   | "pending"
@@ -88,6 +90,10 @@ export function formatReferralNotificationType(
       return "Referral completed";
     case "referral_rewarded":
       return "Referral rewarded";
+    case "admin_reward_eligible":
+      return "Admin: reward eligible";
+    case "admin_rewards_summary":
+      return "Admin: rewards summary";
   }
 }
 
@@ -146,6 +152,13 @@ async function hasSentNotification(
   return rows.length > 0;
 }
 
+export async function hasSentReferralNotification(
+  referralId: number,
+  type: ReferralNotificationType,
+): Promise<boolean> {
+  return hasSentNotification(referralId, type);
+}
+
 async function logReferralNotification(input: {
   referralId: number;
   type: ReferralNotificationType;
@@ -179,6 +192,18 @@ async function logReferralNotification(input: {
       ${sentAt}
     )
   `;
+}
+
+export async function recordReferralNotification(input: {
+  referralId: number;
+  type: ReferralNotificationType;
+  recipientEmail: string;
+  subject: string;
+  status: ReferralNotificationStatus;
+  providerMessageId?: string | null;
+  errorMessage?: string | null;
+}): Promise<void> {
+  return logReferralNotification(input);
 }
 
 export function buildReferralCompletedEmail(

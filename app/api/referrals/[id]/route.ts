@@ -5,6 +5,10 @@ import {
   type ReferralNotificationResult,
 } from "../../../lib/referral-notifications";
 import {
+  sendRewardEligibleAdminNotification,
+  type AdminReferralReminderResult,
+} from "../../../lib/admin-referral-reminders";
+import {
   applyReferralUpdate,
   isDashboardAuthorized,
   parseReferralId,
@@ -125,12 +129,16 @@ export async function PATCH(
     }
 
     const notifications: ReferralNotificationResult[] = [];
+    const adminReminders: AdminReferralReminderResult[] = [];
 
     if (previousStatus !== next.status) {
       try {
         if (next.status === "completed") {
           notifications.push(
             await sendReferralNotification(referralId, "referral_completed"),
+          );
+          adminReminders.push(
+            await sendRewardEligibleAdminNotification(referralId),
           );
         } else if (next.status === "rewarded") {
           notifications.push(
@@ -146,6 +154,7 @@ export async function PATCH(
       success: true,
       referral: serializeReferralTracking(referral),
       notifications,
+      adminReminders,
     });
   } catch (error) {
     console.error(error);
