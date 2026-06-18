@@ -1643,7 +1643,7 @@ export default function CleaningEstimator() {
           >
             Referral code{" "}
             <span className="font-semibold">{referralLinkCode}</span> could not be
-            applied. You can still book normally.
+            applied. You can still book normally
           </div>
         )}
       </div>
