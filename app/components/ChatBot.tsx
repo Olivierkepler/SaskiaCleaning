@@ -8,6 +8,17 @@ type Message = {
   text: string;
 };
 
+type EstimatorContext = {
+  service?: string;
+  location?: string;
+  date?: string;
+  frequency?: string;
+  extras?: string[];
+  estimateLow?: number;
+  estimateMid?: number;
+  estimateHigh?: number;
+};
+
 const QUICK_OPTIONS = [
   "Get a Quote",
   "Residential Cleaning",
@@ -36,14 +47,12 @@ const FALLBACK_BOT_REPLY =
   "Sorry, I'm having trouble responding right now. You can still request a quote using the booking form.";
 
 /**
- * Federal-blue / government style palette, modeled after USCIS's
- * "Emma" virtual assistant widget (uscis.gov). Boxy, low-radius,
- * navy-and-white, minimal-ornamentation aesthetic.
+ * Sky-blue palette (Tailwind sky-500).
  */
 const K = {
-  blue: "#205493", // USCIS federal blue
-  blueDark: "#112e51", // USCIS deep navy
-  blueLight: "#e1f0ff", // pale federal-blue tint
+  blue: "#0ea5e9", // sky-500
+  blueDark: "#0284c7", // sky-600
+  blueLight: "#e0f2fe", // sky-100
   black: "#111111",
   white: "#ffffff",
   border: "#d6d7d9",
@@ -162,13 +171,27 @@ export default function ChatBot() {
     }
   }, [isOpen]);
 
-  useEffect(() => {
-    const handle = () => setIsOpen(true);
+  // Holds the latest estimator selections (service, location, price, etc.)
+  // so the assistant has context on the user's request without that
+  // context ever appearing as a visible chat bubble. Updated every time
+  // the "open-chatbot" event fires, so reopening the chat after changing
+  // selections always carries the freshest state into the next message.
+  const estimatorContextRef = useRef<EstimatorContext | null>(null);
 
-    window.addEventListener("open-chatbot", handle);
+  useEffect(() => {
+    const handle = (e: Event) => {
+      setIsOpen(true);
+
+      const detail = (e as CustomEvent<EstimatorContext | undefined>).detail;
+      if (detail) {
+        estimatorContextRef.current = detail;
+      }
+    };
+
+    window.addEventListener("open-chatbot", handle as EventListener);
 
     return () => {
-      window.removeEventListener("open-chatbot", handle);
+      window.removeEventListener("open-chatbot", handle as EventListener);
     };
   }, []);
 
@@ -275,7 +298,10 @@ export default function ChatBot() {
       const response = await fetch("/api/chatbot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: nextMessages }),
+        body: JSON.stringify({
+          messages: nextMessages,
+          context: estimatorContextRef.current ?? undefined,
+        }),
       });
 
       const data = (await response.json()) as { reply?: string };
@@ -378,7 +404,7 @@ export default function ChatBot() {
                   flexDirection: "column",
                   background: K.white,
                   border: isMobileFullScreen ? "none" : `1px solid ${K.border}`,
-                  borderRadius: isMobileFullScreen ? 0 : 2,
+                  borderRadius: isMobileFullScreen ? 0 : 16,
                   boxShadow: isMobileFullScreen
                     ? "none"
                     : "0 4px 14px rgba(17, 46, 81, 0.22)",
@@ -454,7 +480,7 @@ export default function ChatBot() {
                         height: 36,
                         background: "transparent",
                         border: `1px solid rgba(255,255,255,0.35)`,
-                        borderRadius: 2,
+                        borderRadius: 10,
                         color: K.white,
                         cursor: "pointer",
                         display: "flex",
@@ -508,7 +534,7 @@ export default function ChatBot() {
                             background: K.white,
                             color: K.blue,
                             cursor: isTyping ? "not-allowed" : "pointer",
-                            borderRadius: 2,
+                            borderRadius: 999,
                             transition: "all 0.15s",
                             opacity: isTyping ? 0.6 : 1,
                           }}
@@ -543,7 +569,7 @@ export default function ChatBot() {
                         style={{
                           maxWidth: "88%",
                           padding: "12px 16px",
-                          borderRadius: 2,
+                          borderRadius: 14,
                           fontFamily:
                             "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
                           fontSize: 15,
@@ -578,7 +604,7 @@ export default function ChatBot() {
                         style={{
                           background: K.white,
                           border: `1px solid ${K.border}`,
-                          borderRadius: 2,
+                          borderRadius: 14,
                         }}
                       >
                         <TypingDots />
@@ -605,7 +631,7 @@ export default function ChatBot() {
                       border: `1px solid ${K.border}`,
                       background: K.white,
                       padding: "6px 6px 6px 14px",
-                      borderRadius: 2,
+                      borderRadius: 14,
                       minHeight: 52,
                       transition: "border-color 0.15s, box-shadow 0.15s",
                     }}
@@ -658,7 +684,7 @@ export default function ChatBot() {
                         background:
                           isTyping || !input.trim() ? "#9aa1a8" : K.blue,
                         border: "none",
-                        borderRadius: 2,
+                        borderRadius: 10,
                         color: K.white,
                         display: "flex",
                         alignItems: "center",
@@ -691,7 +717,7 @@ export default function ChatBot() {
               className="absolute right-[76px] top-1/2 hidden -translate-y-1/2 whitespace-nowrap px-4 py-2 shadow-lg md:block"
               style={{
                 background: K.blueDark,
-                borderRadius: 2,
+                borderRadius: 12,
               }}
             >
               <p className="text-sm font-semibold text-white">Need Help?</p>

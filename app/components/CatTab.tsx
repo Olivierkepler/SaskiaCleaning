@@ -375,46 +375,54 @@ function CalendarDropdown({
 // ── Search field ──────────────────────────────────────────────────────────────
 function SF({
   icon, label, value, flex = 1, last = false, active = false, onClick, placeholder = false,
+  error = false, shakeKey = 0,
 }: {
   icon: ReactNode; label: string; value: string; flex?: number;
   last?: boolean; active?: boolean; onClick?: () => void; placeholder?: boolean;
+  error?: boolean; shakeKey?: number;
 }) {
   return (
-    <div
+    <motion.div
       data-cursor-pointer="pointer"
       onClick={onClick}
+      animate={
+        shakeKey > 0
+          ? { x: [0, -6, 6, -5, 5, -2, 2, 0] }
+          : { x: 0 }
+      }
+      transition={{ duration: 0.45, ease: "easeOut" }}
       className={cx(
         "relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 self-stretch bg-white px-3.5 py-3 transition-colors duration-200",
         "sm:min-h-0 sm:h-full sm:px-4 sm:py-0",
         "max-sm:rounded-xl  max-sm:shadow-sm",
-        active ? "sm:bg-white" : "hover:bg-slate-50/80",
+        error ? "sm:bg-red-50/40" : active ? "sm:bg-white" : "hover:bg-slate-50/80",
       )}
       style={{ flex }}
     >
       <div
-        className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-slate-50 ${
-          active ? "text-sky-500" : "text-slate-900"
-        }`}
+        className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
+          error ? "bg-red-50" : "bg-slate-50"
+        } ${error ? "text-red-500" : active ? "text-sky-500" : "text-slate-900"}`}
       >
         {icon}
       </div>
       <div className="flex min-w-0 flex-col justify-center gap-0">
         <span
           className={`block text-[10px] font-semibold uppercase tracking-[0.08em] leading-none sm:text-[10px] ${
-            active ? "text-sky-500" : "text-slate-400"
+            error ? "text-red-500" : active ? "text-sky-500" : "text-slate-400"
           }`}
         >
           {label}
         </span>
         <span
   className={`block whitespace-normal text-sm font-semibold leading-tight tracking-tight sm:truncate sm:text-sm ${
-    placeholder ? "text-slate-400" : "text-slate-900"
+    placeholder ? (error ? "text-red-400" : "text-slate-400") : "text-slate-900"
   }`}
 >
   {value}
 </span>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -702,12 +710,13 @@ function getStandardGalleryDimensions(img: StandardPreviewImage) {
 
 const STANDARD_PREVIEW_IMAGES = {
   default: [
-    { src: "/images/standard/bed.png", alt: "Bedroom" },
+    { src: "/images/standard/Designer(15).png", alt: "Bedroom" },
     {
-      src: "/images/standard/shower1.png",
+      src: "/images/standard/Designer(20).png",
       alt: "Bathroom",
-      width: 100,
-      height: 100,
+      width: 200,
+      height: 200,
+    
     },
   ] satisfies StandardPreviewImage[],
   addons: {
@@ -805,7 +814,7 @@ type DeepCleanAddonLabel = (typeof DEEP_CLEAN_ADDONS)[number]["label"];
 
 const DEEP_CLEAN_PREVIEW_IMAGES = {
   default: [
-    { src: "/images/vacium/vacuum.png", alt: "Deep cleaning service" , width: 180, height: 140,},
+    { src: "/images/deepclean/Designer(19).png", alt: "Deep cleaning service" },
   ] satisfies StandardPreviewImage[],
   addons: {
     "Wall Trim": { src: "/images/deepclean/baseboard.png", alt: "Wall trim cleaning", width: 90, height: 90 },
@@ -961,7 +970,7 @@ function StandardPanel({
   );
 
 
-  const BEDS = ["Studio", "1 bed", "2 bed", "3 bed", "4+ bed"];
+  const BEDS = ["Studio", "1 room", "2 rooms", "3 rooms", "4+ rooms"];
 
   const toggle = useCallback(
     (label: StandardAddonLabel) => {
@@ -1205,8 +1214,8 @@ function CommercialPanel({
 
 // ── Service config ─────────────────────────────────────────────────────────────
 const SERVICES = [
-  { image: "/images/standard/bed.png", label: "Standard",  photo: "/images/booking/Designer(9).png", headline: <>Find the right cleaner<br />from Boston's best<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book now"            },
-  { image: "/images/vacium/vacuum.png",        label: "Deep clean", photo: "/images/boston.jpg", headline: <>Book a deep clean<br />that actually goes deep<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book deep clean"     },
+  { image: "/images/standard/Designer(15).png", label: "Standard",  photo: "/images/booking/Designer(9).png", headline: <>Find the right cleaner<br />from Boston's best<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book now"            },
+  { image: "/images/deepclean/Designer(19).png",        label: "Deep clean", photo: "/images/boston.jpg", headline: <>Book a deep clean<br />that actually goes deep<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book deep clean"     },
   { image: "/images/moveout/moveout.png",          label: "Move-out",   photo: "/images/boston.jpg", headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,        bookLabel: "Book move-out clean" },
   { image: "/images/commercial/commercial.png",        label: "Commercial", photo: "/images/boston.jpg", headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,      bookLabel: "Get a quote"         },
 ];
@@ -1541,12 +1550,23 @@ export default function CleaningEstimator() {
   const [locState, setLocState] = useState<StateKey>("MA");
   const [locCity,  setLocCity]  = useState("Boston");
   const [locOpen,  setLocOpen]  = useState(false);
+  // "Boston, MA" is only a pre-filled default, not a real user choice.
+  // Customize is blocked until the user actively opens this field and
+  // picks a city, even if they end up re-selecting Boston.
+  const [locConfirmed, setLocConfirmed] = useState(false);
 
   const [date,     setDate]     = useState<Date | null>(null);
   const [dateOpen, setDateOpen] = useState(false);
 
   const svc     = SERVICES[serviceIdx];
   const rootRef = useRef<HTMLElement>(null);
+
+  // Drives the shake animation + inline error state on the Location/Date
+  // fields when "Customize" is clicked before both are confirmed.
+  const [locError, setLocError] = useState(false);
+  const [dateError, setDateError] = useState(false);
+  const [shakeKey, setShakeKey] = useState(0);
+  const [requiredFieldsMessage, setRequiredFieldsMessage] = useState("");
 
   const [frequency, setFrequency] = useState("One-time");
   const [optionsOpen, setOptionsOpen] = useState(false);
@@ -1724,11 +1744,42 @@ export default function CleaningEstimator() {
     setLocOpen(false);
     setDateOpen((value) => !value);
   }
+
+  function handleCustomizeClick() {
+    const missingLocation = !locConfirmed;
+    const missingDate = !date;
+
+    if (missingLocation || missingDate) {
+      setLocOpen(false);
+      setDateOpen(false);
+      setLocError(missingLocation);
+      setDateError(missingDate);
+      setShakeKey((value) => value + 1);
+
+      const missingLabels = [
+        missingLocation ? "a location" : null,
+        missingDate ? "a date" : null,
+      ].filter(Boolean);
+      setRequiredFieldsMessage(
+        `Please select ${missingLabels.join(" and ")} before customizing your clean.`,
+      );
+      return;
+    }
+
+    setLocError(false);
+    setDateError(false);
+    setRequiredFieldsMessage("");
+    setLocOpen(false);
+    setDateOpen(false);
+    setOptionsOpen((value) => !value);
+  }
   function handleCitySelect(city: string, state: StateKey) {
     setLocCity(city);
     setLocState(state);
     setLocOpen(false);
     setDateOpen(false);
+    setLocConfirmed(true);
+    setLocError(false);
   }
   
   
@@ -1736,6 +1787,7 @@ export default function CleaningEstimator() {
     setDate(d);
     setLocOpen(false);
     setDateOpen(false);
+    setDateError(false);
   }
 
   function openBookingForm() {
@@ -2084,6 +2136,9 @@ export default function CleaningEstimator() {
                       value={`${locCity}, ${locState}`}
                       active={locOpen}
                       onClick={handleLocField}
+                      placeholder={!locConfirmed}
+                      error={locError}
+                      shakeKey={locError ? shakeKey : 0}
                       last
                     />
 
@@ -2122,6 +2177,8 @@ export default function CleaningEstimator() {
                       active={dateOpen}
                       onClick={handleDateField}
                       placeholder={!date}
+                      error={dateError}
+                      shakeKey={dateError ? shakeKey : 0}
                       last
                     />
 
@@ -2150,11 +2207,7 @@ export default function CleaningEstimator() {
                   <div className="relative flex w-full items-center justify-center p-2 sm:min-h-0 sm:w-auto sm:flex-initial sm:p-1">
                     <button
                       type="button"
-                      onClick={() => {
-                        setLocOpen(false);
-                        setDateOpen(false);
-                        setOptionsOpen((value) => !value);
-                      }}
+                      onClick={handleCustomizeClick}
                       className={[
                         "flex w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg px-4 py-3 text-xs font-bold text-white shadow-sm transition-all duration-200",
                         "max-sm:border-0 sm:h-full sm:min-h-[48px] sm:px-5",
@@ -2178,6 +2231,26 @@ export default function CleaningEstimator() {
                 </div>
               </div>
             </div>
+
+            <AnimatePresence initial={false}>
+              {requiredFieldsMessage && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden px-3 sm:px-5"
+                >
+                  <p
+                    role="alert"
+                    aria-live="assertive"
+                    className="mb-3 rounded-lg bg-red-50 px-3 py-2 text-xs font-semibold text-red-600"
+                  >
+                    {requiredFieldsMessage}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
   
             {/* Active Panel: hidden by default, opened from the Options button */}
             <AnimatePresence initial={false}>
@@ -2234,7 +2307,22 @@ export default function CleaningEstimator() {
               <button
                 type="button"
                 className="flex hover:scale-105 transition-all duration-300 shadow-sm cursor-pointer items-center gap-2 rounded-[10px] bg-sky-500/10 px-4 py-2"
-                onClick={() => window.dispatchEvent(new Event("open-chatbot"))}
+                onClick={() => {
+                  window.dispatchEvent(
+                    new CustomEvent("open-chatbot", {
+                      detail: {
+                        service: svc.label,
+                        location: `${locCity}, ${locState}`,
+                        date: date ? formatDate(date) : undefined,
+                        frequency,
+                        extras: summaryExtras,
+                        estimateLow: prices.low,
+                        estimateMid: prices.mid,
+                        estimateHigh: prices.high,
+                      },
+                    }),
+                  );
+                }}
               >
                 <IoChatbubblesOutline
                   size={20}
