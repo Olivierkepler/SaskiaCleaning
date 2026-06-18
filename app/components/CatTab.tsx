@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect, useMemo, type FormEvent, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronDown, MapPin, SlidersHorizontal } from "lucide-react";
@@ -1209,6 +1210,329 @@ const SERVICES = [
   { image: "/images/moveout/moveout.png",          label: "Move-out",   photo: "/images/boston.jpg", headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,        bookLabel: "Book move-out clean" },
   { image: "/images/commercial/commercial.png",        label: "Commercial", photo: "/images/boston.jpg", headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,      bookLabel: "Get a quote"         },
 ];
+
+// ── Booking modal (rendered through a portal) ──────────────────────────────────
+function BookingModal({
+  open,
+  svc,
+  bookingStatus,
+  bookingErrorMessage,
+  contactName,
+  contactEmail,
+  contactMobile,
+  contactNotes,
+  referralCode,
+  referralCodeError,
+  referralValidation,
+  referralDiscountAmount,
+  estimatedTotalAfterDiscount,
+  prices,
+  onClose,
+  onSubmit,
+  onNameChange,
+  onEmailChange,
+  onMobileChange,
+  onNotesChange,
+  onReferralCodeChange,
+}: {
+  open: boolean;
+  svc: (typeof SERVICES)[number];
+  bookingStatus: BookingSubmitStatus;
+  bookingErrorMessage: string;
+  contactName: string;
+  contactEmail: string;
+  contactMobile: string;
+  contactNotes: string;
+  referralCode: string;
+  referralCodeError: string;
+  referralValidation: ReferralValidationState;
+  referralDiscountAmount: number;
+  estimatedTotalAfterDiscount: number;
+  prices: PriceRange;
+  onClose: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onNameChange: (value: string) => void;
+  onEmailChange: (value: string) => void;
+  onMobileChange: (value: string) => void;
+  onNotesChange: (value: string) => void;
+  onReferralCodeChange: (value: string) => void;
+}) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll while the modal is open so the fixed backdrop never
+  // appears to "scroll away" on mobile browsers.
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 16, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 16, scale: 0.97 }}
+            transition={{ duration: 0.22, ease: MOTION_EASE }}
+            className="relative max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.35)] ring-1 ring-slate-200 sm:p-7"
+            onClick={(event) => event.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="booking-form-title"
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute right-4 top-4 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M2 2l12 12M14 2L2 14"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+
+            <div className="mb-5 pr-8">
+              <h3
+                id="booking-form-title"
+                className="text-xl font-bold text-slate-900"
+              >
+                {svc.bookLabel}
+              </h3>
+              <p className="mt-1 text-sm text-slate-500">
+                Share your contact details and we&apos;ll confirm your{" "}
+                {svc.label.toLowerCase()} request.
+              </p>
+            </div>
+
+            {bookingStatus === "success" ? (
+              <div className="space-y-4">
+                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
+                  Thanks! Your booking request was submitted successfully.
+                </div>
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="w-full cursor-pointer rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-600"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={onSubmit} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="booking-name"
+                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    Full name
+                  </label>
+                  <input
+                    id="booking-name"
+                    type="text"
+                    required
+                    value={contactName}
+                    onChange={(event) => onNameChange(event.target.value)}
+                    className={bookingInputClassName}
+                    placeholder="Your name"
+                    autoComplete="name"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="booking-email"
+                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    Email
+                  </label>
+                  <input
+                    id="booking-email"
+                    type="email"
+                    required
+                    value={contactEmail}
+                    onChange={(event) => onEmailChange(event.target.value)}
+                    className={bookingInputClassName}
+                    placeholder="you@example.com"
+                    autoComplete="email"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="booking-mobile"
+                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    Mobile
+                  </label>
+                  <input
+                    id="booking-mobile"
+                    type="tel"
+                    value={contactMobile}
+                    onChange={(event) => onMobileChange(event.target.value)}
+                    className={bookingInputClassName}
+                    placeholder="Phone number"
+                    autoComplete="tel"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="booking-referral-code"
+                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    Referral code
+                  </label>
+                  <input
+                    id="booking-referral-code"
+                    type="text"
+                    value={referralCode}
+                    onChange={(event) => onReferralCodeChange(event.target.value)}
+                    className={`${bookingInputClassName}${
+                      referralCodeError || referralValidation.status === "invalid"
+                        ? " border-red-300 focus:border-red-400 focus:ring-red-100"
+                        : referralValidation.status === "valid"
+                          ? " border-emerald-300 focus:border-emerald-400 focus:ring-emerald-100"
+                          : ""
+                    }`}
+                    placeholder="Have a referral code?"
+                    autoComplete="off"
+                    aria-invalid={
+                      referralCodeError || referralValidation.status === "invalid"
+                        ? true
+                        : undefined
+                    }
+                    aria-describedby={
+                      referralCodeError
+                        ? "booking-referral-code-error"
+                        : referralValidation.status === "invalid"
+                          ? "booking-referral-code-validation"
+                          : referralValidation.status === "valid"
+                            ? "booking-referral-code-success"
+                            : undefined
+                    }
+                  />
+                  {referralValidation.status === "invalid" && !referralCodeError && (
+                    <p
+                      id="booking-referral-code-validation"
+                      className="mt-1.5 text-sm font-medium text-red-600"
+                    >
+                      Invalid referral code.
+                    </p>
+                  )}
+                  {referralCodeError && (
+                    <p
+                      id="booking-referral-code-error"
+                      className="mt-1.5 text-sm font-medium text-red-600"
+                    >
+                      {referralCodeError}
+                    </p>
+                  )}
+                  {referralValidation.status === "valid" && (
+                    <div
+                      id="booking-referral-code-success"
+                      className="mt-3 space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm"
+                    >
+                      <p className="font-medium text-emerald-800">
+                        Referral applied: ${referralDiscountAmount} off your
+                        first cleaning.
+                      </p>
+                      <div className="space-y-1 text-slate-700">
+                        <div className="flex items-center justify-between gap-4">
+                          <span>Original estimate</span>
+                          <span className="font-semibold text-slate-900">
+                            ${prices.mid}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 text-emerald-700">
+                          <span>Referral discount</span>
+                          <span className="font-semibold">
+                            -${referralDiscountAmount}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-4 border-t border-emerald-200 pt-2 font-bold text-slate-900">
+                          <span>Estimated total after discount</span>
+                          <span>${estimatedTotalAfterDiscount}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="booking-notes"
+                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                  >
+                    Notes (optional)
+                  </label>
+                  <textarea
+                    id="booking-notes"
+                    rows={3}
+                    value={contactNotes}
+                    onChange={(event) => onNotesChange(event.target.value)}
+                    className={`${bookingInputClassName} resize-none`}
+                    placeholder="Access instructions, pets, special requests..."
+                  />
+                </div>
+
+                {bookingStatus === "error" && bookingErrorMessage && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                    {bookingErrorMessage}
+                  </div>
+                )}
+
+                <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    disabled={bookingStatus === "loading"}
+                    className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={bookingStatus === "loading"}
+                    className="cursor-pointer rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(56,189,248,.35)] transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {bookingStatus === "loading"
+                      ? "Submitting..."
+                      : "Submit request"}
+                  </button>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>,
+    document.body,
+  );
+}
+
 // ── Root ──────────────────────────────────────────────────────────────────────
 export default function CleaningEstimator() {
   const [serviceIdx, setServiceIdx] = useState<ServiceIndex>(0);
@@ -1428,6 +1752,13 @@ export default function CleaningEstimator() {
     setBookingErrorMessage("");
     setReferralCode(urlPrefilledReferralCode.current ?? "");
     setReferralCodeError("");
+  }
+
+  function handleReferralCodeChange(value: string) {
+    setReferralCode(value);
+    if (referralCodeError) {
+      setReferralCodeError("");
+    }
   }
 
   async function handleBookingSubmit(event: FormEvent<HTMLFormElement>) {
@@ -2027,246 +2358,29 @@ export default function CleaningEstimator() {
   </div>
       </div>
 
-      <AnimatePresence>
-        {bookingFormOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 p-4"
-            onClick={closeBookingForm}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 16, scale: 0.98 }}
-              transition={{ duration: 0.2 }}
-              className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200"
-              onClick={(event) => event.stopPropagation()}
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="booking-form-title"
-            >
-              <div className="mb-5">
-                <h3
-                  id="booking-form-title"
-                  className="text-xl font-bold text-slate-900"
-                >
-                  {svc.bookLabel}
-                </h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  Share your contact details and we&apos;ll confirm your{" "}
-                  {svc.label.toLowerCase()} request.
-                </p>
-              </div>
-
-              {bookingStatus === "success" ? (
-                <div className="space-y-4">
-                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800">
-                    Thanks! Your booking request was submitted successfully.
-                  </div>
-                  <button
-                    type="button"
-                    onClick={closeBookingForm}
-                    className="w-full rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-600"
-                  >
-                    Close
-                  </button>
-                </div>
-              ) : (
-                <form onSubmit={handleBookingSubmit} className="space-y-4">
-                  <div>
-                    <label
-                      htmlFor="booking-name"
-                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                    >
-                      Full name
-                    </label>
-                    <input
-                      id="booking-name"
-                      type="text"
-                      required
-                      value={contactName}
-                      onChange={(event) => setContactName(event.target.value)}
-                      className={bookingInputClassName}
-                      placeholder="Your name"
-                      autoComplete="name"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="booking-email"
-                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                    >
-                      Email
-                    </label>
-                    <input
-                      id="booking-email"
-                      type="email"
-                      required
-                      value={contactEmail}
-                      onChange={(event) => setContactEmail(event.target.value)}
-                      className={bookingInputClassName}
-                      placeholder="you@example.com"
-                      autoComplete="email"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="booking-mobile"
-                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                    >
-                      Mobile
-                    </label>
-                    <input
-                      id="booking-mobile"
-                      type="tel"
-                      value={contactMobile}
-                      onChange={(event) => setContactMobile(event.target.value)}
-                      className={bookingInputClassName}
-                      placeholder="Phone number"
-                      autoComplete="tel"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="booking-referral-code"
-                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                    >
-                      Referral code
-                    </label>
-                    <input
-                      id="booking-referral-code"
-                      type="text"
-                      value={referralCode}
-                      onChange={(event) => {
-                        setReferralCode(event.target.value);
-                        if (referralCodeError) {
-                          setReferralCodeError("");
-                        }
-                      }}
-                      className={`${bookingInputClassName}${
-                        referralCodeError || referralValidation.status === "invalid"
-                          ? " border-red-300 focus:border-red-400 focus:ring-red-100"
-                          : referralValidation.status === "valid"
-                            ? " border-emerald-300 focus:border-emerald-400 focus:ring-emerald-100"
-                            : ""
-                      }`}
-                      placeholder="Have a referral code?"
-                      autoComplete="off"
-                      aria-invalid={
-                        referralCodeError || referralValidation.status === "invalid"
-                          ? true
-                          : undefined
-                      }
-                      aria-describedby={
-                        referralCodeError
-                          ? "booking-referral-code-error"
-                          : referralValidation.status === "invalid"
-                            ? "booking-referral-code-validation"
-                            : referralValidation.status === "valid"
-                              ? "booking-referral-code-success"
-                              : undefined
-                      }
-                    />
-                    {referralValidation.status === "invalid" && !referralCodeError && (
-                      <p
-                        id="booking-referral-code-validation"
-                        className="mt-1.5 text-sm font-medium text-red-600"
-                      >
-                        Invalid referral code.
-                      </p>
-                    )}
-                    {referralCodeError && (
-                      <p
-                        id="booking-referral-code-error"
-                        className="mt-1.5 text-sm font-medium text-red-600"
-                      >
-                        {referralCodeError}
-                      </p>
-                    )}
-                    {referralValidation.status === "valid" && (
-                      <div
-                        id="booking-referral-code-success"
-                        className="mt-3 space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm"
-                      >
-                        <p className="font-medium text-emerald-800">
-                          Referral applied: ${referralDiscountAmount} off your
-                          first cleaning.
-                        </p>
-                        <div className="space-y-1 text-slate-700">
-                          <div className="flex items-center justify-between gap-4">
-                            <span>Original estimate</span>
-                            <span className="font-semibold text-slate-900">
-                              ${prices.mid}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between gap-4 text-emerald-700">
-                            <span>Referral discount</span>
-                            <span className="font-semibold">
-                              -${referralDiscountAmount}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between gap-4 border-t border-emerald-200 pt-2 font-bold text-slate-900">
-                            <span>Estimated total after discount</span>
-                            <span>${estimatedTotalAfterDiscount}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="booking-notes"
-                      className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                    >
-                      Notes (optional)
-                    </label>
-                    <textarea
-                      id="booking-notes"
-                      rows={3}
-                      value={contactNotes}
-                      onChange={(event) => setContactNotes(event.target.value)}
-                      className={`${bookingInputClassName} resize-none`}
-                      placeholder="Access instructions, pets, special requests..."
-                    />
-                  </div>
-
-                  {bookingStatus === "error" && bookingErrorMessage && (
-                    <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-                      {bookingErrorMessage}
-                    </div>
-                  )}
-
-                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
-                    <button
-                      type="button"
-                      onClick={closeBookingForm}
-                      disabled={bookingStatus === "loading"}
-                      className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={bookingStatus === "loading"}
-                      className="rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(56,189,248,.35)] transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {bookingStatus === "loading"
-                        ? "Submitting..."
-                        : "Submit request"}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <BookingModal
+        open={bookingFormOpen}
+        svc={svc}
+        bookingStatus={bookingStatus}
+        bookingErrorMessage={bookingErrorMessage}
+        contactName={contactName}
+        contactEmail={contactEmail}
+        contactMobile={contactMobile}
+        contactNotes={contactNotes}
+        referralCode={referralCode}
+        referralCodeError={referralCodeError}
+        referralValidation={referralValidation}
+        referralDiscountAmount={referralDiscountAmount}
+        estimatedTotalAfterDiscount={estimatedTotalAfterDiscount}
+        prices={prices}
+        onClose={closeBookingForm}
+        onSubmit={handleBookingSubmit}
+        onNameChange={setContactName}
+        onEmailChange={setContactEmail}
+        onMobileChange={setContactMobile}
+        onNotesChange={setContactNotes}
+        onReferralCodeChange={handleReferralCodeChange}
+      />
     </motion.section>
   );
 }
