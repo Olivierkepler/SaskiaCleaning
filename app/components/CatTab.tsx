@@ -1636,7 +1636,7 @@ export default function CleaningEstimator() {
             letterSpacing: "-0.01em",
           }}
         >
-          See Your Cleaning Price <span style={{ color: K.blue }}>Instantly</span>
+          See Your Cleaning Price. <span style={{ color: K.blue }}>Instantly</span>
         </motion.h2>
    
         
