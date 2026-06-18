@@ -163,7 +163,7 @@ export default function HeroBooking() {
            lg:text-5xl
          "
         >
-          Professional Home Cleaning You Can Trust.
+          Professional Home Cleaning You Can Trust
         </h1>
 
         <p className="text-[16px] font-medium uppercase tracking-[0.09em] text-white/90 sm:text-[18px]">
