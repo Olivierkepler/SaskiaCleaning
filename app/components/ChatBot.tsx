@@ -509,7 +509,45 @@ export default function ChatBot() {
                     scrollbarColor: `${K.border} transparent`,
                   }}
                 >
-                  {showQuickOptions && (
+                
+
+                  {messages.map((msg, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        display: "flex",
+                        justifyContent:
+                          msg.sender === "user" ? "flex-end" : "flex-start",
+                      }}
+                    >
+                      <div
+                        style={{
+                          maxWidth: "88%",
+                          padding: "12px 16px",
+                          borderRadius: 14,
+                          fontFamily:
+                            "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+                          fontSize: 15,
+                          lineHeight: 1.6,
+                          fontWeight: 400,
+                          whiteSpace: "pre-wrap",
+                          ...(msg.sender === "user"
+                            ? {
+                                background: K.blue,
+                                color: K.white,
+                              }
+                            : {
+                                background: K.white,
+                                color: K.text,
+                                border: `1px solid ${K.border}`,
+                              }),
+                        }}
+                      >
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                    {showQuickOptions && (
                     <div
                       style={{
                         display: "flex",
@@ -555,43 +593,6 @@ export default function ChatBot() {
                       ))}
                     </div>
                   )}
-
-                  {messages.map((msg, i) => (
-                    <div
-                      key={i}
-                      style={{
-                        display: "flex",
-                        justifyContent:
-                          msg.sender === "user" ? "flex-end" : "flex-start",
-                      }}
-                    >
-                      <div
-                        style={{
-                          maxWidth: "88%",
-                          padding: "12px 16px",
-                          borderRadius: 14,
-                          fontFamily:
-                            "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
-                          fontSize: 15,
-                          lineHeight: 1.6,
-                          fontWeight: 400,
-                          whiteSpace: "pre-wrap",
-                          ...(msg.sender === "user"
-                            ? {
-                                background: K.blue,
-                                color: K.white,
-                              }
-                            : {
-                                background: K.white,
-                                color: K.text,
-                                border: `1px solid ${K.border}`,
-                              }),
-                        }}
-                      >
-                        {msg.text}
-                      </div>
-                    </div>
-                  ))}
 
                   {isTyping && (
                     <div
