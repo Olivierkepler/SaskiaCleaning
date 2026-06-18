@@ -41,8 +41,8 @@ const fallbackCards: AdCardItem[] = [
     tag: "LIMITED TIME",
     title: "$20 Off",
     titleSmall: "Deep Clean",
-    description: "Save $20 this week. MA & RI.",
-    ctaLabel: "Book Now",
+    description: "Refer a friend and they save $20 on their first cleaning.",
+    ctaLabel: "Refer Now",
     ctaHref: "https://saskiaservices.com/#quote",
     imageUrl: "/images/limited_deal.jpg",
     imageAlt: "Professional deep cleaning service",
@@ -53,8 +53,8 @@ const fallbackCards: AdCardItem[] = [
     tag: "NEW",
     title: "Airbnb",
     titleSmall: "Turnover",
-    description: "Guest-ready turnovers. From $120.",
-    ctaLabel: "Learn More",
+    description: "Know an Airbnb host? Refer them and earn referral rewards.",
+    ctaLabel: "Refer Now",
     ctaHref: "https://saskiaservices.com/#services",
     imageUrl: "/images/towel-folder.jpg",
     imageAlt: "Airbnb turnover cleaning service",
@@ -80,9 +80,7 @@ const inputClassName =
 const labelClassName =
   "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
 
-function isReferralCard(card: AdCardItem) {
-  return card.tag.trim().toUpperCase() === "REFERRAL";
-}
+const PROMO_REFERRAL_CTA_LABEL = "Refer Now";
 
 function AdCard({
   card,
@@ -95,7 +93,6 @@ function AdCard({
 }) {
   const [isMobile, setIsMobile] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
-  const referralCard = isReferralCard(card);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(max-width: 767px)");
@@ -147,14 +144,14 @@ function AdCard({
           </p>
         </div>
 
-        {referralCard && onReferralClick ? (
+        {onReferralClick ? (
           <button
             type="button"
             onClick={onReferralClick}
-            aria-label={`${card.ctaLabel}: ${card.title} ${card.titleSmall ?? ""}`}
+            aria-label={`${PROMO_REFERRAL_CTA_LABEL}: ${card.title} ${card.titleSmall ?? ""}`}
             className={ctaClassName}
           >
-            {card.ctaLabel}
+            {PROMO_REFERRAL_CTA_LABEL}
           </button>
         ) : (
           <a
@@ -552,11 +549,7 @@ export default function AdCardGrid() {
                 <AdCard
                   card={card}
                   index={index}
-                  onReferralClick={
-                    isReferralCard(card)
-                      ? () => setReferralModalOpen(true)
-                      : undefined
-                  }
+                  onReferralClick={() => setReferralModalOpen(true)}
                 />
               </div>
             ))}
@@ -568,11 +561,7 @@ export default function AdCardGrid() {
                 key={card.id}
                 card={card}
                 index={index}
-                onReferralClick={
-                  isReferralCard(card)
-                    ? () => setReferralModalOpen(true)
-                    : undefined
-                }
+                onReferralClick={() => setReferralModalOpen(true)}
               />
             ))}
           </div>
