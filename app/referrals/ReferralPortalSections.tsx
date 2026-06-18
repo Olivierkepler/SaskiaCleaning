@@ -5,6 +5,7 @@ import { useState } from "react";
 import type {
   ReferralPortalCodeSummary,
   ReferralPortalHistoryItem,
+  ReferralPortalRewardWallet,
 } from "../lib/referral-portal";
 
 function formatMoney(amount: number) {
@@ -73,8 +74,157 @@ function MetricCard({
         {label}
       </p>
       <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
-      {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
+      {hint && <p className="mt-1 text-xs leading-relaxed text-slate-500">{hint}</p>}
     </div>
+  );
+}
+
+function WalletCard({
+  label,
+  value,
+  hint,
+  accentClassName,
+}: {
+  label: string;
+  value: string;
+  hint: string;
+  accentClassName: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <div className={`mb-3 h-1 w-10 rounded-full ${accentClassName}`} />
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-2 break-words text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+        {value}
+      </p>
+      <p className="mt-2 text-xs leading-relaxed text-slate-500">{hint}</p>
+    </div>
+  );
+}
+
+function TimelineStep({
+  label,
+  value,
+  isLast = false,
+}: {
+  label: string;
+  value: number;
+  isLast?: boolean;
+}) {
+  return (
+    <div className="relative flex min-w-0 flex-1 flex-col items-center text-center">
+      {!isLast && (
+        <span
+          aria-hidden="true"
+          className="absolute left-[calc(50%+1.25rem)] top-5 hidden h-px w-[calc(100%-2.5rem)] bg-sky-200 sm:block"
+        />
+      )}
+      <div className="grid h-10 w-10 place-items-center rounded-full bg-sky-500 text-sm font-bold text-white shadow-[0_8px_24px_rgba(14,165,233,0.25)]">
+        {value}
+      </div>
+      <p className="mt-3 max-w-[9rem] text-[11px] font-semibold uppercase leading-snug tracking-[0.14em] text-slate-600">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+export function ReferralRewardWalletSection({
+  wallet,
+}: {
+  wallet: ReferralPortalRewardWallet;
+}) {
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="mb-6">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-500">
+          Reward wallet
+        </p>
+        <h2 className="font-heading mt-2 text-2xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-3xl">
+          Your referral rewards
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          Track pending, available, and paid rewards across your referrals.
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <WalletCard
+          label="Pending rewards"
+          value={formatMoney(wallet.pendingRewards)}
+          hint="Friend booked, waiting for service completion."
+          accentClassName="bg-amber-400"
+        />
+        <WalletCard
+          label="Available rewards"
+          value={formatMoney(wallet.availableRewards)}
+          hint="Completed referrals ready for reward review."
+          accentClassName="bg-sky-500"
+        />
+        <WalletCard
+          label="Paid rewards"
+          value={formatMoney(wallet.paidRewards)}
+          hint="Rewards already marked paid."
+          accentClassName="bg-emerald-500"
+        />
+        <WalletCard
+          label="Lifetime earnings"
+          value={formatMoney(wallet.lifetimeEarnings)}
+          hint="All rewards earned through referrals."
+          accentClassName="bg-slate-900"
+        />
+      </div>
+
+      <div className="mt-8 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-5 sm:px-6">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-600">
+          Referral progress
+        </p>
+        <div className="mt-5 flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+          <TimelineStep
+            label="Referrals started"
+            value={wallet.referralsStarted}
+          />
+          <TimelineStep
+            label="Completed cleanings"
+            value={wallet.completedCleanings}
+          />
+          <TimelineStep
+            label="Rewards paid"
+            value={wallet.rewardsPaid}
+            isLast
+          />
+        </div>
+      </div>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Total referrals
+          </p>
+          <p className="mt-1 text-lg font-bold text-slate-900">
+            {wallet.totalReferrals}
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Completed referrals
+          </p>
+          <p className="mt-1 text-lg font-bold text-slate-900">
+            {wallet.completedReferrals}
+          </p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Rewarded referrals
+          </p>
+          <p className="mt-1 text-lg font-bold text-slate-900">
+            {wallet.rewardedReferrals}
+          </p>
+        </div>
+      </div>
+    </section>
   );
 }
 

@@ -1,15 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { ReferralPortalCodeSummary } from "../lib/referral-portal";
+import type {
+  ReferralPortalCodeSummary,
+  ReferralPortalRewardWallet,
+} from "../lib/referral-portal";
 import {
   PortalCodeSection,
   PortalLoadingState,
   PortalTokenError,
+  ReferralRewardWalletSection,
 } from "./ReferralPortalSections";
 
 type PortalResponse =
-  | { success: true; found: true; codes: ReferralPortalCodeSummary[] }
+  | {
+      success: true;
+      found: true;
+      codes: ReferralPortalCodeSummary[];
+      wallet: ReferralPortalRewardWallet;
+    }
   | { error: string };
 
 export function ReferralPortalTokenLoader({ token }: { token: string }) {
@@ -18,6 +27,7 @@ export function ReferralPortalTokenLoader({ token }: { token: string }) {
   const [results, setResults] = useState<ReferralPortalCodeSummary[] | null>(
     null,
   );
+  const [wallet, setWallet] = useState<ReferralPortalRewardWallet | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -26,6 +36,7 @@ export function ReferralPortalTokenLoader({ token }: { token: string }) {
       setIsLoading(true);
       setError(null);
       setResults(null);
+      setWallet(null);
 
       try {
         const response = await fetch(
@@ -46,6 +57,7 @@ export function ReferralPortalTokenLoader({ token }: { token: string }) {
 
         if ("found" in data && data.found) {
           setResults(data.codes);
+          setWallet(data.wallet);
         } else {
           setError("Invalid or expired access link.");
         }
@@ -75,12 +87,13 @@ export function ReferralPortalTokenLoader({ token }: { token: string }) {
     return <PortalTokenError message={error} />;
   }
 
-  if (!results) {
+  if (!results || !wallet) {
     return null;
   }
 
   return (
     <div className="mt-8 space-y-6">
+      <ReferralRewardWalletSection wallet={wallet} />
       {results.map((summary) => (
         <PortalCodeSection key={summary.code} summary={summary} />
       ))}

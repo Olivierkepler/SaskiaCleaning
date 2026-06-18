@@ -36,6 +36,7 @@ export async function GET(req: Request) {
       success: true,
       found: true,
       codes: result.codes,
+      wallet: result.wallet,
     });
   } catch (error) {
     console.error(error);
