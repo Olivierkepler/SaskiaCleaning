@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { sql } from "../../../lib/db";
 import {
+  sendReferralNotification,
+  type ReferralNotificationResult,
+} from "../../../lib/referral-notifications";
+import {
   applyReferralUpdate,
   isDashboardAuthorized,
   parseReferralId,
@@ -87,6 +91,7 @@ export async function PATCH(
     }
 
     const next = applyReferralUpdate(existing, parsed.data);
+    const previousStatus = existing.status;
 
     if (next.useRewardedAtNow) {
       await sql`
@@ -119,9 +124,28 @@ export async function PATCH(
       return NextResponse.json({ error: "Referral not found." }, { status: 404 });
     }
 
+    const notifications: ReferralNotificationResult[] = [];
+
+    if (previousStatus !== next.status) {
+      try {
+        if (next.status === "completed") {
+          notifications.push(
+            await sendReferralNotification(referralId, "referral_completed"),
+          );
+        } else if (next.status === "rewarded") {
+          notifications.push(
+            await sendReferralNotification(referralId, "referral_rewarded"),
+          );
+        }
+      } catch (notificationError) {
+        console.error("Referral notification error:", notificationError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       referral: serializeReferralTracking(referral),
+      notifications,
     });
   } catch (error) {
     console.error(error);
