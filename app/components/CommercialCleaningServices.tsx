@@ -40,6 +40,13 @@ const DEFAULT_SERVICES: Service[] = [
   { id: "deep", label: "Deep Cleaning", icon: Droplets },
 ];
 
+function scrollToQuote() {
+  document.getElementById("quote")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}
+
 export default function CommercialCleaningServices({
   title = "Commercial Cleaning Services",
   tagline = "We Keep Your Business Sparkling Clean",
@@ -53,6 +60,16 @@ export default function CommercialCleaningServices({
 }: CommercialCleaningServicesProps) {
   const prefersReducedMotion = useReducedMotion();
   const ease = [0.16, 1, 0.3, 1] as const;
+
+  const handleCtaClick = () => {
+    onCtaClick?.();
+    scrollToQuote();
+  };
+
+  const handleServiceClick = (serviceId: string) => {
+    onServiceClick?.(serviceId);
+    scrollToQuote();
+  };
 
   const sectionVariants: Variants = {
     hidden: {},
@@ -130,7 +147,6 @@ export default function CommercialCleaningServices({
           >
             {services.map((service) => {
               const Icon = service.icon;
-              const isClickable = Boolean(onServiceClick);
 
               return (
                 <motion.li
@@ -142,22 +158,13 @@ export default function CommercialCleaningServices({
                     <Icon className="h-5 w-5" strokeWidth={1.75} />
                   </span>
 
-                  {isClickable ? (
-                    <button
-                      type="button"
-                      onClick={() => onServiceClick?.(service.id)}
-                      className="text-left text-xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 transition hover:text-sky-500"
-                    >
-                      {service.label}
-                    </button>
-                  ) : (
-                    <a
-                      href={`#${service.id}`}
-                      className="text-xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 transition hover:text-sky-500"
-                    >
-                      {service.label}
-                    </a>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleServiceClick(service.id)}
+                    className="text-left text-xl font-semibold leading-tight tracking-[-0.035em] text-slate-950 transition hover:text-sky-500"
+                  >
+                    {service.label}
+                  </button>
                 </motion.li>
               );
             })}
@@ -166,7 +173,7 @@ export default function CommercialCleaningServices({
           <motion.div className="mt-10" variants={fadeUp}>
             <motion.button
               type="button"
-              onClick={onCtaClick}
+              onClick={handleCtaClick}
               whileHover={prefersReducedMotion ? undefined : { y: -3, scale: 1.02 }}
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               className="rounded-full bg-sky-500 px-7 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(14,165,233,0.24)] transition hover:bg-slate-950"

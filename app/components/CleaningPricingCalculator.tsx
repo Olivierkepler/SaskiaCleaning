@@ -53,6 +53,13 @@ const serviceCategories = [
 
 type ServiceCategory = (typeof serviceCategories)[number];
 
+function scrollToQuote() {
+  document.getElementById("quote")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
+}
+
 export default function CleaningServicesPricing() {
   const [selectedCategory, setSelectedCategory] =
     useState<ServiceCategory | null>(null);
@@ -127,6 +134,10 @@ export default function CleaningServicesPricing() {
 
             <button
               type="button"
+              onClick={() => {
+                setSelectedCategory(null);
+                requestAnimationFrame(scrollToQuote);
+              }}
               className="mt-7 inline-flex w-full items-center justify-center border border-sky-500 bg-transparent py-3 text-[11px] font-black uppercase tracking-[0.14em] text-sky-500 transition-all duration-200 hover:bg-sky-500 hover:text-white"
             >
               Request This Service

@@ -1,12 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import {
-  FaTimes,
-  FaPaperPlane,
-  FaChevronDown,
-  FaChevronUp,
-} from "react-icons/fa";
+import { FaTimes, FaPaperPlane } from "react-icons/fa";
 
 type Message = {
   sender: "bot" | "user";
@@ -14,51 +9,50 @@ type Message = {
 };
 
 const QUICK_OPTIONS = [
-  "Residential Cleaning",
-  "Commercial Cleaning",
-  "Airbnb Cleaning",
-  "Laundry Services",
   "Get a Quote",
+  "Residential Cleaning",
+  "Deep Cleaning",
+  "Airbnb Turnover",
+  "Referral Rewards",
 ];
 
+const WELCOME_MESSAGE = `Hello 👋
+
+I'm the Saskia Assistant.
+
+I can help you with:
+
+• Residential cleaning
+• Deep cleaning
+• Airbnb turnover
+• Commercial cleaning
+• Laundry services
+• Referral rewards
+• Getting a quote
+
+How can I help you today?`;
+
+const FALLBACK_BOT_REPLY =
+  "Sorry, I'm having trouble responding right now. You can still request a quote using the booking form.";
+
+/**
+ * Federal-blue / government style palette, modeled after USCIS's
+ * "Emma" virtual assistant widget (uscis.gov). Boxy, low-radius,
+ * navy-and-white, minimal-ornamentation aesthetic.
+ */
 const K = {
-  blue: "#0ea5e9",
-  blueDark: "#0284c7",
-  blueLight: "#e0f2fe",
+  blue: "#205493", // USCIS federal blue
+  blueDark: "#112e51", // USCIS deep navy
+  blueLight: "#e1f0ff", // pale federal-blue tint
   black: "#111111",
   white: "#ffffff",
-  border: "#e5e5e5",
-  bg: "#fafafa",
-  text: "#111111",
-  muted: "#888888",
-  green: "#22c55e",
+  border: "#d6d7d9",
+  bg: "#f1f1f1",
+  botBubble: "#f1f1f1",
+  text: "#212121",
+  muted: "#5b616b",
+  green: "#2e8540", // USCIS-style confirmation green
 };
-
-function getBotReply(userText: string): string {
-  const t = userText.toLowerCase();
-
-  if (t.includes("quote") || t.includes("price") || t.includes("cost")) {
-    return "Please share your name, location, type of cleaning, number of rooms, and preferred date — I'll prepare your quote right away.";
-  }
-
-  if (t.includes("residential")) {
-    return "Residential cleaning covers kitchens, bathrooms, bedrooms, floors, dusting, and a full home refresh. Would you prefer a standard clean or deep clean?";
-  }
-
-  if (t.includes("commercial")) {
-    return "We clean offices, salons, studios, and small businesses across MA & RI. How often would you need service?";
-  }
-
-  if (t.includes("airbnb")) {
-    return "Our Airbnb turnover includes cleaning, restocking, linen changes, and guest-ready staging. What city is the property in?";
-  }
-
-  if (t.includes("laundry")) {
-    return "We offer wash-and-fold, linen service, and laundry bundled with cleaning. Which works best for you?";
-  }
-
-  return "I can help with residential cleaning, commercial cleaning, Airbnb turnovers, laundry, or a custom quote. What would you like to explore?";
-}
 
 function TypingDots() {
   return (
@@ -66,8 +60,8 @@ function TypingDots() {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 4,
-        padding: "10px 14px",
+        gap: 5,
+        padding: "12px 16px",
       }}
     >
       {[0, 1, 2].map((i) => (
@@ -77,7 +71,7 @@ function TypingDots() {
             width: 7,
             height: 7,
             borderRadius: "50%",
-            background: "#ccc",
+            background: "#9aa1a8",
             display: "inline-block",
             animation: "chatBounce 1.1s ease-in-out infinite",
             animationDelay: `${i * 0.18}s`,
@@ -88,7 +82,13 @@ function TypingDots() {
   );
 }
 
-function Avatar({ size = 36 }: { size?: number }) {
+function Avatar({
+  size = 36,
+  showOnline = true,
+}: {
+  size?: number;
+  showOnline?: boolean;
+}) {
   return (
     <div
       style={{
@@ -108,22 +108,24 @@ function Avatar({ size = 36 }: { size?: number }) {
           objectFit: "cover",
           objectPosition: "center 20%",
           border: `2px solid ${K.white}`,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.12)",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.18)",
         }}
       />
 
-      <span
-        style={{
-          position: "absolute",
-          bottom: 1,
-          right: 1,
-          width: size * 0.28,
-          height: size * 0.28,
-          borderRadius: "50%",
-          background: K.green,
-          border: `2px solid ${K.white}`,
-        }}
-      />
+      {showOnline && (
+        <span
+          style={{
+            position: "absolute",
+            bottom: 1,
+            right: 1,
+            width: Math.max(10, size * 0.28),
+            height: Math.max(10, size * 0.28),
+            borderRadius: "50%",
+            background: K.green,
+            border: `2px solid ${K.white}`,
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -138,7 +140,7 @@ export default function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "Hi, welcome to Saskia Cleaning ✨ How can I help you today?",
+      text: WELCOME_MESSAGE,
     },
   ]);
 
@@ -256,26 +258,44 @@ export default function ChatBot() {
     };
   }, []);
 
-  const sendMessage = (text: string) => {
-    if (!text.trim()) return;
+  const sendMessage = async (text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed || isTyping) return;
 
     setShowQuickOptions(false);
-    setMessages((prev) => [...prev, { sender: "user", text }]);
+
+    const userMessage: Message = { sender: "user", text: trimmed };
+    const nextMessages = [...messages, userMessage];
+
+    setMessages(nextMessages);
     setInput("");
     setIsTyping(true);
 
-    setTimeout(() => {
+    try {
+      const response = await fetch("/api/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: nextMessages }),
+      });
+
+      const data = (await response.json()) as { reply?: string };
+      const reply =
+        typeof data.reply === "string" && data.reply.trim()
+          ? data.reply.trim()
+          : FALLBACK_BOT_REPLY;
+
+      setMessages((prev) => [...prev, { sender: "bot", text: reply }]);
+    } catch {
       setMessages((prev) => [
         ...prev,
-        {
-          sender: "bot",
-          text: getBotReply(text),
-        },
+        { sender: "bot", text: FALLBACK_BOT_REPLY },
       ]);
-
+    } finally {
       setIsTyping(false);
-    }, 750);
+    }
   };
+
+  const isMobileFullScreen = Boolean(visibleViewport);
 
   return (
     <>
@@ -283,34 +303,24 @@ export default function ChatBot() {
         @keyframes chatBounce {
           0%, 60%, 100% {
             transform: translateY(0);
-            opacity: 0.4;
+            opacity: 0.45;
           }
 
           30% {
-            transform: translateY(-5px);
+            transform: translateY(-4px);
             opacity: 1;
           }
         }
 
-        @keyframes chatSlideUp {
+        @keyframes chatFadeUp {
           from {
             opacity: 0;
-            transform: translateY(16px) scale(0.97);
+            transform: translateY(10px);
           }
 
           to {
             opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-
-        @keyframes chatPulse {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(14,165,233,0.4);
-          }
-
-          50% {
-            box-shadow: 0 0 0 8px rgba(14,165,233,0);
+            transform: translateY(0);
           }
         }
 
@@ -352,35 +362,43 @@ export default function ChatBot() {
                       right: 0,
                     }),
               }}
-              className="md:h-[90%]"
             >
               <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Saskia Assistant chat"
                 style={{
                   position: "relative",
                   width: "100%",
-                  maxWidth: visibleViewport ? "100%" : 440,
-                  height: visibleViewport ? visibleViewport.height : "100%",
-                  maxHeight: visibleViewport ? visibleViewport.height : "100%",
+                  maxWidth: isMobileFullScreen ? "100%" : 450,
+                  height: isMobileFullScreen ? visibleViewport?.height : 680,
+                  maxHeight: isMobileFullScreen ? visibleViewport?.height : 720,
+                  minHeight: isMobileFullScreen ? undefined : 650,
                   display: "flex",
                   flexDirection: "column",
                   background: K.white,
-                  border: visibleViewport ? "none" : `1.5px solid ${K.border}`,
-                  borderRadius: visibleViewport ? 0 : "10px",
-                  boxShadow: visibleViewport
+                  border: isMobileFullScreen ? "none" : `1px solid ${K.border}`,
+                  borderRadius: isMobileFullScreen ? 0 : 2,
+                  boxShadow: isMobileFullScreen
                     ? "none"
-                    : "0 8px 40px rgba(0,0,0,0.16)",
-                  animation: "chatSlideUp 0.22s ease-out both",
+                    : "0 4px 14px rgba(17, 46, 81, 0.22)",
+                  animation: "chatFadeUp 0.2s ease-out both",
                   pointerEvents: "auto",
                   overflow: "hidden",
                   margin: 0,
                 }}
-                className="bottom-0 md:bottom-[88px] md:right-6 md:h-auto md:max-h-[680px] md:max-w-[440px] md:rounded-[10px] md:border md:shadow-2xl"
+                className="md:mb-6 md:mr-6"
               >
                 {!isMobileKeyboardOpen && (
-                  <div
+                  <header
                     style={{
-                      background: K.blue,
-                      padding: "14px 16px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 12,
+                      padding: "16px 18px",
+                      background: K.blueDark,
+                      borderBottom: `3px solid ${K.blue}`,
                       flexShrink: 0,
                     }}
                   >
@@ -388,73 +406,67 @@ export default function ChatBot() {
                       style={{
                         display: "flex",
                         alignItems: "center",
-                        justifyContent: "space-between",
                         gap: 12,
+                        minWidth: 0,
                       }}
                     >
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 12,
-                        }}
-                      >
-                        <Avatar size={48} />
+                      <Avatar size={44} />
 
-                        <div>
-                          <p
-                            style={{
-                              fontFamily: "Georgia, 'Times New Roman', serif",
-                              fontSize: 15,
-                              fontWeight: 700,
-                              color: K.white,
-                              lineHeight: 1.2,
-                              letterSpacing: "-0.01em",
-                              margin: 0,
-                            }}
-                          >
-                            Saskia Assistant
-                          </p>
+                      <div style={{ minWidth: 0 }}>
+                        <p
+                          style={{
+                            fontFamily:
+                              "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+                            fontSize: 16,
+                            fontWeight: 700,
+                            color: K.white,
+                            lineHeight: 1.3,
+                            margin: 0,
+                          }}
+                        >
+                          Saskia Assistant
+                        </p>
 
-                          <p
-                            style={{
-                              fontFamily: "Arial, Helvetica, sans-serif",
-                              fontSize: 11,
-                              fontWeight: 600,
-                              color: "rgba(255,255,255,0.75)",
-                              margin: 0,
-                              marginTop: 3,
-                              letterSpacing: "0.02em",
-                            }}
-                          >
-                            Online · Usually replies quickly
-                          </p>
-                        </div>
+                        <p
+                          style={{
+                            fontFamily:
+                              "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+                            fontSize: 13,
+                            fontWeight: 400,
+                            color: "#cbd5e1",
+                            margin: 0,
+                            marginTop: 2,
+                            lineHeight: 1.45,
+                          }}
+                        >
+                          Ask about cleaning services, quotes, referrals, and
+                          bookings.
+                        </p>
                       </div>
-
-                      <button
-                        type="button"
-                        onClick={() => setIsOpen(false)}
-                        aria-label="Close chat"
-                        style={{
-                          width: 32,
-                          height: 32,
-                          background: "rgba(255,255,255,0.15)",
-                          border: "1.5px solid rgba(255,255,255,0.3)",
-                          borderRadius: "10px",
-                          color: K.white,
-                          cursor: "pointer",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                          transition: "background 0.15s",
-                        }}
-                      >
-                        <FaTimes size={14} />
-                      </button>
                     </div>
-                  </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setIsOpen(false)}
+                      aria-label="Close chat"
+                      style={{
+                        width: 36,
+                        height: 36,
+                        background: "transparent",
+                        border: `1px solid rgba(255,255,255,0.35)`,
+                        borderRadius: 2,
+                        color: K.white,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        flexShrink: 0,
+                        transition: "background 0.15s, border-color 0.15s",
+                      }}
+                    >
+                      <FaTimes size={14} />
+                    </button>
+                  </header>
                 )}
 
                 <div
@@ -463,9 +475,7 @@ export default function ChatBot() {
                     minHeight: 0,
                     overflowY: "auto",
                     background: K.bg,
-                    padding: isMobileKeyboardOpen
-                      ? "20px 16px 20px"
-                      : "20px 16px",
+                    padding: "18px 16px",
                     display: "flex",
                     flexDirection: "column",
                     gap: 14,
@@ -473,40 +483,82 @@ export default function ChatBot() {
                     scrollbarColor: `${K.border} transparent`,
                   }}
                 >
+                  {showQuickOptions && (
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                        paddingBottom: 4,
+                      }}
+                    >
+                      {QUICK_OPTIONS.map((opt) => (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => sendMessage(opt)}
+                          disabled={isTyping}
+                          style={{
+                            fontFamily:
+                              "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            padding: "8px 14px",
+                            border: `1px solid ${K.blue}`,
+                            background: K.white,
+                            color: K.blue,
+                            cursor: isTyping ? "not-allowed" : "pointer",
+                            borderRadius: 2,
+                            transition: "all 0.15s",
+                            opacity: isTyping ? 0.6 : 1,
+                          }}
+                          onMouseEnter={(e) => {
+                            if (isTyping) return;
+                            e.currentTarget.style.background = K.blue;
+                            e.currentTarget.style.borderColor = K.blue;
+                            e.currentTarget.style.color = K.white;
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = K.white;
+                            e.currentTarget.style.borderColor = K.blue;
+                            e.currentTarget.style.color = K.blue;
+                          }}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {messages.map((msg, i) => (
                     <div
                       key={i}
                       style={{
                         display: "flex",
-                        alignItems: "flex-end",
-                        gap: 8,
                         justifyContent:
                           msg.sender === "user" ? "flex-end" : "flex-start",
                       }}
                     >
-                      {msg.sender === "bot" && <Avatar size={30} />}
-
                       <div
                         style={{
-                          maxWidth: "76%",
-                          padding: "10px 14px",
-                          borderRadius: "10px",
-                          fontFamily: "Arial, Helvetica, sans-serif",
-                          fontSize: 18,
-                          lineHeight: 1.55,
-                          fontWeight: 500,
+                          maxWidth: "88%",
+                          padding: "12px 16px",
+                          borderRadius: 2,
+                          fontFamily:
+                            "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+                          fontSize: 15,
+                          lineHeight: 1.6,
+                          fontWeight: 400,
+                          whiteSpace: "pre-wrap",
                           ...(msg.sender === "user"
                             ? {
                                 background: K.blue,
                                 color: K.white,
-                                borderLeft: `3px solid ${K.blueDark}`,
                               }
                             : {
                                 background: K.white,
                                 color: K.text,
                                 border: `1px solid ${K.border}`,
-                                borderLeft: `3px solid ${K.blue}`,
-                                boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
                               }),
                         }}
                       >
@@ -519,19 +571,14 @@ export default function ChatBot() {
                     <div
                       style={{
                         display: "flex",
-                        alignItems: "flex-end",
-                        gap: 8,
+                        justifyContent: "flex-start",
                       }}
                     >
-                      <Avatar size={30} />
-
                       <div
                         style={{
                           background: K.white,
                           border: `1px solid ${K.border}`,
-                          borderLeft: `3px solid ${K.blue}`,
-                          borderRadius: "10px",
-                          boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+                          borderRadius: 2,
                         }}
                       >
                         <TypingDots />
@@ -544,130 +591,22 @@ export default function ChatBot() {
 
                 <div
                   style={{
-                    position: "sticky",
-                    bottom: 0,
-                    zIndex: 2,
                     background: K.white,
                     borderTop: `1px solid ${K.border}`,
-                    padding: "12px 14px",
+                    padding: "14px 16px",
                     flexShrink: 0,
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 10,
                   }}
                 >
-                  <div
-                    className="hidden md:block"
-                    style={{
-                      border: `1px solid ${K.border}`,
-                      background: K.white,
-                      borderRadius: "10px",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setShowQuickOptions((v) => !v)}
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        padding: "9px 12px",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        borderBottom: showQuickOptions
-                          ? `1px solid ${K.border}`
-                          : "none",
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontFamily: "Arial, Helvetica, sans-serif",
-                          fontSize: 10,
-                          fontWeight: 700,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.13em",
-                          color: K.black,
-                        }}
-                      >
-                        Suggested Services
-                      </span>
-
-                      <span style={{ color: K.muted }}>
-                        {showQuickOptions ? (
-                          <FaChevronUp size={11} />
-                        ) : (
-                          <FaChevronDown size={11} />
-                        )}
-                      </span>
-                    </button>
-
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateRows: showQuickOptions ? "1fr" : "0fr",
-                        transition: "grid-template-rows 0.22s ease",
-                        overflow: "hidden",
-                      }}
-                    >
-                      <div style={{ overflow: "hidden" }}>
-                        <div
-                          style={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 6,
-                            padding: "10px 12px",
-                          }}
-                        >
-                          {QUICK_OPTIONS.map((opt) => (
-                            <button
-                              key={opt}
-                              type="button"
-                              onClick={() => sendMessage(opt)}
-                              style={{
-                                fontFamily: "Arial, Helvetica, sans-serif",
-                                fontSize: 10,
-                                fontWeight: 700,
-                                letterSpacing: "0.08em",
-                                textTransform: "uppercase",
-                                padding: "6px 12px",
-                                border: `1.5px solid ${K.border}`,
-                                background: K.white,
-                                color: K.text,
-                                cursor: "pointer",
-                                borderRadius: "10px",
-                                transition: "all 0.13s",
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = K.blue;
-                                e.currentTarget.style.color = K.white;
-                                e.currentTarget.style.borderColor = K.blue;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = K.white;
-                                e.currentTarget.style.color = K.text;
-                                e.currentTarget.style.borderColor = K.border;
-                              }}
-                            >
-                              {opt}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
                   <div
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
-                      border: `1.5px solid ${K.border}`,
+                      gap: 10,
+                      border: `1px solid ${K.border}`,
                       background: K.white,
-                      padding: "4px 4px 4px 12px",
-                      borderRadius: "10px",
+                      padding: "6px 6px 6px 14px",
+                      borderRadius: 2,
+                      minHeight: 52,
                       transition: "border-color 0.15s, box-shadow 0.15s",
                     }}
                     onFocusCapture={(e) => {
@@ -685,100 +624,85 @@ export default function ChatBot() {
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === "Enter") {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
                           sendMessage(input);
                         }
                       }}
-                      placeholder="Type your message…"
+                      placeholder="Type your question..."
+                      aria-label="Type your question"
+                      disabled={isTyping}
                       style={{
                         flex: 1,
                         background: K.white,
                         colorScheme: "light",
                         border: "none",
                         outline: "none",
-                        fontFamily: "Arial, Helvetica, sans-serif",
-                        fontSize: 13,
-                        fontWeight: 500,
+                        fontFamily:
+                          "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif",
+                        fontSize: 15,
+                        fontWeight: 400,
                         color: K.text,
-                        padding: "8px 0",
+                        padding: "10px 0",
                       }}
                     />
 
                     <button
                       type="button"
                       onClick={() => sendMessage(input)}
+                      disabled={isTyping || !input.trim()}
                       aria-label="Send message"
                       style={{
-                        width: 36,
-                        height: 36,
-                        background: K.blue,
+                        width: 40,
+                        height: 40,
+                        background:
+                          isTyping || !input.trim() ? "#9aa1a8" : K.blue,
                         border: "none",
-                        borderRadius: "10px",
+                        borderRadius: 2,
                         color: K.white,
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        cursor: "pointer",
+                        cursor:
+                          isTyping || !input.trim()
+                            ? "not-allowed"
+                            : "pointer",
                         flexShrink: 0,
-                        transition:
-                          "background 0.15s ease, transform 0.15s ease",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = K.blueDark;
-                        e.currentTarget.style.transform = "scale(1.05)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = K.blue;
-                        e.currentTarget.style.transform = "scale(1)";
+                        transition: "background 0.15s ease",
                       }}
                     >
-                      <FaPaperPlane size={12} />
+                      <FaPaperPlane size={14} />
                     </button>
                   </div>
-
-                  <p
-                    style={{
-                      fontFamily: "Arial, Helvetica, sans-serif",
-                      fontSize: 9,
-                      fontWeight: 600,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.12em",
-                      color: K.muted,
-                      textAlign: "center",
-                      margin: 0,
-                    }}
-                  >
-                    Saskia Cleaning · MA & RI
-                  </p>
                 </div>
               </div>
             </div>
           </>
         )}
 
-        <button
-          type="button"
-          onClick={() => setIsOpen((v) => !v)}
-          aria-label={isOpen ? "Close chat" : "Chat with us"}
-          className="fixed bottom-6 right-6 z-[9998] flex items-center justify-center"
-        >
-          {!isOpen && (
-            <div className="absolute right-[76px] top-1/2 -translate-y-1/2 whitespace-nowrap rounded-xl bg-white px-4 py-2 shadow-lg ring-1 ring-slate-200">
-              <p className="text-sm font-semibold text-slate-900">
-                Need help?
+        {!isOpen && (
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            aria-label="Open Saskia Assistant chat"
+            className="fixed bottom-6 right-6 z-[9998] flex items-center justify-center"
+          >
+            <div
+              className="absolute right-[76px] top-1/2 hidden -translate-y-1/2 whitespace-nowrap px-4 py-2 shadow-lg md:block"
+              style={{
+                background: K.blueDark,
+                borderRadius: 2,
+              }}
+            >
+              <p className="text-sm font-semibold text-white">Need Help?</p>
+              <p className="text-xs" style={{ color: "#cbd5e1" }}>
+                Ask Saskia.
               </p>
-              <p className="text-xs text-slate-500">Chat with Saskia.</p>
             </div>
-          )}
 
-          {isOpen ? (
-            <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-sky-500 text-white shadow-lg">
-              <FaTimes size={20} />
-            </div>
-          ) : (
             <Avatar size={60} />
-          )}
-        </button>
+          </button>
+        )}
       </div>
     </>
   );
