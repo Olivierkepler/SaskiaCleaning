@@ -37,6 +37,7 @@ export async function GET(req: Request) {
       found: true,
       codes: result.codes,
       wallet: result.wallet,
+      milestones: result.milestones,
     });
   } catch (error) {
     console.error(error);

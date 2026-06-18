@@ -33,6 +33,55 @@ export type ReferralPortalRewardWallet = {
   rewardsPaid: number;
 };
 
+export type ReferralPortalMilestoneKey =
+  | "first_referral"
+  | "referral_champion"
+  | "vip_referrer";
+
+export type ReferralPortalMilestone = {
+  key: ReferralPortalMilestoneKey;
+  label: string;
+  requiredCompletedReferrals: number;
+  description: string;
+  completed: boolean;
+  currentProgress: number;
+  remaining: number;
+  progressPercent: number;
+};
+
+export type ReferralPortalMilestones = {
+  completedCleanings: number;
+  nextMilestone: ReferralPortalMilestone | null;
+  milestones: ReferralPortalMilestone[];
+  allComplete: boolean;
+};
+
+const PORTAL_MILESTONE_DEFINITIONS: Array<{
+  key: ReferralPortalMilestoneKey;
+  label: string;
+  requiredCompletedReferrals: number;
+  description: string;
+}> = [
+  {
+    key: "first_referral",
+    label: "First Referral",
+    requiredCompletedReferrals: 1,
+    description: "Complete your first successful referral.",
+  },
+  {
+    key: "referral_champion",
+    label: "Referral Champion",
+    requiredCompletedReferrals: 5,
+    description: "Complete 5 successful referrals.",
+  },
+  {
+    key: "vip_referrer",
+    label: "Saskia VIP Referrer",
+    requiredCompletedReferrals: 10,
+    description: "Complete 10 successful referrals.",
+  },
+];
+
 export type ReferralPortalHistoryItem = {
   referredLabel: string;
   status: ReferralStatus;
@@ -58,6 +107,7 @@ export type ReferralPortalLookupResult =
       found: true;
       codes: ReferralPortalCodeSummary[];
       wallet: ReferralPortalRewardWallet;
+      milestones: ReferralPortalMilestones;
     };
 
 function emptyStatusCounts(): ReferralPortalStatusCounts {
@@ -114,6 +164,53 @@ export function computeRewardWallet(
     referralsStarted: totalReferrals,
     completedCleanings,
     rewardsPaid: rewardedReferrals,
+  };
+}
+
+export function computeReferralMilestones(
+  completedCleanings: number,
+): ReferralPortalMilestones {
+  const milestones: ReferralPortalMilestone[] = PORTAL_MILESTONE_DEFINITIONS.map(
+    (definition) => {
+      const completed =
+        completedCleanings >= definition.requiredCompletedReferrals;
+      const currentProgress = Math.min(
+        completedCleanings,
+        definition.requiredCompletedReferrals,
+      );
+      const remaining = Math.max(
+        0,
+        definition.requiredCompletedReferrals - completedCleanings,
+      );
+      const progressPercent = Math.min(
+        100,
+        Math.round(
+          (completedCleanings / definition.requiredCompletedReferrals) * 100,
+        ),
+      );
+
+      return {
+        key: definition.key,
+        label: definition.label,
+        requiredCompletedReferrals: definition.requiredCompletedReferrals,
+        description: definition.description,
+        completed,
+        currentProgress,
+        remaining,
+        progressPercent,
+      };
+    },
+  );
+
+  const nextMilestone =
+    milestones.find((milestone) => !milestone.completed) ?? null;
+  const allComplete = milestones.every((milestone) => milestone.completed);
+
+  return {
+    completedCleanings,
+    nextMilestone,
+    milestones,
+    allComplete,
   };
 }
 
@@ -272,9 +369,12 @@ export async function lookupReferrerPortal(input: {
     summaries.push(buildCodeSummary(codeRow, typedReferrals));
   }
 
+  const wallet = computeRewardWallet(allReferrals);
+
   return {
     found: true,
     codes: summaries,
-    wallet: computeRewardWallet(allReferrals),
+    wallet,
+    milestones: computeReferralMilestones(wallet.completedCleanings),
   };
 }

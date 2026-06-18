@@ -5,6 +5,7 @@ import { useState } from "react";
 import type {
   ReferralPortalCodeSummary,
   ReferralPortalHistoryItem,
+  ReferralPortalMilestones,
   ReferralPortalRewardWallet,
 } from "../lib/referral-portal";
 
@@ -223,6 +224,118 @@ export function ReferralRewardWalletSection({
             {wallet.rewardedReferrals}
           </p>
         </div>
+      </div>
+    </section>
+  );
+}
+
+function MilestoneProgressBar({ percent }: { percent: number }) {
+  return (
+    <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200">
+      <div
+        className="h-full rounded-full bg-sky-500 transition-all duration-500"
+        style={{ width: `${percent}%` }}
+      />
+    </div>
+  );
+}
+
+export function ReferralMilestonesSection({
+  milestones,
+}: {
+  milestones: ReferralPortalMilestones;
+}) {
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+      <div className="mb-6">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-500">
+          Milestones
+        </p>
+        <h2 className="font-heading mt-2 text-2xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-3xl">
+          Referral Milestones
+        </h2>
+        <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          Track your progress toward referral milestones based on completed
+          cleanings.
+        </p>
+      </div>
+
+      {milestones.allComplete ? (
+        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-5 text-center sm:px-6">
+          <p className="text-sm font-semibold text-emerald-900">
+            All milestones complete
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-emerald-800">
+            You have reached every referral milestone. Thank you for sharing
+            Saskia Cleaning.
+          </p>
+        </div>
+      ) : milestones.nextMilestone ? (
+        <div className="mb-6 rounded-2xl border border-sky-200 bg-sky-50 px-5 py-5 sm:px-6">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-600">
+            Next milestone
+          </p>
+          <h3 className="mt-2 text-lg font-bold text-slate-950">
+            {milestones.nextMilestone.label}
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+            {milestones.nextMilestone.description}
+          </p>
+          <p className="mt-3 text-sm font-semibold text-sky-700">
+            {milestones.nextMilestone.currentProgress} /{" "}
+            {milestones.nextMilestone.requiredCompletedReferrals} completed
+            cleanings
+          </p>
+          <MilestoneProgressBar percent={milestones.nextMilestone.progressPercent} />
+          <p className="mt-2 text-xs text-slate-500">
+            {milestones.nextMilestone.remaining} more completed cleaning
+            {milestones.nextMilestone.remaining === 1 ? "" : "s"} to unlock
+          </p>
+        </div>
+      ) : null}
+
+      <div className="space-y-4">
+        {milestones.milestones.map((milestone) => (
+          <div
+            key={milestone.key}
+            className={`rounded-2xl border px-5 py-4 sm:px-6 ${
+              milestone.completed
+                ? "border-emerald-200 bg-emerald-50"
+                : "border-slate-200 bg-slate-50"
+            }`}
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-950">
+                    {milestone.label}
+                  </h3>
+                  {milestone.completed && (
+                    <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-800">
+                      Completed
+                    </span>
+                  )}
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  {milestone.description}
+                </p>
+                <p className="mt-3 text-sm font-semibold text-slate-800">
+                  {milestone.currentProgress} /{" "}
+                  {milestone.requiredCompletedReferrals}
+                </p>
+                <MilestoneProgressBar percent={milestone.progressPercent} />
+              </div>
+              {milestone.completed && (
+                <div
+                  aria-hidden="true"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-500 text-lg text-white"
+                >
+                  ✓
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
