@@ -1585,31 +1585,7 @@ export default function CleaningEstimator() {
     transition={{ duration: 0.7, ease: "easeOut" }}
     className="overflow-x-hidden bg-white"
   >
-    {(showReferralLinkSuccessBanner || showReferralLinkWarningBanner) && (
-      <div className="mx-auto max-w-4xl px-4 pt-8 sm:px-6 sm:pt-10">
-        {showReferralLinkSuccessBanner && (
-          <div
-            role="status"
-            className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-left text-sm leading-relaxed text-emerald-900 shadow-sm"
-          >
-            🎉 Referral discount applied! You&apos;re booking with referral code{" "}
-            <span className="font-bold">{referralValidation.code}</span>. You&apos;ll
-            receive ${referralValidation.friendDiscountAmount} off your first
-            cleaning when you submit your booking request.
-          </div>
-        )}
-        {showReferralLinkWarningBanner && (
-          <div
-            role="status"
-            className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-left text-sm leading-relaxed text-amber-900 shadow-sm"
-          >
-            Referral code{" "}
-            <span className="font-semibold">{referralLinkCode}</span> could not be
-            applied. You can still book normally.
-          </div>
-        )}
-      </div>
-    )}
+   
     <div className="mx-auto mt-12 max-w-4xl px-4 text-center sm:mt-16 sm:px-6 lg:mt-20">
       <motion.div
         initial="hidden"
@@ -1646,6 +1622,32 @@ export default function CleaningEstimator() {
         >
           Instant estimate. Book when you&apos;re ready.
         </motion.p>
+
+        {(showReferralLinkSuccessBanner || showReferralLinkWarningBanner) && (
+      <div className="mx-auto max-w-4xl px-4 pt-8 sm:px-6 sm:pt-10">
+        {showReferralLinkSuccessBanner && (
+          <div
+            role="status"
+            className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-left text-sm leading-relaxed text-emerald-900 shadow-sm"
+          >
+            🎉 Referral discount applied! You&apos;re booking with referral code{" "}
+            <span className="font-bold">{referralValidation.code}</span>. You&apos;ll
+            receive ${referralValidation.friendDiscountAmount} off your first
+            cleaning when you submit your booking request.
+          </div>
+        )}
+        {showReferralLinkWarningBanner && (
+          <div
+            role="status"
+            className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-4 text-left text-sm leading-relaxed text-amber-900 shadow-sm"
+          >
+            Referral code{" "}
+            <span className="font-semibold">{referralLinkCode}</span> could not be
+            applied. You can still book normally.
+          </div>
+        )}
+      </div>
+    )}
       </motion.div>
     </div>
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 py-12 sm:gap-7 sm:px-6 sm:py-16 lg:grid-cols-[1.65fr_1fr] lg:gap-8 lg:px-8 lg:py-20">
