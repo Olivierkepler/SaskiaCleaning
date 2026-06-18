@@ -98,6 +98,93 @@ function formatEstimate(
   return "—";
 }
 
+function calculateDiscountedEstimate(
+  value: number | null,
+  discount: number,
+): number | null {
+  if (value == null) return null;
+  return Math.max(0, value - discount);
+}
+
+function getReferralDiscountAmount(booking: BookingRequest): number {
+  const discount = booking.friend_discount_amount;
+  if (discount == null || discount <= 0) return 0;
+  return discount;
+}
+
+function formatDiscountedEstimateRange(booking: BookingRequest): {
+  original: string;
+  final: string;
+  discount: number;
+  hasDiscount: boolean;
+  finalLow: number | null;
+  finalMid: number | null;
+  finalHigh: number | null;
+} {
+  const discount = getReferralDiscountAmount(booking);
+  const original = formatEstimate(
+    booking.estimate_low,
+    booking.estimate_mid,
+    booking.estimate_high,
+  );
+
+  if (discount <= 0) {
+    return {
+      original,
+      final: original,
+      discount: 0,
+      hasDiscount: false,
+      finalLow: booking.estimate_low,
+      finalMid: booking.estimate_mid,
+      finalHigh: booking.estimate_high,
+    };
+  }
+
+  const finalLow = calculateDiscountedEstimate(
+    booking.estimate_low,
+    discount,
+  );
+  const finalMid = calculateDiscountedEstimate(
+    booking.estimate_mid,
+    discount,
+  );
+  const finalHigh = calculateDiscountedEstimate(
+    booking.estimate_high,
+    discount,
+  );
+
+  return {
+    original,
+    final: formatEstimate(finalLow, finalMid, finalHigh),
+    discount,
+    hasDiscount: true,
+    finalLow,
+    finalMid,
+    finalHigh,
+  };
+}
+
+function EstimateDisplay({ booking }: { booking: BookingRequest }) {
+  const estimate = formatDiscountedEstimateRange(booking);
+
+  if (!estimate.hasDiscount) {
+    return <span className="font-medium text-slate-800">{estimate.original}</span>;
+  }
+
+  return (
+    <div className="space-y-0.5 text-xs leading-relaxed">
+      <p className="text-slate-600">
+        <span className="font-semibold text-slate-700">Original:</span>{" "}
+        {estimate.original}
+      </p>
+      <p className="font-medium text-emerald-600">
+        Referral discount: -${estimate.discount}
+      </p>
+      <p className="font-semibold text-slate-800">Final: {estimate.final}</p>
+    </div>
+  );
+}
+
 function formatExtrasList(extras: BookingRequest["extras"]): string {
   const items = normalizeExtras(extras);
   return items.length > 0 ? items.join(", ") : "—";
@@ -452,6 +539,9 @@ export default function DashboardTable({
       "Estimate Low",
       "Estimate Mid",
       "Estimate High",
+      "Final Estimate Low",
+      "Final Estimate Mid",
+      "Final Estimate High",
       "Extras",
       "Notes",
       "Referral Code",
@@ -459,8 +549,10 @@ export default function DashboardTable({
       "Status",
       "Submitted",
     ];
-    const rows = filteredBookings.map((booking) =>
-      [
+    const rows = filteredBookings.map((booking) => {
+      const estimate = formatDiscountedEstimateRange(booking);
+
+      return [
         escapeCsvValue(booking.name),
         escapeCsvValue(booking.email),
         escapeCsvValue(booking.mobile ?? ""),
@@ -479,6 +571,21 @@ export default function DashboardTable({
         escapeCsvValue(
           booking.estimate_high != null ? String(booking.estimate_high) : "",
         ),
+        escapeCsvValue(
+          estimate.hasDiscount && estimate.finalLow != null
+            ? String(estimate.finalLow)
+            : "",
+        ),
+        escapeCsvValue(
+          estimate.hasDiscount && estimate.finalMid != null
+            ? String(estimate.finalMid)
+            : "",
+        ),
+        escapeCsvValue(
+          estimate.hasDiscount && estimate.finalHigh != null
+            ? String(estimate.finalHigh)
+            : "",
+        ),
         escapeCsvValue(formatExtrasList(booking.extras)),
         escapeCsvValue(booking.notes ?? ""),
         escapeCsvValue(booking.referral_code ?? ""),
@@ -491,8 +598,8 @@ export default function DashboardTable({
           BOOKING_STATUS_LABELS[getBookingStatus(booking.status)]
         ),
         escapeCsvValue(formatDate(booking.created_at)),
-      ].join(",")
-    );
+      ].join(",");
+    });
 
     const csv = [headers.map(escapeCsvValue).join(","), ...rows].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -757,11 +864,7 @@ export default function DashboardTable({
                 {paginatedBookings.map((booking) => {
                   const bookingStatus = getBookingStatus(booking.status);
                   const isUnseen = !booking.seen;
-                  const estimateLabel = formatEstimate(
-                    booking.estimate_low,
-                    booking.estimate_mid,
-                    booking.estimate_high,
-                  );
+                  const estimate = formatDiscountedEstimateRange(booking);
 
                   return (
                   <tr
@@ -812,14 +915,18 @@ export default function DashboardTable({
                       {booking.bedrooms} bed / {booking.bathrooms} bath
                     </td>
                     <td
-                      className="whitespace-nowrap p-3 font-medium text-slate-800"
+                      className={`p-3 font-medium text-slate-800 ${
+                        estimate.hasDiscount ? "min-w-[9rem] whitespace-normal" : "whitespace-nowrap"
+                      }`}
                       title={
-                        booking.estimate_mid != null
-                          ? `Mid estimate: $${booking.estimate_mid.toLocaleString("en-US")}`
-                          : undefined
+                        estimate.hasDiscount
+                          ? `Original: ${estimate.original}; Final: ${estimate.final}`
+                          : booking.estimate_mid != null
+                            ? `Mid estimate: $${booking.estimate_mid.toLocaleString("en-US")}`
+                            : undefined
                       }
                     >
-                      {estimateLabel}
+                      <EstimateDisplay booking={booking} />
                     </td>
                     <td className="max-w-[220px] p-3">
                       <BookingDetails
@@ -870,11 +977,6 @@ export default function DashboardTable({
             {paginatedBookings.map((booking) => {
               const bookingStatus = getBookingStatus(booking.status);
               const isUnseen = !booking.seen;
-              const estimateLabel = formatEstimate(
-                booking.estimate_low,
-                booking.estimate_mid,
-                booking.estimate_high,
-              );
 
               return (
               <div
@@ -977,11 +1079,9 @@ export default function DashboardTable({
                     </span>
                   </div>
 
-                  <div className="flex justify-between gap-4">
-                    <span className="text-slate-500">Estimate</span>
-                    <span className="font-medium text-slate-800">
-                      {estimateLabel}
-                    </span>
+                  <div className="border-t border-slate-100 pt-3">
+                    <span className="mb-2 block text-slate-500">Estimate</span>
+                    <EstimateDisplay booking={booking} />
                   </div>
 
                   <div className="border-t border-slate-100 pt-3">
