@@ -794,16 +794,14 @@ function DynamicServiceGallery({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.3, ease: MOTION_EASE }}
-      className={`flex min-h-0 flex-1 flex-col ${
-        isDefaultOnly ? "justify-center" : "justify-start"
-      }`}
+      className="flex min-h-0 flex-1 flex-col"
     >
       <div
         className={
           isDefaultOnly
-          ? "mx-auto flex w-full max-w-[520px] items-center justify-center gap-6"
-          : "grid w-full grid-cols-2 items-start gap-x-6 gap-y-5 overflow-y-auto pr-1"
-      }
+            ? "mx-auto flex w-full max-w-[520px] items-center justify-center gap-6"
+            : "grid w-full grid-cols-2 items-start gap-x-6 gap-y-5 overflow-y-auto pr-1"
+        }
       >
         <AnimatePresence mode="popLayout">
           {images.map((img) => (

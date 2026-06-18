@@ -87,29 +87,29 @@ export default function BookingSummary({
 
       {!collapsed && (
         <>
-          <div className="flex flex-col gap-3 px-4 py-4">
-            <SummaryRow label="Service">{service}</SummaryRow>
-
-            {location && <SummaryRow label="Location">{location}</SummaryRow>}
-
-            {date && <SummaryRow label="Date">{formatDate(date)}</SummaryRow>}
-
-            {frequency && <SummaryRow label="Frequency">{frequency}</SummaryRow>}
-
-            {selections.map((item) => (
-              <SummaryRow key={item.label} label={item.label}>
-                {item.value}
-              </SummaryRow>
-            ))}
-
-            {extras.length > 0 && (
-              <SummaryRow label="Extras">
-                {extras.map((extra) => (
-                  <span key={extra}>{extra}</span>
-                ))}
-              </SummaryRow>
-            )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4 py-4">
+            <div className="flex flex-col gap-3">
+              <SummaryRow label="Service">{service}</SummaryRow>
+              {location && <SummaryRow label="Location">{location}</SummaryRow>}
+              {date && <SummaryRow label="Date">{formatDate(date)}</SummaryRow>}
+            </div>
+            <div className="flex flex-col gap-3">
+              {frequency && <SummaryRow label="Frequency">{frequency}</SummaryRow>}
+              {selections.map((item) => (
+                <SummaryRow key={item.label} label={item.label}>
+                  {item.value}
+                </SummaryRow>
+              ))}
+              {extras.length > 0 && (
+                <SummaryRow label="Extras">
+                  {extras.map((extra) => (
+                    <span key={extra}>{extra}</span>
+                  ))}
+                </SummaryRow>
+              )}
+            </div>
           </div>
+     
 
           <div className="mx-4 border-t border-sky-50" />
 
