@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   buildReferralLink,
   buildReferralShareMessage,
@@ -217,6 +218,18 @@ function ReferralModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedCode, setGeneratedCode] = useState<ReferralCode | null>(null);
   const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
+  const canUsePortal = typeof document !== "undefined";
+
+  useEffect(() => {
+    if (!open) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
 
   function resetModal() {
     setReferrerName("");
@@ -227,11 +240,22 @@ function ReferralModal({
     setCopyFeedback(null);
   }
 
-  function handleClose() {
+  const handleClose = useCallback(() => {
     if (isSubmitting) return;
     onClose();
     resetModal();
-  }
+  }, [isSubmitting, onClose]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") handleClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, handleClose]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -293,27 +317,20 @@ function ReferralModal({
     ? buildReferralLink(generatedCode.code)
     : "";
 
-  return (
-    <AnimatePresence>
-      {open && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/50 p-4"
-          onClick={handleClose}
-        >
-          <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.98 }}
-            transition={{ duration: 0.2 }}
-            className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-slate-200"
-            onClick={(event) => event.stopPropagation()}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="referral-modal-title"
-          >
+  if (!open || !canUsePortal) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md sm:p-6"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="referral-modal-title"
+      onClick={handleClose}
+    >
+      <div
+        className="max-h-[90dvh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-6 shadow-[0_30px_90px_rgba(15,23,42,0.20)] ring-1 ring-slate-200 sm:p-8"
+        onClick={(event) => event.stopPropagation()}
+      >
             <div className="mb-5">
               <h3
                 id="referral-modal-title"
@@ -488,10 +505,9 @@ function ReferralModal({
                 </div>
               </form>
             )}
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+      </div>
+    </div>,
+    document.body,
   );
 }
 
