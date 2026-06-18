@@ -2395,7 +2395,7 @@ export default function CleaningEstimator() {
   whileInView="visible"
   viewport={SCROLL_VIEWPORT}
   variants={slideRight}
-  className="hidden min-h-[440px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_60px_rgba(15,23,42,0.08)] lg:flex"
+  className="hidden min-h-[440px] flex-col overflow-hidden rounded-2xl lg:flex"
 >
   {/* Estimate Header — hidden until "Customize" is opened */}
   <AnimatePresence initial={false}>
@@ -2430,7 +2430,7 @@ export default function CleaningEstimator() {
   </AnimatePresence>
 
   {/* Gallery Area */}
-  <div className="relative flex min-h-0 flex-1 flex-col bg-gradient-to-b from-white to-slate-50/70 p-5 lg:p-6">
+  <div className="relative flex min-h-0 flex-1 flex-col p-5 lg:p-6">
     <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl ">
       <AnimatePresence mode="wait">
         <DynamicServiceGallery
