@@ -8,6 +8,7 @@ import {
   sendRewardEligibleAdminNotification,
   type AdminReferralReminderResult,
 } from "../../../lib/admin-referral-reminders";
+import { sendReferralMilestoneNotifications } from "../../../lib/referral-milestone-notifications";
 import {
   applyReferralUpdate,
   isDashboardAuthorized,
@@ -143,6 +144,12 @@ export async function PATCH(
         } else if (next.status === "rewarded") {
           notifications.push(
             await sendReferralNotification(referralId, "referral_rewarded"),
+          );
+        }
+
+        if (next.status === "completed" || next.status === "rewarded") {
+          notifications.push(
+            ...(await sendReferralMilestoneNotifications(referralId)),
           );
         }
       } catch (notificationError) {

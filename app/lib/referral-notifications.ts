@@ -6,7 +6,10 @@ export type ReferralNotificationType =
   | "referral_completed"
   | "referral_rewarded"
   | "admin_reward_eligible"
-  | "admin_rewards_summary";
+  | "admin_rewards_summary"
+  | "referral_milestone_first"
+  | "referral_milestone_champion"
+  | "referral_milestone_vip";
 
 export type ReferralNotificationStatus =
   | "pending"
@@ -94,6 +97,12 @@ export function formatReferralNotificationType(
       return "Admin: reward eligible";
     case "admin_rewards_summary":
       return "Admin: rewards summary";
+    case "referral_milestone_first":
+      return "First Referral milestone";
+    case "referral_milestone_champion":
+      return "Referral Champion milestone";
+    case "referral_milestone_vip":
+      return "Saskia VIP milestone";
   }
 }
 
