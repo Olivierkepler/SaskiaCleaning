@@ -3,12 +3,21 @@
 import { useState, useCallback, useRef, useEffect, useMemo, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronDown, MapPin, SlidersHorizontal } from "lucide-react";
 import { MASSACHUSETTS_LOCATIONS } from "@/app/data/massachusettsLocations";
 import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
 import BookingSummary from "@/app/components/BookingSummary";
 import { normalizeReferralCode, parseReferralCodeFromSearchParams } from "@/app/lib/referrals";
+import {
+  applyBookingPrefillOnce,
+  formatSavedAddressForBooking,
+  formatSavedAddressLabel,
+  matchServiceAreaFromAddress,
+  type BookingPrefill,
+} from "@/app/lib/booking-prefill";
+import { formatBookingTime } from "@/app/lib/scheduling-pure";
 import { IoChatbubblesOutline } from "react-icons/io5";
 const K = {
   blue:         "#38BDF8",
@@ -1251,6 +1260,13 @@ function BookingModal({
   referralDiscountAmount,
   estimatedTotalAfterDiscount,
   prices,
+  locationSummary,
+  bookingPrefill,
+  locationMode,
+  selectedAddressId,
+  emailReadOnly,
+  bookingTime,
+  bookingTimeLabel,
   onClose,
   onSubmit,
   onNameChange,
@@ -1258,6 +1274,8 @@ function BookingModal({
   onMobileChange,
   onNotesChange,
   onReferralCodeChange,
+  onSelectSavedAddress,
+  onSelectManualLocation,
 }: {
   open: boolean;
   svc: (typeof SERVICES)[number];
@@ -1273,6 +1291,13 @@ function BookingModal({
   referralDiscountAmount: number;
   estimatedTotalAfterDiscount: number;
   prices: PriceRange;
+  locationSummary: string;
+  bookingPrefill: BookingPrefill | null;
+  locationMode: "saved" | "manual";
+  selectedAddressId: string | null;
+  emailReadOnly: boolean;
+  bookingTime: string | null;
+  bookingTimeLabel: string | null;
   onClose: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onNameChange: (value: string) => void;
@@ -1280,6 +1305,8 @@ function BookingModal({
   onMobileChange: (value: string) => void;
   onNotesChange: (value: string) => void;
   onReferralCodeChange: (value: string) => void;
+  onSelectSavedAddress: (addressId: string) => void;
+  onSelectManualLocation: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
 
@@ -1366,6 +1393,18 @@ function BookingModal({
               </div>
             ) : (
               <form onSubmit={onSubmit} className="space-y-4">
+                {bookingPrefill && (
+                  <p className="text-sm text-slate-500">
+                    Using your Saskia profile ·{" "}
+                    <Link
+                      href="/account/profile"
+                      className="font-medium text-sky-600 underline-offset-2 hover:underline"
+                    >
+                      Manage profile
+                    </Link>
+                  </p>
+                )}
+
                 <div>
                   <label
                     htmlFor="booking-name"
@@ -1398,9 +1437,13 @@ function BookingModal({
                     required
                     value={contactEmail}
                     onChange={(event) => onEmailChange(event.target.value)}
-                    className={bookingInputClassName}
+                    className={`${bookingInputClassName}${
+                      emailReadOnly ? " bg-slate-50 text-slate-700" : ""
+                    }`}
                     placeholder="you@example.com"
                     autoComplete="email"
+                    readOnly={emailReadOnly}
+                    aria-readonly={emailReadOnly || undefined}
                   />
                 </div>
 
@@ -1420,6 +1463,97 @@ function BookingModal({
                     placeholder="Phone number"
                     autoComplete="tel"
                   />
+                  {bookingPrefill && !bookingPrefill.phone && (
+                    <p className="mt-1.5 text-xs text-slate-500">
+                      Save this in your profile for faster booking next time.
+                    </p>
+                  )}
+                </div>
+
+                {bookingPrefill && bookingPrefill.savedAddresses.length > 0 && (
+                  <fieldset className="space-y-2">
+                    <legend className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Service location
+                    </legend>
+                    <div className="space-y-2">
+                      {bookingPrefill.savedAddresses.map((address) => {
+                        const checked =
+                          locationMode === "saved" &&
+                          selectedAddressId === address.id;
+                        return (
+                          <label
+                            key={address.id}
+                            className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
+                              checked
+                                ? "border-sky-300 bg-sky-50"
+                                : "border-slate-200 bg-white hover:border-slate-300"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="booking-location-mode"
+                              className="mt-1"
+                              checked={checked}
+                              onChange={() => onSelectSavedAddress(address.id)}
+                            />
+                            <span className="text-slate-700">
+                              {formatSavedAddressLabel(address)}
+                            </span>
+                          </label>
+                        );
+                      })}
+                      <label
+                        className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
+                          locationMode === "manual"
+                            ? "border-sky-300 bg-sky-50"
+                            : "border-slate-200 bg-white hover:border-slate-300"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="booking-location-mode"
+                          className="mt-1"
+                          checked={locationMode === "manual"}
+                          onChange={onSelectManualLocation}
+                        />
+                        <span className="text-slate-700">
+                          Enter another location
+                          {locationMode === "manual" ? (
+                            <span className="mt-0.5 block text-xs text-slate-500">
+                              Uses the city/state selected in the estimator
+                              above.
+                            </span>
+                          ) : null}
+                        </span>
+                      </label>
+                    </div>
+                    {!bookingPrefill.defaultAddress &&
+                      locationMode === "manual" &&
+                      !selectedAddressId && (
+                        <p className="text-xs text-slate-500">
+                          Choose a saved address or continue with the
+                          estimator location.
+                        </p>
+                      )}
+                  </fieldset>
+                )}
+
+                <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Location on this booking
+                  </span>
+                  <p className="mt-1 font-medium text-slate-800">
+                    {locationSummary}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-slate-100 bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Appointment time
+                  </span>
+                  <p className="mt-1 font-medium text-slate-800">
+                    {bookingTimeLabel ?? "Select a time above"}
+                  </p>
                 </div>
 
                 <div>
@@ -1558,7 +1692,11 @@ function BookingModal({
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
-export default function CleaningEstimator() {
+export default function CleaningEstimator({
+  bookingPrefill = null,
+}: {
+  bookingPrefill?: BookingPrefill | null;
+} = {}) {
   const [serviceIdx, setServiceIdx] = useState<ServiceIndex>(0);
   const [prices,     setPrices]     = useState({ low: 144, mid: 180, high: 216 });
 
@@ -1572,6 +1710,13 @@ export default function CleaningEstimator() {
 
   const [date,     setDate]     = useState<Date | null>(null);
   const [dateOpen, setDateOpen] = useState(false);
+  const [bookingTime, setBookingTime] = useState<string | null>(null);
+  const [availableSlots, setAvailableSlots] = useState<
+    Array<{ time: string; label: string }>
+  >([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsError, setSlotsError] = useState("");
+  const slotsRequestIdRef = useRef(0);
 
   const svc     = SERVICES[serviceIdx];
   const rootRef = useRef<HTMLElement>(null);
@@ -1595,6 +1740,9 @@ export default function CleaningEstimator() {
   const [contactEmail, setContactEmail] = useState("");
   const [contactMobile, setContactMobile] = useState("");
   const [contactNotes, setContactNotes] = useState("");
+  const [locationMode, setLocationMode] = useState<"saved" | "manual">("manual");
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const prefillAppliedRef = useRef(false);
   const [referralCode, setReferralCode] = useState("");
   const [referralCodeError, setReferralCodeError] = useState("");
   const [referralValidation, setReferralValidation] =
@@ -1602,6 +1750,223 @@ export default function CleaningEstimator() {
   const [referralLinkCode, setReferralLinkCode] = useState<string | null>(null);
   const urlPrefilledReferralCode = useRef<string | null>(null);
   const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(new Set());
+
+  const applyPrefillSnapshot = useCallback(
+    (force = false) => {
+      if (!force && prefillAppliedRef.current) return;
+
+      if (!bookingPrefill) {
+        if (force) {
+          setContactName("");
+          setContactEmail("");
+          setContactMobile("");
+          setLocationMode("manual");
+          setSelectedAddressId(null);
+        }
+        prefillAppliedRef.current = true;
+        return;
+      }
+
+      const result = applyBookingPrefillOnce({
+        alreadyApplied: false,
+        prefill: bookingPrefill,
+      });
+      setContactName(result.contact.name);
+      setContactEmail(result.contact.email);
+      setContactMobile(result.contact.phone);
+      setLocationMode(result.locationMode);
+      setSelectedAddressId(result.selectedAddressId);
+
+      if (
+        result.selectedAddressId &&
+        bookingPrefill.defaultAddress &&
+        result.selectedAddressId === bookingPrefill.defaultAddress.id
+      ) {
+        const matched = matchServiceAreaFromAddress(
+          bookingPrefill.defaultAddress,
+          LOCATIONS,
+        );
+        if (matched) {
+          setLocCity(matched.city);
+          setLocState(matched.state as StateKey);
+          setLocConfirmed(true);
+        }
+      }
+
+      prefillAppliedRef.current = true;
+    },
+    [bookingPrefill],
+  );
+
+  useEffect(() => {
+    applyPrefillSnapshot(false);
+  }, [applyPrefillSnapshot]);
+
+  const handleSelectSavedAddress = useCallback(
+    (addressId: string) => {
+      const address = bookingPrefill?.savedAddresses.find((a) => a.id === addressId);
+      setLocationMode("saved");
+      setSelectedAddressId(addressId);
+      if (address) {
+        const matched = matchServiceAreaFromAddress(address, LOCATIONS);
+        if (matched) {
+          setLocCity(matched.city);
+          setLocState(matched.state as StateKey);
+          setLocConfirmed(true);
+        }
+      }
+    },
+    [bookingPrefill],
+  );
+
+  const handleSelectManualLocation = useCallback(() => {
+    setLocationMode("manual");
+    setSelectedAddressId(null);
+  }, []);
+
+  const bookingLocationSummary = useMemo(() => {
+    if (locationMode === "saved" && selectedAddressId && bookingPrefill) {
+      const address = bookingPrefill.savedAddresses.find(
+        (entry) => entry.id === selectedAddressId,
+      );
+      if (address) return formatSavedAddressForBooking(address);
+    }
+    return `${locCity}, ${locState}`;
+  }, [
+    locationMode,
+    selectedAddressId,
+    bookingPrefill,
+    locCity,
+    locState,
+  ]);
+
+  const emailReadOnly = Boolean(bookingPrefill?.email);
+
+  const selectedDateOnly = useMemo(
+    () => (date ? formatBookingDateForApi(date) ?? null : null),
+    [date],
+  );
+
+  const [estimatedDurationMinutes, setEstimatedDurationMinutes] = useState<
+    number | null
+  >(null);
+  const [slotRefreshMessage, setSlotRefreshMessage] = useState("");
+
+  const availabilityQuery = useMemo(() => {
+    if (!selectedDateOnly) return null;
+    const { bedrooms, bathrooms } = getBookingRoomCounts(
+      serviceIdx,
+      standardBedIdx,
+      standardBathIdx,
+    );
+    const params = new URLSearchParams({
+      date: selectedDateOnly,
+      service: SERVICES[serviceIdx]!.label,
+      bedrooms: String(bedrooms),
+      bathrooms: String(bathrooms),
+    });
+    return params.toString();
+  }, [selectedDateOnly, serviceIdx, standardBedIdx, standardBathIdx]);
+
+  useEffect(() => {
+    if (!availabilityQuery) {
+      setAvailableSlots([]);
+      setBookingTime(null);
+      setSlotsLoading(false);
+      setSlotsError("");
+      setEstimatedDurationMinutes(null);
+      return;
+    }
+
+    const requestId = ++slotsRequestIdRef.current;
+    setSlotsLoading(true);
+    setSlotsError("");
+    setAvailableSlots([]);
+    setBookingTime(null);
+    setSlotRefreshMessage("");
+
+    fetch(`/api/availability?${availabilityQuery}`)
+      .then(async (response) => {
+        const data = (await response.json()) as {
+          slots?: Array<{ time: string; label: string }>;
+          estimatedDurationMinutes?: number;
+          error?: string;
+        };
+        if (requestId !== slotsRequestIdRef.current) return;
+        if (!response.ok) {
+          setSlotsError(data.error || "Could not load available times.");
+          setAvailableSlots([]);
+          setEstimatedDurationMinutes(null);
+          return;
+        }
+        setAvailableSlots(Array.isArray(data.slots) ? data.slots : []);
+        setEstimatedDurationMinutes(
+          typeof data.estimatedDurationMinutes === "number"
+            ? data.estimatedDurationMinutes
+            : null,
+        );
+      })
+      .catch(() => {
+        if (requestId !== slotsRequestIdRef.current) return;
+        setSlotsError("Could not load available times.");
+        setAvailableSlots([]);
+        setEstimatedDurationMinutes(null);
+      })
+      .finally(() => {
+        if (requestId !== slotsRequestIdRef.current) return;
+        setSlotsLoading(false);
+      });
+  }, [availabilityQuery]);
+
+  const bookingTimeLabel = bookingTime
+    ? availableSlots.find((s) => s.time === bookingTime)?.label ??
+      formatBookingTime(bookingTime)
+    : null;
+
+  async function refreshSlotsForSelectedDate() {
+    if (!availabilityQuery) return;
+    const requestId = ++slotsRequestIdRef.current;
+    setSlotsLoading(true);
+    setSlotsError("");
+    try {
+      const response = await fetch(`/api/availability?${availabilityQuery}`);
+      const data = (await response.json()) as {
+        slots?: Array<{ time: string; label: string }>;
+        estimatedDurationMinutes?: number;
+        error?: string;
+      };
+      if (requestId !== slotsRequestIdRef.current) return;
+      if (!response.ok) {
+        setSlotsError(data.error || "Could not load available times.");
+        setAvailableSlots([]);
+        setBookingTime(null);
+        setEstimatedDurationMinutes(null);
+        return;
+      }
+      const nextSlots = Array.isArray(data.slots) ? data.slots : [];
+      setAvailableSlots(nextSlots);
+      setEstimatedDurationMinutes(
+        typeof data.estimatedDurationMinutes === "number"
+          ? data.estimatedDurationMinutes
+          : null,
+      );
+      if (bookingTime && !nextSlots.some((s) => s.time === bookingTime)) {
+        setBookingTime(null);
+        setSlotRefreshMessage(
+          "Please choose a new time for the updated service.",
+        );
+      }
+    } catch {
+      if (requestId !== slotsRequestIdRef.current) return;
+      setSlotsError("Could not load available times.");
+      setAvailableSlots([]);
+      setBookingTime(null);
+      setEstimatedDurationMinutes(null);
+    } finally {
+      if (requestId !== slotsRequestIdRef.current) return;
+      setSlotsLoading(false);
+    }
+  }
 
   const handleStandardAddonsChange = useCallback((addons: Set<string>) => {
     setStandardSelectedAddons(new Set(addons));
@@ -1803,9 +2168,19 @@ export default function CleaningEstimator() {
     setLocOpen(false);
     setDateOpen(false);
     setDateError(false);
+    setBookingTime(null);
   }
 
   function openBookingForm() {
+    if (!date || !bookingTime) {
+      setDateError(!date);
+      setRequiredFieldsMessage(
+        !date
+          ? "Please select a date and available time."
+          : "Please select an available time.",
+      );
+      return;
+    }
     setBookingFormOpen(true);
     setBookingStatus("idle");
     setBookingErrorMessage("");
@@ -1861,14 +2236,18 @@ export default function CleaningEstimator() {
       bathrooms,
       service: svc.label,
       frequency,
-      location: `${locCity}, ${locState}`,
+      location: bookingLocationSummary,
       bookingDate: formatBookingDateForApi(date),
+      bookingTime: bookingTime ?? undefined,
       extras,
       estimateLow: prices.low,
       estimateMid: prices.mid,
       estimateHigh: prices.high,
       notes: contactNotes.trim() || undefined,
       ...(normalizedReferralCode ? { referralCode: normalizedReferralCode } : {}),
+      ...(locationMode === "saved" && selectedAddressId
+        ? { selectedAddressId }
+        : {}),
     };
 
     try {
@@ -1890,16 +2269,30 @@ export default function CleaningEstimator() {
           return;
         }
 
+        if (response.status === 409) {
+          setBookingStatus("error");
+          setBookingErrorMessage(
+            data.error ||
+              "That time was just booked. Please choose another available time.",
+          );
+          setBookingTime(null);
+          void refreshSlotsForSelectedDate();
+          return;
+        }
+
         throw new Error(data.error || "Failed to submit booking request.");
       }
 
       setBookingStatus("success");
-      setContactName("");
-      setContactEmail("");
-      setContactMobile("");
       setContactNotes("");
       setReferralCode(urlPrefilledReferralCode.current ?? "");
       setReferralCodeError("");
+      setBookingTime(null);
+      // Re-apply initial profile snapshot for a subsequent booking — never
+      // mutate saved profile/addresses from this submit.
+      prefillAppliedRef.current = false;
+      applyPrefillSnapshot(true);
+      void refreshSlotsForSelectedDate();
     } catch (error) {
       setBookingStatus("error");
       setBookingErrorMessage(
@@ -2266,6 +2659,65 @@ export default function CleaningEstimator() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {date ? (
+              <div className="border-t border-slate-100 px-3 py-3 sm:px-5">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Select a time
+                </p>
+                {estimatedDurationMinutes != null ? (
+                  <p className="mb-2 text-sm text-slate-600">
+                    Estimated duration:{" "}
+                    {estimatedDurationMinutes < 60
+                      ? `About ${estimatedDurationMinutes} min`
+                      : estimatedDurationMinutes % 60 === 0
+                        ? `About ${estimatedDurationMinutes / 60} hour${
+                            estimatedDurationMinutes === 60 ? "" : "s"
+                          }`
+                        : `About ${Math.floor(estimatedDurationMinutes / 60)} hr ${
+                            estimatedDurationMinutes % 60
+                          } min`}
+                  </p>
+                ) : null}
+                {slotRefreshMessage ? (
+                  <p className="mb-2 text-sm font-medium text-amber-700">
+                    {slotRefreshMessage}
+                  </p>
+                ) : null}
+                {slotsLoading ? (
+                  <p className="text-sm text-slate-500">Loading available times…</p>
+                ) : slotsError ? (
+                  <p className="text-sm font-medium text-red-600">{slotsError}</p>
+                ) : availableSlots.length === 0 ? (
+                  <p className="text-sm text-slate-600">
+                    No times available for this date. Choose another date.
+                  </p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {availableSlots.map((slot) => {
+                      const selected = bookingTime === slot.time;
+                      return (
+                        <button
+                          key={slot.time}
+                          type="button"
+                          onClick={() => {
+                            setBookingTime(slot.time);
+                            setRequiredFieldsMessage("");
+                          }}
+                          className={`cursor-pointer rounded-lg border px-3 py-2 text-sm font-semibold transition ${
+                            selected
+                              ? "border-sky-400 bg-sky-50 text-sky-800"
+                              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                          }`}
+                        >
+                          {slot.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : null}
   
             {/* Active Panel: hidden by default, opened from the Options button */}
             <AnimatePresence initial={false}>
@@ -2476,6 +2928,13 @@ export default function CleaningEstimator() {
         referralDiscountAmount={referralDiscountAmount}
         estimatedTotalAfterDiscount={estimatedTotalAfterDiscount}
         prices={prices}
+        locationSummary={bookingLocationSummary}
+        bookingPrefill={bookingPrefill}
+        locationMode={locationMode}
+        selectedAddressId={selectedAddressId}
+        emailReadOnly={emailReadOnly}
+        bookingTime={bookingTime}
+        bookingTimeLabel={bookingTimeLabel}
         onClose={closeBookingForm}
         onSubmit={handleBookingSubmit}
         onNameChange={setContactName}
@@ -2483,6 +2942,8 @@ export default function CleaningEstimator() {
         onMobileChange={setContactMobile}
         onNotesChange={setContactNotes}
         onReferralCodeChange={handleReferralCodeChange}
+        onSelectSavedAddress={handleSelectSavedAddress}
+        onSelectManualLocation={handleSelectManualLocation}
       />
     </motion.section>
   );

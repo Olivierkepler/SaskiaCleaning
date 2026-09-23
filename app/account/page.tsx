@@ -7,8 +7,8 @@ const accountSections = [
   {
     title: "My Bookings",
     description: "View and manage your cleaning requests.",
-    href: null as string | null,
-    soon: true,
+    href: "/account/bookings" as string | null,
+    soon: false,
   },
   {
     title: "Referrals",
@@ -24,9 +24,9 @@ const accountSections = [
   },
   {
     title: "Profile",
-    description: "Your Google-linked account details.",
-    href: null as string | null,
-    soon: true,
+    description: "Manage your personal information and saved addresses.",
+    href: "/account/profile" as string | null,
+    soon: false,
   },
 ];
 

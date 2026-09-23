@@ -10,6 +10,7 @@ export type CustomerRecord = {
   id: string;
   email: string;
   name: string | null;
+  phone?: string | null;
   image: string | null;
   email_verified: Date | string | null;
   created_at: Date | string;
@@ -73,10 +74,15 @@ export async function upsertCustomerFromGoogle(input: {
   }
 
   if (customer) {
+    // Preserve customer-edited preferred name and phone.
+    // Google may refresh the provider image; never overwrite non-empty name.
     const updated = await sql`
       UPDATE customers
       SET
-        name = COALESCE(${input.name}, name),
+        name = CASE
+          WHEN name IS NULL OR btrim(name) = '' THEN COALESCE(${input.name}, name)
+          ELSE name
+        END,
         image = COALESCE(${input.image}, image),
         email_verified = COALESCE(email_verified, ${now}::timestamptz),
         updated_at = now()
@@ -94,7 +100,11 @@ export async function upsertCustomerFromGoogle(input: {
         ${now}::timestamptz
       )
       ON CONFLICT (email) DO UPDATE SET
-        name = COALESCE(EXCLUDED.name, customers.name),
+        name = CASE
+          WHEN customers.name IS NULL OR btrim(customers.name) = ''
+            THEN COALESCE(EXCLUDED.name, customers.name)
+          ELSE customers.name
+        END,
         image = COALESCE(EXCLUDED.image, customers.image),
         email_verified = COALESCE(customers.email_verified, EXCLUDED.email_verified),
         updated_at = now()

@@ -16,6 +16,7 @@ type NavbarProps = {
   dashboardKey: string;
   unseenCount: number;
   unseenBookings: UnseenBooking[];
+  pendingChangeRequestCount?: number;
 };
 
 const formatDate = (date: string) => {
@@ -44,6 +45,7 @@ export default function Navbar({
   dashboardKey,
   unseenCount,
   unseenBookings,
+  pendingChangeRequestCount = 0,
 }: NavbarProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -124,6 +126,37 @@ export default function Navbar({
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Referrals
+          </a>
+          <a
+            href={`/dashboard/change-requests?key=${dashboardKey}`}
+            className="relative rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Change Requests
+            {pendingChangeRequestCount > 0 ? (
+              <span className="ml-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">
+                {pendingChangeRequestCount > 99
+                  ? "99+"
+                  : pendingChangeRequestCount}
+              </span>
+            ) : null}
+          </a>
+          <a
+            href={`/dashboard/availability?key=${dashboardKey}`}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Availability
+          </a>
+          <a
+            href={`/dashboard/service-durations?key=${dashboardKey}`}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Durations
+          </a>
+          <a
+            href={`/dashboard/staff?key=${dashboardKey}`}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Staff
           </a>
           <a
             href={`/?key=${dashboardKey}`}

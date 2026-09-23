@@ -4,6 +4,20 @@ import { NextResponse } from "next/server";
 import { sql } from "../../lib/db";
 import { normalizeReferralCode, type ReferralCodeRow } from "../../lib/referrals";
 import { getCurrentCustomer } from "@/app/lib/customer-auth";
+import { getCustomerAddressById } from "@/app/lib/customer-profile";
+import {
+  formatSavedAddressForBooking,
+  resolveBookingLocationSnapshot,
+} from "@/app/lib/booking-prefill";
+import { assertSlotAvailable } from "@/app/lib/scheduling";
+import { createBookingWithCapacityClaim } from "@/app/lib/staff-capacity";
+import {
+  isBookingDateInPast,
+  isValidBookingDateOnly,
+  BOOKING_TIME_REQUIRED_MESSAGE,
+} from "@/app/lib/scheduling-pure";
+import { CAPACITY_CONFLICT_MESSAGE } from "@/app/lib/staff-capacity-pure";
+import { resolveDurationForBooking } from "@/app/lib/booking-duration";
 
 function parseNonNegativeInteger(value: unknown): number | null {
   const parsed = Number(value);
@@ -19,7 +33,7 @@ function normalizeBookingDate(value: unknown): string | null {
   }
 
   const dateString = String(value).slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+  if (!isValidBookingDateOnly(dateString)) {
     return null;
   }
 
@@ -41,13 +55,20 @@ export async function POST(req: Request) {
       frequency,
       location,
       bookingDate,
+      bookingTime,
       extras,
       estimateLow,
       estimateMid,
       estimateHigh,
       notes,
       referralCode,
+      selectedAddressId,
+      durationMinutes: _ignoredClientDuration,
+      customerId: _ignoredCustomerId,
+      userId: _ignoredUserId,
+      accountId: _ignoredAccountId,
     } = body;
+    void _ignoredClientDuration;
 
     if (!name || !email) {
       return NextResponse.json(
@@ -79,10 +100,50 @@ export async function POST(req: Request) {
     }
 
     const parsedBookingDate = normalizeBookingDate(bookingDate);
-    if (bookingDate != null && bookingDate !== "" && parsedBookingDate === null) {
+    if (!parsedBookingDate) {
       return NextResponse.json(
-        { error: "Invalid booking date." },
+        { error: "A valid booking date is required." },
         { status: 400 }
+      );
+    }
+
+    if (isBookingDateInPast(parsedBookingDate)) {
+      return NextResponse.json(
+        { error: "Please choose a today or future date." },
+        { status: 400 }
+      );
+    }
+
+    if (bookingTime == null || bookingTime === "") {
+      return NextResponse.json(
+        { error: BOOKING_TIME_REQUIRED_MESSAGE },
+        { status: 400 }
+      );
+    }
+
+    const durationResult = await resolveDurationForBooking({
+      service: service || null,
+      bedrooms: parsedBedrooms,
+      bathrooms: parsedBathrooms,
+      extras: Array.isArray(extras) ? extras : [],
+    });
+    if (!durationResult.ok) {
+      return NextResponse.json(
+        { error: durationResult.error },
+        { status: 400 },
+      );
+    }
+
+    const slotCheck = await assertSlotAvailable({
+      dateOnly: parsedBookingDate,
+      time: bookingTime,
+      durationMinutes: durationResult.minutes,
+    });
+
+    if (!slotCheck.ok) {
+      return NextResponse.json(
+        { error: slotCheck.error },
+        { status: slotCheck.status },
       );
     }
 
@@ -118,49 +179,94 @@ export async function POST(req: Request) {
     const currentCustomer = await getCurrentCustomer();
     const customerId = currentCustomer?.id ?? null;
 
-    const result = await sql`
-      INSERT INTO booking_requests (
-        name,
-        email,
-        mobile,
-        bedrooms,
-        bathrooms,
-        service,
-        frequency,
-        location,
-        booking_date,
-        extras,
-        estimate_low,
-        estimate_mid,
-        estimate_high,
-        notes,
-        referral_code,
-        seen,
-        customer_id
-      )
-      VALUES (
-        ${name},
-        ${email},
-        ${mobile || null},
-        ${parsedBedrooms},
-        ${parsedBathrooms},
-        ${service || null},
-        ${frequency || null},
-        ${location || null},
-        ${parsedBookingDate},
-        ${JSON.stringify(extrasArray)},
-        ${estimateLow ?? null},
-        ${estimateMid ?? null},
-        ${estimateHigh ?? null},
-        ${notes || null},
-        ${normalizedReferralCode},
-        false,
-        ${customerId}
-      )
-      RETURNING *;
-    `;
+    const requestedAddressId =
+      typeof selectedAddressId === "string" && selectedAddressId.trim()
+        ? selectedAddressId.trim()
+        : null;
 
-    const booking = result[0];
+    let ownedAddress: {
+      addressLine1: string;
+      addressLine2: string | null;
+      city: string;
+      state: string;
+      postalCode: string;
+    } | null = null;
+
+    if (customerId && requestedAddressId) {
+      const address = await getCustomerAddressById(customerId, requestedAddressId);
+      ownedAddress = address
+        ? {
+            addressLine1: address.addressLine1,
+            addressLine2: address.addressLine2,
+            city: address.city,
+            state: address.state,
+            postalCode: address.postalCode,
+          }
+        : null;
+    }
+
+    const locationResult = resolveBookingLocationSnapshot({
+      customerId,
+      selectedAddressId: requestedAddressId,
+      ownedAddress,
+      manualLocation:
+        typeof location === "string" && location.trim()
+          ? location.trim()
+          : null,
+      formatAddress: formatSavedAddressForBooking,
+    });
+
+    if (!locationResult.ok) {
+      return NextResponse.json(
+        { error: locationResult.error },
+        { status: 400 },
+      );
+    }
+
+    if (!locationResult.location) {
+      return NextResponse.json(
+        { error: "A service location is required." },
+        { status: 400 },
+      );
+    }
+
+    let booking: Record<string, unknown>;
+    try {
+      const claim = await createBookingWithCapacityClaim({
+        name: String(name),
+        email: String(email),
+        mobile: mobile || null,
+        bedrooms: parsedBedrooms,
+        bathrooms: parsedBathrooms,
+        service: service || null,
+        frequency: frequency || null,
+        location: locationResult.location,
+        bookingDate: parsedBookingDate,
+        bookingTime: slotCheck.time,
+        durationMinutes: durationResult.minutes,
+        extrasJson: JSON.stringify(extrasArray),
+        estimateLow: estimateLow ?? null,
+        estimateMid: estimateMid ?? null,
+        estimateHigh: estimateHigh ?? null,
+        notes: notes || null,
+        referralCode: normalizedReferralCode,
+        customerId,
+      });
+
+      if (!claim.ok) {
+        return NextResponse.json(
+          { error: claim.error },
+          { status: claim.status },
+        );
+      }
+      booking = claim.booking;
+    } catch (insertError) {
+      console.error("Booking capacity claim failed:", insertError);
+      return NextResponse.json(
+        { error: CAPACITY_CONFLICT_MESSAGE },
+        { status: 409 },
+      );
+    }
 
     if (activeReferralCode && booking) {
       try {

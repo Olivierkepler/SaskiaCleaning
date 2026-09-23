@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import type { BookingStatus } from "../lib/booking-status";
 import DashboardTable from "./DashboardTable";
 import Navbar from "./components/Navbar";
+import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
+import { listAssignmentBookingIds } from "@/app/lib/staff";
 
 type BookingRequest = {
   id: number;
@@ -19,6 +21,7 @@ type BookingRequest = {
   frequency: string | null;
   location: string | null;
   booking_date: string | Date | null;
+  booking_time?: string | null;
   extras: string[] | string | null;
   estimate_low: number | null;
   estimate_mid: number | null;
@@ -74,6 +77,8 @@ export default async function DashboardPage({
       location,
     }));
   const unseenCount = typedBookings.filter((booking) => !booking.seen).length;
+  const pendingChangeRequestCount = await countPendingAdminChangeRequests();
+  const assignedBookingIds = Array.from(await listAssignmentBookingIds());
 
   return (
     <main className="min-h-screen bg-slate-100  py-6 ">
@@ -81,6 +86,7 @@ export default async function DashboardPage({
         dashboardKey={params.key!}
         unseenCount={unseenCount}
         unseenBookings={unseenBookings}
+        pendingChangeRequestCount={pendingChangeRequestCount}
       />
       <div className="mx-auto max-w-full px-20">
        
@@ -101,6 +107,7 @@ export default async function DashboardPage({
         <DashboardTable
           bookings={typedBookings}
           dashboardKey={params.key!}
+          assignedBookingIds={assignedBookingIds}
         />
       </div>
     </main>

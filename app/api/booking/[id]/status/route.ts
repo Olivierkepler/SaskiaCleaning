@@ -54,6 +54,17 @@ export async function PATCH(
       return NextResponse.json({ error: "Booking not found." }, { status: 404 });
     }
 
+    if (status === "cancelled" || status === "completed") {
+      try {
+        const { releaseAssignmentCapacity } = await import(
+          "@/app/lib/staff-capacity"
+        );
+        await releaseAssignmentCapacity(bookingId);
+      } catch (releaseError) {
+        console.error("Failed to release assignment capacity:", releaseError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       booking: result[0],

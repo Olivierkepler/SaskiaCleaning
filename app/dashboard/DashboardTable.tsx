@@ -9,6 +9,7 @@ import {
   type BookingStatus,
   isBookingStatus,
 } from "../lib/booking-status";
+import BookingAssignControl from "./BookingAssignControl";
 
 type SortOption =
   | "newest"
@@ -45,6 +46,7 @@ type BookingRequest = {
   frequency: string | null;
   location: string | null;
   booking_date: string | Date | null;
+  booking_time?: string | null;
   extras: string[] | string | null;
   estimate_low: number | null;
   estimate_mid: number | null;
@@ -84,6 +86,22 @@ function formatRequestedDate(date: string | Date | null): string {
     year: "numeric",
     timeZone: "UTC",
   }).format(new Date(Date.UTC(year, month - 1, day)));
+}
+
+function formatRequestedAppointment(
+  date: string | Date | null,
+  time: string | null | undefined,
+): string {
+  const dateLabel = formatRequestedDate(date);
+  if (dateLabel === "—") return "—";
+  if (time == null || time === "") return `${dateLabel} · Time not specified`;
+  const match = String(time).match(/^(\d{1,2}):(\d{2})/);
+  if (!match) return `${dateLabel} · Time not specified`;
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  const period = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${dateLabel} · ${hour12}:${String(minute).padStart(2, "0")} ${period}`;
 }
 
 function formatEstimate(
@@ -264,9 +282,11 @@ function BookingDetails({
 export default function DashboardTable({
   bookings,
   dashboardKey,
+  assignedBookingIds = [],
 }: {
   bookings: BookingRequest[];
   dashboardKey: string;
+  assignedBookingIds?: number[];
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -275,8 +295,15 @@ export default function DashboardTable({
   const [bathroomFilter, setBathroomFilter] = useState<BathroomFilter>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [referralFilter, setReferralFilter] = useState<ReferralFilter>("all");
+  const [assignmentFilter, setAssignmentFilter] = useState<
+    "all" | "assigned" | "unassigned"
+  >("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<ItemsPerPage>(10);
+  const assignedSet = useMemo(
+    () => new Set(assignedBookingIds),
+    [assignedBookingIds],
+  );
 
   const getBookingStatus = (status: string): BookingStatus =>
     isBookingStatus(status) ? status : "new";
@@ -338,6 +365,13 @@ export default function DashboardTable({
         return false;
       }
 
+      if (assignmentFilter === "unassigned" && assignedSet.has(booking.id)) {
+        return false;
+      }
+      if (assignmentFilter === "assigned" && !assignedSet.has(booking.id)) {
+        return false;
+      }
+
       return true;
     });
 
@@ -364,11 +398,11 @@ export default function DashboardTable({
     });
 
     return result;
-  }, [bookings, search, sort, bedroomFilter, bathroomFilter, statusFilter, referralFilter]);
+  }, [bookings, search, sort, bedroomFilter, bathroomFilter, statusFilter, referralFilter, assignmentFilter, assignedSet]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, sort, bedroomFilter, bathroomFilter, statusFilter, referralFilter, itemsPerPage]);
+  }, [search, sort, bedroomFilter, bathroomFilter, statusFilter, referralFilter, assignmentFilter, itemsPerPage]);
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredBookings.length / itemsPerPage)),
@@ -446,7 +480,8 @@ export default function DashboardTable({
       bedroomFilter !== "all" ||
       bathroomFilter !== "all" ||
       statusFilter !== "all" ||
-      referralFilter !== "all",
+      referralFilter !== "all" ||
+      assignmentFilter !== "all",
   );
 
   const isClearFiltersDisabled = !hasActiveFilters;
@@ -458,6 +493,7 @@ export default function DashboardTable({
     setBathroomFilter("all");
     setStatusFilter("all");
     setReferralFilter("all");
+    setAssignmentFilter("all");
   };
 
   const handleDelete = async (id: number) => {
@@ -833,6 +869,29 @@ export default function DashboardTable({
                   <option value="referral">Referral bookings only</option>
                 </select>
               </div>
+
+              <div>
+                <label
+                  htmlFor="assignment-filter"
+                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
+                >
+                  Assignment
+                </label>
+                <select
+                  id="assignment-filter"
+                  value={assignmentFilter}
+                  onChange={(e) =>
+                    setAssignmentFilter(
+                      e.target.value as "all" | "assigned" | "unassigned",
+                    )
+                  }
+                  className={selectClassName}
+                >
+                  <option value="all">All</option>
+                  <option value="unassigned">Unassigned</option>
+                  <option value="assigned">Assigned</option>
+                </select>
+              </div>
             </div>
 
             <p className="text-sm text-slate-500">
@@ -914,7 +973,10 @@ export default function DashboardTable({
                       </span>
                     </td>
                     <td className="whitespace-nowrap p-3 text-slate-700">
-                      {formatRequestedDate(booking.booking_date)}
+                      {formatRequestedAppointment(
+                        booking.booking_date,
+                        booking.booking_time,
+                      )}
                     </td>
                     <td className="whitespace-nowrap p-3 text-slate-700">
                       {booking.bedrooms} bed / {booking.bathrooms} bath
@@ -1072,9 +1134,25 @@ export default function DashboardTable({
 
                   <div className="flex justify-between gap-4">
                     <span className="text-slate-500">Requested date</span>
-                    <span className="font-medium text-slate-800">
-                      {formatRequestedDate(booking.booking_date)}
+                    <span className="text-right font-medium text-slate-800">
+                      {formatRequestedAppointment(
+                        booking.booking_date,
+                        booking.booking_time,
+                      )}
                     </span>
+                  </div>
+
+                  <div className="border-t border-slate-100 pt-3">
+                    <span className="mb-1 block text-slate-500">Cleaner</span>
+                    {!assignedSet.has(booking.id) ? (
+                      <span className="mb-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase text-amber-800">
+                        Unassigned
+                      </span>
+                    ) : null}
+                    <BookingAssignControl
+                      bookingId={booking.id}
+                      dashboardKey={dashboardKey}
+                    />
                   </div>
 
                   <div className="flex justify-between gap-4">
