@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import CustomCursor from "./components/CustomCursor";
 import LeadCaptureTabs from "./components/LeadCaptureTabs";
 import SocialFloat from "./components/SocialFloat";
+import AuthSessionProvider from "./components/auth/AuthSessionProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -49,16 +50,17 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-    
+        <AuthSessionProvider>
           {/*   <Navbar /> */}
-        {children}
-        {/* <LeadCaptureTabs /> */}
- 
-        {/* <SocialCorner/> */}
-        {/* <WhatsAppFloat/>
+          {children}
+          {/* <LeadCaptureTabs /> */}
+
+          {/* <SocialCorner/> */}
+          {/* <WhatsAppFloat/>
          */}
-         <SocialFloat/>
-        </body>
+          <SocialFloat />
+        </AuthSessionProvider>
+      </body>
     </html>
   );
 }

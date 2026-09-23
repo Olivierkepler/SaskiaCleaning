@@ -3,6 +3,7 @@
 import { NextResponse } from "next/server";
 import { sql } from "../../lib/db";
 import { normalizeReferralCode, type ReferralCodeRow } from "../../lib/referrals";
+import { getCurrentCustomer } from "@/app/lib/customer-auth";
 
 function parseNonNegativeInteger(value: unknown): number | null {
   const parsed = Number(value);
@@ -29,6 +30,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
+    // Ignore any client-supplied customer/user ids — ownership is session-only.
     const {
       name,
       email,
@@ -112,6 +114,10 @@ export async function POST(req: Request) {
       }
     }
 
+    // Authenticated customer ownership — never trust client body.customerId.
+    const currentCustomer = await getCurrentCustomer();
+    const customerId = currentCustomer?.id ?? null;
+
     const result = await sql`
       INSERT INTO booking_requests (
         name,
@@ -129,7 +135,8 @@ export async function POST(req: Request) {
         estimate_high,
         notes,
         referral_code,
-        seen
+        seen,
+        customer_id
       )
       VALUES (
         ${name},
@@ -147,7 +154,8 @@ export async function POST(req: Request) {
         ${estimateHigh ?? null},
         ${notes || null},
         ${normalizedReferralCode},
-        false
+        false,
+        ${customerId}
       )
       RETURNING *;
     `;

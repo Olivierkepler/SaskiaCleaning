@@ -826,7 +826,10 @@ type DeepCleanAddonLabel = (typeof DEEP_CLEAN_ADDONS)[number]["label"];
 
 const DEEP_CLEAN_PREVIEW_IMAGES = {
   default: [
-    { src: "/images/deepclean/Designer(19).png", alt: "Deep cleaning service" },
+    { src: "/images/deepclean/Designer(19).png", alt: "Deep cleaning service", 
+    width: 300,
+    height: 300,
+    },
   ] satisfies StandardPreviewImage[],
   addons: {
     "Wall Trim": { src: "/images/deepclean/baseboard.png", alt: "Wall trim cleaning", width: 90, height: 90 },
@@ -2442,7 +2445,7 @@ export default function CleaningEstimator() {
   </AnimatePresence>
 
   {/* Gallery Area */}
-  <div className="relative flex min-h-0 flex-1 flex-col p-5 lg:p-6">
+  <div className="relative overflow-hidden  flex min-h-0 flex-1 flex-col p-5 lg:p-6">
     <div className="relative min-h-0 flex-1 overflow-hidden rounded-xl ">
       <AnimatePresence mode="wait">
         <DynamicServiceGallery

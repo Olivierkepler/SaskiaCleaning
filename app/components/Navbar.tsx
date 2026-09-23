@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
+import NavbarAuthControls from "@/app/components/auth/NavbarAuthControls";
 
 const navLinks = [
    { label: "Services", href: "#services" },
@@ -18,7 +19,6 @@ export default function Navbar({
 }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [isInfoOpen, setIsInfoOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 16);
@@ -38,7 +38,6 @@ export default function Navbar({
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setIsOpen(false);
-        setIsInfoOpen(false);
       }
     };
 
@@ -139,32 +138,7 @@ export default function Navbar({
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
-            {/* <div className="relative">
-              <button
-                type="button"
-                aria-label="More information"
-                aria-expanded={isInfoOpen}
-                aria-controls="info-popover-desktop"
-                onClick={() => setIsInfoOpen((open) => !open)}
-                className={`rounded-full border px-4 py-3 text-[13px] font-medium uppercase tracking-[0.14em] transition ${
-                  isScrolled
-                    ? "border-slate-200 text-slate-600 hover:border-slate-950 hover:text-slate-950"
-                    : "border-white/40 text-white hover:border-white hover:bg-white hover:text-slate-950"
-                }`}
-              >
-                Info
-              </button>
-
-              {isInfoOpen && (
-                <div
-                  id="info-popover-desktop"
-                  role="status"
-                  className="absolute top-full right-0 z-50 mt-2 w-56 rounded-xl border border-slate-200 bg-white px-4 py-3 text-xs leading-5 text-slate-600 shadow-lg"
-                >
-                  More information coming soon.
-                </div>
-              )}
-            </div> */}
+            <NavbarAuthControls isScrolled={isScrolled} variant="desktop" />
 
             <a
               href="tel:+18573528554"
@@ -281,26 +255,11 @@ export default function Navbar({
                   </div>
 
                   <div className="grid gap-3">
-                    <button
-                      type="button"
-                      aria-label="More information"
-                      aria-expanded={isInfoOpen}
-                      aria-controls="info-popover-mobile"
-                      onClick={() => setIsInfoOpen((open) => !open)}
-                      className="flex items-center justify-center rounded-full border border-slate-200 px-6 py-4 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-600 transition duration-300 hover:border-slate-950 hover:text-slate-950"
-                    >
-                      Info
-                    </button>
-
-                    {isInfoOpen && (
-                      <p
-                        id="info-popover-mobile"
-                        role="status"
-                        className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-600"
-                      >
-                        More information coming soon.
-                      </p>
-                    )}
+                    <NavbarAuthControls
+                      isScrolled={isScrolled}
+                      variant="mobile"
+                      onNavigate={() => setIsOpen(false)}
+                    />
 
                     <a
                       href="#quote"
