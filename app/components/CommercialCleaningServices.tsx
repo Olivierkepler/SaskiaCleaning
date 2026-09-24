@@ -12,6 +12,7 @@ import {
   Droplets,
   LucideIcon,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Service = {
   id: string;
@@ -48,17 +49,37 @@ function scrollToQuote() {
 }
 
 export default function CommercialCleaningServices({
-  title = "Commercial Cleaning Services",
-  tagline = "We Keep Your Business Sparkling Clean",
-  description = "Our experienced and reliable team specializes in commercial cleaning for offices, restaurants, schools, and more — delivering spotless results every time.",
+  title,
+  tagline,
+  description,
   imageSrc = "/images/kitchen.jpg",
-  imageAlt = "Clean commercial restaurant interior",
-  services = DEFAULT_SERVICES,
-  ctaLabel = "Start Cleaning",
+  imageAlt,
+  services,
+  ctaLabel,
   onCtaClick,
   onServiceClick,
 }: CommercialCleaningServicesProps) {
+  const t = useTranslations("home");
   const prefersReducedMotion = useReducedMotion();
+  const resolvedTitle = title ?? t("commercialServicesTitle");
+  const resolvedTagline = tagline ?? t("commercialServicesTagline");
+  const resolvedDescription = description ?? t("commercialServicesBody");
+  const resolvedImageAlt = imageAlt ?? t("commercialImageAlt");
+  const resolvedCtaLabel = ctaLabel ?? t("startCleaning");
+  const labelById: Record<string, string> = {
+    office: t("officeCleaning"),
+    restaurant: t("restaurantCleaning"),
+    "post-construction": t("postConstructionCleaning"),
+    "floor-care": t("floorCareMaintenance"),
+    building: t("buildingMaintenance"),
+    deep: t("deepCleaningService"),
+  };
+  const resolvedServices =
+    services ??
+    DEFAULT_SERVICES.map((s) => ({
+      ...s,
+      label: labelById[s.id] ?? s.label,
+    }));
   const ease = [0.16, 1, 0.3, 1] as const;
 
   const handleCtaClick = () => {
@@ -123,21 +144,21 @@ export default function CommercialCleaningServices({
             className="font-heading text-[clamp(2.7rem,3.5vw,5.2rem)] font-semibold leading-[0.9] tracking-[-0.055em] text-slate-950"
             variants={fadeUp}
           >
-            {title}
+            {resolvedTitle}
           </motion.h2>
 
           <motion.p
             className="mt-5 text-2xl font-light italic tracking-[-0.03em] text-sky-500 sm:text-3xl"
             variants={fadeUp}
           >
-            “{tagline}”
+            “{resolvedTagline}”
           </motion.p>
 
           <motion.p
             className="mt-6 max-w-xl text-[15px] leading-8 text-slate-500 sm:text-lg"
             variants={fadeUp}
           >
-            {description}
+            {resolvedDescription}
           </motion.p>
 
           <motion.ul
@@ -145,7 +166,7 @@ export default function CommercialCleaningServices({
             className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2"
             variants={sectionVariants}
           >
-            {services.map((service) => {
+            {resolvedServices.map((service) => {
               const Icon = service.icon;
 
               return (
@@ -178,7 +199,7 @@ export default function CommercialCleaningServices({
               whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
               className="rounded-full bg-sky-500 px-7 py-4 text-[10px] font-semibold uppercase tracking-[0.18em] text-white shadow-[0_12px_32px_rgba(14,165,233,0.24)] transition hover:bg-slate-950"
             >
-              {ctaLabel}
+              {resolvedCtaLabel}
             </motion.button>
           </motion.div>
         </div>
@@ -196,7 +217,7 @@ export default function CommercialCleaningServices({
           >
             <Image
               src={imageSrc}
-              alt={imageAlt}
+              alt={resolvedImageAlt}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
               className="object-cover"

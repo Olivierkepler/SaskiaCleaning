@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface CounterField {
   label: string;
@@ -26,6 +27,7 @@ function Counter({
   max,
   onChange,
 }: CounterField & { onChange: (v: number) => void }) {
+  const t = useTranslations("hero");
   const atMin = value <= min;
   const atMax = value >= max;
 
@@ -33,7 +35,7 @@ function Counter({
     <div className="grid h-[48px] w-full grid-cols-[42px_1fr_42px] overflow-hidden rounded-md border border-white/30 bg-white shadow-sm transition-colors focus-within:border-sky-400 focus-within:ring-2 focus-within:ring-sky-100 sm:h-[54px] sm:grid-cols-[48px_1fr_48px] sm:w-auto sm:min-w-[178px]">
       <button
         type="button"
-        aria-label={`Decrease ${label}`}
+        aria-label={t("decrease", { label })}
         aria-disabled={atMin}
         onClick={() => {
           if (atMin) return;
@@ -61,7 +63,7 @@ function Counter({
 
       <button
         type="button"
-        aria-label={`Increase ${label}`}
+        aria-label={t("increase", { label })}
         aria-disabled={atMax}
         onClick={() => {
           if (atMax) return;
@@ -93,6 +95,7 @@ const IconCheck = () => (
 );
 
 export default function HeroBooking() {
+  const t = useTranslations("hero");
   const [form, setForm] = useState<FormState>({
     name: "",
     email: "",
@@ -134,7 +137,7 @@ export default function HeroBooking() {
       setTimeout(() => setStatus("idle"), 3500);
     } catch (error) {
       console.error(error);
-      alert("Something went wrong. Please try again.");
+      alert(t("errorAlert"));
       setStatus("idle");
     }
   };
@@ -163,17 +166,17 @@ export default function HeroBooking() {
            lg:text-5xl
          "
         >
-          Professional Home Cleaning You Can Trust
+          {t("headline")}
         </h1>
 
         <p className="text-[16px] font-medium uppercase tracking-[0.09em] text-white/90 sm:text-[18px]">
-          Get a free estimate in under a minute.
+          {t("subhead")}
         </p>
 
         <div className="grid grid-cols-1 gap-2.5 md:grid-cols-[1fr_auto_auto] md:items-center md:gap-3">
           <input
             type="text"
-            placeholder="Full name"
+            placeholder={t("fullName")}
             autoComplete="given-name"
             required
             value={form.name}
@@ -183,7 +186,7 @@ export default function HeroBooking() {
 
 
           <Counter
-            label="Bedrooms"
+            label={t("bedrooms")}
             value={form.bedrooms}
             min={1}
             max={8}
@@ -191,7 +194,7 @@ export default function HeroBooking() {
           />
 
           <Counter
-            label="Bathrooms"
+            label={t("bathrooms")}
             value={form.bathrooms}
             min={1}
             max={6}
@@ -202,7 +205,7 @@ export default function HeroBooking() {
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
           <input
             type="email"
-            placeholder="Email address"
+            placeholder={t("email")}
             autoComplete="email"
             required
             value={form.email}
@@ -212,7 +215,7 @@ export default function HeroBooking() {
 
           <input
             type="tel"
-            placeholder="Phone number"
+            placeholder={t("phoneNumber")}
             autoComplete="tel"
             value={form.mobile}
             onChange={(e) => setField("mobile", e.target.value)}
@@ -243,23 +246,23 @@ export default function HeroBooking() {
               <svg className="animate-spin" width={18} height={18} viewBox="0 0 18 18" fill="none" stroke="white" strokeWidth={2} strokeLinecap="round">
                 <path d="M9 2a7 7 0 1 1-4.95 2.05" />
               </svg>
-              Sending your request...
+              {t("submitting")}
             </>
           ) : isSuccess ? (
             <div className="flex items-center gap-2">
               <IconCheck />
-              Thanks! We'll contact you soon.
+              {t("success")}
             </div>
           ) : (
             <>
-              <span>Get My Free Estimate</span>
+              <span>{t("submit")}</span>
               <IconArrow />
             </>
           )}
         </button>
 
         <p className="text-center text-sm font-medium text-white/80">
-          No obligation • Licensed & insured • Free estimates
+          {t("trustLine")}
         </p>
       </form>
     </div>

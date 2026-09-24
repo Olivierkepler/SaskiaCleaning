@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 type NavbarAuthControlsProps = {
   isScrolled: boolean;
@@ -15,6 +16,7 @@ export default function NavbarAuthControls({
   variant = "desktop",
 }: NavbarAuthControlsProps) {
   const { data: session, status } = useSession();
+  const t = useTranslations("navigation");
 
   if (status === "loading") {
     return (
@@ -36,7 +38,7 @@ export default function NavbarAuthControls({
   }
 
   if (session?.user) {
-    const label = session.user.name?.split(/\s+/)[0] || "Account";
+    const label = session.user.name?.split(/\s+/)[0] || t("account");
 
     if (variant === "mobile") {
       return (
@@ -45,7 +47,7 @@ export default function NavbarAuthControls({
           onClick={onNavigate}
           className="flex items-center justify-center rounded-full border border-slate-200 px-6 py-4 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-600 transition duration-300 hover:border-slate-950 hover:text-slate-950"
         >
-          Account
+          {t("account")}
         </Link>
       );
     }
@@ -58,9 +60,9 @@ export default function NavbarAuthControls({
             ? "border-slate-200 text-slate-600 hover:border-slate-950 hover:text-slate-950"
             : "border-white/40 text-white hover:border-white hover:bg-white hover:text-slate-950"
         }`}
-        aria-label={`Open account for ${label}`}
+        aria-label={t("openAccountFor", { name: label })}
       >
-        Account
+        {t("account")}
       </Link>
     );
   }
@@ -72,7 +74,7 @@ export default function NavbarAuthControls({
         onClick={onNavigate}
         className="flex items-center justify-center rounded-full border border-slate-200 px-6 py-4 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-600 transition duration-300 hover:border-slate-950 hover:text-slate-950"
       >
-        Sign In
+        {t("signIn")}
       </Link>
     );
   }
@@ -86,7 +88,7 @@ export default function NavbarAuthControls({
           : "border-white/40 text-white hover:border-white hover:bg-white hover:text-slate-950"
       }`}
     >
-      Sign In
+      {t("signIn")}
     </Link>
   );
 }

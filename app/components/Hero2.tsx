@@ -7,6 +7,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import HeroQuoteForm from "./HeroQuoteForm";
 import CleaningOrbit from "./CleaningOrbit";
+import { useTranslations } from "next-intl";
 
 const heroImages = [
   "/images/house.jpg",
@@ -15,6 +16,7 @@ const heroImages = [
 ] as const;
 
 export default function Hero() {
+  const t = useTranslations("hero");
   const [activeImage, setActiveImage] = useState(0);
 
   useEffect(() => {
@@ -39,7 +41,7 @@ export default function Hero() {
         >
           <Image
             src={heroImages[activeImage]}
-            alt="Modern spotless home interior"
+            alt={t("bgAlt")}
             fill
             priority={activeImage === 0}
             sizes="100vw"
@@ -122,7 +124,7 @@ export default function Hero() {
           <button
             key={index}
             type="button"
-            aria-label={`Go to background image ${index + 1}`}
+            aria-label={t("goToImage", { n: index + 1 })}
             onClick={() => setActiveImage(index)}
             className={`h-2 rounded-full transition-all duration-500 ${
               activeImage === index

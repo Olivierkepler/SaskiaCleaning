@@ -1,10 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function Footer() {
+  const t = useTranslations("footer");
+
   return (
     <footer data-native-cursor className="relative overflow-hidden bg-white px-6 pt-40 pb-10 sm:px-8 lg:px-16 lg:pt-44">
-      
-      {/* TOP CURVE */}
       <div className="absolute top-0 left-0 z-[2] w-full overflow-hidden leading-[0]">
         <svg
           className="relative block h-[120px] w-[calc(100%+1.3px)]"
@@ -19,25 +22,11 @@ export default function Footer() {
         </svg>
       </div>
 
-      {/* Ambient Glow */}
       <div className="pointer-events-none absolute left-1/2 top-0 h-[28rem] w-[70rem] -translate-x-1/2 rounded-full bg-sky-100/50 blur-3xl" />
 
       <div className="relative mx-auto max-w-7xl">
-        
-        {/* Top Content */}
         <div className="mb-20 grid gap-14 lg:grid-cols-12">
-          
-          {/* Brand */}
           <div className="max-w-md lg:col-span-5">
-            
-            {/* <div className="mb-5 flex items-center gap-3">
-              <span className="h-px w-6 bg-sky-300" />
-
-              <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-sky-500">
-                Saskia Cleaning Services
-              </p>
-            </div> */}
-
             <h3
               className="
                 font-heading
@@ -48,32 +37,23 @@ export default function Footer() {
                 text-slate-950
               "
             >
-              A consistent standard,{" "}
+              {t("headline")}{" "}
               <span className="font-light italic text-sky-500">
-                delivered with care.
+                {t("headlineAccent")}
               </span>
             </h3>
 
             <p className="mt-6 text-[15px] leading-8 text-slate-500">
-              Deep cleaning and routine maintenance for residential and
-              commercial spaces. Every visit is handled with precision,
-              reliability, and respect for your environment.
+              {t("body")}
             </p>
           </div>
 
-          {/* Right Columns */}
           <div className="grid gap-10 sm:grid-cols-3 lg:col-span-7">
-            
-            {/* Contact */}
-            <FooterColumn title="Contact">
-              <FooterLink href="tel:+18573528554">
-                857 352 8554
-              </FooterLink>
-
+            <FooterColumn title={t("contact")}>
+              <FooterLink href="tel:+18573528554">857 352 8554</FooterLink>
               <FooterLink href="mailto:cleaningsaskia@gmail.com">
                 cleaningsaskia@gmail.com
               </FooterLink>
-
               <FooterLink
                 href="https://saskiaservices.com"
                 target="_blank"
@@ -83,58 +63,53 @@ export default function Footer() {
               </FooterLink>
             </FooterColumn>
 
-            {/* Services */}
-            <FooterColumn title="Services">
-              <FooterText>Deep Cleaning</FooterText>
-              <FooterText>Recurring Service</FooterText>
-              <FooterText>Move In / Move Out</FooterText>
-              <FooterText>Commercial Cleaning</FooterText>
+            <FooterColumn title={t("services")}>
+              <FooterText>{t("deepCleaning")}</FooterText>
+              <FooterText>{t("recurringService")}</FooterText>
+              <FooterText>{t("moveInOut")}</FooterText>
+              <FooterText>{t("commercialCleaning")}</FooterText>
             </FooterColumn>
 
-            {/* Area */}
-            <FooterColumn title="Area">
-              <FooterText>Boston</FooterText>
-              <FooterText>Massachusetts</FooterText>
-              <FooterText>United States</FooterText>
+            <FooterColumn title={t("area")}>
+              <FooterText>{t("boston")}</FooterText>
+              <FooterText>{t("massachusetts")}</FooterText>
+              <FooterText>{t("unitedStates")}</FooterText>
             </FooterColumn>
-
           </div>
         </div>
 
-        {/* Bottom */}
-      {/* Bottom */}
-<div className="flex flex-col items-center justify-between gap-6 border-t border-slate-200 pt-8 md:flex-row">
-  <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-slate-400">
-    © 2026 Saskia Cleaning Services
-  </p>
+        <div className="flex flex-col items-center justify-between gap-6 border-t border-slate-200 pt-8 md:flex-row">
+          <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-slate-400">
+            {t("copyright")}
+          </p>
 
-  <div className="flex flex-wrap items-center justify-center gap-6">
-    <Link
-      href="/privacy-policy"
-      className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
-    >
-      Privacy Policy
-    </Link>
+          <div className="flex flex-wrap items-center justify-center gap-6">
+            <Link
+              href="/privacy-policy"
+              className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
+            >
+              {t("privacy")}
+            </Link>
 
-    <Link
-      href="/terms-and-conditions"
-      className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
-    >
-      Terms & Conditions
-    </Link>
+            <Link
+              href="/terms-and-conditions"
+              className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
+            >
+              {t("terms")}
+            </Link>
 
-    <Link
-      href="/referrals"
-      className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
-    >
-      Referral Rewards
-    </Link>
+            <Link
+              href="/referrals"
+              className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
+            >
+              {t("referralRewards")}
+            </Link>
 
-    <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
-      Boston Area
-    </span>
-  </div>
-</div>
+            <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
+              {t("bostonArea")}
+            </span>
+          </div>
+        </div>
       </div>
     </footer>
   );
@@ -149,11 +124,9 @@ function FooterColumn({
 }) {
   return (
     <div className="flex flex-col gap-4">
-      
       <span className="mb-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-950">
         {title}
       </span>
-
       {children}
     </div>
   );
@@ -177,14 +150,6 @@ function FooterLink({
   );
 }
 
-function FooterText({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return (
-    <span className="text-sm leading-6 text-slate-500">
-      {children}
-    </span>
-  );
+function FooterText({ children }: { children: React.ReactNode }) {
+  return <span className="text-sm leading-6 text-slate-500">{children}</span>;
 }

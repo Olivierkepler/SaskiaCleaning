@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 type GoogleSignInButtonProps = {
   callbackUrl?: string;
@@ -41,6 +42,7 @@ export default function GoogleSignInButton({
   callbackUrl = "/account",
   className = "",
 }: GoogleSignInButtonProps) {
+  const t = useTranslations("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -53,7 +55,7 @@ export default function GoogleSignInButton({
     try {
       await signIn("google", { callbackUrl });
     } catch {
-      setError("We couldn't sign you in with Google. Please try again.");
+      setError(t("errorDefault"));
       setLoading(false);
     }
   }
@@ -64,11 +66,11 @@ export default function GoogleSignInButton({
         type="button"
         onClick={handleClick}
         disabled={loading}
-        aria-label="Continue with Google"
+        aria-label={t("continueWithGoogle")}
         className="flex w-full items-center justify-center gap-3 rounded-full border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:scale-[1.02] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
       >
         <GoogleIcon />
-        <span>{loading ? "Connecting…" : "Continue with Google"}</span>
+        <span>{loading ? t("connecting") : t("continueWithGoogle")}</span>
       </button>
 
       {error ? (

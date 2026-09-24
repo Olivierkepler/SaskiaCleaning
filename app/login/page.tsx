@@ -2,34 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 
+import { getTranslations } from "next-intl/server";
+
 import { auth } from "@/auth";
 import GoogleSignInButton from "@/app/components/auth/GoogleSignInButton";
 import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
-
-const ERROR_MESSAGES: Record<string, string> = {
-  AccessDenied: "We couldn't sign you in with Google. Please try again.",
-
-  Configuration:
-    "Sign-in is temporarily unavailable. Please try again later.",
-
-  OAuthAccountNotLinked:
-    "We couldn't sign you in with Google. Please try again.",
-
-  OAuthCallback:
-    "We couldn't sign you in with Google. Please try again.",
-
-  OAuthSignin:
-    "We couldn't sign you in with Google. Please try again.",
-
-  Callback:
-    "We couldn't sign you in with Google. Please try again.",
-
-  Default:
-    "We couldn't sign you in with Google. Please try again.",
-
-  unverified_email:
-    "Your Google account email must be verified before you can sign in.",
-};
 
 type LoginPageProps = {
   searchParams: Promise<{
@@ -41,18 +18,23 @@ export default async function LoginPage({
   searchParams,
 }: LoginPageProps) {
   const session = await auth();
+  const t = await getTranslations("login");
 
   if (session?.user?.id) {
     redirect("/account");
   }
 
   const params = await searchParams;
-
   const errorKey = params.error ?? "";
 
   const errorMessage =
-    errorKey &&
-    (ERROR_MESSAGES[errorKey] || ERROR_MESSAGES.Default);
+    errorKey === "Configuration"
+      ? t("errorConfiguration")
+      : errorKey === "unverified_email"
+        ? t("errorUnverified")
+        : errorKey
+          ? t("errorAccessDenied")
+          : null;
 
   return (
     <main className="min-h-screen bg-[#ffffff] p-3 sm:p-5 lg:p-7">
@@ -132,7 +114,7 @@ export default async function LoginPage({
             {/* Mobile brand */}
             <Link
               href="/"
-              aria-label="Go to Saskia Cleaning home"
+              aria-label={t("homeAria")}
               className="
                 mb-10
                 inline-block
@@ -148,7 +130,7 @@ export default async function LoginPage({
               </p>
 
               <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.25em] text-slate-400">
-                Cleaning Services
+                {t("brandTagline")}
               </p>
             </Link>
 
@@ -191,7 +173,7 @@ export default async function LoginPage({
                 "
               >
                 <span aria-hidden="true">←</span>
-                Back to home
+                {t("backToHome")}
               </Link>
             </div>
 
@@ -205,7 +187,7 @@ export default async function LoginPage({
                   sm:text-[42px]
                 "
               >
-                Sign in to your account
+                {t("signInTitle")}
               </h1>
 
               <p
@@ -217,8 +199,7 @@ export default async function LoginPage({
                   text-slate-600
                 "
               >
-                Manage your bookings, referrals, rewards, profile, and
-                cleaning services.
+                {t("description")}
               </p>
             </div>
 
@@ -259,7 +240,7 @@ export default async function LoginPage({
                 <div className="h-px flex-1 bg-slate-300/70" />
 
                 <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-                  Secure sign in
+                  {t("secureSignIn")}
                 </span>
 
                 <div className="h-px flex-1 bg-slate-300/70" />
@@ -276,8 +257,7 @@ export default async function LoginPage({
                   text-slate-500
                 "
               >
-                We use Google to verify your identity securely. Saskia never
-                sees or stores your Google password.
+                {t("privacyNote")}
               </p>
             </div>
 

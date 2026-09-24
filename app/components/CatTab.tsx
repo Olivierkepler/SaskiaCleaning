@@ -19,6 +19,8 @@ import {
 } from "@/app/lib/booking-prefill";
 import { formatBookingTime } from "@/app/lib/scheduling-pure";
 import { IoChatbubblesOutline } from "react-icons/io5";
+import { useLocale, useTranslations } from "next-intl";
+import { formatUsd, intlLocale } from "@/app/lib/i18n/format";
 const K = {
   blue:         "#38BDF8",
   blueHover:    "#0EA5E9",
@@ -102,8 +104,13 @@ const MONTHS_SHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct
 const DOW          = ["Su","Mo","Tu","We","Th","Fr","Sa"];
 const DOW_SHORT    = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
 
-function formatDate(d: Date) {
-  return `${DOW_SHORT[d.getDay()]} ${MONTHS_SHORT[d.getMonth()]} ${d.getDate()}`;
+function formatDate(d: Date, locale = "en") {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
+    timeZone: "America/New_York",
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  }).format(d);
 }
 
 function cx(...classes: Array<string | false | null | undefined>) {
@@ -458,15 +465,18 @@ function Chip({ label, selected, onClick }: { label: string; selected?: boolean;
 // ── Addon ─────────────────────────────────────────────────────────────────────
 function Addon({
   label,
+  displayLabel,
   image,
   selected,
   onClick,
 }: {
   label: string;
+  displayLabel?: string;
   image: string;
   selected?: boolean;
   onClick: () => void;
 }) {
+  const shown = displayLabel ?? label;
     return (
       <motion.button
         type="button"
@@ -483,7 +493,7 @@ function Addon({
         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-neutral-200 bg-white">
           <Image
             src={image}
-            alt={label}
+            alt={shown}
             width={48}
             height={48}
             className="h-full w-full object-cover"
@@ -506,7 +516,7 @@ function Addon({
         </div>
 
         <span className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${selected ? "text-sky-700" : "text-slate-500"}`}>
-          {label}
+          {shown}
         </span>
       </motion.button>
     );
@@ -526,18 +536,20 @@ function ChipGroup({
   selectedIndex,
   onSelect,
   className = "grid grid-cols-2 gap-2 sm:flex sm:flex-wrap",
+  getDisplayLabel,
 }: {
   options: readonly string[];
   selectedIndex: number;
   onSelect: (index: number) => void;
   className?: string;
+  getDisplayLabel?: (option: string) => string;
 }) {
   return (
     <div className={className}>
       {options.map((option, index) => (
         <Chip
           key={option}
-          label={option}
+          label={getDisplayLabel ? getDisplayLabel(option) : option}
           selected={selectedIndex === index}
           onClick={() => onSelect(index)}
         />
@@ -550,10 +562,12 @@ function AddonGrid<L extends string>({
   addons,
   selectedAddons,
   onToggle,
+  getDisplayLabel,
 }: {
   addons: readonly PricedAddon<L>[];
   selectedAddons: Set<string>;
   onToggle: (label: L) => void;
+  getDisplayLabel?: (label: string) => string;
 }) {
   return (
     <div className="grid gap-2 sm:grid-cols-2">
@@ -561,6 +575,7 @@ function AddonGrid<L extends string>({
         <Addon
           key={addon.label}
           label={addon.label}
+          displayLabel={getDisplayLabel?.(addon.label)}
           image={addon.image}
           selected={selectedAddons.has(addon.label)}
           onClick={() => onToggle(addon.label)}
@@ -570,8 +585,8 @@ function AddonGrid<L extends string>({
   );
 }
 
-function PricePill({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
-  const display = "$" + value.toLocaleString("en-US");
+function PricePill({ label, value, accent, locale = "en" }: { label: string; value: number; accent?: boolean; locale?: string }) {
+  const display = formatUsd(value, locale);
   return (
     <div className="flex flex-col items-center gap-1">
       <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">{label}</span>
@@ -961,6 +976,34 @@ function buildCommercialGalleryImages(selectedAddons: Set<string>): StandardPrev
   return images;
 }
 
+
+const ADDON_DISPLAY_KEYS: Record<string, string> = {
+  "Inside fridge": "insideFridge",
+  "Inside oven": "insideOven",
+  "Laundry fold": "laundryFold",
+  Windows: "windows",
+  "Wall Trim": "wallTrim",
+  "Inside cabinets": "insideCabinets",
+  "Wall scrub": "wallScrub",
+  "Carpet steam": "carpetSteam",
+  "Patch & paint": "patchPaint",
+  "Window wash": "windowWash",
+  "Garage clean": "garageClean",
+  "Floor wax": "floorWax",
+  "Pressure wash": "pressureWash",
+  "Window ext.": "windowExt",
+  Sanitize: "sanitize",
+};
+
+const FREQ_DISPLAY_KEYS: Record<string, string> = {
+  "One-time": "oneTime",
+  "Bi-weekly": "biWeekly",
+  Weekly: "weekly",
+  Monthly: "monthly",
+  Daily: "daily",
+  "3x/week": "threeXWeek",
+};
+
 // ── Service panels ─────────────────────────────────────────────────────────────
 function StandardPanel({
     onPrice,
@@ -983,6 +1026,15 @@ function StandardPanel({
     onBedIdxChange: (index: number) => void;
     onBathIdxChange: (index: number) => void;
   }) {
+  const t = useTranslations("booking");
+  const translateAddon = (label: string) => {
+    const key = ADDON_DISPLAY_KEYS[label];
+    return key ? t(key as "insideFridge") : label;
+  };
+  const translateFreq = (label: string) => {
+    const key = FREQ_DISPLAY_KEYS[label];
+    return key ? t(key as "oneTime") : label;
+  };
   const FREQS = [
     { label: "One-time",  discount: 0  },
     { label: "Bi-weekly", discount: 10 },
@@ -994,7 +1046,7 @@ function StandardPanel({
   );
 
 
-  const BEDS = ["Studio", "1 room", "2 rooms", "3 rooms", "4+ rooms"];
+  const BEDS = [t("studio"), t("oneRoom"), t("twoRooms"), t("threeRooms"), t("fourPlusRooms")];
 
   const toggle = useCallback(
     (label: StandardAddonLabel) => {
@@ -1031,20 +1083,20 @@ function StandardPanel({
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <CollapsibleGroup title="Bedrooms" defaultOpen>
+      <CollapsibleGroup title={t("bedrooms")} defaultOpen>
 <ChipGroup options={BEDS} selectedIndex={bedIdx} onSelect={onBedIdxChange} />
       </CollapsibleGroup>
   
-      <CollapsibleGroup title="Bathrooms" defaultOpen>
+      <CollapsibleGroup title={t("bathrooms")} defaultOpen>
 <ChipGroup options={BATH_VALS.map(String)} selectedIndex={bathIdx} onSelect={onBathIdxChange} className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap" />
       </CollapsibleGroup>
   
-      <CollapsibleGroup title="Frequency">
-<ChipGroup options={FREQS.map((f) => f.label)} selectedIndex={freqIdx} onSelect={(index) => onFrequencyChange(FREQS[index].label)} />
+      <CollapsibleGroup title={t("frequency")}>
+<ChipGroup options={FREQS.map((f) => f.label)} selectedIndex={freqIdx} onSelect={(index) => onFrequencyChange(FREQS[index].label)} getDisplayLabel={translateFreq} />
       </CollapsibleGroup>
   
-      <CollapsibleGroup title="Add-ons">
-<AddonGrid addons={STANDARD_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} />
+      <CollapsibleGroup title={t("addOns")}>
+<AddonGrid addons={STANDARD_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} getDisplayLabel={translateAddon} />
       </CollapsibleGroup>
     </div>
   );
@@ -1059,6 +1111,11 @@ function DeepCleanPanel({
   selectedAddons: Set<string>;
   onSelectedAddonsChange: (addons: Set<string>) => void;
 }) {
+  const t = useTranslations("booking");
+  const translateAddon = (label: string) => {
+    const key = ADDON_DISPLAY_KEYS[label];
+    return key ? t(key as "insideFridge") : label;
+  };
   const [sizeIdx, setSize]   = useState(1);
   const [condIdx, setCond]   = useState(0);
   const SIZES  = ["Studio","1–2 bed","3–4 bed","5+ bed"];
@@ -1087,8 +1144,8 @@ function DeepCleanPanel({
 <ChipGroup options={CONDS} selectedIndex={condIdx} onSelect={setCond} className="grid grid-cols-1 gap-2 sm:grid-cols-3" />
       </CollapsibleGroup>
   
-      <CollapsibleGroup title="Deep clean extras">
-<AddonGrid addons={DEEP_CLEAN_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} />
+      <CollapsibleGroup title={t("deepCleanExtras")}>
+<AddonGrid addons={DEEP_CLEAN_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} getDisplayLabel={translateAddon} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="What's included">
@@ -1118,6 +1175,11 @@ function MoveOutPanel({
   selectedAddons: Set<string>;
   onSelectedAddonsChange: (addons: Set<string>) => void;
 }) {
+  const t = useTranslations("booking");
+  const translateAddon = (label: string) => {
+    const key = ADDON_DISPLAY_KEYS[label];
+    return key ? t(key as "insideFridge") : label;
+  };
   const [typeIdx, setType]   = useState(0);
   const [sqftIdx, setSqft]   = useState(1);
   const TYPES  = ["Apartment","Condo","House","Studio"];
@@ -1146,8 +1208,8 @@ function MoveOutPanel({
 <ChipGroup options={SQFTS} selectedIndex={sqftIdx} onSelect={setSqft} />
       </CollapsibleGroup>
   
-      <CollapsibleGroup title="Move-out extras">
-<AddonGrid addons={MOVE_OUT_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} />
+      <CollapsibleGroup title={t("moveOutExtras")}>
+<AddonGrid addons={MOVE_OUT_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} getDisplayLabel={translateAddon} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Deposit Protection">
@@ -1179,6 +1241,15 @@ function CommercialPanel({
   selectedAddons: Set<string>;
   onSelectedAddonsChange: (addons: Set<string>) => void;
 }) {
+  const t = useTranslations("booking");
+  const translateAddon = (label: string) => {
+    const key = ADDON_DISPLAY_KEYS[label];
+    return key ? t(key as "insideFridge") : label;
+  };
+  const translateFreq = (label: string) => {
+    const key = FREQ_DISPLAY_KEYS[label];
+    return key ? t(key as "oneTime") : label;
+  };
     const [typeIdx, setType] = useState(0);
     const [sqftIdx, setSqft] = useState(0);
     const [schedIdx, setSched] = useState(3);
@@ -1217,12 +1288,12 @@ function CommercialPanel({
 <ChipGroup options={SQFTS} selectedIndex={sqftIdx} onSelect={setSqft} />
       </CollapsibleGroup>
   
-      <CollapsibleGroup title="Schedule" defaultOpen>
-<ChipGroup options={SCHEDS.map((s) => s.label)} selectedIndex={schedIdx} onSelect={setSched} />
+      <CollapsibleGroup title={t("schedule")} defaultOpen>
+<ChipGroup options={SCHEDS.map((s) => s.label)} selectedIndex={schedIdx} onSelect={setSched} getDisplayLabel={translateFreq} />
       </CollapsibleGroup>
   
-      <CollapsibleGroup title="Add-ons">
-<AddonGrid addons={COMMERCIAL_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} />
+      <CollapsibleGroup title={t("addOns")}>
+<AddonGrid addons={COMMERCIAL_ADDONS} selectedAddons={selectedAddons} onToggle={toggle} getDisplayLabel={translateAddon} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Timing">
@@ -1308,6 +1379,9 @@ function BookingModal({
   onSelectSavedAddress: (addressId: string) => void;
   onSelectManualLocation: () => void;
 }) {
+  const tBooking = useTranslations("booking");
+  const tEstimate = useTranslations("estimate");
+  const locale = useLocale();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -1410,7 +1484,7 @@ function BookingModal({
                     htmlFor="booking-name"
                     className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
                   >
-                    Full name
+                    {tBooking("fullName")}
                   </label>
                   <input
                     id="booking-name"
@@ -1419,7 +1493,7 @@ function BookingModal({
                     value={contactName}
                     onChange={(event) => onNameChange(event.target.value)}
                     className={bookingInputClassName}
-                    placeholder="Your name"
+                    placeholder={tBooking("yourName")}
                     autoComplete="name"
                   />
                 </div>
@@ -1429,7 +1503,7 @@ function BookingModal({
                     htmlFor="booking-email"
                     className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
                   >
-                    Email
+                    {tBooking("email")}
                   </label>
                   <input
                     id="booking-email"
@@ -1452,7 +1526,7 @@ function BookingModal({
                     htmlFor="booking-mobile"
                     className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
                   >
-                    Mobile
+                    {tBooking("mobile")}
                   </label>
                   <input
                     id="booking-mobile"
@@ -1552,7 +1626,7 @@ function BookingModal({
                     Appointment time
                   </span>
                   <p className="mt-1 font-medium text-slate-800">
-                    {bookingTimeLabel ?? "Select a time above"}
+                    {bookingTimeLabel ?? tBooking("selectTimeAbove")}
                   </p>
                 </div>
 
@@ -1669,7 +1743,7 @@ function BookingModal({
                     disabled={bookingStatus === "loading"}
                     className="cursor-pointer rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    Cancel
+                    {tBooking("cancel")}
                   </button>
                   <button
                     type="submit"
@@ -1677,8 +1751,8 @@ function BookingModal({
                     className="cursor-pointer rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(56,189,248,.35)] transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {bookingStatus === "loading"
-                      ? "Submitting..."
-                      : "Submit request"}
+                      ? tBooking("submitting")
+                      : tBooking("submitRequest")}
                   </button>
                 </div>
               </form>
@@ -1697,6 +1771,9 @@ export default function CleaningEstimator({
 }: {
   bookingPrefill?: BookingPrefill | null;
 } = {}) {
+  const t = useTranslations("booking");
+  const tEstimate = useTranslations("estimate");
+  const locale = useLocale();
   const [serviceIdx, setServiceIdx] = useState<ServiceIndex>(0);
   const [prices,     setPrices]     = useState({ low: 144, mid: 180, high: 216 });
 
@@ -2035,7 +2112,7 @@ export default function CleaningEstimator({
     isCommercialDefaultGalleryOnly,
   ]);
 
-  const mobileSearchSummary = `${locCity}, ${locState} · ${date ? formatDate(date) : "Select date"} · ${optionsOpen ? "Details open" : "Customize"}`;
+  const mobileSearchSummary = `${locCity}, ${locState} · ${date ? formatDate(date, locale) : t("selectDate")} · ${optionsOpen ? t("detailsOpen") : t("customize")}`;
 
   useEffect(() => {
     const prefilledReferralCode = parseReferralCodeFromSearchParams(
@@ -2580,8 +2657,8 @@ export default function CleaningEstimator({
                   >
                     <SF
                       icon={<Calendar size={18} />}
-                      label="Date"
-                      value={date ? formatDate(date) : "Select date"}
+                      label={t("date")}
+                      value={date ? formatDate(date, locale) : t("selectDate")}
                       active={dateOpen}
                       onClick={handleDateField}
                       placeholder={!date}
@@ -2626,7 +2703,7 @@ export default function CleaningEstimator({
                  
                     >
                       <SlidersHorizontal size={15} strokeWidth={2.25} />
-                      <span>Customize</span>
+                      <span>{t("customize")}</span>
                       <motion.div
                         animate={{ rotate: optionsOpen ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
@@ -2663,7 +2740,7 @@ export default function CleaningEstimator({
             {date ? (
               <div className="border-t border-slate-100 px-3 py-3 sm:px-5">
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Select a time
+                  {t("selectATime")}
                 </p>
                 {estimatedDurationMinutes != null ? (
                   <p className="mb-2 text-sm text-slate-600">
@@ -2685,12 +2762,12 @@ export default function CleaningEstimator({
                   </p>
                 ) : null}
                 {slotsLoading ? (
-                  <p className="text-sm text-slate-500">Loading available times…</p>
+                  <p className="text-sm text-slate-500">{t("loadingSlots")}</p>
                 ) : slotsError ? (
                   <p className="text-sm font-medium text-red-600">{slotsError}</p>
                 ) : availableSlots.length === 0 ? (
                   <p className="text-sm text-slate-600">
-                    No times available for this date. Choose another date.
+                    {t("noTimes")}
                   </p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
@@ -2731,7 +2808,7 @@ export default function CleaningEstimator({
                 >
                   <div className="px-4 py-5 sm:px-6 sm:py-6">
                     <p className="mb-4 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                      Customize your clean
+                      {t("customizeYourClean")}
                     </p>
                     <AnimatePresence mode="wait">
                       <motion.div
@@ -2759,15 +2836,15 @@ export default function CleaningEstimator({
             >
               <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:gap-5 lg:hidden">
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-black">
-                  Estimate range
+                  {t("estimateRange")}
                 </span>
 
                 <div className="flex items-center justify-between gap-3 sm:justify-start sm:gap-4">
-                  <PricePill label="Low" value={prices.low} />
+                  <PricePill label={t("low")} value={prices.low} locale={locale} />
                   <div className="hidden h-7 w-px bg-gray-200 sm:block" />
-                  <PricePill label="Mid" value={prices.mid} accent />
+                  <PricePill label={t("mid")} value={prices.mid} accent locale={locale} />
                   <div className="hidden h-7 w-px bg-gray-200 sm:block" />
-                  <PricePill label="High" value={prices.high} />
+                  <PricePill label={t("high")} value={prices.high} locale={locale} />
                 </div>
               </div>
          
@@ -2780,7 +2857,7 @@ export default function CleaningEstimator({
                       detail: {
                         service: svc.label,
                         location: `${locCity}, ${locState}`,
-                        date: date ? formatDate(date) : undefined,
+                        date: date ? formatDate(date, locale) : undefined,
                         frequency,
                         extras: summaryExtras,
                         estimateLow: prices.low,
@@ -2880,17 +2957,17 @@ export default function CleaningEstimator({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-500">
-                Estimate Range
+                {tEstimate("estimate")}
               </p>
              
             </div>
 
             <div className="grid grid-cols-3 overflow-hidden rounded-xl  py-2 ">
-              <PricePill label="Low" value={prices.low} />
+              <PricePill label={t("low")} value={prices.low} locale={locale} />
               <div className=" px-2">
-                <PricePill label="Mid" value={prices.mid} accent />
+                <PricePill label={t("mid")} value={prices.mid} accent locale={locale} />
               </div>
-              <PricePill label="High" value={prices.high} />
+              <PricePill label={t("high")} value={prices.high} locale={locale} />
             </div>
           </div>
         </div>

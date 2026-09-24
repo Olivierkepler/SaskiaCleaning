@@ -9,6 +9,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 
 type Plan = {
   id: string;
@@ -71,18 +72,37 @@ function scrollToQuote() {
 }
 
 export default function CommercialCleaningPlans({
-  title = "Commercial Cleaning ",
-  description = [
-    "Choose the plan that best fits your company's needs — from routine maintenance to complete facility care.",
-
-  ],
-  contactLabel = "Contact Us",
+  title,
+  description,
+  contactLabel,
   onContactClick,
-  plans = DEFAULT_PLANS,
+  plans,
   onPlanClick,
   backgroundImageSrc = "/images/kitchen.jpg",
 }: CommercialCleaningPlansProps) {
+  const t = useTranslations("home");
   const prefersReducedMotion = useReducedMotion();
+  const resolvedTitle = title ?? `${t("commercialTitle")} `;
+  const resolvedDescription = description ?? [t("commercialDescription")];
+  const resolvedContactLabel = contactLabel ?? t("contactUs");
+  const resolvedPlans =
+    plans ??
+    DEFAULT_PLANS.map((plan) => ({
+      ...plan,
+      name:
+        plan.id === "basic"
+          ? t("planBasic")
+          : plan.id === "advance"
+            ? t("planAdvance")
+            : t("planPremium"),
+      description:
+        plan.id === "basic"
+          ? t("planBasicDesc")
+          : plan.id === "advance"
+            ? t("planAdvanceDesc")
+            : t("planPremiumDesc"),
+      ctaLabel: t("getAQuote"),
+    }));
 
   const handleContactClick = () => {
     onContactClick?.();
@@ -192,12 +212,12 @@ export default function CommercialCleaningPlans({
                   text-slate-950
                 "
               >
-                {title}
+                {resolvedTitle}
                <span className="text-sky-500">Service Plans</span>
               </h2>
 
               <div className="mt-3 space-y-1.5 text-sm leading-6 text-slate-600">
-                {description.map((line) => (
+                {resolvedDescription.map((line) => (
                   <p key={line}>{line}</p>
                 ))}
               </div>
@@ -223,7 +243,7 @@ export default function CommercialCleaningPlans({
                 hover:bg-sky-600
               "
             >
-              {contactLabel}
+              {resolvedContactLabel}
               <ArrowUpRight
                 size={12}
                 className="transition-transform duration-300 group-hover:translate-x-0.5"
@@ -256,7 +276,7 @@ export default function CommercialCleaningPlans({
             variants={gridVariants}
             className="relative z-10 mt-10 grid grid-cols-1 gap-6 sm:mt-12 md:grid-cols-3 lg:gap-8"
           >
-            {plans.map((plan) => (
+            {resolvedPlans.map((plan) => (
               <PlanCard
                 key={plan.id}
                 plan={plan}

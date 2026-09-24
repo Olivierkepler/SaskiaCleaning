@@ -10,6 +10,7 @@ import {
   buildReferralShareMessage,
   type ReferralCode,
 } from "@/app/lib/referrals";
+import { useTranslations } from "next-intl";
 
 interface AdCardItem {
   id: number;
@@ -80,8 +81,6 @@ const inputClassName =
 const labelClassName =
   "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
 
-const PROMO_REFERRAL_CTA_LABEL = "Refer Now";
-
 function AdCard({
   card,
   index,
@@ -148,10 +147,10 @@ function AdCard({
           <button
             type="button"
             onClick={onReferralClick}
-            aria-label={`${PROMO_REFERRAL_CTA_LABEL}: ${card.title} ${card.titleSmall ?? ""}`}
+            aria-label={`${card.ctaLabel}: ${card.title} ${card.titleSmall ?? ""}`}
             className={ctaClassName}
           >
-            {PROMO_REFERRAL_CTA_LABEL}
+            {card.ctaLabel}
           </button>
         ) : (
           <a
@@ -209,6 +208,7 @@ function ReferralModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const t = useTranslations("home");
   const [referrerName, setReferrerName] = useState("");
   const [referrerEmail, setReferrerEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -272,11 +272,11 @@ function ReferralModal({
       const data = (await response.json()) as PublicReferralResponse;
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to create your referral code.");
+        throw new Error(data.error || t("referralCreateFailed"));
       }
 
       if (!data.referralCode) {
-        throw new Error("Failed to create your referral code.");
+        throw new Error(t("referralCreateFailed"));
       }
 
       setGeneratedCode(data.referralCode);
@@ -284,7 +284,7 @@ function ReferralModal({
       setErrorMessage(
         error instanceof Error
           ? error.message
-          : "Failed to create your referral code.",
+          : t("referralCreateFailed"),
       );
     } finally {
       setIsSubmitting(false);
@@ -297,7 +297,7 @@ function ReferralModal({
       setCopyFeedback(label);
       window.setTimeout(() => setCopyFeedback(null), 2000);
     } catch {
-      setCopyFeedback("Copy failed");
+      setCopyFeedback("__copy_failed__");
       window.setTimeout(() => setCopyFeedback(null), 2000);
     }
   }
@@ -410,8 +410,8 @@ function ReferralModal({
 
                 {copyFeedback && (
                   <p className="text-center text-sm font-medium text-emerald-700">
-                    {copyFeedback === "Copy failed"
-                      ? "Could not copy. Please copy manually."
+                    {copyFeedback === "__copy_failed__"
+                      ? t("referralCopyFailed")
                       : `${copyFeedback} copied.`}
                   </p>
                 )}
@@ -458,7 +458,7 @@ function ReferralModal({
 
                 <div>
                   <label htmlFor="referrer-name" className={labelClassName}>
-                    Your name
+                    {t("referralYourName")}
                   </label>
                   <input
                     id="referrer-name"
@@ -467,7 +467,7 @@ function ReferralModal({
                     value={referrerName}
                     onChange={(event) => setReferrerName(event.target.value)}
                     className={inputClassName}
-                    placeholder="Your name"
+                    placeholder={t("referralYourName")}
                     autoComplete="name"
                   />
                 </div>
@@ -507,7 +507,7 @@ function ReferralModal({
                     disabled={isSubmitting}
                     className="rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(56,189,248,.35)] transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isSubmitting ? "Creating..." : "Get my referral code"}
+                    {isSubmitting ? t("referralCreating") : t("referralGetCode")}
                   </button>
                 </div>
               </form>
@@ -521,7 +521,44 @@ function ReferralModal({
 }
 
 export default function AdCardGrid() {
-  const [cards, setCards] = useState<AdCardItem[]>(fallbackCards);
+  const t = useTranslations("home");
+  const localizedFallback: AdCardItem[] = [
+    {
+      id: 1,
+      tag: t("adReferralTag"),
+      title: t("adGive20"),
+      titleSmall: t("adGet20"),
+      description: t("adGive20Desc"),
+      ctaLabel: t("adReferNow"),
+      ctaHref: "https://saskiaservices.com/#quote",
+      imageUrl: "/images/friend_sharing.jpg",
+      imageAlt: t("adAlt1"),
+    },
+    {
+      id: 2,
+      tag: t("adLimitedTag"),
+      title: t("ad20Off"),
+      titleSmall: t("adDeepClean"),
+      description: t("ad20OffDesc"),
+      ctaLabel: t("adReferNow"),
+      ctaHref: "https://saskiaservices.com/#quote",
+      imageUrl: "/images/limited_deal.jpg",
+      imageAlt: t("adAlt2"),
+      isRedTag: true,
+    },
+    {
+      id: 3,
+      tag: t("adNewTag"),
+      title: t("adAirbnb"),
+      titleSmall: t("adTurnover"),
+      description: t("adAirbnbDesc"),
+      ctaLabel: t("adReferNow"),
+      ctaHref: "https://saskiaservices.com/#services",
+      imageUrl: "/images/towel-folder.jpg",
+      imageAlt: t("adAlt3"),
+    },
+  ];
+  const [cards, setCards] = useState<AdCardItem[]>(localizedFallback);
   const [referralModalOpen, setReferralModalOpen] = useState(false);
 
   useEffect(() => {

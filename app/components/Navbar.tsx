@@ -2,23 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { ArrowUpRight, Menu, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import NavbarAuthControls from "@/app/components/auth/NavbarAuthControls";
-
-const navLinks = [
-   { label: "Services", href: "#services" },
-  { label: "Plans", href: "#plans" },
- 
-  { label: "Commercial Cleaning", href: "#commercial-cleaning" },
-  { label: "Pricing", href: "#pricing" },
-];
+import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
 
 export default function Navbar({
   hideNavbar = false,
 }: {
   hideNavbar?: boolean;
 }) {
+  const t = useTranslations("navigation");
+  const tCommon = useTranslations("common");
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+
+  const navLinks = [
+    { label: t("services"), href: "#services" },
+    { label: t("plans"), href: "#plans" },
+    { label: t("commercialCleaning"), href: "#commercial-cleaning" },
+    { label: t("pricing"), href: "#pricing" },
+  ];
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 16);
@@ -65,14 +68,14 @@ export default function Navbar({
         `}
       >
         <nav
-          aria-label="Main navigation"
-          className={`mx-auto flex max-w-7xl items-center justify-between px-6 py-5 transition-all duration-500 ${
+          aria-label={t("mainNav")}
+          className={`mx-auto flex max-w-7xl items-center justify-between gap-3 px-6 py-5 transition-all duration-500 ${
             isScrolled
               ? "rounded-2xl border border-slate-200 bg-white shadow-[0_20px_70px_rgba(0,0,0,0.06)] backdrop-blur-2xl"
               : "bg-transparent"
           }`}
         >
-          <a href="#" className="flex items-center gap-4">
+          <a href="#" className="flex min-w-0 items-center gap-4">
             <div
               className="relative flex items-center"
               style={{ height: "42px", width: "92px" }}
@@ -110,7 +113,7 @@ export default function Navbar({
                   isScrolled ? "text-slate-500" : "text-white/70"
                 }`}
               >
-                Cleaning
+                {t("brandTagline")}
               </p>
             </div>
           </a>
@@ -118,7 +121,7 @@ export default function Navbar({
           <div className="hidden items-center gap-10 lg:flex">
             {navLinks.map((link) => (
               <a
-                key={link.label}
+                key={link.href}
                 href={link.href}
                 className={`group cursor-pointer relative text-[13px] font-semibold uppercase tracking-[0.16em] transition duration-300 ${
                   isScrolled
@@ -138,6 +141,14 @@ export default function Navbar({
           </div>
 
           <div className="hidden items-center gap-3 md:flex">
+            <LanguageSwitcher
+              className={
+                isScrolled
+                  ? ""
+                  : "[&_select]:border-white/40 [&_select]:bg-white/15 [&_select]:text-white"
+              }
+            />
+
             <NavbarAuthControls isScrolled={isScrolled} variant="desktop" />
 
             <a
@@ -148,7 +159,7 @@ export default function Navbar({
                   : "border-white/40 text-white hover:border-white hover:bg-white hover:text-slate-950"
               }`}
             >
-              Call Now
+              {tCommon("callNow")}
             </a>
 
             <a
@@ -159,7 +170,7 @@ export default function Navbar({
                   : "border-white bg-white text-slate-950 hover:bg-transparent hover:text-white"
               }`}
             >
-              Request Quote
+              {t("requestQuote")}
               <ArrowUpRight
                 size={14}
                 className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
@@ -170,10 +181,10 @@ export default function Navbar({
           <button
             type="button"
             onClick={() => setIsOpen(true)}
-            aria-label="Open navigation menu"
+            aria-label={t("openMenu")}
             aria-expanded={isOpen}
             aria-controls="mobile-sidenav"
-            className={`grid cursor-pointer h-11 w-11 place-items-center rounded-full border transition duration-300 lg:hidden ${
+            className={`grid cursor-pointer h-11 w-11 shrink-0 place-items-center rounded-full border transition duration-300 lg:hidden ${
               isScrolled
                 ? "border-sky-500 bg-sky-500 text-white hover:bg-white hover:text-sky-500"
                 : "border-white bg-white text-slate-950 hover:bg-transparent hover:text-white"
@@ -208,14 +219,14 @@ export default function Navbar({
                   </p>
 
                   <p className="mt-2 text-[0.65rem] font-medium uppercase tracking-[0.4em] text-slate-400">
-                    Cleaning
+                    {t("brandTagline")}
                   </p>
                 </div>
 
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  aria-label="Close navigation menu"
+                  aria-label={t("closeMenu")}
                   className="grid h-11 w-11 place-items-center rounded-full border border-slate-200 text-slate-950 transition duration-300 hover:border-slate-950 hover:bg-slate-950 hover:text-white"
                 >
                   <X size={20} />
@@ -223,10 +234,10 @@ export default function Navbar({
               </div>
 
               <div className="flex flex-1 flex-col justify-between px-6 py-8">
-                <nav className="space-y-1" aria-label="Mobile navigation">
+                <nav className="space-y-1" aria-label={t("mobileNav")}>
                   {navLinks.map((link, index) => (
                     <a
-                      key={link.label}
+                      key={link.href}
                       href={link.href}
                       onClick={() => setIsOpen(false)}
                       className="group flex items-center justify-between border-b border-slate-100 py-5 text-[13px] font-semibold uppercase tracking-[0.18em] text-slate-600 transition duration-300 hover:border-slate-950 hover:text-slate-950"
@@ -247,10 +258,13 @@ export default function Navbar({
                 </nav>
 
                 <div>
+                  <div className="mb-4">
+                    <LanguageSwitcher />
+                  </div>
+
                   <div className="mb-6 border-l border-slate-950 pl-4">
                     <p className="text-sm leading-6 text-slate-500">
-                      Premium residential and commercial cleaning delivered with
-                      care, consistency, and uncompromising attention to detail.
+                      {t("mobileBlurb")}
                     </p>
                   </div>
 
@@ -266,7 +280,7 @@ export default function Navbar({
                       onClick={() => setIsOpen(false)}
                       className="group flex items-center justify-center gap-2 rounded-full border border-slate-950 bg-slate-950 px-6 py-4 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition duration-300 hover:bg-transparent hover:text-slate-950"
                     >
-                      Request Quote
+                      {t("requestQuote")}
                       <ArrowUpRight
                         size={15}
                         className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
@@ -278,12 +292,12 @@ export default function Navbar({
                       onClick={() => setIsOpen(false)}
                       className="flex items-center justify-center rounded-full border border-slate-200 px-6 py-4 text-[11px] font-medium uppercase tracking-[0.14em] text-slate-600 transition duration-300 hover:border-slate-950 hover:text-slate-950"
                     >
-                      Call Now
+                      {tCommon("callNow")}
                     </a>
                   </div>
 
                   <p className="mt-8 text-[10px] font-medium uppercase tracking-[0.28em] text-slate-300">
-                    Saskia Cleaning © 2026
+                    {t("copyrightShort")}
                   </p>
                 </div>
               </div>

@@ -1,86 +1,75 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createPortal } from "react-dom";
 
-const services = [
+const serviceDefs = [
   {
-    title: "Residential Cleaning",
-    subtitle: "Premium home care for apartments, houses, and move-outs.",
+    id: "residential",
+    titleKey: "carouselResidentialTitle",
+    subtitleKey: "carouselResidentialSubtitle",
+    detailKeys: ["carouselResidential1", "carouselResidential2", "carouselResidential3"],
     image:
       "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80",
-    details: [
-      "Basic, standard, deep cleaning, and move-in/move-out cleaning.",
-      "Ideal for apartments, family homes, condos, and rentals.",
-      "Includes kitchens, bathrooms, bedrooms, floors, and common areas.",
-    ],
     startingPrice: "$100+",
   },
   {
-    title: "Commercial Cleaning",
-    subtitle: "Precision cleaning for offices, retail spaces, and businesses.",
+    id: "commercial",
+    titleKey: "carouselCommercialTitle",
+    subtitleKey: "carouselCommercialSubtitle",
+    detailKeys: ["carouselCommercial1", "carouselCommercial2", "carouselCommercial3"],
     image:
       "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80",
-    details: [
-      "Designed for offices, stores, studios, and small businesses.",
-      "Includes floors, desks, restrooms, trash removal, and shared spaces.",
-      "Available for one-time, weekly, or recurring janitorial service.",
-    ],
     startingPrice: "$180+",
   },
   {
-    title: "Laundry Services",
-    subtitle: "Wash, dry, fold, pressing, linens, and pickup solutions.",
+    id: "laundry",
+    titleKey: "carouselLaundryTitle",
+    subtitleKey: "carouselLaundrySubtitle",
+    detailKeys: ["carouselLaundry1", "carouselLaundry2", "carouselLaundry3"],
     image:
       "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80",
-    details: [
-      "Wash and fold, drying, ironing, bedding, linens, and same-day laundry.",
-      "Pickup and delivery available for busy clients.",
-      "Perfect for homes, rentals, Airbnb hosts, and professionals.",
-    ],
     startingPrice: "$1.75/lb",
   },
   {
-    title: "Airbnb Cleaning",
-    subtitle: "Fast guest-ready turnovers for short-term rental properties.",
+    id: "airbnb",
+    titleKey: "carouselAirbnbTitle",
+    subtitleKey: "carouselAirbnbSubtitle",
+    detailKeys: ["carouselAirbnb1", "carouselAirbnb2", "carouselAirbnb3"],
     image:
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80",
-    details: [
-      "Quick turnover cleaning between guest stays.",
-      "Linen replacement, restocking, bathroom refresh, and kitchen reset.",
-      "Same-day turnover options available for urgent bookings.",
-    ],
     startingPrice: "$120+",
   },
   {
-    title: "Specialty Cleaning",
-    subtitle: "Advanced care for carpets, windows, appliances, and build-outs.",
+    id: "specialty",
+    titleKey: "carouselSpecialtyTitle",
+    subtitleKey: "carouselSpecialtySubtitle",
+    detailKeys: ["carouselSpecialty1", "carouselSpecialty2", "carouselSpecialty3"],
     image:
       "https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=900&q=80",
-    details: [
-      "Carpet cleaning, window cleaning, appliance cleaning, and post-construction.",
-      "Great for seasonal refreshes or specific problem areas.",
-      "Pricing depends on room count, surface type, and job size.",
-    ],
     startingPrice: "$45+",
   },
   {
-    title: "Add-On Services",
-    subtitle: "Custom enhancements for deeper, cleaner, smarter service.",
+    id: "addon",
+    titleKey: "carouselAddonTitle",
+    subtitleKey: "carouselAddonSubtitle",
+    detailKeys: ["carouselAddon1", "carouselAddon2", "carouselAddon3"],
     image:
       "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=900&q=80",
-    details: [
-      "Fridge cleaning, oven cleaning, pet hair removal, cabinet cleaning, and eco-friendly products.",
-      "Can be added to any cleaning package.",
-      "Best for clients who want a more detailed finish.",
-    ],
     startingPrice: "$10+",
   },
 ];
 
-type Service = (typeof services)[number];
+type Service = {
+  title: string;
+  subtitle: string;
+  image: string;
+  details: string[];
+  startingPrice: string;
+};
 
-const COUNT = services.length;
+const COUNT = serviceDefs.length;
 const AUTO_DELAY = 4000;
 const RESUME_AFTER = 6000;
 
@@ -479,6 +468,15 @@ function ServiceModal({
 }
 
 export default function ServiceCarousel() {
+  const t = useTranslations("home");
+  const services = serviceDefs.map((s) => ({
+    title: t(s.titleKey),
+    subtitle: t(s.subtitleKey),
+    image: s.image,
+    details: s.detailKeys.map((k) => t(k)),
+    startingPrice: s.startingPrice,
+  }));
+
   const [selected, setSelected] = useState<Service | null>(null);
   const [portalReady, setPortalReady] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
