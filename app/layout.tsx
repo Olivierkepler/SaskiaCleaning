@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display, Geist_Mono } from "next/font/google";
-import SocialCorner from "./components/SocialCorner";
-import WhatsAppFloat from "./components/WhatsAppFloat";
-import "./globals.css";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
-  {/* import Navbar from './components/Navbar'; */}
-import Footer from "./components/Footer";
-import CustomCursor from "./components/CustomCursor";
-import LeadCaptureTabs from "./components/LeadCaptureTabs";
 import SocialFloat from "./components/SocialFloat";
 import AuthSessionProvider from "./components/auth/AuthSessionProvider";
+import "./globals.css";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -39,27 +35,26 @@ export const viewport = {
   themeColor: "#ffffff",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${inter.variable} ${playfair.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col font-sans">
-        <AuthSessionProvider>
-          {/*   <Navbar /> */}
-          {children}
-          {/* <LeadCaptureTabs /> */}
-
-          {/* <SocialCorner/> */}
-          {/* <WhatsAppFloat/>
-         */}
-          <SocialFloat />
-        </AuthSessionProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <AuthSessionProvider>
+            {children}
+            <SocialFloat />
+          </AuthSessionProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

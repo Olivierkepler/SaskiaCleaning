@@ -1,0 +1,14 @@
+{
+  "common": {
+    "language": "Language",
+    "english": "English",
+    "spanish": "Spanish",
+    "french": "French"
+  },
+  "navigation": {
+    "home": "Home",
+    "account": "Account",
+    "bookings": "Bookings",
+    "profile": "Profile"
+  }
+}

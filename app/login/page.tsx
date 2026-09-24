@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import GoogleSignInButton from "@/app/components/auth/GoogleSignInButton";
+import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
 
 const ERROR_MESSAGES: Record<string, string> = {
   AccessDenied: "We couldn't sign you in with Google. Please try again.",
@@ -124,6 +125,10 @@ export default async function LoginPage({
           />
 
           <div className="relative z-10 w-full max-w-[520px]">
+            <div className="mb-6 flex justify-end">
+              <LanguageSwitcher />
+            </div>
+
             {/* Mobile brand */}
             <Link
               href="/"
