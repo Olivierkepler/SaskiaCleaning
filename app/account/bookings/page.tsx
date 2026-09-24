@@ -32,6 +32,8 @@ export default async function AccountBookingsPage() {
         eyebrow="Your account"
         title="My Bookings"
         description="View and manage your cleaning requests."
+        imageSrc="/account/mybooking.png"
+        imageAlt="Clean living room with soft seating and natural light"
       />
 
       <div className="mb-4 flex justify-end">

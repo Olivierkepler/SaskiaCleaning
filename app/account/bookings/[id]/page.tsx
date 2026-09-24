@@ -109,6 +109,8 @@ export default async function AccountBookingDetailPage({
         eyebrow={`Booking #${booking.id}`}
         title={serviceLabel}
         description="Review booking details and request changes when available."
+        imageSrc="/account/mybooking.png"
+        imageAlt="Clean living room with soft seating and natural light"
       />
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-4">

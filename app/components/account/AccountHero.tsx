@@ -1,10 +1,16 @@
 import Image from "next/image";
 
+const DEFAULT_HERO_IMAGE = "/account/headeraccount.png";
+const DEFAULT_HERO_ALT =
+  "Freshly cleaned space with folded towels and greenery";
+
 type AccountHeroProps = {
   eyebrow?: string;
   title: string;
   description?: string;
   priority?: boolean;
+  imageSrc?: string;
+  imageAlt?: string;
 };
 
 export default function AccountHero({
@@ -12,12 +18,14 @@ export default function AccountHero({
   title,
   description,
   priority = false,
+  imageSrc = DEFAULT_HERO_IMAGE,
+  imageAlt = DEFAULT_HERO_ALT,
 }: AccountHeroProps) {
   return (
     <section className="relative mb-8 min-h-[240px] overflow-hidden rounded-[28px] md:min-h-[300px]">
       <Image
-        src="/account/headeraccount.png"
-        alt="Freshly cleaned space with folded towels and greenery"
+        src={imageSrc}
+        alt={imageAlt}
         fill
         priority={priority}
         sizes="(max-width: 768px) 100vw, 1152px"
