@@ -1,5 +1,4 @@
 import { requireCustomer } from "@/app/lib/customer-auth";
-import AccountPageShell from "@/app/components/account/AccountPageShell";
 import AccountHero from "@/app/components/account/AccountHero";
 import AccountProfileHeader from "@/app/components/account/AccountProfileHeader";
 import AccountActionGrid from "@/app/components/account/AccountActionGrid";
@@ -9,7 +8,7 @@ export default async function AccountPage() {
   const firstName = customer.name?.trim().split(/\s+/)[0] ?? "there";
 
   return (
-    <AccountPageShell>
+    <>
       <AccountHero
         eyebrow="Your account"
         title={`Hello, ${firstName}`}
@@ -25,6 +24,6 @@ export default async function AccountPage() {
         />
         <AccountActionGrid />
       </section>
-    </AccountPageShell>
+    </>
   );
 }

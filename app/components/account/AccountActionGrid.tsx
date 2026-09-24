@@ -27,7 +27,7 @@ const accountSections: Array<{
   {
     title: "Referrals",
     description: "Track referrals and share your rewards link.",
-    href: "/referrals",
+    href: "/account/referrals",
     icon: Gift,
     iconWrap: "bg-emerald-50 text-emerald-600",
     accent: "from-emerald-100/80 to-transparent",
@@ -35,7 +35,7 @@ const accountSections: Array<{
   {
     title: "Rewards",
     description: "See your referral wallet and milestones.",
-    href: "/referrals",
+    href: "/account/rewards",
     icon: Star,
     iconWrap: "bg-amber-50 text-amber-600",
     accent: "from-amber-100/80 to-transparent",

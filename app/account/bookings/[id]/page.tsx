@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { requireCustomer } from "@/app/lib/customer-auth";
 import { getCustomerBookingById } from "@/app/lib/customer-bookings";
 import {
@@ -16,6 +17,7 @@ import {
   getCustomerBookingStatusBadgeClass,
 } from "@/app/lib/customer-bookings-pure";
 import BookingChangeRequestPanel from "@/app/components/account/BookingChangeRequestPanel";
+import AccountHero from "@/app/components/account/AccountHero";
 import { formatCustomerDurationLabel } from "@/app/lib/booking-duration-pure";
 
 type AccountBookingDetailPageProps = {
@@ -27,7 +29,7 @@ function DetailRow({
   children,
 }: {
   label: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <div className="grid gap-1 border-b border-slate-100 py-3 last:border-b-0 sm:grid-cols-[140px_1fr] sm:gap-4">
@@ -102,146 +104,144 @@ export default async function AccountBookingDetailPage({
   const serviceLabel = booking.service?.trim() || "Cleaning service";
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-white px-6 py-16 sm:px-8 sm:py-20">
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <Link
-            href="/account/bookings"
-            className="text-sm font-medium text-slate-500 transition hover:text-sky-600"
-          >
-            ← My Bookings
-          </Link>
-          <Link
-            href={buildBookAgainHref({ service: booking.service })}
-            className="rounded-full border border-sky-500 bg-sky-500 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-sky-600"
-          >
-            Book Again
-          </Link>
-        </div>
+    <>
+      <AccountHero
+        eyebrow={`Booking #${booking.id}`}
+        title={serviceLabel}
+        description="Review booking details and request changes when available."
+      />
 
-        <section className="rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_20px_70px_rgba(15,23,42,0.08)] sm:p-10">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-sky-500">
-                Booking #{booking.id}
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-                {serviceLabel}
-              </h1>
-            </div>
-            <span
-              className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${statusClass}`}
-            >
-              {statusLabel}
-            </span>
-          </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+        <Link
+          href="/account/bookings"
+          className="text-sm font-medium text-slate-500 transition hover:text-sky-600"
+        >
+          ← My Bookings
+        </Link>
+        <Link
+          href={buildBookAgainHref({ service: booking.service })}
+          className="rounded-full border border-sky-500 bg-sky-500 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-sky-600"
+        >
+          Book Again
+        </Link>
+      </div>
 
-          <div className="mt-8">
-            <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+      <section className="rounded-[28px] border border-slate-200/60 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] md:p-10">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-slate-950">
               Booking summary
             </h2>
-            <dl className="mt-2">
-              <DetailRow label="Service date">
-                {formatCustomerBookingDate(booking.booking_date)}
-              </DetailRow>
-              <DetailRow label="Appointment time">
-                {formatBookingTime(booking.booking_time)}
-              </DetailRow>
-              <DetailRow label="Estimated duration">
-                {formatCustomerDurationLabel(booking.duration_minutes) ??
-                  "Duration not specified"}
-              </DetailRow>
-              <DetailRow label="Status">{statusLabel}</DetailRow>
-              <DetailRow label="Estimate">{estimate}</DetailRow>
-              {booking.frequency ? (
-                <DetailRow label="Frequency">{booking.frequency}</DetailRow>
-              ) : null}
-            </dl>
           </div>
+          <span
+            className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide ${statusClass}`}
+          >
+            {statusLabel}
+          </span>
+        </div>
 
+        <div className="mt-6">
+          <dl>
+            <DetailRow label="Service date">
+              {formatCustomerBookingDate(booking.booking_date)}
+            </DetailRow>
+            <DetailRow label="Appointment time">
+              {formatBookingTime(booking.booking_time)}
+            </DetailRow>
+            <DetailRow label="Estimated duration">
+              {formatCustomerDurationLabel(booking.duration_minutes) ??
+                "Duration not specified"}
+            </DetailRow>
+            <DetailRow label="Status">{statusLabel}</DetailRow>
+            <DetailRow label="Estimate">{estimate}</DetailRow>
+            {booking.frequency ? (
+              <DetailRow label="Frequency">{booking.frequency}</DetailRow>
+            ) : null}
+          </dl>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+            Service location
+          </h2>
+          <dl className="mt-2">
+            <DetailRow label="Location">
+              {booking.location?.trim() || "—"}
+            </DetailRow>
+          </dl>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+            Cleaning details
+          </h2>
+          <dl className="mt-2">
+            <DetailRow label="Bedrooms">{booking.bedrooms}</DetailRow>
+            <DetailRow label="Bathrooms">{booking.bathrooms}</DetailRow>
+            <DetailRow label="Add-ons">
+              {booking.extras.length > 0 ? (
+                <ul className="list-disc space-y-1 pl-4">
+                  {booking.extras.map((extra) => (
+                    <li key={extra}>{extra}</li>
+                  ))}
+                </ul>
+              ) : (
+                "None"
+              )}
+            </DetailRow>
+          </dl>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+            Contact
+          </h2>
+          <dl className="mt-2">
+            <DetailRow label="Name">{booking.name}</DetailRow>
+            <DetailRow label="Email">{booking.email}</DetailRow>
+            <DetailRow label="Mobile">
+              {booking.mobile?.trim() || "—"}
+            </DetailRow>
+            {booking.notes?.trim() ? (
+              <DetailRow label="Notes">{booking.notes}</DetailRow>
+            ) : null}
+          </dl>
+        </div>
+
+        {booking.referral_code ? (
           <div className="mt-8">
             <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
-              Service location
+              Referral
             </h2>
             <dl className="mt-2">
-              <DetailRow label="Location">
-                {booking.location?.trim() || "—"}
-              </DetailRow>
+              <DetailRow label="Code used">{booking.referral_code}</DetailRow>
             </dl>
           </div>
+        ) : null}
 
-          <div className="mt-8">
-            <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
-              Cleaning details
-            </h2>
-            <dl className="mt-2">
-              <DetailRow label="Bedrooms">{booking.bedrooms}</DetailRow>
-              <DetailRow label="Bathrooms">{booking.bathrooms}</DetailRow>
-              <DetailRow label="Add-ons">
-                {booking.extras.length > 0 ? (
-                  <ul className="list-disc space-y-1 pl-4">
-                    {booking.extras.map((extra) => (
-                      <li key={extra}>{extra}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  "None"
-                )}
-              </DetailRow>
-            </dl>
-          </div>
-
-          <div className="mt-8">
-            <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
-              Contact
-            </h2>
-            <dl className="mt-2">
-              <DetailRow label="Name">{booking.name}</DetailRow>
-              <DetailRow label="Email">{booking.email}</DetailRow>
-              <DetailRow label="Mobile">
-                {booking.mobile?.trim() || "—"}
-              </DetailRow>
-              {booking.notes?.trim() ? (
-                <DetailRow label="Notes">{booking.notes}</DetailRow>
-              ) : null}
-            </dl>
-          </div>
-
-          {booking.referral_code ? (
-            <div className="mt-8">
-              <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
-                Referral
-              </h2>
-              <dl className="mt-2">
-                <DetailRow label="Code used">{booking.referral_code}</DetailRow>
-              </dl>
-            </div>
-          ) : null}
-
-          <BookingChangeRequestPanel
-            bookingId={booking.id}
-            service={booking.service}
-            bookingDate={booking.booking_date}
-            bookingTime={booking.booking_time}
-            location={booking.location}
-            status={booking.status}
-            canRequest={canRequest}
-            pendingRequest={
-              pendingRequest
-                ? {
-                    request_type: pendingRequest.request_type,
-                    requested_date: pendingRequest.requested_date,
-                    requested_time: pendingRequest.requested_time,
-                    reason: pendingRequest.reason,
-                    status: pendingRequest.status,
-                    customer_message: pendingRequest.customer_message,
-                  }
-                : null
-            }
-            latestResolvedRequest={latestResolvedRequest}
-          />
-        </section>
-      </div>
-    </main>
+        <BookingChangeRequestPanel
+          bookingId={booking.id}
+          service={booking.service}
+          bookingDate={booking.booking_date}
+          bookingTime={booking.booking_time}
+          location={booking.location}
+          status={booking.status}
+          canRequest={canRequest}
+          pendingRequest={
+            pendingRequest
+              ? {
+                  request_type: pendingRequest.request_type,
+                  requested_date: pendingRequest.requested_date,
+                  requested_time: pendingRequest.requested_time,
+                  reason: pendingRequest.reason,
+                  status: pendingRequest.status,
+                  customer_message: pendingRequest.customer_message,
+                }
+              : null
+          }
+          latestResolvedRequest={latestResolvedRequest}
+        />
+      </section>
+    </>
   );
 }

@@ -35,15 +35,15 @@ const NAV_ITEMS: AccountNavItem[] = [
   },
   {
     label: "Referrals",
-    href: "/referrals",
+    href: "/account/referrals",
     icon: Gift,
     exact: true,
   },
   {
     label: "Rewards",
-    href: "/referrals",
+    href: "/account/rewards",
     icon: Star,
-    neverActive: true,
+    exact: true,
   },
   {
     label: "Profile",
