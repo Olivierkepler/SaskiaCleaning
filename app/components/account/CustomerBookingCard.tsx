@@ -29,7 +29,7 @@ export default function CustomerBookingCard({
   const serviceLabel = booking.service?.trim() || "Cleaning service";
 
   return (
-    <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <article className="rounded-[22px] bg-[#ECF0F3] p-5 shadow-[10px_10px_24px_rgba(163,177,198,0.40),-10px_-10px_24px_rgba(255,255,255,0.95)] sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">

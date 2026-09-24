@@ -209,7 +209,7 @@ export default function AddressBook({ initialAddresses }: AddressBookProps) {
       {mode !== "idle" ? (
         <form
           onSubmit={saveAddress}
-          className="mt-4 space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-4 sm:p-5"
+          className="mt-4 space-y-3 rounded-[22px] bg-[#ECF0F3] p-4 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)] sm:p-5"
         >
           <h3 className="text-sm font-semibold text-slate-900">
             {mode === "edit" ? "Edit address" : "New address"}
@@ -332,7 +332,7 @@ export default function AddressBook({ initialAddresses }: AddressBookProps) {
       ) : null}
 
       {addresses.length === 0 && mode === "idle" ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-slate-200 bg-slate-50/80 px-6 py-10 text-center">
+        <div className="mt-6 rounded-[22px] bg-[#ECF0F3] px-6 py-10 text-center shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]">
           <h3 className="text-lg font-semibold text-slate-900">
             No saved addresses yet
           </h3>
@@ -352,7 +352,7 @@ export default function AddressBook({ initialAddresses }: AddressBookProps) {
           {addresses.map((address) => (
             <li
               key={address.id}
-              className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"
+              className="rounded-[20px] bg-[#ECF0F3] p-4 shadow-[10px_10px_24px_rgba(163,177,198,0.40),-10px_-10px_24px_rgba(255,255,255,0.95)] sm:p-5"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>

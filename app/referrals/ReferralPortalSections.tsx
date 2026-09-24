@@ -70,7 +70,7 @@ function MetricCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="rounded-[20px] bg-[#ECF0F3] p-4 shadow-[10px_10px_24px_rgba(163,177,198,0.40),-10px_-10px_24px_rgba(255,255,255,0.95)]">
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </p>
@@ -92,7 +92,7 @@ function WalletCard({
   accentClassName: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+    <div className="rounded-[20px] bg-[#ECF0F3] p-4 shadow-[10px_10px_24px_rgba(163,177,198,0.40),-10px_-10px_24px_rgba(255,255,255,0.95)] sm:p-5">
       <div className={`mb-3 h-1 w-10 rounded-full ${accentClassName}`} />
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
         {label}
@@ -138,7 +138,7 @@ export function ReferralRewardWalletSection({
   wallet: ReferralPortalRewardWallet;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <section className="rounded-[28px] bg-[#ECF0F3] p-6 shadow-[14px_14px_32px_rgba(163,177,198,0.45),-14px_-14px_32px_rgba(255,255,255,0.95)] sm:p-8">
       <div className="mb-6">
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-500">
           Reward wallet
@@ -178,7 +178,7 @@ export function ReferralRewardWalletSection({
         />
       </div>
 
-      <div className="mt-8 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-5 sm:px-6">
+      <div className="mt-8 rounded-[20px] border border-sky-100 bg-sky-50 px-4 py-5 sm:px-6">
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-600">
           Referral progress
         </p>
@@ -200,7 +200,7 @@ export function ReferralRewardWalletSection({
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="rounded-[18px] bg-[#ECF0F3] px-4 py-3 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
             Total referrals
           </p>
@@ -208,7 +208,7 @@ export function ReferralRewardWalletSection({
             {wallet.totalReferrals}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="rounded-[18px] bg-[#ECF0F3] px-4 py-3 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
             Completed referrals
           </p>
@@ -216,7 +216,7 @@ export function ReferralRewardWalletSection({
             {wallet.completedReferrals}
           </p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="rounded-[18px] bg-[#ECF0F3] px-4 py-3 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]">
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-500">
             Rewarded referrals
           </p>
@@ -246,7 +246,7 @@ export function ReferralMilestonesSection({
   milestones: ReferralPortalMilestones;
 }) {
   return (
-    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <section className="rounded-[28px] bg-[#ECF0F3] p-6 shadow-[14px_14px_32px_rgba(163,177,198,0.45),-14px_-14px_32px_rgba(255,255,255,0.95)] sm:p-8">
       <div className="mb-6">
         <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-500">
           Milestones
@@ -298,10 +298,10 @@ export function ReferralMilestonesSection({
         {milestones.milestones.map((milestone) => (
           <div
             key={milestone.key}
-            className={`rounded-2xl border px-5 py-4 sm:px-6 ${
+            className={`rounded-[20px] px-5 py-4 sm:px-6 ${
               milestone.completed
-                ? "border-emerald-200 bg-emerald-50"
-                : "border-slate-200 bg-slate-50"
+                ? "border border-emerald-200 bg-emerald-50"
+                : "bg-[#ECF0F3] shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]"
             }`}
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -352,7 +352,7 @@ export function PortalCodeSection({
   );
 
   return (
-    <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <div className="space-y-6 rounded-[28px] bg-[#ECF0F3] p-6 shadow-[14px_14px_32px_rgba(163,177,198,0.45),-14px_-14px_32px_rgba(255,255,255,0.95)] sm:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-500">
@@ -423,7 +423,7 @@ export function PortalCodeSection({
           ).map(([key, label]) => (
             <div
               key={key}
-              className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+              className="rounded-[18px] bg-[#ECF0F3] px-4 py-3 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]"
             >
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 {label}
@@ -441,7 +441,7 @@ export function PortalCodeSection({
           Referral history
         </h3>
         {summary.referrals.length === 0 ? (
-          <div className="mt-3 rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+          <div className="mt-3 rounded-[20px] bg-[#ECF0F3] px-4 py-8 text-center text-sm text-slate-500 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]">
             No referrals yet. Share your link to start earning rewards.
           </div>
         ) : (
@@ -449,7 +449,7 @@ export function PortalCodeSection({
             {summary.referrals.map((referral, index) => (
               <div
                 key={`${referral.referredLabel}-${referral.createdAt}-${index}`}
-                className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-3 rounded-[20px] bg-[#ECF0F3] px-4 py-4 shadow-[10px_10px_24px_rgba(163,177,198,0.40),-10px_-10px_24px_rgba(255,255,255,0.95)] sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <p className="font-semibold text-slate-900">
@@ -480,7 +480,7 @@ export function PortalCodeSection({
 
 export function PortalLoadingState() {
   return (
-    <div className="mt-10 rounded-3xl border border-slate-200 bg-white px-6 py-10 text-center shadow-sm sm:px-8">
+    <div className="mt-10 rounded-[28px] bg-[#ECF0F3] px-6 py-10 text-center shadow-[14px_14px_32px_rgba(163,177,198,0.45),-14px_-14px_32px_rgba(255,255,255,0.95)] sm:px-8">
       <p className="text-sm font-medium text-slate-600">
         Verifying your secure access link...
       </p>

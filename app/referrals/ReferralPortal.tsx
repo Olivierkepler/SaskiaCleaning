@@ -108,7 +108,11 @@ export default function ReferralPortal({
       {showRequestForm && (
         <form
           onSubmit={handleSubmit}
-          className="mt-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          className={
+            embedded
+              ? "mt-2 rounded-[24px] bg-[#ECF0F3] p-6 shadow-[10px_10px_24px_rgba(163,177,198,0.40),-10px_-10px_24px_rgba(255,255,255,0.95)] sm:p-8"
+              : "mt-2 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8"
+          }
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
