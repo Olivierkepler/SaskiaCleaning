@@ -19,7 +19,10 @@ export default function AccountNavbar({
   customerImage,
 }: AccountNavbarProps) {
   const displayName = customerName?.trim() || "Saskia customer";
-  const initial = (customerName?.trim() || customerEmail).charAt(0).toUpperCase();
+
+  const initial = (customerName?.trim() || customerEmail)
+    .charAt(0)
+    .toUpperCase();
 
   return (
     <header className="mb-7">
@@ -33,7 +36,7 @@ export default function AccountNavbar({
           bg-white
           px-5
           py-3
-          shadow-[0_14px_40px_rgba(71,85,105,0.10)]
+          shadow-[inset_18px_18px_30px_rgba(209,217,230,1),inset_-18px_-18px_30px_rgba(255,255,255,1)]
           sm:px-6
         "
       >
@@ -122,6 +125,7 @@ export default function AccountNavbar({
               <p className="truncate text-sm font-semibold leading-tight text-slate-900">
                 {displayName}
               </p>
+
               <p className="mt-0.5 hidden truncate text-xs leading-tight text-slate-500 md:block">
                 {customerEmail}
               </p>
