@@ -28,7 +28,7 @@ export default function SignOutButton({
       aria-label="Sign out of your Saskia account"
       className={
         className ||
-        "rounded-full border border-slate-200 px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-700 transition hover:border-slate-900 hover:text-slate-900 disabled:opacity-60"
+        " cursor-pointer px-5 py-2.5 text-[12px] font-semibold uppercase tracking-[0.14em] text-slate-700 transition  hover:text-slate-900 disabled:opacity-60"
       }
     >
       {loading ? "Signing out…" : label}

@@ -22,7 +22,7 @@ export default function AccountHero({
   imageAlt = DEFAULT_HERO_ALT,
 }: AccountHeroProps) {
   return (
-    <section className="relative mb-8 min-h-[240px] overflow-hidden rounded-[28px] md:min-h-[300px]">
+    <section className="relative mb-8 min-h-[240px] overflow-hidden rounded-[10px] md:min-h-[300px]">
       <Image
         src={imageSrc}
         alt={imageAlt}
