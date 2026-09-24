@@ -1,6 +1,5 @@
 import { requireCustomer } from "@/app/lib/customer-auth";
 import AccountPageShell from "@/app/components/account/AccountPageShell";
-import AccountNavbar from "@/app/components/account/AccountNavbar";
 import AccountHero from "@/app/components/account/AccountHero";
 import AccountProfileHeader from "@/app/components/account/AccountProfileHeader";
 import AccountActionGrid from "@/app/components/account/AccountActionGrid";
@@ -11,8 +10,6 @@ export default async function AccountPage() {
 
   return (
     <AccountPageShell>
-      <AccountNavbar />
-
       <AccountHero
         eyebrow="Your account"
         title={`Hello, ${firstName}`}
