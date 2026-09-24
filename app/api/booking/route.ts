@@ -18,6 +18,7 @@ import {
 } from "@/app/lib/scheduling-pure";
 import { CAPACITY_CONFLICT_MESSAGE } from "@/app/lib/staff-capacity-pure";
 import { resolveDurationForBooking } from "@/app/lib/booking-duration";
+import { getJobBufferMinutes } from "@/app/lib/booking-buffer";
 
 function parseNonNegativeInteger(value: unknown): number | null {
   const parsed = Number(value);
@@ -134,10 +135,14 @@ export async function POST(req: Request) {
       );
     }
 
+    // Server owns buffer — never trust client.
+    const bufferMinutes = await getJobBufferMinutes();
+
     const slotCheck = await assertSlotAvailable({
       dateOnly: parsedBookingDate,
       time: bookingTime,
       durationMinutes: durationResult.minutes,
+      bufferMinutes,
     });
 
     if (!slotCheck.ok) {
@@ -244,6 +249,7 @@ export async function POST(req: Request) {
         bookingDate: parsedBookingDate,
         bookingTime: slotCheck.time,
         durationMinutes: durationResult.minutes,
+        bufferMinutes,
         extrasJson: JSON.stringify(extrasArray),
         estimateLow: estimateLow ?? null,
         estimateMid: estimateMid ?? null,

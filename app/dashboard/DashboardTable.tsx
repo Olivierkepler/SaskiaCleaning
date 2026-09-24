@@ -283,10 +283,12 @@ export default function DashboardTable({
   bookings,
   dashboardKey,
   assignedBookingIds = [],
+  capacityHints = {},
 }: {
   bookings: BookingRequest[];
   dashboardKey: string;
   assignedBookingIds?: number[];
+  capacityHints?: Record<number, "overdue" | "capacity_held">;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
@@ -304,6 +306,23 @@ export default function DashboardTable({
     () => new Set(assignedBookingIds),
     [assignedBookingIds],
   );
+
+  function capacityBadge(bookingId: number) {
+    const hint = capacityHints[bookingId];
+    if (!hint) return null;
+    if (hint === "overdue") {
+      return (
+        <span className="ml-1 inline-flex rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-800">
+          Overdue
+        </span>
+      );
+    }
+    return (
+      <span className="ml-1 inline-flex rounded border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-800">
+        Capacity held
+      </span>
+    );
+  }
 
   const getBookingStatus = (status: string): BookingStatus =>
     isBookingStatus(status) ? status : "new";
@@ -1003,22 +1022,25 @@ export default function DashboardTable({
                       />
                     </td>
                     <td className="p-3">
-                      <select
-                        value={bookingStatus}
-                        onChange={(e) =>
-                          handleStatusChange(
-                            booking.id,
-                            e.target.value as BookingStatus
-                          )
-                        }
-                        className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold shadow-sm outline-none transition focus:ring-2 focus:ring-sky-100 ${BOOKING_STATUS_BADGE_CLASS[bookingStatus]}`}
-                      >
-                        {BOOKING_STATUSES.map((status) => (
-                          <option key={status} value={status}>
-                            {BOOKING_STATUS_LABELS[status]}
-                          </option>
-                        ))}
-                      </select>
+                      <div className="flex flex-wrap items-center gap-1">
+                        <select
+                          value={bookingStatus}
+                          onChange={(e) =>
+                            handleStatusChange(
+                              booking.id,
+                              e.target.value as BookingStatus
+                            )
+                          }
+                          className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold shadow-sm outline-none transition focus:ring-2 focus:ring-sky-100 ${BOOKING_STATUS_BADGE_CLASS[bookingStatus]}`}
+                        >
+                          {BOOKING_STATUSES.map((status) => (
+                            <option key={status} value={status}>
+                              {BOOKING_STATUS_LABELS[status]}
+                            </option>
+                          ))}
+                        </select>
+                        {capacityBadge(booking.id)}
+                      </div>
                     </td>
                     <td className="whitespace-nowrap p-3 text-xs text-slate-500">
                       {formatDate(booking.created_at)}
@@ -1098,23 +1120,26 @@ export default function DashboardTable({
                   >
                     Status
                   </label>
-                  <select
-                    id={`status-${booking.id}`}
-                    value={bookingStatus}
-                    onChange={(e) =>
-                      handleStatusChange(
-                        booking.id,
-                        e.target.value as BookingStatus
-                      )
-                    }
-                    className={`w-full rounded-lg border px-2.5 py-2 text-sm font-semibold shadow-sm outline-none transition focus:ring-2 focus:ring-sky-100 ${BOOKING_STATUS_BADGE_CLASS[bookingStatus]}`}
-                  >
-                    {BOOKING_STATUSES.map((status) => (
-                      <option key={status} value={status}>
-                        {BOOKING_STATUS_LABELS[status]}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex flex-wrap items-center gap-1">
+                    <select
+                      id={`status-${booking.id}`}
+                      value={bookingStatus}
+                      onChange={(e) =>
+                        handleStatusChange(
+                          booking.id,
+                          e.target.value as BookingStatus
+                        )
+                      }
+                      className={`w-full rounded-lg border px-2.5 py-2 text-sm font-semibold shadow-sm outline-none transition focus:ring-2 focus:ring-sky-100 ${BOOKING_STATUS_BADGE_CLASS[bookingStatus]}`}
+                    >
+                      {BOOKING_STATUSES.map((status) => (
+                        <option key={status} value={status}>
+                          {BOOKING_STATUS_LABELS[status]}
+                        </option>
+                      ))}
+                    </select>
+                    {capacityBadge(booking.id)}
+                  </div>
                 </div>
 
                 <div className="grid gap-3 text-sm">

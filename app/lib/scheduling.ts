@@ -133,6 +133,7 @@ export async function getAvailableSlotsForDate(
     excludeBookingId?: number | null;
     ignoreOccupiedTime?: string | null;
     durationMinutes: number;
+    bufferMinutes?: number;
   },
 ): Promise<AvailableSlot[]> {
   const { getAvailableSlotsWithCapacity } = await import(
@@ -142,6 +143,7 @@ export async function getAvailableSlotsForDate(
     now: options?.now,
     excludeBookingId: options?.excludeBookingId,
     durationMinutes: options.durationMinutes,
+    bufferMinutes: options.bufferMinutes,
   });
 }
 
@@ -153,6 +155,7 @@ export async function assertSlotAvailable(input: {
   dateOnly: string;
   time: unknown;
   durationMinutes: number;
+  bufferMinutes?: number;
   excludeBookingId?: number | null;
   ignoreOccupiedTime?: string | null;
   requireTime?: boolean;
@@ -165,6 +168,7 @@ export async function assertSlotAvailable(input: {
     dateOnly: input.dateOnly,
     time: input.time,
     durationMinutes: input.durationMinutes,
+    bufferMinutes: input.bufferMinutes,
     excludeBookingId: input.excludeBookingId,
     requireTime: input.requireTime,
   });

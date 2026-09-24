@@ -1,5 +1,6 @@
 /**
- * Pure multi-cleaner capacity helpers — Phase 11.8 + 11.9 overlap awareness.
+ * Pure multi-cleaner capacity helpers —
+ * Phase 11.8 + 11.9 overlap + 11.10 post-job buffer capacity windows.
  * No DB / Next imports — safe for unit tests.
  */
 
@@ -12,13 +13,17 @@ import {
   type StaffRole,
 } from "@/app/lib/staff-pure";
 import {
-  getBookingWindow,
   resolveEffectiveDurationMinutes,
   staffAvailabilityCoversWindow,
   staffTimeOffOverlapsWindow,
   windowsOverlapMinutes,
   type BookingWindow,
 } from "@/app/lib/booking-duration-pure";
+import {
+  getCapacityWindow,
+  resolveEffectiveBufferMinutes,
+  type CapacityWindow,
+} from "@/app/lib/booking-buffer-pure";
 
 /** Roles that consume public cleaning capacity (one booking = one unit). */
 export const CAPACITY_STAFF_ROLES: readonly StaffRole[] = ["cleaner"];
@@ -48,8 +53,11 @@ export function compareStaffForAutoAssign(
 
 export type AssignedWindow = {
   startTime: string;
+  /** Service duration only (customer-facing). */
   durationMinutes: number;
-  /** Exclusive end minutes from midnight (same day). */
+  /** Post-job buffer included in capacity end. */
+  bufferMinutes: number;
+  /** Exclusive capacity end minutes from midnight (same day). */
   startMinutes: number;
   endMinutes: number;
 };
@@ -69,25 +77,38 @@ export type StaffCapacitySnapshot = {
 export function buildAssignedWindow(
   startTime: string,
   durationMinutes: number | null | undefined,
+  bufferMinutes?: number | null,
 ): AssignedWindow | null {
-  const effective = resolveEffectiveDurationMinutes(durationMinutes);
-  const window = getBookingWindow({
+  const effectiveDuration = resolveEffectiveDurationMinutes(durationMinutes);
+  // Omitted buffer → 0 (Phase 11.9 adjacency). Explicit null → legacy fallback.
+  const resolvedBuffer =
+    bufferMinutes === undefined
+      ? 0
+      : resolveEffectiveBufferMinutes(bufferMinutes);
+
+  const window = getCapacityWindow({
     dateOnly: "2000-01-01",
     startTime,
-    durationMinutes: effective,
+    durationMinutes: effectiveDuration,
+    bufferMinutes: resolvedBuffer,
   });
   if (!window) return null;
   return {
     startTime: window.startTime,
     durationMinutes: window.durationMinutes,
+    bufferMinutes: window.bufferMinutes,
     startMinutes: window.startMinutes,
     endMinutes: window.endMinutes,
   };
 }
 
+/**
+ * Staff eligibility uses the CAPACITY window (service + post-job buffer).
+ * Business hours still validate the SERVICE window separately.
+ */
 export function staffIsEligibleForCapacityWindow(
   staff: StaffCapacitySnapshot,
-  window: BookingWindow,
+  window: BookingWindow | CapacityWindow,
   options?: { ignoreAssignedWindows?: boolean },
 ): boolean {
   if (!staff.isActive) return false;
@@ -139,11 +160,13 @@ export function staffIsEligibleForCapacitySlot(
   staff: StaffCapacitySnapshot,
   slotTime: string,
   durationMinutes: number = 60,
+  bufferMinutes: number = 0,
 ): boolean {
-  const window = getBookingWindow({
+  const window = getCapacityWindow({
     dateOnly: "2000-01-01",
     startTime: slotTime,
     durationMinutes,
+    bufferMinutes,
   });
   if (!window) return false;
   return staffIsEligibleForCapacityWindow(staff, window);
@@ -162,15 +185,19 @@ export function summarizeSlotCapacityForDuration(input: {
   candidateSlots: AvailableSlot[];
   staff: StaffCapacitySnapshot[];
   durationMinutes: number;
+  /** Post-job buffer applied to capacity eligibility. */
+  bufferMinutes?: number;
   dateOnly: string;
   /** Bookings whose windows overlap each candidate (count). */
   overlappingBookedByTime?: Record<string, number>;
 }): SlotCapacitySummary[] {
+  const bufferMinutes = input.bufferMinutes ?? 0;
   return input.candidateSlots.map((slot) => {
-    const window = getBookingWindow({
+    const window = getCapacityWindow({
       dateOnly: input.dateOnly,
       startTime: slot.time,
       durationMinutes: input.durationMinutes,
+      bufferMinutes,
     });
     if (!window) {
       return {
@@ -215,12 +242,11 @@ export function summarizeSlotCapacity(input: {
   staff: StaffCapacitySnapshot[];
   bookedByTime: Record<string, number>;
 }): SlotCapacitySummary[] {
-  // Map legacy assignedTimes-style snapshots if any tests still pass them —
-  // capacity snapshots now use assignedWindows.
   return summarizeSlotCapacityForDuration({
     candidateSlots: input.candidateSlots,
     staff: input.staff,
     durationMinutes: 60,
+    bufferMinutes: 0,
     dateOnly: "2000-01-01",
     overlappingBookedByTime: input.bookedByTime,
   });
@@ -228,7 +254,7 @@ export function summarizeSlotCapacity(input: {
 
 export function pickAutoAssignStaffIdForWindow(
   staff: StaffCapacitySnapshot[],
-  window: BookingWindow,
+  window: BookingWindow | CapacityWindow,
 ): string | null {
   const eligible = staff
     .filter((s) => staffIsEligibleForCapacityWindow(s, window))
@@ -240,11 +266,13 @@ export function pickAutoAssignStaffId(
   staff: StaffCapacitySnapshot[],
   slotTime: string,
   durationMinutes: number = 60,
+  bufferMinutes: number = 0,
 ): string | null {
-  const window = getBookingWindow({
+  const window = getCapacityWindow({
     dateOnly: "2000-01-01",
     startTime: slotTime,
     durationMinutes,
+    bufferMinutes,
   });
   if (!window) return null;
   return pickAutoAssignStaffIdForWindow(staff, window);

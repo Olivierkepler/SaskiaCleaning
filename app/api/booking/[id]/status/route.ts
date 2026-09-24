@@ -54,14 +54,25 @@ export async function PATCH(
       return NextResponse.json({ error: "Booking not found." }, { status: 404 });
     }
 
-    if (status === "cancelled" || status === "completed") {
+    if (status === "cancelled") {
       try {
         const { releaseAssignmentCapacity } = await import(
-          "@/app/lib/staff-capacity"
+          "@/app/lib/capacity-release"
         );
-        await releaseAssignmentCapacity(bookingId);
+        await releaseAssignmentCapacity(bookingId, "cancelled");
       } catch (releaseError) {
         console.error("Failed to release assignment capacity:", releaseError);
+      }
+    }
+
+    if (status === "completed") {
+      try {
+        const { releaseCompletedCapacityIfWindowElapsed } = await import(
+          "@/app/lib/capacity-release"
+        );
+        await releaseCompletedCapacityIfWindowElapsed(bookingId);
+      } catch (releaseError) {
+        console.error("Failed to release completed capacity:", releaseError);
       }
     }
 

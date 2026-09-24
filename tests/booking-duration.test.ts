@@ -25,6 +25,7 @@ import {
   type StaffCapacitySnapshot,
 } from "../app/lib/staff-capacity-pure";
 import { hasOverlappingStaffConflict } from "../app/lib/staff-pure";
+import { generateAvailableSlots } from "../app/lib/scheduling-pure";
 
 const rules = [
   { serviceKey: "Standard", durationMinutes: 120 },
@@ -214,28 +215,201 @@ describe("overlap windows", () => {
   });
 });
 
-describe("overlap-aware staff conflict + capacity", () => {
-  it("hasOverlappingStaffConflict detects partial overlap", () => {
+describe("production Sep25-style overlap availability (Phase 11.9)", () => {
+  const weekly = {
+    dayOfWeek: 5,
+    startTime: "09:00",
+    endTime: "17:00",
+    slotIntervalMinutes: 60,
+    isActive: true,
+  };
+  const now = new Date("2026-09-20T12:00:00.000Z");
+
+  function candidateSlotsForStandard() {
+    const raw = generateAvailableSlots({
+      dateOnly: "2026-09-25",
+      weekly,
+      blocks: [],
+      occupiedTimes: [],
+      now,
+    });
+    return raw.filter((slot) => {
+      const w = getBookingWindow({
+        dateOnly: "2026-09-25",
+        startTime: slot.time,
+        durationMinutes: 120,
+      });
+      return (
+        w != null &&
+        bookingFitsBusinessHours({
+          window: w,
+          businessStartTime: "09:00",
+          businessEndTime: "17:00",
+        })
+      );
+    });
+  }
+
+  it("1 cleaner with 10:00-12:00 blocks 09/10/11; 12:00 remains available", () => {
+    const staff = [
+      makeStaff({
+        id: "only",
+        assignedWindows: [buildAssignedWindow("10:00", 120)!],
+      }),
+    ];
+    const summaries = summarizeSlotCapacityForDuration({
+      candidateSlots: candidateSlotsForStandard(),
+      staff,
+      durationMinutes: 120,
+      dateOnly: "2026-09-25",
+    });
+    const available = summaries.filter((s) => s.available).map((s) => s.time);
+    const unavailable = summaries.filter((s) => !s.available).map((s) => s.time);
+    assert.deepEqual(unavailable, ["09:00", "10:00", "11:00"]);
+    assert.deepEqual(available, ["12:00", "13:00", "14:00", "15:00"]);
+  });
+
+  it("2 cleaners with one occupied still leave 09/10/11 available (multi-capacity)", () => {
+    const staff = [
+      makeStaff({
+        id: "a",
+        assignedWindows: [buildAssignedWindow("10:00", 120)!],
+      }),
+      makeStaff({
+        id: "b",
+        createdAt: "2026-01-02T00:00:00.000Z",
+        assignedWindows: [],
+      }),
+    ];
+    const summaries = summarizeSlotCapacityForDuration({
+      candidateSlots: candidateSlotsForStandard(),
+      staff,
+      durationMinutes: 120,
+      dateOnly: "2026-09-25",
+    });
+    const available = summaries.filter((s) => s.available).map((s) => s.time);
+    assert.ok(available.includes("09:00"));
+    assert.ok(available.includes("10:00"));
+    assert.ok(available.includes("11:00"));
+    assert.ok(available.includes("12:00"));
+  });
+
+  it("both cleaners occupied at overlapping windows leaves morning slots empty", () => {
+    const occupied = buildAssignedWindow("10:00", 120)!;
+    const staff = [
+      makeStaff({ id: "a", assignedWindows: [occupied] }),
+      makeStaff({
+        id: "b",
+        createdAt: "2026-01-02T00:00:00.000Z",
+        assignedWindows: [buildAssignedWindow("10:00", 120)!],
+      }),
+    ];
+    const summaries = summarizeSlotCapacityForDuration({
+      candidateSlots: candidateSlotsForStandard(),
+      staff,
+      durationMinutes: 120,
+      dateOnly: "2026-09-25",
+    });
+    const available = summaries.filter((s) => s.available).map((s) => s.time);
+    assert.ok(!available.includes("09:00"));
+    assert.ok(!available.includes("10:00"));
+    assert.ok(!available.includes("11:00"));
+    assert.ok(available.includes("12:00"));
+  });
+
+  it("cancelled/inactive assignment does not consume capacity", () => {
+    const staff = [
+      makeStaff({
+        id: "only",
+        // no assignedWindows = released/cancelled capacity
+        assignedWindows: [],
+      }),
+    ];
+    const summaries = summarizeSlotCapacityForDuration({
+      candidateSlots: candidateSlotsForStandard(),
+      staff,
+      durationMinutes: 120,
+      dateOnly: "2026-09-25",
+    });
+    assert.ok(summaries.find((s) => s.time === "10:00")?.available);
+  });
+
+  it("partial time off 10-12 blocks morning windows like an assignment", () => {
+    const staff = [
+      makeStaff({
+        id: "only",
+        timeOff: [{ startTime: "10:00", endTime: "12:00" }],
+      }),
+    ];
+    const summaries = summarizeSlotCapacityForDuration({
+      candidateSlots: candidateSlotsForStandard(),
+      staff,
+      durationMinutes: 120,
+      dateOnly: "2026-09-25",
+    });
+    const unavailable = summaries.filter((s) => !s.available).map((s) => s.time);
+    assert.deepEqual(unavailable, ["09:00", "10:00", "11:00"]);
+  });
+
+  it("partial scheduling block 10-12 removes overlapping candidate starts", () => {
+    const raw = generateAvailableSlots({
+      dateOnly: "2026-09-25",
+      weekly,
+      blocks: [],
+      occupiedTimes: [],
+      now,
+    });
+    const withBlock = raw.filter((slot) => {
+      const w = getBookingWindow({
+        dateOnly: "2026-09-25",
+        startTime: slot.time,
+        durationMinutes: 120,
+      });
+      if (
+        !w ||
+        !bookingFitsBusinessHours({
+          window: w,
+          businessStartTime: "09:00",
+          businessEndTime: "17:00",
+        })
+      ) {
+        return false;
+      }
+      return !schedulingBlockOverlapsWindow({
+        blockStartTime: "10:00",
+        blockEndTime: "12:00",
+        window: w,
+      });
+    });
+    assert.deepEqual(
+      withBlock.map((s) => s.time),
+      ["12:00", "13:00", "14:00", "15:00"],
+    );
+  });
+
+  it("adjacency at exactly 12:00 after 10:00-12:00 does not conflict", () => {
     assert.equal(
       hasOverlappingStaffConflict({
         existingAssignments: [
           {
-            bookingId: 1,
-            bookingDate: "2026-10-09",
+            bookingId: 83,
+            bookingDate: "2026-09-25",
             bookingTime: "10:00",
             durationMinutes: 120,
-            status: "scheduled",
+            status: "new",
           },
         ],
-        candidateBookingId: 2,
-        candidateDate: "2026-10-09",
-        candidateTime: "11:00",
+        candidateBookingId: 99,
+        candidateDate: "2026-09-25",
+        candidateTime: "12:00",
         candidateDurationMinutes: 120,
       }),
-      true,
+      false,
     );
   });
+});
 
+describe("overlap-aware staff conflict + capacity", () => {
   it("adjacent jobs for same cleaner remain eligible", () => {
     assert.equal(
       hasOverlappingStaffConflict({

@@ -101,6 +101,7 @@ export function hasExactSlotStaffConflict(input: {
     "contacted",
     "scheduled",
     "in_progress",
+    "completed",
   ];
   const date = input.candidateDate;
   const time = parseBookingTime(input.candidateTime);
@@ -115,8 +116,8 @@ export function hasExactSlotStaffConflict(input: {
 }
 
 /**
- * Overlap-aware staff conflict (Phase 11.9).
- * Uses half-open [start, end) windows in minutes from midnight.
+ * Overlap-aware staff conflict (Phase 11.9 + 11.10 buffer).
+ * Uses half-open [start, end) capacity windows in minutes from midnight.
  */
 export function hasOverlappingStaffConflict(input: {
   existingAssignments: Array<{
@@ -124,12 +125,14 @@ export function hasOverlappingStaffConflict(input: {
     bookingDate: string | null;
     bookingTime: string | null;
     durationMinutes: number | null;
+    bufferMinutes?: number | null;
     status: string;
   }>;
   candidateBookingId: number;
   candidateDate: string | null;
   candidateTime: string | null;
   candidateDurationMinutes: number;
+  candidateBufferMinutes?: number;
   capacityStatuses?: readonly string[];
 }): boolean {
   const capacity = input.capacityStatuses ?? [
@@ -137,13 +140,21 @@ export function hasOverlappingStaffConflict(input: {
     "contacted",
     "scheduled",
     "in_progress",
+    "completed",
   ];
   const date = input.candidateDate;
   const time = parseBookingTime(input.candidateTime);
   if (!date || !time) return false;
 
   const candidateStart = timeToMinutes(time);
-  const candidateEnd = candidateStart + input.candidateDurationMinutes;
+  const candidateBuffer =
+    typeof input.candidateBufferMinutes === "number" &&
+    Number.isInteger(input.candidateBufferMinutes) &&
+    input.candidateBufferMinutes >= 0
+      ? input.candidateBufferMinutes
+      : 0;
+  const candidateEnd =
+    candidateStart + input.candidateDurationMinutes + candidateBuffer;
   if (Number.isNaN(candidateStart)) return false;
 
   return input.existingAssignments.some((row) => {
@@ -159,7 +170,19 @@ export function hasOverlappingStaffConflict(input: {
       row.durationMinutes > 0
         ? row.durationMinutes
         : 120; // LEGACY_DURATION_FALLBACK — keep in sync with booking-duration-pure
-    const rowEnd = rowStart + rowDuration;
+    // When bufferMinutes key is omitted (legacy Phase 11.9 callers), treat as 0.
+    // When explicitly null (DB), use legacy buffer fallback (30).
+    const resolvedRowBuffer =
+      "bufferMinutes" in row
+        ? row.bufferMinutes == null
+          ? 30
+          : typeof row.bufferMinutes === "number" &&
+              Number.isInteger(row.bufferMinutes) &&
+              row.bufferMinutes >= 0
+            ? row.bufferMinutes
+            : 0
+        : 0;
+    const rowEnd = rowStart + rowDuration + resolvedRowBuffer;
     return candidateStart < rowEnd && rowStart < candidateEnd;
   });
 }

@@ -18,6 +18,7 @@ export type CustomerBooking = {
   booking_date: string | Date | null;
   booking_time: string | null;
   duration_minutes: number | null;
+  buffer_minutes: number | null;
   extras: string[];
   estimate_low: number | null;
   estimate_mid: number | null;
@@ -39,6 +40,8 @@ function mapRow(row: CustomerBookingRow): CustomerBooking {
       row.booking_time == null ? null : String(row.booking_time).slice(0, 8),
     duration_minutes:
       row.duration_minutes == null ? null : Number(row.duration_minutes),
+    buffer_minutes:
+      row.buffer_minutes == null ? null : Number(row.buffer_minutes),
     extras: normalizeBookingExtras(row.extras),
   };
 }
@@ -65,6 +68,7 @@ export async function getCustomerBookings(
       booking_date,
       booking_time,
       duration_minutes,
+      buffer_minutes,
       extras,
       estimate_low,
       estimate_mid,
@@ -111,6 +115,7 @@ export async function getCustomerBookingById(
       booking_date,
       booking_time,
       duration_minutes,
+      buffer_minutes,
       extras,
       estimate_low,
       estimate_mid,

@@ -18,6 +18,9 @@ export const CAPACITY_CONSUMING_STATUSES = [
   "contacted",
   "scheduled",
   "in_progress",
+  // Completed keeps capacity until soft-release (cancel) so early finish
+  // does not free the buffered handoff window (Phase 11.10).
+  "completed",
 ] as const;
 
 export type CapacityConsumingStatus =

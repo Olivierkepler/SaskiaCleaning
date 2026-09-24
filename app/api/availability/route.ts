@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { getAvailableSlotsForDate } from "@/app/lib/scheduling";
 import { isValidBookingDateOnly } from "@/app/lib/scheduling-pure";
 import { resolveDurationForBooking } from "@/app/lib/booking-duration";
+import { getJobBufferMinutes } from "@/app/lib/booking-buffer";
 
 /**
  * Public read-only availability.
  * Duration is server-calculated from service (+ optional room fields).
+ * Buffer is server-owned and never exposed.
  * Returns only date + slot times/labels — no booking, staff, or customer data.
  */
 export async function GET(req: Request) {
@@ -49,8 +51,10 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: duration.error }, { status: 400 });
     }
 
+    const bufferMinutes = await getJobBufferMinutes();
     const slots = await getAvailableSlotsForDate(date, {
       durationMinutes: duration.minutes,
+      bufferMinutes,
     });
 
     return NextResponse.json({

@@ -20,12 +20,15 @@ import {
 import { parseBookingDateOnly } from "@/app/lib/customer-bookings-pure";
 import { sendEmail } from "@/app/lib/email";
 import {
-  getBookingWindow,
   resolveEffectiveDurationMinutes,
   staffAvailabilityCoversWindow,
   staffTimeOffOverlapsWindow,
   formatEstimatedDuration,
 } from "@/app/lib/booking-duration-pure";
+import {
+  getCapacityWindow,
+  resolveEffectiveBufferMinutes,
+} from "@/app/lib/booking-buffer-pure";
 
 export type StaffMember = {
   id: string;
@@ -287,7 +290,7 @@ export async function countUpcomingAssignmentsForStaff(
     WHERE a.staff_id = ${staffId}
       AND a.is_active = true
       AND a.is_primary = true
-      AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress')
+      AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress', 'completed')
       AND (
         b.booking_date IS NULL
         OR b.booking_date >= (CURRENT_DATE AT TIME ZONE 'America/New_York')
@@ -322,7 +325,7 @@ export async function upsertStaffAvailability(
 > {
   // Detect future assignments that would fall outside the new weekly windows.
   const futureRows = await sql`
-    SELECT a.slot_date, a.slot_time, b.duration_minutes
+    SELECT a.slot_date, a.slot_time, b.duration_minutes, b.buffer_minutes
     FROM booking_assignments a
     INNER JOIN booking_requests b ON b.id = a.booking_id
     WHERE a.staff_id = ${staffId}
@@ -330,7 +333,7 @@ export async function upsertStaffAvailability(
       AND a.is_primary = true
       AND a.slot_date IS NOT NULL
       AND a.slot_time IS NOT NULL
-      AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress')
+      AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress', 'completed')
       AND a.slot_date >= (CURRENT_DATE AT TIME ZONE 'America/New_York')
   `;
 
@@ -340,6 +343,7 @@ export async function upsertStaffAvailability(
     slot_date: string | Date;
     slot_time: string;
     duration_minutes: number | null;
+    buffer_minutes: number | null;
   }>) {
     const dateOnly = parseBookingDateOnly(row.slot_date);
     const time = parseBookingTime(String(row.slot_time));
@@ -356,10 +360,14 @@ export async function upsertStaffAvailability(
     const durationMinutes = resolveEffectiveDurationMinutes(
       row.duration_minutes == null ? null : Number(row.duration_minutes),
     );
-    const window = getBookingWindow({
+    const bufferMinutes = resolveEffectiveBufferMinutes(
+      row.buffer_minutes == null ? null : Number(row.buffer_minutes),
+    );
+    const window = getCapacityWindow({
       dateOnly,
       startTime: time,
       durationMinutes,
+      bufferMinutes,
     });
     if (
       !start ||
@@ -476,20 +484,21 @@ export async function createStaffTimeOff(input: {
       : null;
 
   const assignmentRows = await sql`
-    SELECT a.slot_time, b.duration_minutes
+    SELECT a.slot_time, b.duration_minutes, b.buffer_minutes
     FROM booking_assignments a
     INNER JOIN booking_requests b ON b.id = a.booking_id
     WHERE a.staff_id = ${input.staffId}
       AND a.is_active = true
       AND a.is_primary = true
       AND a.slot_date = ${input.offDate}::date
-      AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress')
+      AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress', 'completed')
   `;
 
   let conflictCount = 0;
   for (const row of assignmentRows as Array<{
     slot_time: string | null;
     duration_minutes: number | null;
+    buffer_minutes: number | null;
   }>) {
     const slotTime = parseBookingTime(
       row.slot_time == null ? null : String(row.slot_time),
@@ -498,10 +507,14 @@ export async function createStaffTimeOff(input: {
     const durationMinutes = resolveEffectiveDurationMinutes(
       row.duration_minutes == null ? null : Number(row.duration_minutes),
     );
-    const window = getBookingWindow({
+    const bufferMinutes = resolveEffectiveBufferMinutes(
+      row.buffer_minutes == null ? null : Number(row.buffer_minutes),
+    );
+    const window = getCapacityWindow({
       dateOnly: input.offDate,
       startTime: slotTime,
       durationMinutes,
+      bufferMinutes,
     });
     if (!window) continue;
     if (
@@ -602,16 +615,18 @@ async function staffIsEligibleForSlot(input: {
   dateOnly: string;
   time: string;
   durationMinutes: number;
+  bufferMinutes: number;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const staff = await findStaffById(input.staffId);
   if (!staff || !staff.isActive) {
     return { ok: false, error: "That staff member is not available." };
   }
 
-  const window = getBookingWindow({
+  const window = getCapacityWindow({
     dateOnly: input.dateOnly,
     startTime: input.time,
     durationMinutes: input.durationMinutes,
+    bufferMinutes: input.bufferMinutes,
   });
   if (!window) {
     return { ok: false, error: "Invalid booking time window." };
@@ -692,7 +707,7 @@ export async function listEligibleStaffForBooking(bookingId: number): Promise<
   StaffMember[]
 > {
   const bookingRows = await sql`
-    SELECT id, booking_date, booking_time, status, duration_minutes
+    SELECT id, booking_date, booking_time, status, duration_minutes, buffer_minutes
     FROM booking_requests
     WHERE id = ${bookingId}
     LIMIT 1
@@ -704,6 +719,7 @@ export async function listEligibleStaffForBooking(bookingId: number): Promise<
         booking_time: string | null;
         status: string;
         duration_minutes: number | null;
+        buffer_minutes: number | null;
       }
     | undefined;
   if (!booking) return [];
@@ -715,6 +731,9 @@ export async function listEligibleStaffForBooking(bookingId: number): Promise<
   if (!dateOnly || !time) return [];
   const durationMinutes = resolveEffectiveDurationMinutes(
     booking.duration_minutes == null ? null : Number(booking.duration_minutes),
+  );
+  const bufferMinutes = resolveEffectiveBufferMinutes(
+    booking.buffer_minutes == null ? null : Number(booking.buffer_minutes),
   );
 
   const active = await sql`
@@ -732,6 +751,7 @@ export async function listEligibleStaffForBooking(bookingId: number): Promise<
       dateOnly,
       time,
       durationMinutes,
+      bufferMinutes,
     });
     if (!base.ok) continue;
 
@@ -741,13 +761,14 @@ export async function listEligibleStaffForBooking(bookingId: number): Promise<
         COALESCE(a.slot_date, b.booking_date) AS booking_date,
         COALESCE(a.slot_time, b.booking_time) AS booking_time,
         b.duration_minutes,
+        b.buffer_minutes,
         b.status
       FROM booking_assignments a
       INNER JOIN booking_requests b ON b.id = a.booking_id
       WHERE a.staff_id = ${staff.id}
         AND a.is_primary = true
         AND a.is_active = true
-        AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress')
+        AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress', 'completed')
     `;
     if (
       hasOverlappingStaffConflict({
@@ -762,12 +783,15 @@ export async function listEligibleStaffForBooking(bookingId: number): Promise<
             r.booking_time == null ? null : String(r.booking_time),
           durationMinutes:
             r.duration_minutes == null ? null : Number(r.duration_minutes),
+          bufferMinutes:
+            r.buffer_minutes == null ? null : Number(r.buffer_minutes),
           status: String(r.status),
         })),
         candidateBookingId: bookingId,
         candidateDate: dateOnly,
         candidateTime: time,
         candidateDurationMinutes: durationMinutes,
+        candidateBufferMinutes: bufferMinutes,
       })
     ) {
       continue;
@@ -787,7 +811,7 @@ export async function assignStaffToBooking(input: {
   | { ok: false; error: string; status: number }
 > {
   const bookingRows = await sql`
-    SELECT id, booking_date, booking_time, duration_minutes, status, name, email, service, location, mobile
+    SELECT id, booking_date, booking_time, duration_minutes, buffer_minutes, status, name, email, service, location, mobile
     FROM booking_requests
     WHERE id = ${input.bookingId}
     LIMIT 1
@@ -818,10 +842,14 @@ export async function assignStaffToBooking(input: {
       ? null
       : Number(booking.duration_minutes),
   );
-  const window = getBookingWindow({
+  const bufferMinutes = resolveEffectiveBufferMinutes(
+    booking.buffer_minutes == null ? null : Number(booking.buffer_minutes),
+  );
+  const window = getCapacityWindow({
     dateOnly,
     startTime: time,
     durationMinutes,
+    bufferMinutes,
   });
   if (!window) {
     return { ok: false, error: "Invalid booking time window.", status: 400 };
@@ -832,6 +860,7 @@ export async function assignStaffToBooking(input: {
     dateOnly,
     time,
     durationMinutes,
+    bufferMinutes,
   });
   if (!eligibility.ok) {
     return { ok: false, error: eligibility.error, status: 400 };
@@ -843,13 +872,14 @@ export async function assignStaffToBooking(input: {
       COALESCE(a.slot_date, b.booking_date) AS booking_date,
       COALESCE(a.slot_time, b.booking_time) AS booking_time,
       b.duration_minutes,
+      b.buffer_minutes,
       b.status
     FROM booking_assignments a
     INNER JOIN booking_requests b ON b.id = a.booking_id
     WHERE a.staff_id = ${input.staffId}
       AND a.is_primary = true
       AND a.is_active = true
-      AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress')
+      AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress', 'completed')
   `;
   if (
     hasOverlappingStaffConflict({
@@ -864,12 +894,15 @@ export async function assignStaffToBooking(input: {
           r.booking_time == null ? null : String(r.booking_time),
         durationMinutes:
           r.duration_minutes == null ? null : Number(r.duration_minutes),
+        bufferMinutes:
+          r.buffer_minutes == null ? null : Number(r.buffer_minutes),
         status: String(r.status),
       })),
       candidateBookingId: input.bookingId,
       candidateDate: dateOnly,
       candidateTime: time,
       candidateDurationMinutes: durationMinutes,
+      candidateBufferMinutes: bufferMinutes,
     })
   ) {
     return {
@@ -888,7 +921,11 @@ export async function assignStaffToBooking(input: {
     // Soft-release any prior active primary, then insert new claim with slot fields.
     await sql`
       UPDATE booking_assignments
-      SET is_active = false, updated_at = now()
+      SET
+        is_active = false,
+        released_at = now(),
+        release_reason = 'admin_release',
+        updated_at = now()
       WHERE booking_id = ${input.bookingId}
         AND is_active = true
     `;
@@ -941,6 +978,7 @@ export async function assignStaffToBooking(input: {
             `Date: ${dateOnly}`,
             `Time: ${time}`,
             `Estimated duration: ${formatEstimatedDuration(durationMinutes)}`,
+            `Reserved until: ${window.endTime}`,
             `Location: ${String(booking.location ?? "—")}`,
             "",
             "View your jobs: https://saskiaservices.com/staff",
@@ -1032,7 +1070,11 @@ export async function unassignBooking(
   const previous = await getAssignmentForBooking(bookingId);
   const rows = await sql`
     UPDATE booking_assignments
-    SET is_active = false, updated_at = now()
+    SET
+      is_active = false,
+      released_at = now(),
+      release_reason = 'admin_release',
+      updated_at = now()
     WHERE booking_id = ${bookingId}
       AND is_active = true
     RETURNING id
@@ -1074,7 +1116,7 @@ export async function revalidateAssignmentAfterReschedule(
   const assignment = await getAssignmentForBooking(bookingId);
 
   const bookingRows = await sql`
-    SELECT booking_date, booking_time, status, duration_minutes
+    SELECT booking_date, booking_time, status, duration_minutes, buffer_minutes
     FROM booking_requests
     WHERE id = ${bookingId}
     LIMIT 1
@@ -1085,6 +1127,7 @@ export async function revalidateAssignmentAfterReschedule(
         booking_time: string | null;
         status: string;
         duration_minutes: number | null;
+        buffer_minutes: number | null;
       }
     | undefined;
   if (!booking) return "none";
@@ -1098,7 +1141,11 @@ export async function revalidateAssignmentAfterReschedule(
     if (assignment) {
       await sql`
         UPDATE booking_assignments
-        SET is_active = false, updated_at = now()
+        SET
+          is_active = false,
+          released_at = now(),
+          release_reason = 'rescheduled',
+          updated_at = now()
         WHERE booking_id = ${bookingId}
           AND is_active = true
       `;
@@ -1112,10 +1159,14 @@ export async function revalidateAssignmentAfterReschedule(
       ? null
       : Number(booking.duration_minutes),
   );
-  const window = getBookingWindow({
+  const bufferMinutes = resolveEffectiveBufferMinutes(
+    booking.buffer_minutes == null ? null : Number(booking.buffer_minutes),
+  );
+  const window = getCapacityWindow({
     dateOnly,
     startTime: time,
     durationMinutes,
+    bufferMinutes,
   });
 
   if (assignment && window) {
@@ -1124,6 +1175,7 @@ export async function revalidateAssignmentAfterReschedule(
       dateOnly,
       time,
       durationMinutes,
+      bufferMinutes,
     });
     const conflictRows = await sql`
       SELECT
@@ -1131,13 +1183,14 @@ export async function revalidateAssignmentAfterReschedule(
         COALESCE(a.slot_date, b.booking_date) AS booking_date,
         COALESCE(a.slot_time, b.booking_time) AS booking_time,
         b.duration_minutes,
+        b.buffer_minutes,
         b.status
       FROM booking_assignments a
       INNER JOIN booking_requests b ON b.id = a.booking_id
       WHERE a.staff_id = ${assignment.staffId}
         AND a.is_primary = true
         AND a.is_active = true
-        AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress')
+        AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress', 'completed')
     `;
     const conflict = hasOverlappingStaffConflict({
       existingAssignments: (
@@ -1151,12 +1204,15 @@ export async function revalidateAssignmentAfterReschedule(
           r.booking_time == null ? null : String(r.booking_time),
         durationMinutes:
           r.duration_minutes == null ? null : Number(r.duration_minutes),
+        bufferMinutes:
+          r.buffer_minutes == null ? null : Number(r.buffer_minutes),
         status: String(r.status),
       })),
       candidateBookingId: bookingId,
       candidateDate: dateOnly,
       candidateTime: time,
       candidateDurationMinutes: durationMinutes,
+      candidateBufferMinutes: bufferMinutes,
     });
 
     if (eligibility.ok && !conflict) {

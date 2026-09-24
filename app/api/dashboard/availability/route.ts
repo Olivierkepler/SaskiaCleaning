@@ -4,6 +4,10 @@ import {
   upsertWeeklyAvailability,
 } from "@/app/lib/scheduling";
 import { parseBookingTime } from "@/app/lib/scheduling-pure";
+import {
+  getSchedulingBufferSettings,
+  updateJobBufferMinutes,
+} from "@/app/lib/booking-buffer";
 
 function unauthorized() {
   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -20,7 +24,10 @@ export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
     const date = url.searchParams.get("date");
-    const days = await listWeeklyAvailability();
+    const [days, bufferSettings] = await Promise.all([
+      listWeeklyAvailability(),
+      getSchedulingBufferSettings(),
+    ]);
 
     if (date) {
       const { getCapacityAwareSlotsForDate } = await import(
@@ -45,9 +52,11 @@ export async function GET(req: Request) {
       }
       const slots = await getCapacityAwareSlotsForDate(date, {
         durationMinutes: duration.minutes,
+        bufferMinutes: bufferSettings.jobBufferMinutes,
       });
       return NextResponse.json({
         days,
+        jobBufferMinutes: bufferSettings.jobBufferMinutes,
         date,
         estimatedDurationMinutes: duration.minutes,
         slots: slots.map((s) => ({
@@ -61,7 +70,10 @@ export async function GET(req: Request) {
       });
     }
 
-    return NextResponse.json({ days });
+    return NextResponse.json({
+      days,
+      jobBufferMinutes: bufferSettings.jobBufferMinutes,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
@@ -76,6 +88,17 @@ export async function PUT(req: Request) {
 
   try {
     const body = await req.json();
+
+    if (body?.jobBufferMinutes != null && body?.days == null) {
+      const updated = await updateJobBufferMinutes(body.jobBufferMinutes);
+      if (!updated.ok) {
+        return NextResponse.json({ error: updated.error }, { status: 400 });
+      }
+      return NextResponse.json({
+        jobBufferMinutes: updated.jobBufferMinutes,
+      });
+    }
+
     const days = Array.isArray(body?.days) ? body.days : null;
     if (!days) {
       return NextResponse.json({ error: "days array required." }, { status: 400 });
@@ -119,7 +142,20 @@ export async function PUT(req: Request) {
     );
 
     const updated = await upsertWeeklyAvailability(normalized);
-    return NextResponse.json({ days: updated });
+
+    let jobBufferMinutes: number | undefined;
+    if (body?.jobBufferMinutes != null) {
+      const bufferResult = await updateJobBufferMinutes(body.jobBufferMinutes);
+      if (!bufferResult.ok) {
+        return NextResponse.json({ error: bufferResult.error }, { status: 400 });
+      }
+      jobBufferMinutes = bufferResult.jobBufferMinutes;
+    } else {
+      const settings = await getSchedulingBufferSettings();
+      jobBufferMinutes = settings.jobBufferMinutes;
+    }
+
+    return NextResponse.json({ days: updated, jobBufferMinutes });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

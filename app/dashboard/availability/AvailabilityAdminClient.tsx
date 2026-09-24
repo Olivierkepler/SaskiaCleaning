@@ -44,6 +44,7 @@ export default function AvailabilityAdminClient({
 }) {
   const [days, setDays] = useState<DayRow[]>([]);
   const [blocks, setBlocks] = useState<BlockRow[]>([]);
+  const [jobBufferMinutes, setJobBufferMinutes] = useState(30);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [blockDate, setBlockDate] = useState("");
@@ -70,6 +71,9 @@ export default function AvailabilityAdminClient({
       if (!availRes.ok) throw new Error(availData.error || "Failed to load hours");
       if (!blocksRes.ok) throw new Error(blocksData.error || "Failed to load blocks");
       setDays(availData.days ?? []);
+      if (typeof availData.jobBufferMinutes === "number") {
+        setJobBufferMinutes(availData.jobBufferMinutes);
+      }
       setBlocks(blocksData.blocks ?? []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
@@ -96,6 +100,30 @@ export default function AvailabilityAdminClient({
       setCapacitySlots([]);
     } finally {
       setCapacityLoading(false);
+    }
+  }
+
+  async function saveBuffer() {
+    setSaving(true);
+    setMessage("");
+    setError("");
+    try {
+      const response = await fetch(
+        `/api/dashboard/availability?key=${encodeURIComponent(dashboardKey)}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ jobBufferMinutes }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Save failed");
+      setJobBufferMinutes(Number(data.jobBufferMinutes ?? jobBufferMinutes));
+      setMessage("Cleaner handoff buffer saved.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -195,6 +223,40 @@ export default function AvailabilityAdminClient({
           {error}
         </p>
       ) : null}
+
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-500">
+              Cleaner handoff buffer
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Post-job minutes reserved after each cleaning before the same
+              cleaner can take another job. Not shown to customers.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void saveBuffer()}
+            disabled={saving}
+            className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            Save buffer
+          </button>
+        </div>
+        <label className="flex items-center gap-3 text-sm text-slate-800">
+          <input
+            type="number"
+            min={0}
+            max={180}
+            step={1}
+            value={jobBufferMinutes}
+            onChange={(e) => setJobBufferMinutes(Number(e.target.value))}
+            className="w-24 rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
+          />
+          minutes (0–180)
+        </label>
+      </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center justify-between gap-3">

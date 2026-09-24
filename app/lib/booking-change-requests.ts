@@ -189,13 +189,20 @@ export async function createCustomerBookingChangeRequest(input: {
     const { resolveEffectiveDurationMinutes } = await import(
       "@/app/lib/booking-duration-pure"
     );
+    const { resolveEffectiveBufferMinutes } = await import(
+      "@/app/lib/booking-buffer-pure"
+    );
     const durationMinutes = resolveEffectiveDurationMinutes(
       bookingPreview.duration_minutes,
+    );
+    const bufferMinutes = resolveEffectiveBufferMinutes(
+      bookingPreview.buffer_minutes,
     );
     const slotCheck = await assertSlotAvailable({
       dateOnly: requestedDate,
       time: input.requestedTime,
       durationMinutes,
+      bufferMinutes,
       excludeBookingId: input.bookingId,
     });
     if (!slotCheck.ok) {
@@ -475,7 +482,7 @@ export async function approveBookingChangeRequest(input: {
     // New reschedule requests include a time; legacy date-only keep date update only.
     if (requestedTime) {
       const bookingDurationRows = await sql`
-        SELECT duration_minutes
+        SELECT duration_minutes, buffer_minutes
         FROM booking_requests
         WHERE id = ${existing.booking_id}
         LIMIT 1
@@ -483,17 +490,24 @@ export async function approveBookingChangeRequest(input: {
       const { resolveEffectiveDurationMinutes } = await import(
         "@/app/lib/booking-duration-pure"
       );
-      const storedDuration = (
-        bookingDurationRows[0] as { duration_minutes: number | null } | undefined
-      )?.duration_minutes;
+      const { resolveEffectiveBufferMinutes } = await import(
+        "@/app/lib/booking-buffer-pure"
+      );
+      const row = bookingDurationRows[0] as
+        | { duration_minutes: number | null; buffer_minutes: number | null }
+        | undefined;
       const durationMinutes = resolveEffectiveDurationMinutes(
-        storedDuration == null ? null : Number(storedDuration),
+        row?.duration_minutes == null ? null : Number(row.duration_minutes),
+      );
+      const bufferMinutes = resolveEffectiveBufferMinutes(
+        row?.buffer_minutes == null ? null : Number(row.buffer_minutes),
       );
 
       const slotCheck = await assertSlotAvailable({
         dateOnly,
         time: requestedTime,
         durationMinutes,
+        bufferMinutes,
         excludeBookingId: existing.booking_id,
       });
       if (!slotCheck.ok) {
@@ -609,7 +623,7 @@ export async function approveBookingChangeRequest(input: {
     try {
       const { getAssignmentForBooking } = await import("@/app/lib/staff");
       const { releaseAssignmentCapacity } = await import(
-        "@/app/lib/staff-capacity"
+        "@/app/lib/capacity-release"
       );
       const { sendEmail } = await import("@/app/lib/email");
       const assignment = await getAssignmentForBooking(request.booking_id);
@@ -627,7 +641,7 @@ export async function approveBookingChangeRequest(input: {
           ].join("\n"),
         });
       }
-      await releaseAssignmentCapacity(request.booking_id);
+      await releaseAssignmentCapacity(request.booking_id, "cancelled");
     } catch (error) {
       console.error("Cancel assignment cleanup failed");
       void error;

@@ -201,12 +201,12 @@ export async function transitionStaffJobStatus(input: {
 
   if (input.nextStatus === "completed") {
     try {
-      const { releaseAssignmentCapacity } = await import(
-        "@/app/lib/staff-capacity"
+      const { releaseCompletedCapacityIfWindowElapsed } = await import(
+        "@/app/lib/capacity-release"
       );
-      await releaseAssignmentCapacity(input.bookingId);
+      await releaseCompletedCapacityIfWindowElapsed(input.bookingId);
     } catch (error) {
-      console.error("Failed to release capacity on completion");
+      console.error("Failed to release capacity after completion window check");
       void error;
     }
   }

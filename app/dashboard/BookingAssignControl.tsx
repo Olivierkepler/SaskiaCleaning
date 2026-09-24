@@ -21,6 +21,10 @@ export default function BookingAssignControl({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [assignment, setAssignment] = useState<Assignment>(null);
+  const [opsWindow, setOpsWindow] = useState<{
+    serviceRange: string;
+    reservedUntil: string | null;
+  } | null>(null);
   const [eligible, setEligible] = useState<Eligible[]>([]);
   const [error, setError] = useState("");
   const [staffId, setStaffId] = useState("");
@@ -38,6 +42,16 @@ export default function BookingAssignControl({
         if (cancelled) return;
         if (!res.ok) throw new Error(data.error || "Failed to load");
         setAssignment(data.assignment);
+        setOpsWindow(
+          data.opsWindow
+            ? {
+                serviceRange: String(data.opsWindow.serviceRange),
+                reservedUntil: data.opsWindow.reservedUntil
+                  ? String(data.opsWindow.reservedUntil)
+                  : null,
+              }
+            : null,
+        );
         setEligible(data.eligibleStaff ?? []);
         setStaffId(data.assignment?.staffId ?? "");
       })
@@ -96,6 +110,14 @@ export default function BookingAssignControl({
           {error ? <p className="text-red-600">{error}</p> : null}
           {!loading ? (
             <>
+              {opsWindow ? (
+                <p className="mb-2 text-xs text-slate-600">
+                  Service: {opsWindow.serviceRange}
+                  {opsWindow.reservedUntil
+                    ? ` · Reserved until ${opsWindow.reservedUntil}`
+                    : ""}
+                </p>
+              ) : null}
               <select
                 value={staffId}
                 onChange={(e) => setStaffId(e.target.value)}

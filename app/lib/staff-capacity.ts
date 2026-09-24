@@ -1,6 +1,6 @@
 /**
  * Server-side multi-cleaner capacity + atomic booking claim
- * (Phase 11.8 exact claim + Phase 11.9 overlap windows).
+ * (Phase 11.8 exact claim + Phase 11.9 overlap + Phase 11.10 buffers).
  */
 
 import "server-only";
@@ -26,8 +26,13 @@ import {
   getBookingWindow,
   resolveEffectiveDurationMinutes,
   schedulingBlockOverlapsWindow,
-  type BookingWindow,
 } from "@/app/lib/booking-duration-pure";
+import {
+  getCapacityWindow,
+  resolveEffectiveBufferMinutes,
+  type CapacityWindow,
+} from "@/app/lib/booking-buffer-pure";
+import { getJobBufferMinutes } from "@/app/lib/booking-buffer";
 import {
   CAPACITY_CONFLICT_MESSAGE,
   CAPACITY_UNAVAILABLE_MESSAGE,
@@ -84,14 +89,17 @@ export async function loadStaffCapacitySnapshotsForDate(
         SELECT
           a.staff_id,
           a.slot_time,
-          b.duration_minutes
+          b.duration_minutes,
+          b.buffer_minutes
         FROM booking_assignments a
         INNER JOIN booking_requests b ON b.id = a.booking_id
         WHERE a.is_active = true
           AND a.is_primary = true
           AND a.slot_date = ${dateOnly}::date
           AND a.slot_time IS NOT NULL
-          AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress')
+          AND b.status IN (
+            'new', 'contacted', 'scheduled', 'in_progress', 'completed'
+          )
       `,
       sql`
         SELECT a.staff_id, COUNT(*)::int AS count
@@ -144,7 +152,9 @@ export async function loadStaffCapacitySnapshotsForDate(
     if (!time) continue;
     const duration =
       row.duration_minutes == null ? null : Number(row.duration_minutes);
-    const window = buildAssignedWindow(time, duration);
+    const buffer =
+      row.buffer_minutes == null ? null : Number(row.buffer_minutes);
+    const window = buildAssignedWindow(time, duration, buffer);
     if (!window) continue;
     const list = assignedByStaff.get(id) ?? [];
     list.push(window);
@@ -225,6 +235,8 @@ export async function getCapacityAwareSlotsForDate(
     now?: Date;
     excludeBookingId?: number | null;
     durationMinutes: number;
+    /** When omitted, loads current scheduling_settings buffer. */
+    bufferMinutes?: number;
   },
 ): Promise<SlotCapacitySummary[]> {
   if (!isValidBookingDateOnly(dateOnly)) return [];
@@ -237,6 +249,11 @@ export async function getCapacityAwareSlotsForDate(
     return [];
   }
 
+  const bufferMinutes =
+    options?.bufferMinutes != null
+      ? resolveEffectiveBufferMinutes(options.bufferMinutes)
+      : await getJobBufferMinutes();
+
   const [weekly, blocks, staff] = await Promise.all([
     getWeeklyAvailabilityForDate(dateOnly),
     listBlocksForDate(dateOnly),
@@ -247,7 +264,7 @@ export async function getCapacityAwareSlotsForDate(
   let staffForEval = staff;
   if (options?.excludeBookingId) {
     const excludeRows = await sql`
-      SELECT slot_time, duration_minutes
+      SELECT slot_time, duration_minutes, buffer_minutes
       FROM booking_assignments a
       INNER JOIN booking_requests b ON b.id = a.booking_id
       WHERE a.booking_id = ${options.excludeBookingId}
@@ -256,28 +273,26 @@ export async function getCapacityAwareSlotsForDate(
       LIMIT 1
     `;
     const ex = excludeRows[0] as
-      | { slot_time: string; duration_minutes: number | null }
+      | {
+          slot_time: string;
+          duration_minutes: number | null;
+          buffer_minutes: number | null;
+        }
       | undefined;
     if (ex) {
       const exTime = parseBookingTime(String(ex.slot_time));
-      const exDur = resolveEffectiveDurationMinutes(
-        ex.duration_minutes == null ? null : Number(ex.duration_minutes),
-      );
       if (exTime) {
         staffForEval = staff.map((s) => ({
           ...s,
           assignedWindows: s.assignedWindows.filter(
-            (w) =>
-              !(
-                w.startTime === exTime &&
-                w.durationMinutes === exDur
-              ),
+            (w) => w.startTime !== exTime,
           ),
         }));
       }
     }
   }
 
+  // Business hours: SERVICE window only (buffer may extend past close).
   const candidates = filterCandidatesForDuration({
     dateOnly,
     weekly,
@@ -286,10 +301,12 @@ export async function getCapacityAwareSlotsForDate(
     now: options?.now,
   });
 
+  // Staff eligibility: CAPACITY window (service + buffer).
   return summarizeSlotCapacityForDuration({
     candidateSlots: candidates,
     staff: staffForEval,
     durationMinutes,
+    bufferMinutes,
     dateOnly,
   });
 }
@@ -300,6 +317,7 @@ export async function getAvailableSlotsWithCapacity(
     now?: Date;
     excludeBookingId?: number | null;
     durationMinutes: number;
+    bufferMinutes?: number;
   },
 ): Promise<AvailableSlot[]> {
   const summaries = await getCapacityAwareSlotsForDate(dateOnly, options);
@@ -312,10 +330,11 @@ export async function assertSlotHasCapacity(input: {
   dateOnly: string;
   time: unknown;
   durationMinutes: number;
+  bufferMinutes?: number;
   excludeBookingId?: number | null;
   requireTime?: boolean;
 }): Promise<
-  | { ok: true; time: string; window: BookingWindow }
+  | { ok: true; time: string; window: CapacityWindow }
   | { ok: false; error: string; status: number; conflict?: boolean }
 > {
   const requireTime = input.requireTime !== false;
@@ -335,10 +354,16 @@ export async function assertSlotHasCapacity(input: {
     return { ok: false, error: "Invalid booking date.", status: 400 };
   }
 
-  const window = getBookingWindow({
+  const bufferMinutes =
+    input.bufferMinutes != null
+      ? resolveEffectiveBufferMinutes(input.bufferMinutes)
+      : await getJobBufferMinutes();
+
+  const window = getCapacityWindow({
     dateOnly: input.dateOnly,
     startTime: parsed,
     durationMinutes: input.durationMinutes,
+    bufferMinutes,
   });
   if (!window) {
     return {
@@ -352,6 +377,7 @@ export async function assertSlotHasCapacity(input: {
     const summaries = await getCapacityAwareSlotsForDate(input.dateOnly, {
       excludeBookingId: input.excludeBookingId,
       durationMinutes: input.durationMinutes,
+      bufferMinutes,
     });
 
     const match = summaries.find((s) => s.time === parsed);
@@ -393,6 +419,7 @@ export type BookingInsertFields = {
   bookingDate: string;
   bookingTime: string;
   durationMinutes: number;
+  bufferMinutes: number;
   extrasJson: string;
   estimateLow: number | null;
   estimateMid: number | null;
@@ -414,7 +441,8 @@ function isOverlapClaimViolation(error: unknown): boolean {
 }
 
 /**
- * Atomically insert booking + primary assignment with overlap window.
+ * Atomically insert booking + primary assignment with capacity window
+ * (service duration + post-job buffer snapshot).
  * Retries next cleaner on unique/exclusion conflict.
  */
 export async function createBookingWithCapacityClaim(
@@ -423,10 +451,12 @@ export async function createBookingWithCapacityClaim(
   | { ok: true; booking: Record<string, unknown>; staffId: string }
   | { ok: false; error: string; status: number }
 > {
-  const window = getBookingWindow({
+  const bufferMinutes = resolveEffectiveBufferMinutes(fields.bufferMinutes);
+  const window = getCapacityWindow({
     dateOnly: fields.bookingDate,
     startTime: fields.bookingTime,
     durationMinutes: fields.durationMinutes,
+    bufferMinutes,
   });
   if (!window) {
     return { ok: false, error: SLOT_UNAVAILABLE_MESSAGE, status: 400 };
@@ -457,7 +487,8 @@ export async function createBookingWithCapacityClaim(
         WITH new_booking AS (
           INSERT INTO booking_requests (
             name, email, mobile, bedrooms, bathrooms, service, frequency,
-            location, booking_date, booking_time, duration_minutes, extras,
+            location, booking_date, booking_time, duration_minutes,
+            buffer_minutes, extras,
             estimate_low, estimate_mid, estimate_high, notes,
             referral_code, seen, customer_id
           )
@@ -467,6 +498,7 @@ export async function createBookingWithCapacityClaim(
             ${fields.frequency}, ${fields.location},
             ${fields.bookingDate}::date, ${fields.bookingTime}::time,
             ${fields.durationMinutes},
+            ${bufferMinutes},
             ${fields.extrasJson},
             ${fields.estimateLow}, ${fields.estimateMid}, ${fields.estimateHigh},
             ${fields.notes}, ${fields.referralCode}, false, ${fields.customerId}
@@ -517,6 +549,7 @@ export async function createBookingWithCapacityClaim(
               `Date: ${fields.bookingDate}`,
               `Time: ${fields.bookingTime}`,
               `Estimated duration: ${formatEstimatedDuration(fields.durationMinutes)}`,
+              `Reserved until: ${window.endTime}`,
               `Location: ${fields.location}`,
               "",
               "View your jobs: https://saskiaservices.com/staff",
@@ -546,7 +579,7 @@ export async function createBookingWithCapacityClaim(
 }
 
 /**
- * Atomically approve reschedule using stored booking.duration_minutes.
+ * Atomically approve reschedule using stored duration_minutes + buffer_minutes.
  */
 export async function rescheduleBookingWithCapacityClaim(input: {
   bookingId: number;
@@ -560,7 +593,7 @@ export async function rescheduleBookingWithCapacityClaim(input: {
   | { ok: false; error: string; status: number }
 > {
   const bookingRows = await sql`
-    SELECT id, booking_date, booking_time, status, duration_minutes
+    SELECT id, booking_date, booking_time, status, duration_minutes, buffer_minutes
     FROM booking_requests
     WHERE id = ${input.bookingId}
     LIMIT 1
@@ -575,11 +608,15 @@ export async function rescheduleBookingWithCapacityClaim(input: {
       ? null
       : Number(booking.duration_minutes),
   );
+  const bufferMinutes = resolveEffectiveBufferMinutes(
+    booking.buffer_minutes == null ? null : Number(booking.buffer_minutes),
+  );
 
-  const window = getBookingWindow({
+  const window = getCapacityWindow({
     dateOnly: input.newDate,
     startTime: input.newTime,
     durationMinutes,
+    bufferMinutes,
   });
   if (!window) {
     return { ok: false, error: SLOT_UNAVAILABLE_MESSAGE, status: 400 };
@@ -611,7 +648,6 @@ export async function rescheduleBookingWithCapacityClaim(input: {
     return {
       ...s,
       assignedWindows: s.assignedWindows.filter((w) => {
-        // Drop any window that belongs to this booking's current slot on this date.
         const oldDate = parseBookingDateOnly(
           booking.booking_date as string | Date | null,
         );
@@ -675,7 +711,11 @@ export async function rescheduleBookingWithCapacityClaim(input: {
         ),
         released AS (
           UPDATE booking_assignments
-          SET is_active = false, updated_at = now()
+          SET
+            is_active = false,
+            released_at = now(),
+            release_reason = 'rescheduled',
+            updated_at = now()
           WHERE booking_id = ${input.bookingId}
             AND is_active = true
           RETURNING id
@@ -747,6 +787,7 @@ export async function rescheduleBookingWithCapacityClaim(input: {
                 `Date: ${input.newDate}`,
                 `Time: ${input.newTime}`,
                 `Estimated duration: ${formatEstimatedDuration(durationMinutes)}`,
+                `Reserved until: ${window.endTime}`,
                 "",
                 "— Saskia Cleaning",
               ].join("\n"),
@@ -769,16 +810,7 @@ export async function rescheduleBookingWithCapacityClaim(input: {
   return { ok: false, error: CAPACITY_CONFLICT_MESSAGE, status: 409 };
 }
 
-export async function releaseAssignmentCapacity(
-  bookingId: number,
-): Promise<void> {
-  await sql`
-    UPDATE booking_assignments
-    SET is_active = false, updated_at = now()
-    WHERE booking_id = ${bookingId}
-      AND is_active = true
-  `;
-}
+export { releaseAssignmentCapacity } from "@/app/lib/capacity-release";
 
 export async function backfillUnassignedFutureBookings(): Promise<{
   assigned: number;
@@ -786,7 +818,7 @@ export async function backfillUnassignedFutureBookings(): Promise<{
   remainingIds: number[];
 }> {
   const rows = await sql`
-    SELECT id, booking_date, booking_time, duration_minutes, service
+    SELECT id, booking_date, booking_time, duration_minutes, buffer_minutes, service
     FROM booking_requests b
     WHERE b.booking_time IS NOT NULL
       AND b.status IN ('new', 'contacted', 'scheduled', 'in_progress')
@@ -808,6 +840,7 @@ export async function backfillUnassignedFutureBookings(): Promise<{
     booking_date: string | Date;
     booking_time: string;
     duration_minutes: number | null;
+    buffer_minutes: number | null;
   }>) {
     const dateOnly = parseBookingDateOnly(row.booking_date);
     const time = parseBookingTime(String(row.booking_time));
@@ -818,10 +851,14 @@ export async function backfillUnassignedFutureBookings(): Promise<{
     const durationMinutes = resolveEffectiveDurationMinutes(
       row.duration_minutes == null ? null : Number(row.duration_minutes),
     );
-    const window = getBookingWindow({
+    const bufferMinutes = resolveEffectiveBufferMinutes(
+      row.buffer_minutes == null ? null : Number(row.buffer_minutes),
+    );
+    const window = getCapacityWindow({
       dateOnly,
       startTime: time,
       durationMinutes,
+      bufferMinutes,
     });
     if (!window) {
       remainingIds.push(Number(row.id));
@@ -841,7 +878,7 @@ export async function backfillUnassignedFutureBookings(): Promise<{
           window_start, window_end
         )
         VALUES (
-          ${Number(row.id)}, ${pick}::uuid, 'backfill-11.9', true,
+          ${Number(row.id)}, ${pick}::uuid, 'backfill-11.10', true,
           ${dateOnly}::date, ${time}::time, true,
           ${window.windowStartUtc.toISOString()}::timestamptz,
           ${window.windowEndUtc.toISOString()}::timestamptz

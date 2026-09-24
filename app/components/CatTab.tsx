@@ -2797,6 +2797,8 @@ export default function CleaningEstimator({
                 />
                 Chat with our Assistant
               </button>
+
+              
   
               <AnimatePresence initial={false}>
                 {optionsOpen && (

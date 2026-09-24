@@ -6,6 +6,7 @@ import DashboardTable from "./DashboardTable";
 import Navbar from "./components/Navbar";
 import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
 import { listAssignmentBookingIds } from "@/app/lib/staff";
+import { listAdminCapacityHints } from "@/app/lib/capacity-release";
 
 type BookingRequest = {
   id: number;
@@ -79,6 +80,12 @@ export default async function DashboardPage({
   const unseenCount = typedBookings.filter((booking) => !booking.seen).length;
   const pendingChangeRequestCount = await countPendingAdminChangeRequests();
   const assignedBookingIds = Array.from(await listAssignmentBookingIds());
+  const capacityHints: Record<number, "overdue" | "capacity_held"> = {};
+  for (const h of await listAdminCapacityHints()) {
+    if (h.label === "overdue" || h.label === "capacity_held") {
+      capacityHints[h.bookingId] = h.label;
+    }
+  }
 
   return (
     <main className="min-h-screen bg-slate-100  py-6 ">
@@ -108,6 +115,7 @@ export default async function DashboardPage({
           bookings={typedBookings}
           dashboardKey={params.key!}
           assignedBookingIds={assignedBookingIds}
+          capacityHints={capacityHints}
         />
       </div>
     </main>

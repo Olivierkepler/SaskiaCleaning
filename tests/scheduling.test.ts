@@ -37,16 +37,17 @@ describe("scheduling constants", () => {
     assert.equal(MINIMUM_LEAD_MINUTES, 0);
   });
 
-  it("capacity statuses exclude cancelled and completed", () => {
+  it("capacity statuses include completed (buffer hold) but exclude cancelled", () => {
     assert.ok(isCapacityConsumingStatus("new"));
     assert.ok(isCapacityConsumingStatus("scheduled"));
+    assert.ok(isCapacityConsumingStatus("completed"));
     assert.equal(isCapacityConsumingStatus("cancelled"), false);
-    assert.equal(isCapacityConsumingStatus("completed"), false);
     assert.deepEqual([...CAPACITY_CONSUMING_STATUSES], [
       "new",
       "contacted",
       "scheduled",
       "in_progress",
+      "completed",
     ]);
   });
 });
@@ -158,8 +159,11 @@ describe("slot generation", () => {
     assert.equal(isSlotInGeneratedList(slots, "10:00"), true);
   });
 
-  it("completed historical booking does not block future slot", () => {
-    assert.equal(isCapacityConsumingStatus("completed"), false);
+  it("completed keeps capacity until soft-release (Phase 11.10 buffer hold)", () => {
+    // Early completion must not free the buffered handoff window.
+    // Cancel soft-releases; completed with active assignment still consumes.
+    assert.equal(isCapacityConsumingStatus("completed"), true);
+    assert.equal(isCapacityConsumingStatus("cancelled"), false);
   });
 
   it("past date rejected", () => {
