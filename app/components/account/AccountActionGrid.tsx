@@ -1,48 +1,43 @@
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 
-import {
-  ArrowRight,
-  CalendarDays,
-  Gift,
-  Star,
-  UserRound,
-  type LucideIcon,
-} from "lucide-react";
-
-const accountSections: Array<{
+type AccountSection = {
   title: string;
   description: string;
   href: string;
-  icon: LucideIcon;
-  iconWrap: string;
-}> = [
+  imageSrc: string;
+  imageAlt: string;
+};
+
+const accountSections: AccountSection[] = [
   {
     title: "My Bookings",
     description: "View and manage your cleaning requests.",
     href: "/account/bookings",
-    icon: CalendarDays,
-    iconWrap: "bg-sky-50 text-sky-600",
+    imageSrc: "/account/reviews/bookings.png",
+    imageAlt: "Bookings calendar",
   },
   {
     title: "Referrals",
     description: "Track referrals and share your rewards link.",
     href: "/account/referrals",
-    icon: Gift,
-    iconWrap: "bg-emerald-50 text-emerald-600",
+    imageSrc: "/account/reviews/overviewreferal.png",
+    imageAlt: "Referral sharing",
   },
   {
     title: "Rewards",
     description: "See your referral wallet and milestones.",
     href: "/account/rewards",
-    icon: Star,
-    iconWrap: "bg-amber-50 text-amber-600",
+    imageSrc: "/account/reviews/reward.png",
+    imageAlt: "Rewards gift",
   },
   {
     title: "Profile",
     description: "Manage your personal information and saved addresses.",
     href: "/account/profile",
-    icon: UserRound,
-    iconWrap: "bg-violet-50 text-violet-600",
+    imageSrc: "/account/reviews/reviewprofile.png",
+    imageAlt: "Profile settings",
   },
 ];
 
@@ -53,8 +48,6 @@ export default function AccountActionGrid() {
       className="mt-8 grid gap-6 sm:grid-cols-2"
     >
       {accountSections.map((section) => {
-        const Icon = section.icon;
-
         return (
           <Link
             key={section.title}
@@ -99,23 +92,14 @@ export default function AccountActionGrid() {
               "
             />
 
-            {/* Icon */}
-            <div
-              className={`
-                relative
-                grid
-                h-14
-                w-14
-                shrink-0
-                place-items-center
-                rounded-[18px]
-                ${section.iconWrap}
-                shadow-[5px_5px_12px_rgba(163,177,198,0.25),-5px_-5px_12px_rgba(255,255,255,0.95)]
-              `}
-            >
-              <Icon
-                className="h-6 w-6"
-                aria-hidden="true"
+            {/* Illustration */}
+            <div className="relative h-[68px] w-[68px] shrink-0 sm:h-[76px] sm:w-[76px]">
+              <Image
+                src={section.imageSrc}
+                alt={section.imageAlt}
+                fill
+                sizes="(max-width: 640px) 68px, 76px"
+                className="object-contain"
               />
             </div>
 
