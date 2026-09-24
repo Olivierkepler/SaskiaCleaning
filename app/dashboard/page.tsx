@@ -7,6 +7,7 @@ import Navbar from "./components/Navbar";
 import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
 import { listAssignmentBookingIds } from "@/app/lib/staff";
 import { listAdminCapacityHints } from "@/app/lib/capacity-release";
+import { countOpsNeedsAttention } from "@/app/lib/ops-exceptions";
 
 type BookingRequest = {
   id: number;
@@ -39,6 +40,7 @@ type BookingRow = Omit<BookingRequest, "friend_discount_amount"> & {
 type DashboardPageProps = {
   searchParams: Promise<{
     key?: string;
+    booking?: string;
   }>;
 };
 
@@ -50,6 +52,12 @@ export default async function DashboardPage({
   if (params.key !== process.env.DASHBOARD_KEY) {
     redirect("/");
   }
+
+  const highlightBookingId = (() => {
+    if (!params.booking) return null;
+    const n = Number(params.booking);
+    return Number.isInteger(n) && n > 0 ? n : null;
+  })();
 
   const bookings = await sql`
     SELECT
@@ -86,6 +94,7 @@ export default async function DashboardPage({
       capacityHints[h.bookingId] = h.label;
     }
   }
+  const opsNeedsAttentionCount = await countOpsNeedsAttention();
 
   return (
     <main className="min-h-screen bg-slate-100  py-6 ">
@@ -94,6 +103,7 @@ export default async function DashboardPage({
         unseenCount={unseenCount}
         unseenBookings={unseenBookings}
         pendingChangeRequestCount={pendingChangeRequestCount}
+        opsNeedsAttentionCount={opsNeedsAttentionCount}
       />
       <div className="mx-auto max-w-full px-20">
        
@@ -116,6 +126,7 @@ export default async function DashboardPage({
           dashboardKey={params.key!}
           assignedBookingIds={assignedBookingIds}
           capacityHints={capacityHints}
+          highlightBookingId={highlightBookingId}
         />
       </div>
     </main>

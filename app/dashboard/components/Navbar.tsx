@@ -17,6 +17,7 @@ type NavbarProps = {
   unseenCount: number;
   unseenBookings: UnseenBooking[];
   pendingChangeRequestCount?: number;
+  opsNeedsAttentionCount?: number;
 };
 
 const formatDate = (date: string) => {
@@ -46,6 +47,7 @@ export default function Navbar({
   unseenCount,
   unseenBookings,
   pendingChangeRequestCount = 0,
+  opsNeedsAttentionCount = 0,
 }: NavbarProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -114,6 +116,19 @@ export default function Navbar({
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Bookings
+          </a>
+          <a
+            href={`/dashboard/operations?key=${dashboardKey}`}
+            className="relative rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Operations
+            {opsNeedsAttentionCount > 0 ? (
+              <span className="ml-2 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
+                {opsNeedsAttentionCount > 99
+                  ? "99+"
+                  : opsNeedsAttentionCount}
+              </span>
+            ) : null}
           </a>
           <a
             href={`/dashboard/promos?key=${dashboardKey}`}

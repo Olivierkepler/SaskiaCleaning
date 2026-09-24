@@ -284,14 +284,18 @@ export default function DashboardTable({
   dashboardKey,
   assignedBookingIds = [],
   capacityHints = {},
+  highlightBookingId = null,
 }: {
   bookings: BookingRequest[];
   dashboardKey: string;
   assignedBookingIds?: number[];
   capacityHints?: Record<number, "overdue" | "capacity_held">;
+  highlightBookingId?: number | null;
 }) {
   const router = useRouter();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(
+    highlightBookingId != null ? String(highlightBookingId) : "",
+  );
   const [sort, setSort] = useState<SortOption>("newest");
   const [bedroomFilter, setBedroomFilter] = useState<BedroomFilter>("all");
   const [bathroomFilter, setBathroomFilter] = useState<BathroomFilter>("all");
@@ -327,6 +331,13 @@ export default function DashboardTable({
   const getBookingStatus = (status: string): BookingStatus =>
     isBookingStatus(status) ? status : "new";
 
+  useEffect(() => {
+    if (highlightBookingId == null) return;
+    const el = document.getElementById(`booking-${highlightBookingId}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [highlightBookingId, bookings]);
+
   const filteredBookings = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -337,6 +348,7 @@ export default function DashboardTable({
         const statusValue = bookingStatus.replace(/_/g, " ");
 
         const matchesSearch =
+          String(booking.id).includes(query) ||
           booking.name.toLowerCase().includes(query) ||
           booking.email.toLowerCase().includes(query) ||
           (booking.mobile?.toLowerCase().includes(query) ?? false) ||
@@ -951,11 +963,14 @@ export default function DashboardTable({
 
                   return (
                   <tr
+                    id={`booking-${booking.id}`}
                     key={booking.id}
                     className={`align-top transition ${
-                      isUnseen
-                        ? "bg-sky-50 hover:bg-sky-100"
-                        : "hover:bg-slate-50"
+                      highlightBookingId === booking.id
+                        ? "bg-amber-50 ring-2 ring-inset ring-amber-300 hover:bg-amber-50"
+                        : isUnseen
+                          ? "bg-sky-50 hover:bg-sky-100"
+                          : "hover:bg-slate-50"
                     }`}
                   >
                     <td className="p-3 font-medium text-slate-900">
@@ -1069,11 +1084,14 @@ export default function DashboardTable({
 
               return (
               <div
+                id={`booking-${booking.id}`}
                 key={booking.id}
                 className={`rounded-xl border p-4 shadow-sm ${
-                  isUnseen
-                    ? "border-sky-300 bg-sky-50"
-                    : "border-slate-200 bg-white"
+                  highlightBookingId === booking.id
+                    ? "border-amber-400 bg-amber-50 ring-2 ring-amber-200"
+                    : isUnseen
+                      ? "border-sky-300 bg-sky-50"
+                      : "border-slate-200 bg-white"
                 }`}
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
