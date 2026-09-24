@@ -34,10 +34,12 @@ export default function AccountNavbar({
           justify-between
           gap-4
           bg-white
+          rounded-[10px]
           px-5
           py-3
-          shadow-[inset_18px_18px_30px_rgba(209,217,230,1),inset_-18px_-18px_30px_rgba(255,255,255,1)]
+          shadow-[inset_10px_10px_18px_rgba(209,217,230,0.93),inset_-10px_-10px_18px_rgba(255,255,255,0.97)]
           sm:px-6
+     
         "
       >
         {/* Brand / home */}
