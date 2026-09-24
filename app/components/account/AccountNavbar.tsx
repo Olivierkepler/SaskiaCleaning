@@ -34,10 +34,10 @@ export default function AccountNavbar({
           justify-between
           gap-4
           rounded-[10px]
-          bg-white
+          bg-[#ECF0F3]
           px-5
           py-3
-          shadow-[inset_18px_18px_30px_#D1D9E6,inset_-18px_-18px_30px_#FFFFFF]
+          shadow-[10px_10px_24px_rgba(163,177,198,0.40),-10px_-10px_24px_rgba(255,255,255,0.95)]
           sm:px-6
         "
       >
@@ -106,7 +106,7 @@ export default function AccountNavbar({
         {/* Customer identity + sign out */}
         <div className="flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-4">
           <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
-            {/* Avatar */}
+            {/* Customer avatar */}
             <div
               className="
                 relative
@@ -137,7 +137,7 @@ export default function AccountNavbar({
               )}
             </div>
 
-            {/* Customer details */}
+            {/* Customer name and email */}
             <div className="hidden min-w-0 sm:block">
               <p className="truncate text-sm font-semibold leading-tight text-slate-900">
                 {displayName}
@@ -152,9 +152,10 @@ export default function AccountNavbar({
           {/* Divider */}
           <div
             aria-hidden="true"
-            className="hidden h-8 w-px shrink-0 bg-slate-200 sm:block"
+            className="hidden h-8 w-px shrink-0 bg-slate-300/70 sm:block"
           />
 
+          {/* Sign out */}
           <SignOutButton />
         </div>
       </div>
