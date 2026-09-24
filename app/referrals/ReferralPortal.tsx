@@ -167,7 +167,7 @@ export default function ReferralPortal({
       )}
 
       {submitSuccess && (
-        <div className="mt-10 rounded-3xl border border-emerald-200 bg-emerald-50 px-6 py-8 text-center sm:px-8">
+        <div className="mt-10 rounded-xl  bg-emerald-50 px-6 py-8 text-center sm:px-8">
           <p className="text-sm font-medium leading-7 text-emerald-900">
             {submitSuccess}
           </p>
