@@ -142,7 +142,7 @@ export default function BookingChangeRequestPanel({
   }
 
   return (
-    <section className="mt-8 rounded-2xl border border-slate-200 bg-slate-50/80 p-5 sm:p-6">
+    <section className="mt-8 rounded-[20px] bg-[#ECF0F3] p-5 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)] sm:p-6">
       <h2 className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
         Manage booking
       </h2>
