@@ -6,12 +6,21 @@ import SignOutButton from "@/app/components/auth/SignOutButton";
 type AccountNavbarProps = {
   homeHref?: string;
   homeLabel?: string;
+  customerName: string | null;
+  customerEmail: string;
+  customerImage?: string | null;
 };
 
 export default function AccountNavbar({
   homeHref = "/",
   homeLabel = "Home",
+  customerName,
+  customerEmail,
+  customerImage,
 }: AccountNavbarProps) {
+  const displayName = customerName?.trim() || "Saskia customer";
+  const initial = (customerName?.trim() || customerEmail).charAt(0).toUpperCase();
+
   return (
     <header className="mb-7">
       <div
@@ -21,7 +30,6 @@ export default function AccountNavbar({
           items-center
           justify-between
           gap-4
-
           bg-white
           px-5
           py-3
@@ -91,8 +99,40 @@ export default function AccountNavbar({
           </div>
         </Link>
 
-        {/* Account action */}
-        <div className="flex shrink-0 items-center">
+        {/* Customer identity + sign out */}
+        <div className="flex min-w-0 shrink-0 items-center gap-2.5 sm:gap-4">
+          <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-slate-200 bg-sky-50 sm:h-11 sm:w-11">
+              {customerImage ? (
+                <Image
+                  src={customerImage}
+                  alt={displayName}
+                  fill
+                  sizes="44px"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="grid h-full w-full place-items-center text-sm font-semibold text-sky-500">
+                  {initial}
+                </div>
+              )}
+            </div>
+
+            <div className="hidden min-w-0 sm:block">
+              <p className="truncate text-sm font-semibold leading-tight text-slate-900">
+                {displayName}
+              </p>
+              <p className="mt-0.5 hidden truncate text-xs leading-tight text-slate-500 md:block">
+                {customerEmail}
+              </p>
+            </div>
+          </div>
+
+          <div
+            aria-hidden="true"
+            className="hidden h-8 w-px shrink-0 bg-slate-200 sm:block"
+          />
+
           <SignOutButton />
         </div>
       </div>

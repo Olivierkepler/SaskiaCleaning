@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 import {
   CalendarDays,
   Gift,
@@ -16,7 +17,7 @@ type AccountNavItem = {
   href: string;
   icon: LucideIcon;
 
-  /** Exact pathname match only (e.g. Account Overview at /account). */
+  /** Exact pathname match only. */
   exact?: boolean;
 
   /** When true, never auto-highlight. */
@@ -79,69 +80,69 @@ function linkClassName(
 ): string {
   /*
    * Mobile / tablet
-   * Keep the compact navigation simple.
    */
   if (compact) {
     const base =
-      "inline-flex shrink-0 items-center gap-2 rounded-full " +
-      "px-4 py-2.5 text-sm font-medium " +
-      "transition-all duration-300 ease-out " +
+      "inline-flex shrink-0 items-center gap-2 rounded-full px-4 py-2.5 " +
+      "text-sm font-medium transition-all duration-300 ease-out " +
       "focus-visible:outline-none focus-visible:ring-2 " +
       "focus-visible:ring-sky-300";
 
     if (active) {
-      return `${base} bg-sky-50 text-sky-600`;
+      return (
+        `${base} ` +
+        "bg-[#ECF0F3] text-sky-600 " +
+        "shadow-[inset_4px_4px_9px_rgba(163,177,198,0.28),inset_-4px_-4px_9px_rgba(255,255,255,0.95)]"
+      );
     }
 
     return (
-      `${base} text-slate-600 ` +
-      "hover:bg-slate-50 hover:text-slate-950"
+      `${base} ` +
+      "bg-[#ECF0F3] text-slate-600 " +
+      "shadow-[4px_4px_10px_rgba(163,177,198,0.28),-4px_-4px_10px_rgba(255,255,255,0.95)] " +
+      "hover:text-sky-600"
     );
   }
 
   /*
-   * Desktop navigation button.
+   * Desktop navigation item
+   *
+   * Matches the raised #ECF0F3 styling used by AccountActionGrid.
    */
   const base =
-    "flex min-h-[50px] items-center gap-3 " +
-    "rounded-[16px] px-3.5 py-3 " +
+    "flex min-h-[52px] items-center gap-3 rounded-[16px] px-4 py-3 " +
     "text-[15px] font-medium " +
     "transition-[background-color,color,box-shadow,transform] " +
     "duration-300 ease-out " +
-    "focus-visible:outline-none " +
-    "focus-visible:ring-2 " +
-    "focus-visible:ring-sky-300 " +
-    "focus-visible:ring-offset-2";
+    "focus-visible:outline-none focus-visible:ring-2 " +
+    "focus-visible:ring-sky-300 focus-visible:ring-offset-2 " +
+    "focus-visible:ring-offset-[#ECF0F3]";
 
   /*
-   * Active item.
-   *
-   * Keep the selected destination visible without needing hover.
+   * Active item:
+   * pressed / inset state
    */
   if (active) {
     return (
       `${base} ` +
-      "bg-sky-50 " +
+      "bg-[#ECF0F3] " +
       "text-sky-600 " +
-      "shadow-[inset_4px_4px_10px_rgba(209,217,230,0.55),inset_-4px_-4px_10px_rgba(255,255,255,0.95)]"
+      "shadow-[inset_5px_5px_12px_rgba(163,177,198,0.32),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]"
     );
   }
 
   /*
-   * Inactive item.
-   *
-   * On hover, the button receives the inner-shadow treatment:
-   * #D1D9E6 on the upper/left side
-   * white highlight on the lower/right side.
+   * Inactive item:
+   * raised card state similar to AccountActionGrid.
    */
   return (
     `${base} ` +
-    "bg-transparent " +
+    "bg-[#ECF0F3] " +
     "text-slate-600 " +
-    "shadow-none " +
-    "hover:bg-[#f4f7fa] " +
+    "shadow-[6px_6px_14px_rgba(163,177,198,0.30),-6px_-6px_14px_rgba(255,255,255,0.95)] " +
+    "hover:-translate-y-[1px] " +
     "hover:text-sky-600 " +
-    "hover:shadow-[inset_6px_6px_18px_rgba(209,217,230,0.85),inset_-6px_-6px_18px_rgba(255,255,255,1)]"
+    "hover:shadow-[8px_8px_18px_rgba(163,177,198,0.38),-8px_-8px_18px_rgba(255,255,255,1)]"
   );
 }
 
@@ -155,7 +156,7 @@ export default function AccountSidebar() {
         aria-label="Account navigation"
         className="mb-6 lg:hidden"
       >
-        <ul className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        <ul className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-3 pt-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isItemActive(pathname, item);
@@ -192,14 +193,14 @@ export default function AccountSidebar() {
           h-fit
           w-[250px]
           shrink-0
-          rounded-[10px]
-          bg-white
+          rounded-[22px]
+          bg-[#ECF0F3]
           p-4
-          shadow-[0_18px_45px_rgba(71,85,105,0.14)]
+          shadow-[10px_10px_24px_rgba(163,177,198,0.38),-10px_-10px_24px_rgba(255,255,255,0.95)]
           lg:block
         "
       >
-        <ul className="flex flex-col gap-1.5">
+        <ul className="flex flex-col gap-3">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isItemActive(pathname, item);

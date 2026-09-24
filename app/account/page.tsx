@@ -1,7 +1,6 @@
 import { requireCustomer } from "@/app/lib/customer-auth";
 
 import AccountHero from "@/app/components/account/AccountHero";
-import AccountProfileHeader from "@/app/components/account/AccountProfileHeader";
 import AccountActionGrid from "@/app/components/account/AccountActionGrid";
 
 export default async function AccountPage() {
@@ -28,12 +27,6 @@ export default async function AccountPage() {
           md:p-10
         "
       >
-        <AccountProfileHeader
-          name={customer.name}
-          email={customer.email}
-          image={customer.image}
-        />
-
         <AccountActionGrid />
       </section>
     </>
