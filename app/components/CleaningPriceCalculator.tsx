@@ -544,7 +544,7 @@ export default function CleaningPriceCalculator({ onPriceChange }: CleaningPrice
             </motion.button>
 
             <p className="mt-4 text-center text-[9px] font-medium uppercase leading-5 tracking-[0.22em] text-slate-400">
-              Final pricing may vary by condition & access
+              Final pricing may vary by condition & access.
             </p>
           </div>
         </aside>
