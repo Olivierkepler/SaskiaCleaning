@@ -45,7 +45,7 @@ type DashboardPageProps = {
 export default async function DashboardPage({
   searchParams,
 }: DashboardPageProps) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const params = await searchParams;
 
   const highlightBookingId = (() => {
@@ -98,6 +98,7 @@ export default async function DashboardPage({
         unseenBookings={unseenBookings}
         pendingChangeRequestCount={pendingChangeRequestCount}
         opsNeedsAttentionCount={opsNeedsAttentionCount}
+        isOwner={admin.role === "OWNER"}
       />
       <div className="mx-auto max-w-full px-20">
         <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">

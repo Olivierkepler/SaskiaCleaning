@@ -1,16 +1,18 @@
-import { requireAdmin } from "@/app/lib/admin-auth";
+import { requireOwner } from "@/app/lib/admin-auth";
 import Navbar from "../components/Navbar";
 import { sql } from "@/app/lib/db";
 import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
-import { listOpsExceptions } from "@/app/lib/ops-exceptions";
-import OperationsClient from "./OperationsClient";
+import { countOpsNeedsAttention } from "@/app/lib/ops-exceptions";
+import { listAdminUsers, serializeAdminUser } from "@/app/lib/admin-users";
+import AdminsClient from "./AdminsClient";
 
-export default async function OperationsDashboardPage() {
-  const admin = await requireAdmin();
+export default async function AdminsDashboardPage() {
+  const owner = await requireOwner();
 
-  const [{ items, summary }, pendingCount, unseenRows] = await Promise.all([
-    listOpsExceptions(),
+  const [admins, pendingCount, opsCount, unseenRows] = await Promise.all([
+    listAdminUsers(),
     countPendingAdminChangeRequests(),
+    countOpsNeedsAttention(),
     sql`
       SELECT id, name, email, created_at, service, location
       FROM booking_requests
@@ -44,22 +46,24 @@ export default async function OperationsDashboardPage() {
         unseenCount={unseenBookings.length}
         unseenBookings={unseenBookings}
         pendingChangeRequestCount={pendingCount}
-        opsNeedsAttentionCount={summary.needsAttention}
-        isOwner={admin.role === "OWNER"}
+        opsNeedsAttentionCount={opsCount}
+        isOwner
       />
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-            Operations
+            Admins
           </h1>
           <p className="mt-2 text-sm text-slate-600">
-            Scheduling exceptions that need admin attention. Capacity-held
-            completed jobs before buffer expiry are informational. Manual
-            release never deletes assignment history.
+            Manage Google-authenticated admin access. Only OWNER can add or
+            deactivate admins. At least one active OWNER is always required.
           </p>
         </div>
 
-        <OperationsClient initialItems={items} summary={summary} />
+        <AdminsClient
+          initialAdmins={admins.map(serializeAdminUser)}
+          currentAdminId={owner.id}
+        />
       </div>
     </main>
   );

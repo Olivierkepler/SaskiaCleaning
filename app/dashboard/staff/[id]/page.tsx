@@ -17,7 +17,7 @@ type PageProps = {
 };
 
 export default async function StaffDetailPage({ params }: PageProps) {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const { id } = await params;
 
   const staff = await findStaffById(id);
@@ -41,6 +41,7 @@ export default async function StaffDetailPage({ params }: PageProps) {
     <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         <Navbar
+          isOwner={admin.role === "OWNER"}
           unseenCount={unseenRows.length}
           unseenBookings={
             unseenRows as Array<{

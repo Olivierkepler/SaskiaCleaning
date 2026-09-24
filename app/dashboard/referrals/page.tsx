@@ -17,7 +17,7 @@ import Navbar from "../components/Navbar";
 import ReferralDashboard from "./ReferralDashboard";
 
 export default async function ReferralsDashboardPage() {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const [codeRows, referralRows, bookingRows, notificationRows] =
     await Promise.all([
@@ -110,6 +110,7 @@ export default async function ReferralsDashboardPage() {
     <main className="min-h-screen bg-slate-100 py-6">
       <div className="mx-auto max-w-full px-4 sm:px-6 lg:px-20">
         <Navbar
+          isOwner={admin.role === "OWNER"}
           unseenCount={unseenCount}
           unseenBookings={unseenBookings}
         />

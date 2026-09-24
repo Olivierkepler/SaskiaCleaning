@@ -8,7 +8,7 @@ import {
 import ChangeRequestsTable from "./ChangeRequestsTable";
 
 export default async function DashboardChangeRequestsPage() {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const [requests, pendingCount, unseenRows] = await Promise.all([
     listPendingAdminChangeRequests(),
@@ -48,6 +48,7 @@ export default async function DashboardChangeRequestsPage() {
         unseenCount={unseenCount}
         unseenBookings={unseenBookings}
         pendingChangeRequestCount={pendingCount}
+        isOwner={admin.role === "OWNER"}
       />
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">

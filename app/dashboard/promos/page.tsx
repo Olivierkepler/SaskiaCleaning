@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 import PromoCardsTable from "./PromoCardsTable";
 
 export default async function PromoCardsDashboardPage() {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const [promoRows, bookingRows] = await Promise.all([
     sql`
@@ -38,6 +38,7 @@ export default async function PromoCardsDashboardPage() {
     <main className="min-h-screen bg-slate-100 py-6">
       <div className="mx-auto max-w-full px-4 sm:px-6 lg:px-20">
         <Navbar
+          isOwner={admin.role === "OWNER"}
           unseenCount={unseenCount}
           unseenBookings={unseenBookings}
         />

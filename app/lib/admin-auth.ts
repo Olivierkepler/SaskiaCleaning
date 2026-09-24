@@ -4,12 +4,16 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { normalizeCustomerEmail } from "@/app/lib/customer-auth-pure";
 import {
   ADMIN_AUTH_PORTAL_COOKIE,
   ADMIN_AUTH_PORTAL_VALUE,
-  isAdminEmail,
 } from "@/app/lib/admin-auth-pure";
+import {
+  resolveAuthorizedAdmin,
+  type AdminUser,
+} from "@/app/lib/admin-users";
+import type { AdminRole } from "@/app/lib/admin-users-pure";
+import { canManageAdmins } from "@/app/lib/admin-users-pure";
 
 export {
   ADMIN_AUTH_PORTAL_COOKIE,
@@ -21,24 +25,37 @@ export {
 } from "@/app/lib/admin-auth-pure";
 
 export type AdminSession = {
+  id: string;
   email: string;
+  name: string | null;
+  role: AdminRole;
+  isActive: true;
 };
 
-function adminAllowlistRaw(): string | undefined {
-  return process.env.ADMIN_EMAILS;
+function toSession(admin: AdminUser): AdminSession {
+  return {
+    id: admin.id,
+    email: admin.email,
+    name: admin.name,
+    role: admin.role,
+    isActive: true,
+  };
 }
 
 /**
- * Resolve admin from Auth.js session email against ADMIN_EMAILS.
- * Never trust client-supplied email or JWT isAdmin alone.
+ * Resolve admin from verified Auth.js session email + active admin_users row.
+ * ADMIN_EMAILS only bootstraps a missing OWNER row (transition fallback).
+ * Never trust client-supplied email/role or JWT isAdmin alone.
  */
 export async function getAdminSession(): Promise<AdminSession | null> {
   const session = await auth();
   const email =
     typeof session?.user?.email === "string" ? session.user.email : null;
   if (!email) return null;
-  if (!isAdminEmail(email, adminAllowlistRaw())) return null;
-  return { email: normalizeCustomerEmail(email) };
+
+  const admin = await resolveAuthorizedAdmin(email);
+  if (!admin) return null;
+  return toSession(admin);
 }
 
 export async function isAdminSession(): Promise<boolean> {
@@ -56,7 +73,7 @@ export async function requireAdmin(
   return admin;
 }
 
-/** API guard — 401 JSON when not an allowlisted Google admin. */
+/** API guard — 401 JSON when not an active Google admin. */
 export async function requireAdminApi(): Promise<
   { ok: true; admin: AdminSession } | { ok: false; response: NextResponse }
 > {
@@ -68,6 +85,32 @@ export async function requireAdminApi(): Promise<
     };
   }
   return { ok: true, admin };
+}
+
+/** Page guard — OWNER only. Non-owners redirect to dashboard. */
+export async function requireOwner(
+  loginRedirect = "/admin/login",
+): Promise<AdminSession> {
+  const admin = await requireAdmin(loginRedirect);
+  if (!canManageAdmins(admin)) {
+    redirect("/dashboard");
+  }
+  return admin;
+}
+
+/** API guard — OWNER only (403 for ADMIN, 401 for unauthenticated). */
+export async function requireOwnerApi(): Promise<
+  { ok: true; admin: AdminSession } | { ok: false; response: NextResponse }
+> {
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate;
+  if (!canManageAdmins(gate.admin)) {
+    return {
+      ok: false,
+      response: NextResponse.json({ error: "Forbidden." }, { status: 403 }),
+    };
+  }
+  return gate;
 }
 
 export async function markAdminAuthPortalIntent(): Promise<void> {

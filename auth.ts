@@ -13,7 +13,6 @@ import {
 } from "@/app/lib/staff-pure";
 import {
   ADMIN_AUTH_PORTAL_VALUE,
-  isAdminEmail,
 } from "@/app/lib/admin-auth-pure";
 import { cookies } from "next/headers";
 
@@ -24,7 +23,7 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
-      /** Hint only — always re-check ADMIN_EMAILS server-side via requireAdmin(). */
+      /** Hint only — always re-check admin_users server-side via requireAdmin(). */
       isAdmin?: boolean;
     };
     /** Present only for allowlisted active staff. Revalidated on each requireStaff(). */
@@ -118,10 +117,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       await clearPortalIntent();
 
       if (portalIntent === "admin") {
-        if (!isAdminEmail(email, process.env.ADMIN_EMAILS)) {
+        const { resolveAuthorizedAdmin } = await import(
+          "@/app/lib/admin-users"
+        );
+        const admin = await resolveAuthorizedAdmin(email);
+        if (!admin) {
           return "/admin/login?error=unauthorized";
         }
-        // Allowlisted admin may also be a customer — provision/link when possible.
+        // Active admin may also be a customer — provision/link when possible.
         try {
           const customer = await upsertCustomerFromGoogle({
             email,
@@ -174,7 +177,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         const email = profile.email;
-        appToken.isAdmin = isAdminEmail(email, process.env.ADMIN_EMAILS);
+
+        try {
+          const { resolveAuthorizedAdmin, touchAdminLastLogin } = await import(
+            "@/app/lib/admin-users"
+          );
+          const admin = await resolveAuthorizedAdmin(email);
+          appToken.isAdmin = Boolean(admin);
+          if (admin && account) {
+            // Fresh Google sign-in only — not every token refresh / API call.
+            try {
+              await touchAdminLastLogin(admin.id);
+            } catch (error) {
+              console.error("Admin last_login_at update failed:", error);
+            }
+          }
+        } catch (error) {
+          console.error("JWT admin sync failed:", error);
+          appToken.isAdmin = false;
+        }
 
         try {
           const staff = await findActiveStaffByEmail(email);
@@ -247,12 +268,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
-      // Recompute admin claim from env allowlist on every token refresh.
+      // Recompute admin claim from active admin_users on every token refresh.
       if (typeof appToken.email === "string") {
-        appToken.isAdmin = isAdminEmail(
-          appToken.email,
-          process.env.ADMIN_EMAILS,
-        );
+        try {
+          const { resolveAuthorizedAdmin } = await import(
+            "@/app/lib/admin-users"
+          );
+          const admin = await resolveAuthorizedAdmin(appToken.email);
+          appToken.isAdmin = Boolean(admin);
+        } catch {
+          delete appToken.isAdmin;
+        }
       } else {
         delete appToken.isAdmin;
       }

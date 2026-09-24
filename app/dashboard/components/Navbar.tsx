@@ -18,6 +18,7 @@ type NavbarProps = {
   unseenBookings: UnseenBooking[];
   pendingChangeRequestCount?: number;
   opsNeedsAttentionCount?: number;
+  isOwner?: boolean;
 };
 
 const formatDate = (date: string) => {
@@ -47,6 +48,7 @@ export default function Navbar({
   unseenBookings,
   pendingChangeRequestCount = 0,
   opsNeedsAttentionCount = 0,
+  isOwner = false,
 }: NavbarProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -171,6 +173,14 @@ export default function Navbar({
           >
             Staff
           </a>
+          {isOwner ? (
+            <a
+              href="/dashboard/admins"
+              className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            >
+              Admins
+            </a>
+          ) : null}
           <a
             href="/"
             className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-sky-600"

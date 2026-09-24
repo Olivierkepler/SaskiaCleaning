@@ -6,7 +6,7 @@ import AvailabilityAdminClient from "./AvailabilityAdminClient";
 import { SASKIA_TIME_ZONE } from "@/app/lib/scheduling-pure";
 
 export default async function AvailabilityDashboardPage() {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const unseenRows = await sql`
     SELECT id, name, email, created_at, service, location
@@ -22,6 +22,7 @@ export default async function AvailabilityDashboardPage() {
     <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         <Navbar
+          isOwner={admin.role === "OWNER"}
           unseenCount={unseenRows.length}
           unseenBookings={
             unseenRows as Array<{
