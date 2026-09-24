@@ -1,23 +1,11 @@
+import { requireAdmin } from "@/app/lib/admin-auth";
 import { sql } from "../../lib/db";
-import { redirect } from "next/navigation";
 import { serializePromoCard, type PromoCardRow } from "../../lib/promo-cards";
 import Navbar from "../components/Navbar";
 import PromoCardsTable from "./PromoCardsTable";
 
-type DashboardPageProps = {
-  searchParams: Promise<{
-    key?: string;
-  }>;
-};
-
-export default async function PromoCardsDashboardPage({
-  searchParams,
-}: DashboardPageProps) {
-  const params = await searchParams;
-
-  if (params.key !== process.env.DASHBOARD_KEY) {
-    redirect("/");
-  }
+export default async function PromoCardsDashboardPage() {
+  await requireAdmin();
 
   const [promoRows, bookingRows] = await Promise.all([
     sql`
@@ -50,7 +38,6 @@ export default async function PromoCardsDashboardPage({
     <main className="min-h-screen bg-slate-100 py-6">
       <div className="mx-auto max-w-full px-4 sm:px-6 lg:px-20">
         <Navbar
-          dashboardKey={params.key!}
           unseenCount={unseenCount}
           unseenBookings={unseenBookings}
         />
@@ -64,7 +51,7 @@ export default async function PromoCardsDashboardPage({
           </p>
         </div>
 
-        <PromoCardsTable cards={cards} dashboardKey={params.key!} />
+        <PromoCardsTable cards={cards} />
       </div>
     </main>
   );

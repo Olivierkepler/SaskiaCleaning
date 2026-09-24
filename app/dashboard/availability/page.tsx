@@ -1,23 +1,12 @@
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/app/lib/admin-auth";
 import Navbar from "../components/Navbar";
 import { sql } from "@/app/lib/db";
 import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
 import AvailabilityAdminClient from "./AvailabilityAdminClient";
 import { SASKIA_TIME_ZONE } from "@/app/lib/scheduling-pure";
 
-type PageProps = {
-  searchParams: Promise<{ key?: string }>;
-};
-
-export default async function AvailabilityDashboardPage({
-  searchParams,
-}: PageProps) {
-  const params = await searchParams;
-  if (params.key !== process.env.DASHBOARD_KEY) {
-    redirect("/");
-  }
-
-  const key = params.key!;
+export default async function AvailabilityDashboardPage() {
+  await requireAdmin();
 
   const unseenRows = await sql`
     SELECT id, name, email, created_at, service, location
@@ -33,16 +22,17 @@ export default async function AvailabilityDashboardPage({
     <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl">
         <Navbar
-          dashboardKey={key}
           unseenCount={unseenRows.length}
-          unseenBookings={unseenRows as Array<{
-            id: number;
-            name: string;
-            email: string;
-            created_at: string;
-            service: string | null;
-            location: string | null;
-          }>}
+          unseenBookings={
+            unseenRows as Array<{
+              id: number;
+              name: string;
+              email: string;
+              created_at: string;
+              service: string | null;
+              location: string | null;
+            }>
+          }
           pendingChangeRequestCount={pendingChangeRequestCount}
         />
 
@@ -54,7 +44,7 @@ export default async function AvailabilityDashboardPage({
           </p>
         </div>
 
-        <AvailabilityAdminClient dashboardKey={key} />
+        <AvailabilityAdminClient />
       </div>
     </main>
   );

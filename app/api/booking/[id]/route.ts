@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import { sql } from "../../../lib/db";
 
 export async function DELETE(
@@ -6,12 +7,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const url = new URL(req.url);
-    const key = url.searchParams.get("key");
-
-    if (key !== process.env.DASHBOARD_KEY) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const gate = await requireAdminApi();
+    if (!gate.ok) return gate.response;
 
     const { id } = await params;
 

@@ -11,6 +11,10 @@ import {
   STAFF_AUTH_PORTAL_COOKIE,
   STAFF_AUTH_PORTAL_VALUE,
 } from "@/app/lib/staff-pure";
+import {
+  ADMIN_AUTH_PORTAL_VALUE,
+  isAdminEmail,
+} from "@/app/lib/admin-auth-pure";
 import { cookies } from "next/headers";
 
 declare module "next-auth" {
@@ -20,6 +24,8 @@ declare module "next-auth" {
       name?: string | null;
       email?: string | null;
       image?: string | null;
+      /** Hint only — always re-check ADMIN_EMAILS server-side via requireAdmin(). */
+      isAdmin?: boolean;
     };
     /** Present only for allowlisted active staff. Revalidated on each requireStaff(). */
     staffId?: string | null;
@@ -29,18 +35,24 @@ declare module "next-auth" {
 type AppJWT = JWT & {
   customerId?: string;
   staffId?: string;
+  isAdmin?: boolean;
 };
 
-async function readStaffPortalIntent(): Promise<boolean> {
+type PortalIntent = "admin" | "staff" | null;
+
+async function readPortalIntent(): Promise<PortalIntent> {
   try {
     const jar = await cookies();
-    return jar.get(STAFF_AUTH_PORTAL_COOKIE)?.value === STAFF_AUTH_PORTAL_VALUE;
+    const value = jar.get(STAFF_AUTH_PORTAL_COOKIE)?.value;
+    if (value === ADMIN_AUTH_PORTAL_VALUE) return "admin";
+    if (value === STAFF_AUTH_PORTAL_VALUE) return "staff";
+    return null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-async function clearStaffPortalIntent(): Promise<void> {
+async function clearPortalIntent(): Promise<void> {
   try {
     const jar = await cookies();
     jar.delete(STAFF_AUTH_PORTAL_COOKIE);
@@ -76,20 +88,58 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       if (!isGoogleEmailVerified(profile)) {
+        const portalIntent = await readPortalIntent();
+        await clearPortalIntent();
+        if (portalIntent === "admin") {
+          return "/admin/login?error=unverified_email";
+        }
+        if (portalIntent === "staff") {
+          return "/staff/login?error=unverified_email";
+        }
         return "/login?error=unverified_email";
       }
 
       const email =
         typeof profile?.email === "string" ? profile.email : null;
       if (!email) {
+        const portalIntent = await readPortalIntent();
+        await clearPortalIntent();
+        if (portalIntent === "admin") {
+          return "/admin/login?error=unverified_email";
+        }
+        if (portalIntent === "staff") {
+          return "/staff/login?error=unverified_email";
+        }
         return "/login?error=unverified_email";
       }
 
-      const staffIntent = await readStaffPortalIntent();
-      // Always clear so abandoned staff intents cannot poison customer login.
-      await clearStaffPortalIntent();
+      const portalIntent = await readPortalIntent();
+      // Always clear so abandoned portal intents cannot poison other logins.
+      await clearPortalIntent();
 
-      if (staffIntent) {
+      if (portalIntent === "admin") {
+        if (!isAdminEmail(email, process.env.ADMIN_EMAILS)) {
+          return "/admin/login?error=unauthorized";
+        }
+        // Allowlisted admin may also be a customer — provision/link when possible.
+        try {
+          const customer = await upsertCustomerFromGoogle({
+            email,
+            name: typeof profile?.name === "string" ? profile.name : null,
+            image:
+              typeof profile?.picture === "string" ? profile.picture : null,
+            providerAccountId: account.providerAccountId,
+            emailVerified: true,
+          });
+          await linkGuestBookingsByEmail(customer.id, customer.email);
+        } catch (error) {
+          console.error("Google admin customer upsert failed:", error);
+          // Admin access does not require a customer row.
+        }
+        return true;
+      }
+
+      if (portalIntent === "staff") {
         const staff = await findActiveStaffByEmail(email);
         if (!staff) {
           return "/staff/login?error=not_staff";
@@ -124,6 +174,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         const email = profile.email;
+        appToken.isAdmin = isAdminEmail(email, process.env.ADMIN_EMAILS);
 
         try {
           const staff = await findActiveStaffByEmail(email);
@@ -196,6 +247,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
+      // Recompute admin claim from env allowlist on every token refresh.
+      if (typeof appToken.email === "string") {
+        appToken.isAdmin = isAdminEmail(
+          appToken.email,
+          process.env.ADMIN_EMAILS,
+        );
+      } else {
+        delete appToken.isAdmin;
+      }
+
       return appToken;
     },
 
@@ -221,6 +282,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         ) {
           session.user.image = appToken.picture as string | null;
         }
+        session.user.isAdmin = appToken.isAdmin === true;
       }
       session.staffId =
         typeof appToken.staffId === "string" ? appToken.staffId : null;

@@ -181,10 +181,8 @@ function PromoCardForm({
 
 export default function PromoCardsTable({
   cards,
-  dashboardKey,
 }: {
   cards: PromoCard[];
-  dashboardKey: string;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<{
@@ -211,7 +209,7 @@ export default function PromoCardsTable({
 
     try {
       const response = await fetch(
-        `/api/promo-cards?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/promo-cards`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -244,7 +242,7 @@ export default function PromoCardsTable({
 
     try {
       const response = await fetch(
-        `/api/promo-cards/${id}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/promo-cards/${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -276,7 +274,7 @@ export default function PromoCardsTable({
 
     try {
       const response = await fetch(
-        `/api/promo-cards/${card.id}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/promo-cards/${card.id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -313,7 +311,7 @@ export default function PromoCardsTable({
 
     try {
       const response = await fetch(
-        `/api/promo-cards/${id}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/promo-cards/${id}`,
         { method: "DELETE" },
       );
       const data = (await response.json()) as { error?: string };

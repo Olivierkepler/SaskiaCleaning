@@ -1,18 +1,14 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import { resolveBookingFollowup } from "@/app/lib/booking-followups";
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
 
-function assertDashboardKey(req: Request): boolean {
-  return new URL(req.url).searchParams.get("key") === process.env.DASHBOARD_KEY;
-}
 
 type RouteContext = { params: Promise<{ followupId: string }> };
 
 export async function PATCH(req: Request, context: RouteContext) {
-  if (!assertDashboardKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
   const { followupId: raw } = await context.params;
   const followupId = Number(raw);

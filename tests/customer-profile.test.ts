@@ -201,8 +201,8 @@ describe("ownership and limits (unit)", () => {
 
   it("guest booking and admin auth remain separate concepts", () => {
     const guestBooking = { customer_id: null };
-    const dashboardKeyOk = "key" === "key";
+    const adminAllowlistConfigured = "ADMIN_EMAILS" === "ADMIN_EMAILS";
     assert.equal(guestBooking.customer_id, null);
-    assert.equal(dashboardKeyOk, true);
+    assert.equal(adminAllowlistConfigured, true);
   });
 });

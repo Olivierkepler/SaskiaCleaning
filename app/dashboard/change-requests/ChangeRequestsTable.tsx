@@ -28,12 +28,10 @@ export type AdminChangeRequestRow = {
 };
 
 type ChangeRequestsTableProps = {
-  dashboardKey: string;
   initialRequests: AdminChangeRequestRow[];
 };
 
 export default function ChangeRequestsTable({
-  dashboardKey,
   initialRequests,
 }: ChangeRequestsTableProps) {
   const router = useRouter();
@@ -51,7 +49,7 @@ export default function ChangeRequestsTable({
 
     try {
       const response = await fetch(
-        `/api/dashboard/change-requests?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/change-requests`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

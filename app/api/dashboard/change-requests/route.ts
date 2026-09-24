@@ -1,20 +1,14 @@
 import { NextResponse } from "next/server";
-import { isDashboardAuthorized } from "@/app/lib/referrals";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import {
   approveBookingChangeRequest,
   listPendingAdminChangeRequests,
   rejectBookingChangeRequest,
 } from "@/app/lib/booking-change-requests";
 
-function getDashboardKey(req: Request): string | null {
-  const url = new URL(req.url);
-  return url.searchParams.get("key");
-}
-
 export async function GET(req: Request) {
-  if (!isDashboardAuthorized(getDashboardKey(req))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
   try {
     const requests = await listPendingAdminChangeRequests();
@@ -30,9 +24,8 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  if (!isDashboardAuthorized(getDashboardKey(req))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
   let body: unknown;
   try {

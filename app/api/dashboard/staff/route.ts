@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import {
   createStaffMember,
   listStaffMembers,
   countUpcomingAssignmentsForStaff,
 } from "@/app/lib/staff";
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
 
-function assertKey(req: Request): boolean {
-  return new URL(req.url).searchParams.get("key") === process.env.DASHBOARD_KEY;
-}
 
 export async function GET(req: Request) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   try {
     const staff = await listStaffMembers();
     const withCounts = await Promise.all(
@@ -31,7 +27,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   try {
     const body = await req.json();
     const result = await createStaffMember(body);

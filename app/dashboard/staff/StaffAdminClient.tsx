@@ -16,10 +16,8 @@ type StaffRow = {
 };
 
 export default function StaffAdminClient({
-  dashboardKey,
   initialStaff,
 }: {
-  dashboardKey: string;
   initialStaff: StaffRow[];
 }) {
   const router = useRouter();
@@ -39,7 +37,7 @@ export default function StaffAdminClient({
     setMessage("");
     try {
       const response = await fetch(
-        `/api/dashboard/staff?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/staff`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -159,7 +157,7 @@ export default function StaffAdminClient({
                   </p>
                 </div>
                 <Link
-                  href={`/dashboard/staff/${member.id}?key=${encodeURIComponent(dashboardKey)}`}
+                  href={`/dashboard/staff/${member.id}`}
                   className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700"
                 >
                   Manage

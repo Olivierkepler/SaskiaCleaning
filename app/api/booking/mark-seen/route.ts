@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import { sql } from "../../../lib/db";
 
 export async function PATCH(req: Request) {
   try {
-    const url = new URL(req.url);
-    const key = url.searchParams.get("key");
-
-    if (key !== process.env.DASHBOARD_KEY) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const gate = await requireAdminApi();
+    if (!gate.ok) return gate.response;
 
     const result = await sql`
       UPDATE booking_requests

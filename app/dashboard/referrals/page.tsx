@@ -1,5 +1,5 @@
+import { requireAdmin } from "@/app/lib/admin-auth";
 import { sql } from "../../lib/db";
-import { redirect } from "next/navigation";
 import {
   computeReferralAnalytics,
   computeReferralFunnel,
@@ -16,20 +16,8 @@ import {
 import Navbar from "../components/Navbar";
 import ReferralDashboard from "./ReferralDashboard";
 
-type DashboardPageProps = {
-  searchParams: Promise<{
-    key?: string;
-  }>;
-};
-
-export default async function ReferralsDashboardPage({
-  searchParams,
-}: DashboardPageProps) {
-  const params = await searchParams;
-
-  if (params.key !== process.env.DASHBOARD_KEY) {
-    redirect("/");
-  }
+export default async function ReferralsDashboardPage() {
+  await requireAdmin();
 
   const [codeRows, referralRows, bookingRows, notificationRows] =
     await Promise.all([
@@ -122,7 +110,6 @@ export default async function ReferralsDashboardPage({
     <main className="min-h-screen bg-slate-100 py-6">
       <div className="mx-auto max-w-full px-4 sm:px-6 lg:px-20">
         <Navbar
-          dashboardKey={params.key!}
           unseenCount={unseenCount}
           unseenBookings={unseenBookings}
         />
@@ -144,7 +131,6 @@ export default async function ReferralsDashboardPage({
           funnel={funnel}
           topReferrers={topReferrers}
           referrerExportRows={referrerExportRows}
-          dashboardKey={params.key!}
         />
       </div>
     </main>

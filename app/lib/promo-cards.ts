@@ -46,8 +46,9 @@ export type PromoCardInput = {
   isActive: boolean;
 };
 
-export function isDashboardAuthorized(key: string | null): boolean {
-  return key === process.env.DASHBOARD_KEY;
+/** @deprecated DASHBOARD_KEY URL auth removed. Use requireAdminApi(). */
+export function isDashboardAuthorized(_key: string | null): boolean {
+  return false;
 }
 
 export function serializePromoCard(row: PromoCardRow): PromoCard {

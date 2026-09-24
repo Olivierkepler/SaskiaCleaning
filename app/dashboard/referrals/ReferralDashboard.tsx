@@ -618,7 +618,6 @@ export default function ReferralDashboard({
   funnel,
   topReferrers,
   referrerExportRows,
-  dashboardKey,
 }: {
   referralCodes: ReferralCode[];
   referrals: ReferralTracking[];
@@ -627,7 +626,6 @@ export default function ReferralDashboard({
   funnel: ReferralFunnelStep[];
   topReferrers: TopReferrerStats[];
   referrerExportRows: TopReferrerStats[];
-  dashboardKey: string;
 }) {
   const router = useRouter();
   const [message, setMessage] = useState<{
@@ -866,7 +864,7 @@ export default function ReferralDashboard({
 
     try {
       const response = await fetch(
-        `/api/referrals/admin-reminders?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/referrals/admin-reminders`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -921,7 +919,7 @@ export default function ReferralDashboard({
 
     try {
       const response = await fetch(
-        `/api/referral-codes?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/referral-codes`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -957,7 +955,7 @@ export default function ReferralDashboard({
 
     try {
       const response = await fetch(
-        `/api/referral-codes/${id}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/referral-codes/${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -992,7 +990,7 @@ export default function ReferralDashboard({
 
     try {
       const response = await fetch(
-        `/api/referral-codes/${code.id}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/referral-codes/${code.id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -1038,7 +1036,7 @@ export default function ReferralDashboard({
 
     try {
       const response = await fetch(
-        `/api/referral-codes/${code.id}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/referral-codes/${code.id}`,
         { method: "DELETE" },
       );
       const data = (await response.json()) as {
@@ -1084,7 +1082,7 @@ export default function ReferralDashboard({
 
     try {
       const response = await fetch(
-        `/api/referrals/${referralId}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/referrals/${referralId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

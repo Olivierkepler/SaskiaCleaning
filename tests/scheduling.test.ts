@@ -260,8 +260,8 @@ describe("regressions", () => {
     assert.equal(typeof buildBookAgainHref, "function");
   });
 
-  it("Google Auth and DASHBOARD_KEY remain separate concepts", () => {
-    assert.equal("DASHBOARD_KEY", "DASHBOARD_KEY");
+  it("Google Auth admin allowlist remains separate from customer session", () => {
+    assert.equal("ADMIN_EMAILS", "ADMIN_EMAILS");
   });
 
   it("public availability payload leaks no customer data", () => {

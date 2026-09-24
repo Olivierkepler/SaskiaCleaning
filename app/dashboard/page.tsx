@@ -1,6 +1,5 @@
-// app/dashboard/page.tsx
+import { requireAdmin } from "@/app/lib/admin-auth";
 import { sql } from "../lib/db";
-import { redirect } from "next/navigation";
 import type { BookingStatus } from "../lib/booking-status";
 import DashboardTable from "./DashboardTable";
 import Navbar from "./components/Navbar";
@@ -39,7 +38,6 @@ type BookingRow = Omit<BookingRequest, "friend_discount_amount"> & {
 
 type DashboardPageProps = {
   searchParams: Promise<{
-    key?: string;
     booking?: string;
   }>;
 };
@@ -47,11 +45,8 @@ type DashboardPageProps = {
 export default async function DashboardPage({
   searchParams,
 }: DashboardPageProps) {
+  await requireAdmin();
   const params = await searchParams;
-
-  if (params.key !== process.env.DASHBOARD_KEY) {
-    redirect("/");
-  }
 
   const highlightBookingId = (() => {
     if (!params.booking) return null;
@@ -99,20 +94,17 @@ export default async function DashboardPage({
   return (
     <main className="min-h-screen bg-slate-100  py-6 ">
       <Navbar
-        dashboardKey={params.key!}
         unseenCount={unseenCount}
         unseenBookings={unseenBookings}
         pendingChangeRequestCount={pendingChangeRequestCount}
         opsNeedsAttentionCount={opsNeedsAttentionCount}
       />
       <div className="mx-auto max-w-full px-20">
-       
-  
         <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
           <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
             Booking Requests
           </h1>
-  
+
           <p className="mt-2 text-sm text-slate-600 sm:text-base">
             Total bookings:{" "}
             <span className="font-semibold text-slate-900">
@@ -120,10 +112,9 @@ export default async function DashboardPage({
             </span>
           </p>
         </div>
-  
+
         <DashboardTable
           bookings={typedBookings}
-          dashboardKey={params.key!}
           assignedBookingIds={assignedBookingIds}
           capacityHints={capacityHints}
           highlightBookingId={highlightBookingId}

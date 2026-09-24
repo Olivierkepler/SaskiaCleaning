@@ -31,20 +31,17 @@ function getAdminNotificationEmail(): string | null {
 }
 
 function buildReferralsDashboardUrl(): string {
-  const key = process.env.DASHBOARD_KEY?.trim();
-  const keyQuery = key ? `?key=${encodeURIComponent(key)}` : "";
-
   const explicitBase = process.env.NEXT_PUBLIC_APP_URL?.trim();
   if (explicitBase) {
-    return `${explicitBase.replace(/\/$/, "")}/dashboard/referrals${keyQuery}`;
+    return `${explicitBase.replace(/\/$/, "")}/dashboard/referrals`;
   }
 
   const vercelHost = process.env.VERCEL_URL?.trim();
   if (vercelHost) {
-    return `https://${vercelHost}/dashboard/referrals${keyQuery}`;
+    return `https://${vercelHost}/dashboard/referrals`;
   }
 
-  return `http://localhost:3000/dashboard/referrals${keyQuery}`;
+  return "http://localhost:3000/dashboard/referrals";
 }
 
 async function loadReferralTrackingById(

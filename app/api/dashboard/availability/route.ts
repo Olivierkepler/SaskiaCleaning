@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import {
   listWeeklyAvailability,
   upsertWeeklyAvailability,
@@ -9,17 +10,11 @@ import {
   updateJobBufferMinutes,
 } from "@/app/lib/booking-buffer";
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
 
-function assertDashboardKey(req: Request): boolean {
-  const url = new URL(req.url);
-  return url.searchParams.get("key") === process.env.DASHBOARD_KEY;
-}
 
 export async function GET(req: Request) {
-  if (!assertDashboardKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
   try {
     const url = new URL(req.url);
@@ -84,7 +79,8 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  if (!assertDashboardKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
   try {
     const body = await req.json();

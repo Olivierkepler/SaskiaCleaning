@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import {
   createStaffTimeOff,
   deleteStaffTimeOff,
@@ -10,18 +11,13 @@ import {
   countUpcomingAssignmentsForStaff,
 } from "@/app/lib/staff";
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
 
-function assertKey(req: Request): boolean {
-  return new URL(req.url).searchParams.get("key") === process.env.DASHBOARD_KEY;
-}
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(req: Request, context: RouteContext) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   const { id } = await context.params;
   const staff = await findStaffById(id);
   if (!staff) {
@@ -36,7 +32,8 @@ export async function GET(req: Request, context: RouteContext) {
 }
 
 export async function PUT(req: Request, context: RouteContext) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   const { id } = await context.params;
   const body = await req.json();
 
@@ -77,7 +74,8 @@ export async function PUT(req: Request, context: RouteContext) {
 }
 
 export async function DELETE(req: Request, context: RouteContext) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   const { id } = await context.params;
   const url = new URL(req.url);
   const timeOffId = Number(url.searchParams.get("timeOffId"));

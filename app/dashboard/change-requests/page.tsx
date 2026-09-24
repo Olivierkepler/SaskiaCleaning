@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/app/lib/admin-auth";
 import Navbar from "../components/Navbar";
 import { sql } from "@/app/lib/db";
 import {
@@ -7,18 +7,8 @@ import {
 } from "@/app/lib/booking-change-requests";
 import ChangeRequestsTable from "./ChangeRequestsTable";
 
-type PageProps = {
-  searchParams: Promise<{ key?: string }>;
-};
-
-export default async function DashboardChangeRequestsPage({
-  searchParams,
-}: PageProps) {
-  const params = await searchParams;
-
-  if (params.key !== process.env.DASHBOARD_KEY) {
-    redirect("/");
-  }
+export default async function DashboardChangeRequestsPage() {
+  await requireAdmin();
 
   const [requests, pendingCount, unseenRows] = await Promise.all([
     listPendingAdminChangeRequests(),
@@ -55,7 +45,6 @@ export default async function DashboardChangeRequestsPage({
   return (
     <main className="min-h-screen bg-slate-100 py-6">
       <Navbar
-        dashboardKey={params.key!}
         unseenCount={unseenCount}
         unseenBookings={unseenBookings}
         pendingChangeRequestCount={pendingCount}
@@ -75,10 +64,7 @@ export default async function DashboardChangeRequestsPage({
           </p>
         </div>
 
-        <ChangeRequestsTable
-          dashboardKey={params.key!}
-          initialRequests={requests}
-        />
+        <ChangeRequestsTable initialRequests={requests} />
       </div>
     </main>
   );

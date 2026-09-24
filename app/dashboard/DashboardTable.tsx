@@ -281,13 +281,11 @@ function BookingDetails({
 
 export default function DashboardTable({
   bookings,
-  dashboardKey,
   assignedBookingIds = [],
   capacityHints = {},
   highlightBookingId = null,
 }: {
   bookings: BookingRequest[];
-  dashboardKey: string;
   assignedBookingIds?: number[];
   capacityHints?: Record<number, "overdue" | "capacity_held">;
   highlightBookingId?: number | null;
@@ -531,7 +529,7 @@ export default function DashboardTable({
     const confirmed = confirm("Are you sure you want to delete this booking?");
     if (!confirmed) return;
 
-    const response = await fetch(`/api/booking/${id}?key=${dashboardKey}`, {
+    const response = await fetch(`/api/booking/${id}`, {
       method: "DELETE",
     });
 
@@ -545,7 +543,7 @@ export default function DashboardTable({
 
   const handleStatusChange = async (id: number, status: BookingStatus) => {
     const response = await fetch(
-      `/api/booking/${id}/status?key=${dashboardKey}`,
+      `/api/booking/${id}/status`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -563,7 +561,7 @@ export default function DashboardTable({
 
   const handleMarkAllSeen = async () => {
     const response = await fetch(
-      `/api/booking/mark-seen?key=${dashboardKey}`,
+      `/api/booking/mark-seen`,
       { method: "PATCH" }
     );
 
@@ -1194,7 +1192,6 @@ export default function DashboardTable({
                     ) : null}
                     <BookingAssignControl
                       bookingId={booking.id}
-                      dashboardKey={dashboardKey}
                     />
                   </div>
 

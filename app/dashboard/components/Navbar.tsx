@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import AdminSignOutButton from "@/app/components/admin/AdminSignOutButton";
 
 export type UnseenBooking = {
   id: number;
@@ -13,7 +14,6 @@ export type UnseenBooking = {
 };
 
 type NavbarProps = {
-  dashboardKey: string;
   unseenCount: number;
   unseenBookings: UnseenBooking[];
   pendingChangeRequestCount?: number;
@@ -43,7 +43,6 @@ const formatDate = (date: string) => {
 };
 
 export default function Navbar({
-  dashboardKey,
   unseenCount,
   unseenBookings,
   pendingChangeRequestCount = 0,
@@ -85,10 +84,9 @@ export default function Navbar({
     setIsMarkingSeen(true);
 
     try {
-      const response = await fetch(
-        `/api/booking/mark-seen?key=${dashboardKey}`,
-        { method: "PATCH" }
-      );
+      const response = await fetch(`/api/booking/mark-seen`, {
+        method: "PATCH",
+      });
 
       if (!response.ok) {
         alert("Failed to mark bookings as seen.");
@@ -112,13 +110,13 @@ export default function Navbar({
 
         <div className="flex flex-wrap items-center gap-2">
           <a
-            href={`/dashboard?key=${dashboardKey}`}
+            href="/dashboard"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Bookings
           </a>
           <a
-            href={`/dashboard/operations?key=${dashboardKey}`}
+            href="/dashboard/operations"
             className="relative rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Operations
@@ -131,19 +129,19 @@ export default function Navbar({
             ) : null}
           </a>
           <a
-            href={`/dashboard/promos?key=${dashboardKey}`}
+            href="/dashboard/promos"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Promo Cards
           </a>
           <a
-            href={`/dashboard/referrals?key=${dashboardKey}`}
+            href="/dashboard/referrals"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Referrals
           </a>
           <a
-            href={`/dashboard/change-requests?key=${dashboardKey}`}
+            href="/dashboard/change-requests"
             className="relative rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Change Requests
@@ -156,29 +154,30 @@ export default function Navbar({
             ) : null}
           </a>
           <a
-            href={`/dashboard/availability?key=${dashboardKey}`}
+            href="/dashboard/availability"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Availability
           </a>
           <a
-            href={`/dashboard/service-durations?key=${dashboardKey}`}
+            href="/dashboard/service-durations"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Durations
           </a>
           <a
-            href={`/dashboard/staff?key=${dashboardKey}`}
+            href="/dashboard/staff"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Staff
           </a>
           <a
-            href={`/?key=${dashboardKey}`}
+            href="/"
             className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-sky-600"
           >
             Home
           </a>
+          <AdminSignOutButton />
 
           <div className="relative" ref={dropdownRef}>
             <button

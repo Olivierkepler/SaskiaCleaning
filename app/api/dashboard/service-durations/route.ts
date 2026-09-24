@@ -1,20 +1,16 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import {
   deleteServiceDurationRule,
   listServiceDurationRules,
   upsertServiceDurationRule,
 } from "@/app/lib/booking-duration";
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
 
-function assertKey(req: Request): boolean {
-  return new URL(req.url).searchParams.get("key") === process.env.DASHBOARD_KEY;
-}
 
 export async function GET(req: Request) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   try {
     const rules = await listServiceDurationRules();
     return NextResponse.json({ rules });
@@ -28,7 +24,8 @@ export async function GET(req: Request) {
 }
 
 export async function PUT(req: Request) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   try {
     const body = await req.json();
     const result = await upsertServiceDurationRule({
@@ -53,7 +50,8 @@ export async function PUT(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   try {
     const id = Number(new URL(req.url).searchParams.get("id"));
     if (!Number.isInteger(id) || id <= 0) {

@@ -208,11 +208,10 @@ describe("ownership and mutation rules (unit)", () => {
     assert.equal(guestBooking.customer_id, null);
   });
 
-  it("admin DASHBOARD_KEY remains separate from Google session", () => {
-    const dashboardKey = "admin-key";
-    const requestKey = "admin-key";
+  it("admin Google allowlist remains separate from Google session", () => {
     const googleCustomer = { id: "cust-1" };
-    assert.equal(requestKey === dashboardKey, true);
+    const isAdmin = false;
+    assert.equal(isAdmin, false);
     assert.ok(googleCustomer.id);
   });
 

@@ -12,10 +12,8 @@ type Assignment = {
 
 export default function BookingAssignControl({
   bookingId,
-  dashboardKey,
 }: {
   bookingId: number;
-  dashboardKey: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -35,7 +33,7 @@ export default function BookingAssignControl({
     setLoading(true);
     setError("");
     fetch(
-      `/api/dashboard/bookings/${bookingId}/assignment?key=${encodeURIComponent(dashboardKey)}`,
+      `/api/dashboard/bookings/${bookingId}/assignment`,
     )
       .then(async (res) => {
         const data = await res.json();
@@ -64,14 +62,14 @@ export default function BookingAssignControl({
     return () => {
       cancelled = true;
     };
-  }, [open, bookingId, dashboardKey]);
+  }, [open, bookingId]);
 
   async function save(unassign = false) {
     setLoading(true);
     setError("");
     try {
       const response = await fetch(
-        `/api/dashboard/bookings/${bookingId}/assignment?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/bookings/${bookingId}/assignment`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

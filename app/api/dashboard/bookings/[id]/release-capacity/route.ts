@@ -1,13 +1,8 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import { adminReleaseBookingCapacity } from "@/app/lib/ops-exceptions";
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
 
-function assertDashboardKey(req: Request): boolean {
-  return new URL(req.url).searchParams.get("key") === process.env.DASHBOARD_KEY;
-}
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -16,7 +11,8 @@ type RouteContext = { params: Promise<{ id: string }> };
  * Does not change booking status. Preserves assignment history.
  */
 export async function POST(req: Request, context: RouteContext) {
-  if (!assertDashboardKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
   const { id } = await context.params;
   const bookingId = Number(id);

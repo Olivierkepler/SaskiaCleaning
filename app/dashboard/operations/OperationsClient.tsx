@@ -58,11 +58,9 @@ const SEVERITY_CLASS: Record<OpsSeverity, string> = {
 };
 
 export default function OperationsClient({
-  dashboardKey,
   initialItems,
   summary,
 }: {
-  dashboardKey: string;
   initialItems: OpsExceptionClientItem[];
   summary: OpsSummaryClient;
 }) {
@@ -122,7 +120,7 @@ export default function OperationsClient({
     setMessage("");
     try {
       const res = await fetch(
-        `/api/booking/${bookingId}/status?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/booking/${bookingId}/status`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
@@ -160,7 +158,7 @@ export default function OperationsClient({
     setMessage("");
     try {
       const res = await fetch(
-        `/api/dashboard/bookings/${item.bookingId}/release-capacity?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/bookings/${item.bookingId}/release-capacity`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -303,7 +301,7 @@ export default function OperationsClient({
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <a
-                    href={`/dashboard?key=${encodeURIComponent(dashboardKey)}&booking=${item.bookingId}`}
+                    href={`/dashboard?booking=${item.bookingId}`}
                     className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800"
                   >
                     View booking
@@ -352,7 +350,6 @@ export default function OperationsClient({
                   </p>
                   <BookingAssignControl
                     bookingId={item.bookingId}
-                    dashboardKey={dashboardKey}
                   />
                 </div>
               )}
@@ -361,7 +358,6 @@ export default function OperationsClient({
                 <div className="mt-3">
                   <FollowupPanel
                     bookingId={item.bookingId}
-                    dashboardKey={dashboardKey}
                     status={item.status}
                     exceptionLabel={item.exceptionLabel}
                     onSaved={() => router.refresh()}

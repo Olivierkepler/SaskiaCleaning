@@ -38,14 +38,12 @@ function formatNy(iso: string | null): string {
 
 export default function FollowupPanel({
   bookingId,
-  dashboardKey,
   status,
   exceptionLabel,
   onSaved,
   onClose,
 }: {
   bookingId: number;
-  dashboardKey: string;
   status: string;
   exceptionLabel?: string | null;
   onSaved?: () => void;
@@ -71,7 +69,7 @@ export default function FollowupPanel({
     setError("");
     try {
       const res = await fetch(
-        `/api/dashboard/bookings/${bookingId}/followups?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/bookings/${bookingId}/followups`,
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load follow-ups");
@@ -81,7 +79,7 @@ export default function FollowupPanel({
     } finally {
       setLoading(false);
     }
-  }, [bookingId, dashboardKey]);
+  }, [bookingId]);
 
   useEffect(() => {
     void load();
@@ -96,7 +94,7 @@ export default function FollowupPanel({
         ? new Date(nextLocal).toISOString()
         : null;
       const res = await fetch(
-        `/api/dashboard/bookings/${bookingId}/followups?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/bookings/${bookingId}/followups`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -129,7 +127,7 @@ export default function FollowupPanel({
     setError("");
     try {
       const res = await fetch(
-        `/api/dashboard/followups/${id}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/followups/${id}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },

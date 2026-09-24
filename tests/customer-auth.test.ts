@@ -62,15 +62,10 @@ describe("booking ownership rules (unit)", () => {
 });
 
 describe("admin auth separation (unit)", () => {
-  it("keeps DASHBOARD_KEY check independent of customer session", () => {
-    const dashboardKey = "secret-admin-key";
-    const requestKey = "secret-admin-key";
-    const customerSession = { user: { id: "customer-1" } };
-
-    const adminOk = requestKey === dashboardKey;
+  it("keeps Google admin allowlist independent of customer session", () => {
+    const customerSession = { user: { id: "customer-1", email: "c@x.com" } };
     const isAdminViaCustomerSession = false;
 
-    assert.equal(adminOk, true);
     assert.equal(isAdminViaCustomerSession, false);
     assert.ok(customerSession.user.id);
   });

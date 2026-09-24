@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import { sql } from "../../../lib/db";
 import {
-  isDashboardAuthorized,
   mergePromoCardInput,
   parsePromoCardInput,
   serializePromoCard,
@@ -61,12 +61,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const url = new URL(req.url);
-    const key = url.searchParams.get("key");
-
-    if (!isDashboardAuthorized(key)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
     const { id } = await params;
     const cardId = parsePromoCardId(id);
@@ -140,12 +136,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const url = new URL(req.url);
-    const key = url.searchParams.get("key");
-
-    if (!isDashboardAuthorized(key)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
     const { id } = await params;
     const cardId = parsePromoCardId(id);

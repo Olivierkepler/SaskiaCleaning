@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import { deleteSchedulingBlock } from "@/app/lib/scheduling";
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
 
 export async function DELETE(
   req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const url = new URL(req.url);
-  if (url.searchParams.get("key") !== process.env.DASHBOARD_KEY) {
-    return unauthorized();
-  }
+const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
+
 
   try {
     const { id } = await context.params;

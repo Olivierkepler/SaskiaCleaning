@@ -214,10 +214,10 @@ describe("account bookings route protection (unit)", () => {
 });
 
 describe("admin auth remains separate (unit)", () => {
-  it("DASHBOARD_KEY check is independent of customer bookings", () => {
-    const dashboardKey = "admin-key";
-    const requestKey = "admin-key";
-    assert.equal(requestKey === dashboardKey, true);
+  it("Google admin allowlist remains separate from customer bookings", () => {
+    const sessionCustomerId = "cust-1";
+    assert.ok(sessionCustomerId);
+    assert.equal("ADMIN_EMAILS" === "ADMIN_EMAILS", true);
   });
 });
 

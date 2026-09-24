@@ -37,13 +37,11 @@ type TimeOff = {
 };
 
 export default function StaffDetailClient({
-  dashboardKey,
   staff: initialStaff,
   initialAvailability,
   initialTimeOff,
   upcomingJobs,
 }: {
-  dashboardKey: string;
   staff: Staff;
   initialAvailability: Day[];
   initialTimeOff: TimeOff[];
@@ -63,7 +61,7 @@ export default function StaffDetailClient({
     setError("");
     setMessage("");
     const response = await fetch(
-      `/api/dashboard/staff/${staff.id}?key=${encodeURIComponent(dashboardKey)}`,
+      `/api/dashboard/staff/${staff.id}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -87,7 +85,7 @@ export default function StaffDetailClient({
     setError("");
     setMessage("");
     const response = await fetch(
-      `/api/dashboard/staff/${staff.id}?key=${encodeURIComponent(dashboardKey)}`,
+      `/api/dashboard/staff/${staff.id}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -107,7 +105,7 @@ export default function StaffDetailClient({
     setError("");
     setMessage("");
     const response = await fetch(
-      `/api/dashboard/staff/${staff.id}?key=${encodeURIComponent(dashboardKey)}`,
+      `/api/dashboard/staff/${staff.id}`,
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -136,7 +134,7 @@ export default function StaffDetailClient({
 
   async function removeTimeOff(id: number) {
     const response = await fetch(
-      `/api/dashboard/staff/${staff.id}?key=${encodeURIComponent(dashboardKey)}&timeOffId=${id}`,
+      `/api/dashboard/staff/${staff.id}&timeOffId=${id}`,
       { method: "DELETE" },
     );
     if (!response.ok) {

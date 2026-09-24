@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import {
   assignStaffToBooking,
   getAssignmentForBooking,
@@ -20,18 +21,13 @@ import {
   resolveEffectiveBufferMinutes,
 } from "@/app/lib/booking-buffer-pure";
 
-function unauthorized() {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
 
-function assertKey(req: Request): boolean {
-  return new URL(req.url).searchParams.get("key") === process.env.DASHBOARD_KEY;
-}
 
 type RouteContext = { params: Promise<{ id: string }> };
 
 export async function GET(req: Request, context: RouteContext) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   const { id } = await context.params;
   const bookingId = Number(id);
   if (!Number.isInteger(bookingId) || bookingId <= 0) {
@@ -94,7 +90,8 @@ export async function GET(req: Request, context: RouteContext) {
 }
 
 export async function PUT(req: Request, context: RouteContext) {
-  if (!assertKey(req)) return unauthorized();
+  const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
   const { id } = await context.params;
   const bookingId = Number(id);
   if (!Number.isInteger(bookingId) || bookingId <= 0) {

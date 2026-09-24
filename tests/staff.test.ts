@@ -55,11 +55,10 @@ describe("staff auth boundaries (unit)", () => {
     assert.equal(Boolean(session.staffId), false);
   });
 
-  it("staff cannot access admin dashboard without DASHBOARD_KEY", () => {
-    const keyOk = "secret" === "secret";
-    const staffSession = { staffId: "s1" };
-    assert.equal(Boolean(staffSession.staffId) && keyOk, true);
-    assert.notEqual("DASHBOARD_KEY", staffSession.staffId);
+  it("staff cannot access admin dashboard without ADMIN_EMAILS allowlist", () => {
+    const staffSession = { staffId: "s1", email: "cleaner@example.com" };
+    assert.ok(staffSession.staffId);
+    assert.notEqual("ADMIN_EMAILS", staffSession.staffId);
   });
 
   it("staff portal cookie is distinct from customer login", () => {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import { sql } from "../../../lib/db";
 import {
   sendReferralNotification,
@@ -11,7 +12,6 @@ import {
 import { sendReferralMilestoneNotifications } from "../../../lib/referral-milestone-notifications";
 import {
   applyReferralUpdate,
-  isDashboardAuthorized,
   parseReferralId,
   parseReferralUpdate,
   serializeReferralTracking,
@@ -56,12 +56,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const url = new URL(req.url);
-    const key = url.searchParams.get("key");
-
-    if (!isDashboardAuthorized(key)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
     const { id } = await params;
     const referralId = parseReferralId(id);

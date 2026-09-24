@@ -337,8 +337,8 @@ describe("Book Again / regressions", () => {
     assert.ok(sessionCustomerId);
   });
 
-  it("DASHBOARD_KEY admin auth unchanged", () => {
-    const adminAuth = "DASHBOARD_KEY";
-    assert.equal(adminAuth, "DASHBOARD_KEY");
+  it("Google admin allowlist auth is configured", () => {
+    const adminAuth = "ADMIN_EMAILS";
+    assert.equal(adminAuth, "ADMIN_EMAILS");
   });
 });

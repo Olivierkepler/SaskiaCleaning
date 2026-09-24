@@ -8,11 +8,7 @@ type Rule = {
   durationMinutes: number;
 };
 
-export default function ServiceDurationsClient({
-  dashboardKey,
-}: {
-  dashboardKey: string;
-}) {
+export default function ServiceDurationsClient() {
   const [rules, setRules] = useState<Rule[]>([]);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -24,7 +20,7 @@ export default function ServiceDurationsClient({
     setError("");
     try {
       const res = await fetch(
-        `/api/dashboard/service-durations?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/service-durations`,
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load");
@@ -32,7 +28,7 @@ export default function ServiceDurationsClient({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
     }
-  }, [dashboardKey]);
+  }, []);
 
   useEffect(() => {
     void load();
@@ -44,7 +40,7 @@ export default function ServiceDurationsClient({
     setError("");
     try {
       const res = await fetch(
-        `/api/dashboard/service-durations?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/service-durations`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -72,7 +68,7 @@ export default function ServiceDurationsClient({
     setError("");
     try {
       const res = await fetch(
-        `/api/dashboard/service-durations?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/service-durations`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

@@ -1,23 +1,12 @@
-import { redirect } from "next/navigation";
+import { requireAdmin } from "@/app/lib/admin-auth";
 import Navbar from "../components/Navbar";
 import { sql } from "@/app/lib/db";
 import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
-import {
-  listOpsExceptions,
-} from "@/app/lib/ops-exceptions";
+import { listOpsExceptions } from "@/app/lib/ops-exceptions";
 import OperationsClient from "./OperationsClient";
 
-type PageProps = {
-  searchParams: Promise<{ key?: string }>;
-};
-
-export default async function OperationsDashboardPage({
-  searchParams,
-}: PageProps) {
-  const params = await searchParams;
-  if (params.key !== process.env.DASHBOARD_KEY) {
-    redirect("/");
-  }
+export default async function OperationsDashboardPage() {
+  await requireAdmin();
 
   const [{ items, summary }, pendingCount, unseenRows] = await Promise.all([
     listOpsExceptions(),
@@ -52,7 +41,6 @@ export default async function OperationsDashboardPage({
   return (
     <main className="min-h-screen bg-slate-100 py-6">
       <Navbar
-        dashboardKey={params.key!}
         unseenCount={unseenBookings.length}
         unseenBookings={unseenBookings}
         pendingChangeRequestCount={pendingCount}
@@ -70,11 +58,7 @@ export default async function OperationsDashboardPage({
           </p>
         </div>
 
-        <OperationsClient
-          dashboardKey={params.key!}
-          initialItems={items}
-          summary={summary}
-        />
+        <OperationsClient initialItems={items} summary={summary} />
       </div>
     </main>
   );

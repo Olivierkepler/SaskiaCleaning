@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
+import { requireAdminApi } from "@/app/lib/admin-auth";
 import { sendOutstandingRewardsSummary } from "../../../lib/admin-referral-reminders";
-import { isDashboardAuthorized } from "../../../lib/referrals";
 
 export async function POST(req: Request) {
   try {
-    const url = new URL(req.url);
-    const key = url.searchParams.get("key");
-
-    if (!isDashboardAuthorized(key)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const gate = await requireAdminApi();
+  if (!gate.ok) return gate.response;
 
     let body: unknown;
     try {

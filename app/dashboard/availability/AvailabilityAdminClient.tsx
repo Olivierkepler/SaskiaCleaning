@@ -37,11 +37,7 @@ const DAY_LABELS = [
   "Saturday",
 ];
 
-export default function AvailabilityAdminClient({
-  dashboardKey,
-}: {
-  dashboardKey: string;
-}) {
+export default function AvailabilityAdminClient() {
   const [days, setDays] = useState<DayRow[]>([]);
   const [blocks, setBlocks] = useState<BlockRow[]>([]);
   const [jobBufferMinutes, setJobBufferMinutes] = useState(30);
@@ -61,9 +57,9 @@ export default function AvailabilityAdminClient({
     setError("");
     try {
       const [availRes, blocksRes] = await Promise.all([
-        fetch(`/api/dashboard/availability?key=${encodeURIComponent(dashboardKey)}`),
+        fetch(`/api/dashboard/availability`),
         fetch(
-          `/api/dashboard/scheduling-blocks?key=${encodeURIComponent(dashboardKey)}`,
+          `/api/dashboard/scheduling-blocks`,
         ),
       ]);
       const availData = await availRes.json();
@@ -78,7 +74,7 @@ export default function AvailabilityAdminClient({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
     }
-  }, [dashboardKey]);
+  }, []);
 
   useEffect(() => {
     void load();
@@ -90,7 +86,7 @@ export default function AvailabilityAdminClient({
     setError("");
     try {
       const res = await fetch(
-        `/api/dashboard/availability?key=${encodeURIComponent(dashboardKey)}&date=${encodeURIComponent(capacityDate)}&service=${encodeURIComponent(capacityService)}`,
+        `/api/dashboard/availability&date=${encodeURIComponent(capacityDate)}&service=${encodeURIComponent(capacityService)}`,
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to load capacity");
@@ -109,7 +105,7 @@ export default function AvailabilityAdminClient({
     setError("");
     try {
       const response = await fetch(
-        `/api/dashboard/availability?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/availability`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -133,7 +129,7 @@ export default function AvailabilityAdminClient({
     setError("");
     try {
       const response = await fetch(
-        `/api/dashboard/availability?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/availability`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -157,7 +153,7 @@ export default function AvailabilityAdminClient({
     setError("");
     try {
       const response = await fetch(
-        `/api/dashboard/scheduling-blocks?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/scheduling-blocks`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -189,7 +185,7 @@ export default function AvailabilityAdminClient({
     setError("");
     try {
       const response = await fetch(
-        `/api/dashboard/scheduling-blocks/${id}?key=${encodeURIComponent(dashboardKey)}`,
+        `/api/dashboard/scheduling-blocks/${id}`,
         { method: "DELETE" },
       );
       const data = await response.json();

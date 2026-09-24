@@ -178,8 +178,9 @@ export function isDuplicateReferralCodeError(error: unknown): boolean {
   );
 }
 
-export function isDashboardAuthorized(key: string | null): boolean {
-  return key === process.env.DASHBOARD_KEY;
+/** @deprecated DASHBOARD_KEY URL auth removed. Use requireAdminApi(). */
+export function isDashboardAuthorized(_key: string | null): boolean {
+  return false;
 }
 
 export function isReferralStatus(value: string): value is ReferralStatus {

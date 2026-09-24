@@ -129,8 +129,9 @@ describe("isolation / privacy concepts", () => {
 
   it("deep-link contains only booking id (no secrets)", () => {
     const bookingId = 83;
-    const href = `/dashboard?key=REDACTED&booking=${bookingId}`;
+    const href = `/dashboard?booking=${bookingId}`;
     assert.match(href, /booking=83/);
+    assert.equal(href.includes("key="), false);
     assert.equal(href.includes("CRON_SECRET"), false);
     assert.equal(href.includes("email="), false);
   });
