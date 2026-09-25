@@ -36,7 +36,7 @@ const DEFAULT_PLANS: Plan[] = [
     id: "basic",
     name: "Basic",
     icon: Wind,
-    imageSrc: "/images/Designer(1).png",
+    imageSrc: "/commercial/basic.png",
     description:
       "Essential care for smaller spaces, high-traffic areas, restrooms, and shared environments.",
     ctaLabel: "Get A Quote",
@@ -46,7 +46,7 @@ const DEFAULT_PLANS: Plan[] = [
     name: "Advance",
     icon: Sparkles,
     featured: true,
-    imageSrc: "/images/Designer(2).png",
+    imageSrc: "/commercial/advnace2.png",
     description:
       "Detailed sanitation, floor attention, surface care, and flexible scheduling for larger spaces.",
     ctaLabel: "Get A Quote",
@@ -55,7 +55,7 @@ const DEFAULT_PLANS: Plan[] = [
     id: "premium",
     name: "Premium",
     icon: Building2,
-    imageSrc: "/images/Designer(3).png",
+    imageSrc: "/commercial/premium.png",
     description:
       "Complete facility care with polished standards, specialty services, and ongoing support.",
     ctaLabel: "Get A Quote",
@@ -82,9 +82,11 @@ export default function CommercialCleaningPlans({
 }: CommercialCleaningPlansProps) {
   const t = useTranslations("home");
   const prefersReducedMotion = useReducedMotion();
+
   const resolvedTitle = title ?? `${t("commercialTitle")} `;
   const resolvedDescription = description ?? [t("commercialDescription")];
   const resolvedContactLabel = contactLabel ?? t("contactUs");
+
   const resolvedPlans =
     plans ??
     DEFAULT_PLANS.map((plan) => ({
@@ -126,13 +128,13 @@ export default function CommercialCleaningPlans({
   const fadeUpVariants: Variants = {
     hidden: {
       opacity: 0,
-      y: prefersReducedMotion ? 0 : 40,
+      y: prefersReducedMotion ? 0 : 36,
     },
     show: {
       opacity: 1,
       y: 0,
       transition: {
-        duration: prefersReducedMotion ? 0.01 : 0.85,
+        duration: prefersReducedMotion ? 0.01 : 0.8,
         ease,
       },
     },
@@ -142,14 +144,14 @@ export default function CommercialCleaningPlans({
     hidden: {},
     show: {
       transition: {
-        staggerChildren: prefersReducedMotion ? 0 : 0.08,
+        staggerChildren: prefersReducedMotion ? 0 : 0.1,
       },
     },
   };
 
   return (
     <motion.section
-      id="plans"  
+      id="plans"
       aria-labelledby="plans-heading"
       className="relative w-full overflow-hidden bg-white py-24"
       variants={sectionVariants}
@@ -163,12 +165,13 @@ export default function CommercialCleaningPlans({
     >
       <Curve position="top" />
 
+      {/* Background image */}
       <motion.div
         aria-hidden="true"
         variants={{
           hidden: {
             opacity: 0,
-            scale: prefersReducedMotion ? 1 : 1.05,
+            scale: prefersReducedMotion ? 1 : 1.04,
           },
           show: {
             opacity: 1,
@@ -180,101 +183,62 @@ export default function CommercialCleaningPlans({
           },
         }}
         className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed"
-        style={{ backgroundImage: `url(${backgroundImageSrc})` }}
+        style={{
+          backgroundImage: `url(${backgroundImageSrc})`,
+        }}
       />
 
-      {/* <div aria-hidden="true" className="absolute inset-0 bg-slate-950/55" /> */}
+      {/* Background treatment */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 bg-white/24 backdrop-blur-[1px]"
+      />
 
-   {/* Blue overlay */}
- 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-16 pt-12 sm:px-6 sm:pb-20 sm:pt-16 lg:px-8">
-        {/* <motion.div
-          variants={fadeUpVariants}
-          className="
-            rounded-[0.75rem]
-            bg-white
-            px-5 py-6
-            sm:px-8 sm:py-7
-            shadow-[0_12px_40px_rgba(15,23,42,0.06)]
-            ring-1 ring-slate-200/50
-          "
-        >
-          <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-            <div className="max-w-xl">
-              <h2
-                id="plans-heading"
-                className="
-                  font-heading
-                  text-[clamp(1.5rem,2vw,2.2rem)]
-                  font-semibold
-                  leading-[0.95]
-                  tracking-[-0.03em]
-                  text-slate-950
-                "
-              >
-                {resolvedTitle}
-               <span className="text-sky-500">Service Plans</span>
-              </h2>
+      <div
+        aria-hidden="true"
+        className="
+          absolute inset-0
+          bg-[linear-gradient(180deg,rgba(255,255,255,0.22)_0%,rgba(248,250,252,0.08)_45%,rgba(255,255,255,0.22)_100%)]
+        "
+      />
 
-              <div className="mt-3 space-y-1.5 text-sm leading-6 text-slate-600">
-                {resolvedDescription.map((line) => (
-                  <p key={line}>{line}</p>
-                ))}
-              </div>
-            </div>
-
-            <motion.button
-              type="button"
-              onClick={handleContactClick}
-              whileHover={prefersReducedMotion ? undefined : { y: -2 }}
-              whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-              className="
-                inline-flex items-center gap-2
-                rounded-full
-                bg-sky-500
-                cursor-pointer
-                px-5 py-3
-                text-[11px]
-                font-medium
-                uppercase
-                tracking-[0.12em]
-                text-white
-                transition
-                hover:bg-sky-600
-              "
-            >
-              {resolvedContactLabel}
-              <ArrowUpRight
-                size={12}
-                className="transition-transform duration-300 group-hover:translate-x-0.5"
-              />
-            </motion.button>
-          </div>
-        </motion.div> */}
-
-        <br />
-
+      <div className="relative z-10 mx-auto max-w-[1400px] px-4 pb-16 pt-16 sm:px-6 sm:pb-20 sm:pt-20 lg:px-8">
         <div className="relative">
+          {/* Ambient decoration */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -left-8 top-8 h-28 w-28 rounded-full bg-sky-100/50 blur-3xl"
+            className="
+              pointer-events-none
+              absolute -left-20 top-20
+              h-72 w-72
+              rounded-full
+              bg-sky-300/10
+              blur-[100px]
+            "
           />
+
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -right-10 bottom-10 h-36 w-36 rounded-full bg-slate-100 blur-3xl"
+            className="
+              pointer-events-none
+              absolute -right-20 bottom-0
+              h-80 w-80
+              rounded-full
+              bg-blue-200/10
+              blur-[110px]
+            "
           />
-          {/* <svg
-            aria-hidden="true"
-            className="pointer-events-none absolute -top-6 right-16 h-8 w-8 text-sky-200"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-          >
-            <path d="M12 2l2.9 6.9H22l-5.5 4.5 2.1 6.9L12 17.8l-6.6 3.5 2.1-6.9L2 8.9h7.1z" />
-          </svg> */}
 
           <motion.div
             variants={gridVariants}
-            className="relative z-10 mt-10 grid grid-cols-1 gap-6 sm:mt-12 md:grid-cols-3 lg:gap-8"
+            className="
+              relative z-10
+              grid grid-cols-1
+              gap-6
+              md:grid-cols-3
+              lg:gap-7
+              xl:gap-8
+            "
           >
             {resolvedPlans.map((plan) => (
               <PlanCard
@@ -283,6 +247,8 @@ export default function CommercialCleaningPlans({
                 variants={fadeUpVariants}
                 reduced={prefersReducedMotion ?? false}
                 onClick={handlePlanClick}
+                mostPopularLabel={t("mostPopular")}
+                fallbackCtaLabel={t("getAQuote")}
               />
             ))}
           </motion.div>
@@ -294,7 +260,11 @@ export default function CommercialCleaningPlans({
   );
 }
 
-function Curve({ position }: { position: "top" | "bottom" }) {
+function Curve({
+  position,
+}: {
+  position: "top" | "bottom";
+}) {
   return (
     <div
       aria-hidden="true"
@@ -304,7 +274,7 @@ function Curve({ position }: { position: "top" | "bottom" }) {
       `}
     >
       <svg
-        className="relative block h-[120px] w-[calc(100%+1.3px)]"
+        className="relative block h-[100px] w-[calc(100%+1.3px)] sm:h-[120px]"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 1200 120"
         preserveAspectRatio="none"
@@ -323,86 +293,284 @@ type PlanCardProps = {
   onClick?: (planId: string) => void;
   variants: Variants;
   reduced: boolean;
+  mostPopularLabel: string;
+  fallbackCtaLabel: string;
 };
 
-function PlanCard({ plan, onClick, variants, reduced }: PlanCardProps) {
+function PlanCard({
+  plan,
+  onClick,
+  variants,
+  reduced,
+  mostPopularLabel,
+  fallbackCtaLabel,
+}: PlanCardProps) {
   return (
     <motion.article
       variants={variants}
-      whileHover={reduced ? undefined : { y: -6 }}
+      whileHover={
+        reduced
+          ? undefined
+          : {
+              y: -8,
+            }
+      }
       transition={{
         type: "spring",
         stiffness: 260,
-        damping: 22,
+        damping: 25,
       }}
       className="
-        group relative flex h-full flex-col overflow-hidden rounded-[10px]
-        border border-neutral-200 bg-white
-        shadow-sm transition-all duration-300
-        hover:border-sky-500 hover:shadow-[0_18px_45px_rgba(12,26,46,0.12)]
+        group
+        relative
+        flex h-full flex-col
+        overflow-hidden
+        rounded-[24px]
+        border border-white/80
+        bg-white
+        shadow-[0_18px_55px_rgba(15,23,42,0.10)]
+        ring-1 ring-slate-950/[0.035]
+        transition-[box-shadow,border-color]
+        duration-500
+        hover:border-sky-200/90
+        hover:shadow-[0_30px_80px_rgba(15,23,42,0.16)]
       "
     >
-      {plan.featured && (
-        <div className="absolute left-0 top-4 z-10 bg-sky-500 px-3 py-1">
-          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
-            Most Popular
-          </span>
-        </div>
-      )}
-
-      <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden border-b border-neutral-200 bg-[#F8F8F8]">
+      {/* Image */}
+      <div
+        className="
+          relative
+          aspect-[4/3]
+          w-full
+          overflow-hidden
+          bg-slate-100
+        "
+      >
         {plan.imageSrc ? (
           <Image
             src={plan.imageSrc}
             alt={plan.name}
-            width={190}
-            height={190}
-            className="object-contain transition-transform duration-700 ease-out group-hover:scale-105"
+            fill
+            sizes="
+              (max-width: 767px) 100vw,
+              (max-width: 1279px) 33vw,
+              430px
+            "
+            className="
+              object-cover
+              transition-transform
+              duration-700
+              ease-[cubic-bezier(0.16,1,0.3,1)]
+              group-hover:scale-[1.045]
+            "
           />
         ) : (
-          <Wind className="h-10 w-10 text-sky-500" strokeWidth={1.75} />
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+            <Wind
+              aria-hidden="true"
+              className="h-12 w-12 text-sky-500"
+              strokeWidth={1.5}
+            />
+          </div>
         )}
+
+        {/* Image readability treatment */}
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute inset-0
+            bg-gradient-to-t
+            from-slate-950/20
+            via-transparent
+            to-black/[0.03]
+          "
+        />
+
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute inset-x-0 bottom-0
+            h-24
+            bg-gradient-to-t
+            from-black/20
+            to-transparent
+          "
+        />
+
+        {/* Most popular badge */}
+        {/* {plan.featured && (
+          <div
+            className="
+              absolute left-5 top-5 z-20
+              inline-flex
+              items-center
+              gap-2
+              rounded-full
+              border border-white/40
+              bg-sky-500/95
+              px-3.5 py-2
+              text-white
+              shadow-[0_8px_25px_rgba(2,132,199,0.28)]
+              backdrop-blur-md
+            "
+          >
+            <Sparkles
+              aria-hidden="true"
+              className="h-3.5 w-3.5"
+              strokeWidth={2}
+            />
+
+            <span
+              className="
+                text-[9px]
+                font-bold
+                uppercase
+                tracking-[0.17em]
+              "
+            >
+              {mostPopularLabel}
+            </span>
+          </div>
+        )} */}
+
+        {/* Plan label over image */}
+        <div className="absolute bottom-4 left-5 z-10">
+          <div
+            className="
+              inline-flex
+              items-center
+              rounded-full
+              border border-white/30
+              bg-slate-950/45
+              px-3 py-1.5
+              text-[9px]
+              font-semibold
+              uppercase
+              tracking-[0.18em]
+              text-white
+              shadow-sm
+              backdrop-blur-md
+            "
+          >
+            {plan.name}
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-1 flex-col justify-between px-5 py-5 text-center">
-        <div>
+      {/* Content */}
+      <div
+        className="
+          relative
+          flex flex-1 flex-col
+          px-6 pb-6 pt-7
+          sm:px-7 sm:pb-7
+          lg:px-7
+        "
+      >
+        {/* Subtle top accent */}
+        <div
+          aria-hidden="true"
+          className="
+            absolute left-7 top-0
+            h-[2px] w-10
+            -translate-y-px
+            rounded-full
+            bg-sky-500
+          "
+        />
+
+        <div className="flex flex-1 flex-col">
           <h4
             className="
-              font-serif text-[clamp(26px,2vw,34px)]
-              font-bold leading-none tracking-[-0.02em]
+              font-heading
+              text-[clamp(1.8rem,2.2vw,2.25rem)]
+              font-medium
+              leading-[1.02]
+              tracking-[-0.04em]
               text-slate-950
             "
           >
             {plan.name}
           </h4>
 
-          <p className="mx-auto mt-3 max-w-[260px] text-[13px] leading-6 text-slate-500">
+          <p
+            className="
+              mt-4
+              max-w-[34rem]
+              text-[14px]
+              leading-[1.75]
+              text-slate-500
+            "
+          >
             {plan.description}
           </p>
         </div>
 
+        {/* CTA */}
         <motion.button
           type="button"
           onClick={() => onClick?.(plan.id)}
-          whileHover={reduced ? undefined : { scale: 1.01 }}
-          whileTap={reduced ? undefined : { scale: 0.98 }}
+          whileTap={reduced ? undefined : { scale: 0.985 }}
           className="
-            mt-6 inline-flex w-full items-center justify-center gap-2
-            border border-sky-500 bg-transparent px-6 py-3
-            text-[11px] font-black uppercase tracking-[0.14em]
-            text-sky-500 transition-all duration-200
-            hover:bg-sky-500 hover:text-white
-            focus:outline-none focus-visible:ring-2
-            focus-visible:ring-sky-500 focus-visible:ring-offset-2
+            mt-7
+            inline-flex
+            min-h-12
+            w-full
             cursor-pointer
+            items-center
+            justify-between
+            rounded-[14px]
+            bg-[#0F172A]
+            px-5 py-3.5
+            text-left
+            text-[10px]
+            font-bold
+            uppercase
+            tracking-[0.16em]
+            text-white
+            shadow-[0_8px_24px_rgba(15,23,42,0.14)]
+            transition-all
+            duration-300
+            hover:bg-sky-500
+            hover:shadow-[0_12px_30px_rgba(14,165,233,0.24)]
+            focus:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-sky-500
+            focus-visible:ring-offset-2
           "
         >
-          {plan.ctaLabel ?? "Get A Quote"}
-          <ArrowUpRight
-            aria-hidden="true"
-            size={13}
-            className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
-          />
+          <span>{plan.ctaLabel ?? fallbackCtaLabel}</span>
+
+          <span
+            className="
+              flex
+              h-8 w-8
+              shrink-0
+              items-center
+              justify-center
+              rounded-full
+              bg-white/10
+              ring-1 ring-white/10
+              transition-all
+              duration-300
+              group-hover:bg-white/20
+              group-hover:ring-white/20
+            "
+          >
+            <ArrowUpRight
+              aria-hidden="true"
+              size={15}
+              strokeWidth={1.9}
+              className="
+                transition-transform
+                duration-300
+                group-hover:-translate-y-0.5
+                group-hover:translate-x-0.5
+              "
+            />
+          </span>
         </motion.button>
       </div>
     </motion.article>

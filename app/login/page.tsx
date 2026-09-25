@@ -107,9 +107,7 @@ export default async function LoginPage({
           />
 
           <div className="relative z-10 w-full max-w-[520px]">
-            <div className="mb-6 flex justify-end">
-              <LanguageSwitcher />
-            </div>
+
 
             {/* Mobile brand */}
             <Link

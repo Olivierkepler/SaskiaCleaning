@@ -118,6 +118,7 @@ export default function Navbar({
         <nav
           aria-label={t("mainNav")}
           className={`
+
             relative
             mx-auto
             max-w-[1440px]
@@ -143,6 +144,7 @@ export default function Navbar({
                   py-2.5
                   sm:px-6
                   lg:px-8
+                  lg:py-8
                 `
             }
           `}
@@ -154,12 +156,14 @@ export default function Navbar({
             className="
               flex
               items-center
+
               justify-between
               gap-4
               lg:absolute
               lg:left-8
               lg:top-2.5
               lg:z-10
+              lg:py-4
             "
           >
             <a
@@ -311,7 +315,7 @@ export default function Navbar({
                 <p
                   className={`
                     whitespace-nowrap
-                    text-[12px]
+                    text-[17px]
                     font-semibold
                     ${utilityPrimaryClass}
                   `}
@@ -323,7 +327,7 @@ export default function Navbar({
                   className={`
                     mt-1
                     whitespace-nowrap
-                    text-[10px]
+                    text-[14px]
                     font-medium
                     ${utilitySecondaryClass}
                   `}
@@ -346,7 +350,7 @@ export default function Navbar({
                 <p
                   className={`
                     whitespace-nowrap
-                    text-[12px]
+                    text-[17px]
                     font-semibold
                     ${utilityPrimaryClass}
                   `}
@@ -358,7 +362,7 @@ export default function Navbar({
                   className={`
                     mt-1
                     whitespace-nowrap
-                    text-[10px]
+                    text-[14px]
                     font-medium
                     ${utilitySecondaryClass}
                   `}
@@ -400,7 +404,7 @@ export default function Navbar({
                 <p
                   className={`
                     whitespace-nowrap
-                    text-[12px]
+                    text-[17px]
                     font-semibold
                     transition
                     ${utilityPrimaryClass}
@@ -414,7 +418,7 @@ export default function Navbar({
                   className={`
                     mt-1
                     whitespace-nowrap
-                    text-[10px]
+                    text-[14px]
                     font-medium
                     ${utilitySecondaryClass}
                   `}
@@ -438,7 +442,7 @@ export default function Navbar({
                 border
                 px-6
                 py-3
-                text-[11px]
+                text-[13px]
                 font-semibold
                 uppercase
                 tracking-[0.14em]
@@ -447,8 +451,8 @@ export default function Navbar({
                 ${
                   isScrolled
                     ? `
-                      border-sky-500
-                      bg-sky-500
+                      border-slate-950
+                      bg-slate-950
                       text-white
                       hover:bg-white
                       hover:text-sky-500
@@ -484,6 +488,7 @@ export default function Navbar({
           <div
             className={`
               flex
+
               items-center
               justify-between
               gap-4
@@ -506,7 +511,7 @@ export default function Navbar({
                     translate-y-0
                     pt-0
                     opacity-100
-                    lg:pt-2.5
+                    lg:pt-4.5
                   `
               }
             `}
@@ -515,6 +520,7 @@ export default function Navbar({
             <div
               className="
                 hidden
+
                 min-w-0
                 flex-1
                 items-center
@@ -584,7 +590,7 @@ export default function Navbar({
               "
             >
               {/* Language */}
-              <div
+              {/* <div
                 className={`
                   group/language
                   flex
@@ -667,7 +673,7 @@ export default function Navbar({
                       : "[&_select]:text-white",
                   ].join(" ")}
                 />
-              </div>
+              </div> */}
 
               {/* Separator */}
               <span
@@ -692,14 +698,16 @@ export default function Navbar({
                   h-10
                   items-center
 
+
                   [&_a]:flex
                   [&_a]:h-10
                   [&_a]:items-center
                   [&_a]:justify-center
                   [&_a]:rounded-full
+
                   [&_a]:border
                   [&_a]:px-4
-                  [&_a]:text-[10px]
+                  [&_a]:text-[14px]
                   [&_a]:font-semibold
                   [&_a]:uppercase
                   [&_a]:tracking-[0.14em]
@@ -707,7 +715,7 @@ export default function Navbar({
                   [&_a]:transition-all
                   [&_a]:duration-300
 
-                  [&_span]:text-[10px]
+                  [&_span]:text-[14px]
                   [&_span]:font-semibold
                   [&_span]:uppercase
                   [&_span]:tracking-[0.14em]
@@ -737,11 +745,14 @@ export default function Navbar({
                   }
                 `}
               >
-                <NavbarAuthControls
+             <span className="bg-sky-600 rounded-full " >
+             <NavbarAuthControls
                   isScrolled={isScrolled}
                   variant="desktop"
                 />
+             </span>
               </div>
+
             </div>
           </div>
         </nav>

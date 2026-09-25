@@ -1,10 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useState,
+  type FormEvent,
+} from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+} from "framer-motion";
+import { ArrowUpRight, Copy, X } from "lucide-react";
 import {
   buildReferralLink,
   buildReferralShareMessage,
@@ -42,7 +51,8 @@ const fallbackCards: AdCardItem[] = [
     tag: "LIMITED TIME",
     title: "$20 Off",
     titleSmall: "Deep Clean",
-    description: "Refer a friend and they save $20 on their first cleaning.",
+    description:
+      "Refer a friend and they save $20 on their first cleaning.",
     ctaLabel: "Refer Now",
     ctaHref: "https://saskiaservices.com/#quote",
     imageUrl: "/images/limited_deal.jpg",
@@ -54,7 +64,8 @@ const fallbackCards: AdCardItem[] = [
     tag: "NEW",
     title: "Airbnb",
     titleSmall: "Turnover",
-    description: "Know an Airbnb host? Refer them and earn referral rewards.",
+    description:
+      "Know an Airbnb host? Refer them and earn referral rewards.",
     ctaLabel: "Refer Now",
     ctaHref: "https://saskiaservices.com/#services",
     imageUrl: "/images/towel-folder.jpg",
@@ -65,8 +76,8 @@ const fallbackCards: AdCardItem[] = [
 const cardVariants = {
   hidden: {
     opacity: 0,
-    y: 32,
-    scale: 0.96,
+    y: 28,
+    scale: 0.975,
   },
   visible: {
     opacity: 1,
@@ -75,11 +86,36 @@ const cardVariants = {
   },
 };
 
-const inputClassName =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+const inputClassName = `
+  w-full
+  rounded-[14px]
+  border
+  border-slate-200
+  bg-slate-50/80
+  px-4
+  py-3.5
+  text-sm
+  text-slate-900
+  outline-none
+  transition-all
+  duration-300
+  placeholder:text-slate-400
+  hover:border-slate-300
+  focus:border-sky-400
+  focus:bg-white
+  focus:ring-4
+  focus:ring-sky-100/70
+`;
 
-const labelClassName =
-  "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
+const labelClassName = `
+  mb-2
+  block
+  text-[10px]
+  font-bold
+  uppercase
+  tracking-[0.16em]
+  text-slate-500
+`;
 
 function AdCard({
   card,
@@ -94,51 +130,217 @@ function AdCard({
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(max-width: 767px)");
-    const updateIsMobile = () => setIsMobile(mediaQuery.matches);
+    const mediaQuery = window.matchMedia(
+      "(max-width: 767px)",
+    );
+
+    const updateIsMobile = () => {
+      setIsMobile(mediaQuery.matches);
+    };
 
     updateIsMobile();
     setHasMounted(true);
-    mediaQuery.addEventListener("change", updateIsMobile);
 
-    return () => mediaQuery.removeEventListener("change", updateIsMobile);
+    mediaQuery.addEventListener(
+      "change",
+      updateIsMobile,
+    );
+
+    return () => {
+      mediaQuery.removeEventListener(
+        "change",
+        updateIsMobile,
+      );
+    };
   }, []);
 
-  const tagColor = card.isRedTag ? "bg-red-700" : "bg-sky-500";
-  const className =
-    "group flex h-full flex-col overflow-hidden rounded-xl border border-sky-500 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl";
+  const tagColor = card.isRedTag
+    ? "bg-rose-600"
+    : "bg-sky-500";
 
-  const ctaClassName =
-    "mt-5 rounded-[10px] inline-flex w-full items-center justify-center border border-sky-500 px-4 py-3 text-[11px] font-bold uppercase tracking-[0.14em] text-sky-500 transition-colors duration-200 hover:bg-sky-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2";
+  const cardClassName = `
+    group
+    relative
+    flex
+    h-full
+    flex-col
+    overflow-hidden
+    rounded-[24px]
+    border
+    border-slate-200/70
+    bg-white
+    shadow-[0_14px_40px_rgba(15,23,42,0.07)]
+    ring-1
+    ring-slate-950/[0.025]
+    transition-[transform,box-shadow,border-color]
+    duration-500
+    hover:-translate-y-1.5
+    hover:border-sky-200
+    hover:shadow-[0_26px_65px_rgba(15,23,42,0.13)]
+  `;
+
+  const ctaClassName = `
+    group/cta
+    mt-7
+    inline-flex
+    min-h-[50px]
+    w-full
+    cursor-pointer
+    items-center
+    justify-between
+    rounded-[14px]
+    bg-slate-950
+    px-5
+    py-3.5
+    text-[10px]
+    font-bold
+    uppercase
+    tracking-[0.16em]
+    text-white
+    shadow-[0_10px_24px_rgba(15,23,42,0.14)]
+    transition-all
+    duration-300
+    hover:bg-sky-500
+    hover:shadow-[0_14px_30px_rgba(14,165,233,0.22)]
+    focus:outline-none
+    focus-visible:ring-2
+    focus-visible:ring-sky-500
+    focus-visible:ring-offset-2
+  `;
 
   const cardContent = (
     <>
-      <div className="relative aspect-[4/3] w-full overflow-hidden">
+      {/* Image */}
+      <div
+        className="
+          relative
+          aspect-[4/3]
+          w-full
+          overflow-hidden
+          bg-slate-100
+        "
+      >
         <Image
           src={card.imageUrl}
           alt={card.imageAlt}
           fill
-          sizes="(max-width: 640px) 80vw, (max-width: 768px) 65vw, 33vw"
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+          sizes="
+            (max-width: 640px) 84vw,
+            (max-width: 768px) 65vw,
+            33vw
+          "
+          className="
+            object-cover
+            transition-transform
+            duration-700
+            ease-[cubic-bezier(0.16,1,0.3,1)]
+            group-hover:scale-[1.045]
+          "
         />
 
-        <div className={`absolute left-0 top-4 px-3 py-1 ${tagColor}`}>
-          <span className="text-[9px] font-black uppercase tracking-[0.18em] text-white">
+        {/* subtle image treatment */}
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute
+            inset-0
+            bg-gradient-to-t
+            from-slate-950/20
+            via-transparent
+            to-black/[0.02]
+          "
+        />
+
+        {/* Badge */}
+        <div
+          className={`
+            absolute
+            left-5
+            top-5
+            z-10
+            inline-flex
+            items-center
+            rounded-full
+            px-3.5
+            py-2
+            shadow-[0_8px_20px_rgba(15,23,42,0.14)]
+            ${tagColor}
+          `}
+        >
+          <span
+            className="
+              text-[9px]
+              font-extrabold
+              uppercase
+              tracking-[0.18em]
+              text-white
+            "
+          >
             {card.tag}
           </span>
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col justify-between border-t border-sky-500 p-5">
-        <div>
-          <h3 className="font-serif text-[clamp(24px,2vw,30px)] font-bold leading-none tracking-[-0.02em] text-gray-950">
+      {/* Card content */}
+      <div
+        className="
+          relative
+          flex
+          flex-1
+          flex-col
+          px-6
+          pb-6
+          pt-7
+          sm:px-7
+          sm:pb-7
+        "
+      >
+        {/* small accent */}
+        <div
+          aria-hidden="true"
+          className="
+            absolute
+            left-6
+            top-0
+            h-[2px]
+            w-10
+            -translate-y-px
+            rounded-full
+            bg-sky-500
+            sm:left-7
+          "
+        />
+
+        <div className="flex-1">
+          <h3
+            className="
+              font-heading
+              text-[clamp(1.75rem,2.2vw,2.2rem)]
+              font-medium
+              leading-[0.98]
+              tracking-[-0.045em]
+              text-slate-950
+            "
+          >
             {card.title}
+
             {card.titleSmall && (
-              <span className="block leading-tight">{card.titleSmall}</span>
+              <span className="mt-1 block">
+                {card.titleSmall}
+              </span>
             )}
           </h3>
 
-          <p className="mt-3 text-sm leading-relaxed text-gray-500">
+          <p
+            className="
+              mt-5
+              max-w-sm
+              text-[14px]
+              leading-6
+              text-slate-500
+            "
+          >
             {card.description}
           </p>
         </div>
@@ -147,20 +349,74 @@ function AdCard({
           <button
             type="button"
             onClick={onReferralClick}
-            aria-label={`${card.ctaLabel}: ${card.title} ${card.titleSmall ?? ""}`}
+            aria-label={`${card.ctaLabel}: ${card.title} ${
+              card.titleSmall ?? ""
+            }`}
             className={ctaClassName}
           >
-            {card.ctaLabel}
+            <span>{card.ctaLabel}</span>
+
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-full
+                bg-white/10
+                transition
+                group-hover/cta:bg-white/20
+              "
+            >
+              <ArrowUpRight
+                size={15}
+                strokeWidth={1.9}
+                className="
+                  transition-transform
+                  duration-300
+                  group-hover/cta:-translate-y-0.5
+                  group-hover/cta:translate-x-0.5
+                "
+              />
+            </span>
           </button>
         ) : (
           <a
             href={card.ctaHref}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${card.ctaLabel}: ${card.title} ${card.titleSmall ?? ""}`}
+            aria-label={`${card.ctaLabel}: ${card.title} ${
+              card.titleSmall ?? ""
+            }`}
             className={ctaClassName}
           >
-            {card.ctaLabel}
+            <span>{card.ctaLabel}</span>
+
+            <span
+              className="
+                flex
+                h-8
+                w-8
+                items-center
+                justify-center
+                rounded-full
+                bg-white/10
+                transition
+                group-hover/cta:bg-white/20
+              "
+            >
+              <ArrowUpRight
+                size={15}
+                strokeWidth={1.9}
+                className="
+                  transition-transform
+                  duration-300
+                  group-hover/cta:-translate-y-0.5
+                  group-hover/cta:translate-x-0.5
+                "
+              />
+            </span>
           </a>
         )}
       </div>
@@ -168,7 +424,11 @@ function AdCard({
   );
 
   if (!hasMounted || isMobile) {
-    return <article className={className}>{cardContent}</article>;
+    return (
+      <article className={cardClassName}>
+        {cardContent}
+      </article>
+    );
   }
 
   return (
@@ -176,13 +436,16 @@ function AdCard({
       variants={cardVariants}
       initial="hidden"
       whileInView="visible"
-      viewport={{ once: true, amount: 0.25 }}
+      viewport={{
+        once: true,
+        amount: 0.25,
+      }}
       transition={{
-        duration: 0.55,
+        duration: 0.6,
         delay: index * 0.08,
         ease: [0.22, 1, 0.36, 1],
       }}
-      className={className}
+      className={cardClassName}
     >
       {cardContent}
     </motion.article>
@@ -209,22 +472,36 @@ function ReferralModal({
   onClose: () => void;
 }) {
   const t = useTranslations("home");
-  const [referrerName, setReferrerName] = useState("");
-  const [referrerEmail, setReferrerEmail] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [generatedCode, setGeneratedCode] = useState<ReferralCode | null>(null);
-  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
-  const canUsePortal = typeof document !== "undefined";
+
+  const [referrerName, setReferrerName] =
+    useState("");
+  const [referrerEmail, setReferrerEmail] =
+    useState("");
+  const [errorMessage, setErrorMessage] =
+    useState("");
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
+  const [generatedCode, setGeneratedCode] =
+    useState<ReferralCode | null>(null);
+
+  const [copyFeedback, setCopyFeedback] =
+    useState<string | null>(null);
+
+  const canUsePortal =
+    typeof document !== "undefined";
 
   useEffect(() => {
     if (!open) return;
 
-    const previousOverflow = document.body.style.overflow;
+    const previousOverflow =
+      document.body.style.overflow;
+
     document.body.style.overflow = "hidden";
 
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflow =
+        previousOverflow;
     };
   }, [open]);
 
@@ -239,6 +516,7 @@ function ReferralModal({
 
   const handleClose = useCallback(() => {
     if (isSubmitting) return;
+
     onClose();
     resetModal();
   }, [isSubmitting, onClose]);
@@ -246,37 +524,68 @@ function ReferralModal({
   useEffect(() => {
     if (!open) return;
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") handleClose();
+    const handleKeyDown = (
+      event: KeyboardEvent,
+    ) => {
+      if (event.key === "Escape") {
+        handleClose();
+      }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener(
+      "keydown",
+      handleKeyDown,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "keydown",
+        handleKeyDown,
+      );
+    };
   }, [open, handleClose]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
+
     setIsSubmitting(true);
     setErrorMessage("");
 
     try {
-      const response = await fetch("/api/referral-codes/public", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          referrerName: referrerName.trim(),
-          referrerEmail: referrerEmail.trim() || undefined,
-        }),
-      });
+      const response = await fetch(
+        "/api/referral-codes/public",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            referrerName:
+              referrerName.trim(),
+            referrerEmail:
+              referrerEmail.trim() ||
+              undefined,
+          }),
+        },
+      );
 
-      const data = (await response.json()) as PublicReferralResponse;
+      const data =
+        (await response.json()) as PublicReferralResponse;
 
       if (!response.ok) {
-        throw new Error(data.error || t("referralCreateFailed"));
+        throw new Error(
+          data.error ||
+            t("referralCreateFailed"),
+        );
       }
 
       if (!data.referralCode) {
-        throw new Error(t("referralCreateFailed"));
+        throw new Error(
+          t("referralCreateFailed"),
+        );
       }
 
       setGeneratedCode(data.referralCode);
@@ -291,30 +600,54 @@ function ReferralModal({
     }
   }
 
-  async function copyText(label: string, value: string) {
+  async function copyText(
+    label: string,
+    value: string,
+  ) {
     try {
-      await navigator.clipboard.writeText(value);
+      await navigator.clipboard.writeText(
+        value,
+      );
+
       setCopyFeedback(label);
-      window.setTimeout(() => setCopyFeedback(null), 2000);
+
+      window.setTimeout(() => {
+        setCopyFeedback(null);
+      }, 2000);
     } catch {
       setCopyFeedback("__copy_failed__");
-      window.setTimeout(() => setCopyFeedback(null), 2000);
+
+      window.setTimeout(() => {
+        setCopyFeedback(null);
+      }, 2000);
     }
   }
 
   function handleBookCleaning() {
     handleClose();
-    document.getElementById("quote")?.scrollIntoView({ behavior: "smooth" });
+
+    document
+      .getElementById("quote")
+      ?.scrollIntoView({
+        behavior: "smooth",
+      });
   }
 
   const shareMessage = generatedCode
-    ? buildReferralShareMessage(generatedCode.code)
-    : "";
-  const referralLink = generatedCode
-    ? buildReferralLink(generatedCode.code)
+    ? buildReferralShareMessage(
+        generatedCode.code,
+      )
     : "";
 
-  if (!canUsePortal) return null;
+  const referralLink = generatedCode
+    ? buildReferralLink(
+        generatedCode.code,
+      )
+    : "";
+
+  if (!canUsePortal) {
+    return null;
+  }
 
   return createPortal(
     <AnimatePresence>
@@ -323,191 +656,636 @@ function ReferralModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.18 }}
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md"
+          transition={{
+            duration: 0.2,
+          }}
+          className="
+            fixed
+            inset-0
+            z-[9999]
+            flex
+            items-center
+            justify-center
+            bg-slate-950/55
+            p-4
+            backdrop-blur-[10px]
+          "
           role="dialog"
           aria-modal="true"
           aria-labelledby="referral-modal-title"
           onClick={handleClose}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.18 }}
-            className="max-h-[90dvh] w-full max-w-xl overflow-y-auto overscroll-contain rounded-[2rem] bg-white p-6 shadow-[0_30px_90px_rgba(15,23,42,0.20)] ring-1 ring-slate-200 md:p-8"
-            onClick={(event) => event.stopPropagation()}
+            initial={{
+              opacity: 0,
+              scale: 0.96,
+              y: 16,
+            }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: 0,
+            }}
+            exit={{
+              opacity: 0,
+              scale: 0.96,
+              y: 10,
+            }}
+            transition={{
+              duration: 0.22,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="
+              relative
+              max-h-[90dvh]
+              w-full
+              max-w-xl
+              overflow-y-auto
+              overscroll-contain
+              rounded-[26px]
+              border
+              border-white/80
+              bg-white
+              p-6
+              shadow-[0_35px_100px_rgba(15,23,42,0.25)]
+              ring-1
+              ring-slate-950/[0.04]
+              md:p-8
+            "
+            onClick={(event) =>
+              event.stopPropagation()
+            }
           >
-            <div className="mb-5">
+            {/* Close */}
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              aria-label="Close referral modal"
+              className="
+                absolute
+                right-5
+                top-5
+                flex
+                h-9
+                w-9
+                cursor-pointer
+                items-center
+                justify-center
+                rounded-full
+                border
+                border-slate-200
+                bg-white
+                text-slate-500
+                transition
+                hover:border-slate-300
+                hover:bg-slate-50
+                hover:text-slate-900
+                disabled:cursor-not-allowed
+                disabled:opacity-50
+              "
+            >
+              <X size={16} />
+            </button>
+
+            {/* Heading */}
+            <div className="mb-7 pr-12">
+              <div
+                aria-hidden="true"
+                className="
+                  mb-4
+                  h-[3px]
+                  w-9
+                  rounded-full
+                  bg-sky-500
+                "
+              />
+
+              <p
+                className="
+                  mb-2
+                  text-[10px]
+                  font-bold
+                  uppercase
+                  tracking-[0.18em]
+                  text-sky-500
+                "
+              >
+                Saskia rewards
+              </p>
+
               <h3
                 id="referral-modal-title"
-                className="text-xl font-bold text-slate-900"
+                className="
+                  font-heading
+                  text-[30px]
+                  font-medium
+                  leading-none
+                  tracking-[-0.04em]
+                  text-slate-950
+                "
               >
                 Refer a friend
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                Share this code with a friend.
+
+              <p
+                className="
+                  mt-3
+                  max-w-md
+                  text-sm
+                  leading-6
+                  text-slate-500
+                "
+              >
+                Share your referral code and
+                help a friend save on their
+                first cleaning.
               </p>
             </div>
 
             {generatedCode ? (
               <div className="space-y-4">
-                <div className="space-y-3 rounded-xl border border-sky-100 bg-sky-50 px-4 py-4 text-sm leading-relaxed text-slate-700">
+                {/* Reward information */}
+                <div
+                  className="
+                    space-y-3
+                    rounded-[18px]
+                    border
+                    border-sky-100
+                    bg-sky-50/70
+                    p-5
+                    text-sm
+                    leading-6
+                    text-slate-600
+                  "
+                >
                   <p>
-                    Your friend gets $20 off their first cleaning when they book
-                    with your code.
+                    Your friend gets{" "}
+                    <span className="font-semibold text-slate-900">
+                      $20 off
+                    </span>{" "}
+                    their first cleaning when
+                    they book with your code.
                   </p>
+
                   <p>
-                    You receive your $20 referral reward after your referred
-                    friend completes a paid service.
+                    You receive your{" "}
+                    <span className="font-semibold text-slate-900">
+                      $20 referral reward
+                    </span>{" "}
+                    after your referred friend
+                    completes a paid service.
                   </p>
+
                   <p>
-                    Referral rewards are not applied immediately. They are
-                    reviewed after the referred booking is completed.
+                    Referral rewards are
+                    reviewed after the referred
+                    booking is completed.
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-center">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {/* Code */}
+                <div
+                  className="
+                    rounded-[18px]
+                    border
+                    border-slate-200/80
+                    bg-slate-50/80
+                    px-5
+                    py-6
+                    text-center
+                  "
+                >
+                  <p
+                    className="
+                      text-[10px]
+                      font-bold
+                      uppercase
+                      tracking-[0.17em]
+                      text-slate-400
+                    "
+                  >
                     Your referral code
                   </p>
-                  <p className="mt-2 font-mono text-2xl font-bold tracking-[0.12em] text-slate-900">
+
+                  <p
+                    className="
+                      mt-3
+                      font-mono
+                      text-[28px]
+                      font-bold
+                      tracking-[0.14em]
+                      text-slate-950
+                    "
+                  >
                     {generatedCode.code}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {/* Link */}
+                <div
+                  className="
+                    rounded-[18px]
+                    border
+                    border-slate-200/80
+                    bg-white
+                    p-5
+                  "
+                >
+                  <p
+                    className="
+                      text-[10px]
+                      font-bold
+                      uppercase
+                      tracking-[0.16em]
+                      text-slate-400
+                    "
+                  >
                     Your referral link
                   </p>
-                  <p className="mt-2 break-all text-sm font-medium leading-relaxed text-sky-700">
+
+                  <p
+                    className="
+                      mt-3
+                      break-all
+                      text-sm
+                      font-medium
+                      leading-6
+                      text-sky-700
+                    "
+                  >
                     {referralLink}
                   </p>
+
                   <button
                     type="button"
-                    onClick={() => copyText("Link", referralLink)}
-                    className="mt-3 w-full rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white transition hover:bg-sky-600"
+                    onClick={() =>
+                      copyText(
+                        "Link",
+                        referralLink,
+                      )
+                    }
+                    className="
+                      mt-4
+                      inline-flex
+                      w-full
+                      cursor-pointer
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-[13px]
+                      bg-slate-950
+                      px-4
+                      py-3.5
+                      text-sm
+                      font-semibold
+                      text-white
+                      transition
+                      hover:bg-sky-500
+                    "
                   >
+                    <Copy size={15} />
                     Copy link
                   </button>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {/* Message */}
+                <div
+                  className="
+                    rounded-[18px]
+                    border
+                    border-slate-200/80
+                    bg-white
+                    p-5
+                  "
+                >
+                  <p
+                    className="
+                      text-[10px]
+                      font-bold
+                      uppercase
+                      tracking-[0.16em]
+                      text-slate-400
+                    "
+                  >
                     Message to send
                   </p>
-                  <p className="mt-2 break-words text-sm leading-relaxed text-slate-700">
+
+                  <p
+                    className="
+                      mt-3
+                      break-words
+                      text-sm
+                      leading-6
+                      text-slate-600
+                    "
+                  >
                     {shareMessage}
                   </p>
+
                   <button
                     type="button"
-                    onClick={() => copyText("Message", shareMessage)}
-                    className="mt-3 w-full rounded-lg border border-sky-500 bg-white px-4 py-3 text-sm font-bold text-sky-600 transition hover:bg-sky-50"
+                    onClick={() =>
+                      copyText(
+                        "Message",
+                        shareMessage,
+                      )
+                    }
+                    className="
+                      mt-4
+                      inline-flex
+                      w-full
+                      cursor-pointer
+                      items-center
+                      justify-center
+                      gap-2
+                      rounded-[13px]
+                      border
+                      border-slate-200
+                      bg-white
+                      px-4
+                      py-3.5
+                      text-sm
+                      font-semibold
+                      text-slate-700
+                      transition
+                      hover:border-sky-300
+                      hover:bg-sky-50
+                      hover:text-sky-700
+                    "
                   >
+                    <Copy size={15} />
                     Copy message
                   </button>
                 </div>
 
                 {copyFeedback && (
-                  <p className="text-center text-sm font-medium text-emerald-700">
-                    {copyFeedback === "__copy_failed__"
-                      ? t("referralCopyFailed")
+                  <p
+                    className="
+                      rounded-[12px]
+                      bg-emerald-50
+                      px-4
+                      py-3
+                      text-center
+                      text-sm
+                      font-medium
+                      text-emerald-700
+                    "
+                  >
+                    {copyFeedback ===
+                    "__copy_failed__"
+                      ? t(
+                          "referralCopyFailed",
+                        )
                       : `${copyFeedback} copied.`}
                   </p>
                 )}
 
-                <div className="grid gap-2">
+                <div className="grid gap-2.5 pt-2">
                   <Link
                     href="/referrals"
-                    className="rounded-lg border border-sky-500 bg-white px-4 py-3 text-center text-sm font-semibold text-sky-600 transition hover:bg-sky-50"
+                    className="
+                      rounded-[13px]
+                      border
+                      border-sky-500
+                      bg-white
+                      px-4
+                      py-3.5
+                      text-center
+                      text-sm
+                      font-semibold
+                      text-sky-600
+                      transition
+                      hover:bg-sky-50
+                    "
                   >
                     Check your referral rewards
                   </Link>
+
                   <button
                     type="button"
-                    onClick={handleBookCleaning}
-                    className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+                    onClick={
+                      handleBookCleaning
+                    }
+                    className="
+                      cursor-pointer
+                      rounded-[13px]
+                      border
+                      border-slate-200
+                      bg-white
+                      px-4
+                      py-3.5
+                      text-sm
+                      font-semibold
+                      text-slate-700
+                      transition
+                      hover:bg-slate-50
+                    "
                   >
                     Book a cleaning
                   </button>
+
                   <button
                     type="button"
                     onClick={handleClose}
-                    className="rounded-lg px-4 py-3 text-sm font-semibold text-slate-500 transition hover:text-slate-700"
+                    className="
+                      cursor-pointer
+                      rounded-[13px]
+                      px-4
+                      py-3
+                      text-sm
+                      font-semibold
+                      text-slate-400
+                      transition
+                      hover:bg-slate-50
+                      hover:text-slate-700
+                    "
                   >
                     Close
                   </button>
                 </div>
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-3 rounded-xl border border-sky-100 bg-sky-50 px-4 py-4 text-sm leading-relaxed text-slate-700">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-5"
+              >
+                <div
+                  className="
+                    space-y-3
+                    rounded-[18px]
+                    border
+                    border-sky-100
+                    bg-sky-50/70
+                    p-5
+                    text-sm
+                    leading-6
+                    text-slate-600
+                  "
+                >
                   <p>
-                    Your friend gets $20 off their first cleaning when they book
-                    with your code.
+                    Your friend gets{" "}
+                    <span className="font-semibold text-slate-900">
+                      $20 off
+                    </span>{" "}
+                    their first cleaning when
+                    they book with your code.
                   </p>
+
                   <p>
-                    You receive your $20 referral reward after your referred
-                    friend completes a paid service.
+                    You receive your{" "}
+                    <span className="font-semibold text-slate-900">
+                      $20 referral reward
+                    </span>{" "}
+                    after your referred friend
+                    completes a paid service.
                   </p>
+
                   <p>
-                    Referral rewards are not applied immediately. They are
-                    reviewed after the referred booking is completed.
+                    Referral rewards are
+                    reviewed after the referred
+                    booking is completed.
                   </p>
                 </div>
 
                 <div>
-                  <label htmlFor="referrer-name" className={labelClassName}>
-                    {t("referralYourName")}
+                  <label
+                    htmlFor="referrer-name"
+                    className={
+                      labelClassName
+                    }
+                  >
+                    {t(
+                      "referralYourName",
+                    )}
                   </label>
+
                   <input
                     id="referrer-name"
                     type="text"
                     required
                     value={referrerName}
-                    onChange={(event) => setReferrerName(event.target.value)}
-                    className={inputClassName}
-                    placeholder={t("referralYourName")}
+                    onChange={(event) =>
+                      setReferrerName(
+                        event.target.value,
+                      )
+                    }
+                    className={
+                      inputClassName
+                    }
+                    placeholder={t(
+                      "referralYourName",
+                    )}
                     autoComplete="name"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="referrer-email" className={labelClassName}>
+                  <label
+                    htmlFor="referrer-email"
+                    className={
+                      labelClassName
+                    }
+                  >
                     Your email (optional)
                   </label>
+
                   <input
                     id="referrer-email"
                     type="email"
                     value={referrerEmail}
-                    onChange={(event) => setReferrerEmail(event.target.value)}
-                    className={inputClassName}
+                    onChange={(event) =>
+                      setReferrerEmail(
+                        event.target.value,
+                      )
+                    }
+                    className={
+                      inputClassName
+                    }
                     placeholder="you@example.com"
                     autoComplete="email"
                   />
                 </div>
 
                 {errorMessage && (
-                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+                  <div
+                    role="alert"
+                    className="
+                      rounded-[14px]
+                      border
+                      border-red-200
+                      bg-red-50
+                      px-4
+                      py-3
+                      text-sm
+                      font-medium
+                      text-red-700
+                    "
+                  >
                     {errorMessage}
                   </div>
                 )}
 
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <div
+                  className="
+                    flex
+                    flex-col
+                    gap-2.5
+                    pt-1
+                    sm:flex-row
+                    sm:justify-end
+                  "
+                >
                   <button
                     type="button"
                     onClick={handleClose}
                     disabled={isSubmitting}
-                    className="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="
+                      cursor-pointer
+                      rounded-[13px]
+                      border
+                      border-slate-200
+                      bg-white
+                      px-5
+                      py-3.5
+                      text-sm
+                      font-semibold
+                      text-slate-600
+                      transition
+                      hover:bg-slate-50
+                      disabled:cursor-not-allowed
+                      disabled:opacity-50
+                    "
                   >
                     Cancel
                   </button>
+
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="rounded-lg bg-sky-500 px-4 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(56,189,248,.35)] transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="
+                      cursor-pointer
+                      rounded-[13px]
+                      bg-sky-500
+                      px-5
+                      py-3.5
+                      text-sm
+                      font-bold
+                      text-white
+                      shadow-[0_10px_24px_rgba(14,165,233,0.20)]
+                      transition
+                      hover:bg-sky-600
+                      disabled:cursor-not-allowed
+                      disabled:opacity-50
+                    "
                   >
-                    {isSubmitting ? t("referralCreating") : t("referralGetCode")}
+                    {isSubmitting
+                      ? t(
+                          "referralCreating",
+                        )
+                      : t(
+                          "referralGetCode",
+                        )}
                   </button>
                 </div>
               </form>
@@ -522,6 +1300,7 @@ function ReferralModal({
 
 export default function AdCardGrid() {
   const t = useTranslations("home");
+
   const localizedFallback: AdCardItem[] = [
     {
       id: 1,
@@ -530,8 +1309,10 @@ export default function AdCardGrid() {
       titleSmall: t("adGet20"),
       description: t("adGive20Desc"),
       ctaLabel: t("adReferNow"),
-      ctaHref: "https://saskiaservices.com/#quote",
-      imageUrl: "/images/friend_sharing.jpg",
+      ctaHref:
+        "https://saskiaservices.com/#quote",
+      imageUrl:
+        "/images/friend_sharing.jpg",
       imageAlt: t("adAlt1"),
     },
     {
@@ -541,8 +1322,10 @@ export default function AdCardGrid() {
       titleSmall: t("adDeepClean"),
       description: t("ad20OffDesc"),
       ctaLabel: t("adReferNow"),
-      ctaHref: "https://saskiaservices.com/#quote",
-      imageUrl: "/images/limited_deal.jpg",
+      ctaHref:
+        "https://saskiaservices.com/#quote",
+      imageUrl:
+        "/images/limited_deal.jpg",
       imageAlt: t("adAlt2"),
       isRedTag: true,
     },
@@ -553,28 +1336,50 @@ export default function AdCardGrid() {
       titleSmall: t("adTurnover"),
       description: t("adAirbnbDesc"),
       ctaLabel: t("adReferNow"),
-      ctaHref: "https://saskiaservices.com/#services",
-      imageUrl: "/images/towel-folder.jpg",
+      ctaHref:
+        "https://saskiaservices.com/#services",
+      imageUrl:
+        "/images/towel-folder.jpg",
       imageAlt: t("adAlt3"),
     },
   ];
-  const [cards, setCards] = useState<AdCardItem[]>(localizedFallback);
-  const [referralModalOpen, setReferralModalOpen] = useState(false);
+
+  const [cards, setCards] =
+    useState<AdCardItem[]>(
+      localizedFallback,
+    );
+
+  const [
+    referralModalOpen,
+    setReferralModalOpen,
+  ] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadPromoCards() {
       try {
-        const response = await fetch("/api/promo-cards");
+        const response = await fetch(
+          "/api/promo-cards",
+        );
+
         if (!response.ok) return;
 
-        const data = (await response.json()) as PromoCardsResponse;
-        if (cancelled || !data.success || !data.cards?.length) return;
+        const data =
+          (await response.json()) as PromoCardsResponse;
 
+        if (
+          cancelled ||
+          !data.success ||
+          !data.cards?.length
+        ) {
+          return;
+        }
+
+        // Backend behavior intentionally unchanged.
         setCards(data.cards);
       } catch {
-        // Keep fallbackCards on network or parse errors.
+        // Keep localized fallbacks on network/parse errors.
       }
     }
 
@@ -587,39 +1392,122 @@ export default function AdCardGrid() {
 
   return (
     <>
-      <section className="relative z-20 w-full bg-white py-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] sm:px-6 md:hidden [&::-webkit-scrollbar]:hidden">
-            {cards.map((card, index) => (
-              <div
-                key={card.id}
-                className="w-[80%] flex-none snap-center sm:w-[65%]"
-              >
-                <AdCard
-                  card={card}
-                  index={index}
-                  onReferralClick={() => setReferralModalOpen(true)}
-                />
-              </div>
-            ))}
+      <section
+        className="
+          relative
+          z-20
+          w-full
+          overflow-hidden
+          bg-white
+          py-12
+          sm:py-14
+          lg:py-16
+        "
+      >
+        {/* subtle background atmosphere */}
+        <div
+          aria-hidden="true"
+          className="
+            pointer-events-none
+            absolute
+            left-1/2
+            top-0
+            h-[280px]
+            w-[900px]
+            -translate-x-1/2
+            rounded-full
+            bg-sky-50/60
+            blur-[100px]
+          "
+        />
+
+        <div
+          className="
+            relative
+            mx-auto
+            max-w-7xl
+          "
+        >
+          {/* Mobile carousel */}
+          <div
+            className="
+              flex
+              snap-x
+              snap-mandatory
+              gap-4
+              overflow-x-auto
+              px-4
+              pb-6
+              [scrollbar-width:none]
+              sm:gap-5
+              sm:px-6
+              md:hidden
+              [&::-webkit-scrollbar]:hidden
+            "
+          >
+            {cards.map(
+              (card, index) => (
+                <div
+                  key={card.id}
+                  className="
+                    w-[86%]
+                    flex-none
+                    snap-center
+                    sm:w-[68%]
+                  "
+                >
+                  <AdCard
+                    card={card}
+                    index={index}
+                    onReferralClick={() =>
+                      setReferralModalOpen(
+                        true,
+                      )
+                    }
+                  />
+                </div>
+              ),
+            )}
           </div>
 
-          <div className="hidden grid-cols-3 gap-5 px-6 md:grid lg:px-10 xl:px-12">
-            {cards.map((card, index) => (
-              <AdCard
-                key={card.id}
-                card={card}
-                index={index}
-                onReferralClick={() => setReferralModalOpen(true)}
-              />
-            ))}
+          {/* Desktop grid */}
+          <div
+            className="
+              hidden
+              grid-cols-3
+              items-stretch
+              gap-6
+              px-6
+              md:grid
+              lg:gap-7
+              lg:px-8
+              xl:gap-8
+              xl:px-10
+            "
+          >
+            {cards.map(
+              (card, index) => (
+                <AdCard
+                  key={card.id}
+                  card={card}
+                  index={index}
+                  onReferralClick={() =>
+                    setReferralModalOpen(
+                      true,
+                    )
+                  }
+                />
+              ),
+            )}
           </div>
         </div>
       </section>
 
       <ReferralModal
         open={referralModalOpen}
-        onClose={() => setReferralModalOpen(false)}
+        onClose={() =>
+          setReferralModalOpen(false)
+        }
       />
     </>
   );

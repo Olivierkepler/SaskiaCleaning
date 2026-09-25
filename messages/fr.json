@@ -11,34 +11,31 @@
     "loading": "Chargement…",
     "close": "Fermer"
   },
- "navigation": {
-  "home": "Accueil",
-  "account": "Compte",
-  "bookings": "Réservations",
-  "profile": "Profil",
-  "services": "Services",
-  "plans": "Formules",
-  "commercialCleaning": "Nettoyage commercial",
-  "pricing": "Tarifs",
-  "requestQuote": "Demander un devis",
-  "signIn": "Se connecter",
-  "openMenu": "Ouvrir le menu de navigation",
-  "closeMenu": "Fermer le menu de navigation",
-  "mobileNav": "Navigation mobile",
-  "mainNav": "Navigation principale",
-  "brandTagline": "Cleaning",
-  "mobileBlurb": "Un nettoyage résidentiel et commercial premium, livré avec soin, constance et une attention irréprochable aux détails.",
-  "copyrightShort": "Saskia Cleaning © 2026",
-  "openAccountFor": "Ouvrir le compte de {name}",
-  "serviceArea": "Boston et ses environs",
-  "serviceAreaDetail": "Massachusetts",
-  "businessHours": "8 h–17 h",
-  "businessDays": "Lundi–vendredi",
-  "speakWithSaskia": "Parlez avec Saskia"
-}
-
-
-  ,
+  "navigation": {
+    "home": "Accueil",
+    "account": "Compte",
+    "bookings": "Réservations",
+    "profile": "Profil",
+    "services": "Services",
+    "plans": "Formules",
+    "commercialCleaning": "Nettoyage commercial",
+    "pricing": "Tarifs",
+    "requestQuote": "Demander un devis",
+    "signIn": "Se connecter",
+    "openMenu": "Ouvrir le menu de navigation",
+    "closeMenu": "Fermer le menu de navigation",
+    "mobileNav": "Navigation mobile",
+    "mainNav": "Navigation principale",
+    "brandTagline": "Cleaning",
+    "mobileBlurb": "Un nettoyage résidentiel et commercial premium, livré avec soin, constance et une attention irréprochable aux détails.",
+    "copyrightShort": "Saskia Cleaning © 2026",
+    "openAccountFor": "Ouvrir le compte de {name}",
+    "serviceArea": "Boston et ses environs",
+    "serviceAreaDetail": "Massachusetts",
+    "businessHours": "8 h–17 h",
+    "businessDays": "Lundi–vendredi",
+    "speakWithSaskia": "Parlez avec Saskia"
+  },
   "hero": {
     "headline": "Un nettoyage professionnel pour la maison en qui vous pouvez avoir confiance",
     "subhead": "Obtenez une estimation gratuite en moins d'une minute.",
@@ -70,7 +67,8 @@
     "commercialTitle": "Nettoyage commercial",
     "commercialDescription": "Choisissez la formule qui correspond le mieux aux besoins de votre entreprise — de l'entretien courant à la prise en charge complète des locaux.",
     "contactUs": "Nous contacter",
-    "getAQuote": "Obtenir un devis",
+    "getAQuote": "Demander un devis",
+    "mostPopular": "Le plus populaire",
     "planBasic": "Basique",
     "planAdvance": "Avancé",
     "planPremium": "Premium",
@@ -389,6 +387,17 @@
       "s10Title": "Nous joindre",
       "s10Intro": "Pour toute question sur cette Politique de confidentialité ou nos pratiques de données, contactez Saskia Cleaning Services :"
     },
+
+"servicesOrbit": {
+  "services": "Services",
+  "plans": "Formules",
+  "commercial": "Commercial",
+  "pricing": "Tarifs",
+  "serviceArea": "Zone de service",
+  "getQuote": "Demander un devis",
+  "cleanerAlt": "Professionnelle du nettoyage"
+},
+
     "terms": {
       "metaTitle": "Conditions générales | Saskia Cleaning Services",
       "metaDescription": "Consultez les conditions générales pour réserver des services de nettoyage avec Saskia Cleaning Services.",

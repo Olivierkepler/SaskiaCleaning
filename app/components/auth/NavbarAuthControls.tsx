@@ -55,7 +55,7 @@ export default function NavbarAuthControls({
     return (
       <Link
         href="/account"
-        className={`rounded-full border px-5 py-3 text-[13px] font-medium uppercase tracking-[0.14em] transition ${
+        className={`rounded-full  border px-5 py-3 text-[13px] font-medium uppercase tracking-[0.14em] transition ${
           isScrolled
             ? "border-slate-200 text-slate-600 hover:border-slate-950 hover:text-slate-950"
             : "border-white/40 text-white hover:border-white hover:bg-white hover:text-slate-950"
