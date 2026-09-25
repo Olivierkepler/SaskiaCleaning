@@ -2246,6 +2246,13 @@ export default function CleaningEstimator({
     setDateOpen(false);
     setDateError(false);
     setBookingTime(null);
+
+    // Automatically open Customize once both required fields are valid.
+    if (locConfirmed) {
+      setLocError(false);
+      setRequiredFieldsMessage("");
+      setOptionsOpen(true);
+    }
   }
 
   function openBookingForm() {
@@ -2518,6 +2525,8 @@ export default function CleaningEstimator({
     )}
       </motion.div>
     </div>
+
+
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 py-12 sm:gap-7 sm:px-6 sm:py-16 lg:grid-cols-[1.65fr_1fr] lg:gap-8 lg:px-8 lg:py-20">
         
         {/* Left Column */}
