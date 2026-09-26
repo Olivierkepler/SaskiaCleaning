@@ -7,10 +7,29 @@ export default function Footer() {
   const t = useTranslations("footer");
 
   return (
-    <footer data-native-cursor className="relative overflow-hidden bg-white px-6 pt-40 pb-10 sm:px-8 lg:px-16 lg:pt-44">
-      <div className="absolute top-0 left-0 z-[2] w-full overflow-hidden leading-[0]">
+    <footer
+      data-native-cursor
+      className="
+        relative
+        overflow-hidden
+        bg-gradient-to-b
+        from-sky-50/80
+        via-white
+        to-slate-50
+        px-5
+        pb-8
+        pt-28
+        sm:px-8
+        sm:pt-36
+        lg:px-16
+        lg:pt-40
+      "
+    >
+      {/* Top curve */}
+      <div aria-hidden="true" className="pointer-events-none absolute left-0 top-0 w-full overflow-hidden leading-[0]">
         <svg
-          className="relative block h-[120px] w-[calc(100%+1.3px)]"
+          className="relative block h-[80px] w-[calc(100%+1.3px)] sm:h-[100px]"
+          focusable="false"
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 1200 120"
           preserveAspectRatio="none"
@@ -22,38 +41,115 @@ export default function Footer() {
         </svg>
       </div>
 
-      <div className="pointer-events-none absolute left-1/2 top-0 h-[28rem] w-[70rem] -translate-x-1/2 rounded-full bg-sky-100/50 blur-3xl" />
+      {/* Ambient background */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          left-1/2
+          top-0
+          h-[30rem]
+          w-[72rem]
+          -translate-x-1/2
+          rounded-full
+          bg-sky-100/45
+          blur-[90px]
+        "
+      />
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          -bottom-24
+          right-[-8rem]
+          h-[22rem]
+          w-[22rem]
+          rounded-full
+          bg-sky-50
+          blur-[80px]
+        "
+      />
 
       <div className="relative mx-auto max-w-7xl">
-        <div className="mb-20 grid gap-14 lg:grid-cols-12">
-          <div className="max-w-md lg:col-span-5">
-            <h3
+        {/* Main footer content */}
+        <div
+          className="
+            mb-12
+            grid
+            gap-10
+            sm:gap-12
+            lg:mb-16
+            xl:grid-cols-12
+            xl:gap-12
+          "
+        >
+          {/* Brand / statement */}
+          <div className="max-w-xl xl:col-span-4">
+            <div
+              aria-hidden="true"
+              className="mb-5 h-[3px] w-10 rounded-full bg-sky-500"
+            />
+
+            <h2
               className="
                 font-heading
-                text-[clamp(2.2rem,4vw,2.5rem)]
+                text-[clamp(2.35rem,4vw,3rem)]
                 font-semibold
-                leading-[0.95]
-                tracking-[-0.05em]
+                leading-[1.1]
+                tracking-[-0.045em]
                 text-slate-950
               "
             >
               {t("headline")}{" "}
-              <span className="font-light italic text-sky-500">
+              <span className="font-light italic text-sky-700">
                 {t("headlineAccent")}
               </span>
-            </h3>
+            </h2>
 
-            <p className="mt-6 text-[15px] leading-8 text-slate-500">
+            <p
+              className="
+                mt-5
+                max-w-lg
+                text-[15px]
+                leading-7
+                text-slate-600
+                sm:text-[16px]
+              "
+            >
               {t("body")}
             </p>
           </div>
 
-          <div className="grid gap-10 sm:grid-cols-3 lg:col-span-7">
-            <FooterColumn title={t("contact")}>
-              <FooterLink href="tel:+18573528554">857 352 8554</FooterLink>
+          {/* Footer columns */}
+          <div
+            className="
+              grid
+              min-w-0
+              grid-cols-2
+              gap-x-6
+              gap-y-8
+              border-t
+              border-slate-200/80
+              pt-8
+              sm:grid-cols-[1.4fr_1fr_1fr]
+              sm:gap-8
+              xl:col-span-8
+              xl:border-t-0
+              xl:pt-2
+            "
+          >
+            <FooterColumn title={t("contact")} className="col-span-2 sm:col-span-1">
+              <FooterLink href="tel:+18573528554">
+                857 352 8554
+              </FooterLink>
+
               <FooterLink href="mailto:cleaningsaskia@gmail.com">
                 cleaningsaskia@gmail.com
               </FooterLink>
+
               <FooterLink
                 href="https://saskiaservices.com"
                 target="_blank"
@@ -78,34 +174,68 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col items-center justify-between gap-6 border-t border-slate-200 pt-8 md:flex-row">
-          <p className="text-[10px] font-medium uppercase tracking-[0.32em] text-slate-400">
+        {/* Bottom row */}
+        <div
+          className="
+            flex
+            flex-col
+            gap-4
+            border-t
+            border-slate-200/80
+            pt-6
+            lg:flex-row
+            lg:items-center
+            lg:justify-between
+          "
+        >
+          <p
+            className="
+              text-center
+              text-xs
+              leading-6
+              font-medium
+              text-slate-600
+              lg:text-left
+            "
+          >
             {t("copyright")}
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-6">
-            <Link
-              href="/privacy-policy"
-              className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
-            >
+          <div
+            className="
+              flex
+              flex-wrap
+              items-center
+              justify-center
+              gap-x-5
+              gap-y-1
+              lg:justify-end
+            "
+          >
+            <FooterBottomLink href="/privacy-policy">
               {t("privacy")}
-            </Link>
+            </FooterBottomLink>
 
-            <Link
-              href="/terms-and-conditions"
-              className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
-            >
+            <FooterBottomLink href="/terms-and-conditions">
               {t("terms")}
-            </Link>
+            </FooterBottomLink>
 
-            <Link
-              href="/referrals"
-              className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400 transition hover:text-sky-500"
-            >
+            <FooterBottomLink href="/referrals">
               {t("referralRewards")}
-            </Link>
+            </FooterBottomLink>
 
-            <span className="text-[10px] font-medium uppercase tracking-[0.24em] text-slate-400">
+            <span
+              className="
+                text-[11px]
+                font-medium
+                uppercase
+                tracking-[0.12em]
+                text-slate-600
+                w-full
+                text-center
+                sm:w-auto
+              "
+            >
               {t("bostonArea")}
             </span>
           </div>
@@ -118,15 +248,27 @@ export default function Footer() {
 function FooterColumn({
   title,
   children,
+  className = "",
 }: {
   title: string;
+  className?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-4">
-      <span className="mb-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-950">
+    <div className={`flex min-w-0 flex-col items-start gap-2 ${className}`}>
+      <h3
+        className="
+          mb-3
+          text-[11px]
+          font-bold
+          uppercase
+          tracking-[0.16em]
+          text-slate-950
+        "
+      >
         {title}
-      </span>
+      </h3>
+
       {children}
     </div>
   );
@@ -140,16 +282,103 @@ function FooterLink({
     <a
       {...props}
       className="
-        text-sm leading-6 text-slate-500
-        transition duration-300
-        hover:text-sky-500
+        group
+        relative
+        flex
+        min-h-11
+        max-w-full
+        items-center
+        rounded-sm
+        [overflow-wrap:anywhere]
+        text-sm
+        leading-6
+        text-slate-600
+        transition-colors
+        duration-300
+        motion-reduce:transition-none
+        hover:text-sky-700
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-sky-600
+        focus-visible:ring-offset-2
       "
     >
-      {children}
+      <span className="relative">
+        {children}
+
+        <span
+          aria-hidden="true"
+          className="
+            absolute
+            -bottom-1
+            left-0
+            h-px
+            w-full
+            origin-left
+            scale-x-0
+            bg-sky-500
+            transition-transform
+            duration-300
+            group-hover:scale-x-100
+            group-focus-visible:scale-x-100
+            motion-reduce:transition-none
+          "
+        />
+      </span>
     </a>
   );
 }
 
-function FooterText({ children }: { children: React.ReactNode }) {
-  return <span className="text-sm leading-6 text-slate-500">{children}</span>;
+function FooterBottomLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="
+        inline-flex
+        min-h-11
+        items-center
+        rounded-sm
+        text-xs
+        font-medium
+        leading-5
+        hover:underline
+        underline-offset-4
+        text-slate-600
+        transition-colors
+        duration-300
+        motion-reduce:transition-none
+        hover:text-sky-700
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-sky-600
+        focus-visible:ring-offset-2
+      "
+    >
+      {children}
+    </Link>
+  );
+}
+
+function FooterText({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      className="
+        text-sm
+        leading-6
+        text-slate-600
+      "
+    >
+      {children}
+    </span>
+  );
 }
