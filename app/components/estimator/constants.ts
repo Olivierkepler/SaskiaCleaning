@@ -144,7 +144,7 @@ export const staggerItem = {
 };
 
 export const STANDARD_GALLERY_DEFAULT_WIDTH = 320;
-export const STANDARD_GALLERY_DEFAULT_HEIGHT = 240;
+export const STANDARD_GALLERY_DEFAULT_HEIGHT = 300;
 
 export const STANDARD_ADDONS = [
   { label: "Inside fridge", price: 15, image: "/images/standard/modernfridge.png" },
@@ -155,7 +155,7 @@ export const STANDARD_ADDONS = [
 
 export const STANDARD_PREVIEW_IMAGES = {
   default: [
-    { src: "/images/standard/roomandbedroom.png", alt: "Bedroom", width: 300, height: 300 },
+    { src: "/images/standard/roomandbedroom.png", alt: "Bedroom",  },
   ] satisfies StandardPreviewImage[],
   addons: {
     "Inside fridge": {
