@@ -155,7 +155,7 @@ export const STANDARD_ADDONS = [
 
 export const STANDARD_PREVIEW_IMAGES = {
   default: [
-    { src: "/images/standard/roomandbedroom.png", alt: "Bedroom" },
+    { src: "/images/standard/roomandbedroom.png", alt: "Bedroom", width: 300, height: 300 },
   ] satisfies StandardPreviewImage[],
   addons: {
     "Inside fridge": {
