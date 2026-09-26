@@ -387,17 +387,15 @@
       "s10Title": "Contact Us",
       "s10Intro": "If you have questions about this Privacy Policy or our data practices, contact Saskia Cleaning Services:"
     },
-
-"servicesOrbit": {
-  "services": "Services",
-  "plans": "Plans",
-  "commercial": "Commercial",
-  "pricing": "Pricing",
-  "serviceArea": "Service Area",
-  "getQuote": "Get Quote",
-  "cleanerAlt": "Professional cleaner"
-},
-
+    "servicesOrbit": {
+      "services": "Services",
+      "plans": "Plans",
+      "commercial": "Commercial",
+      "pricing": "Pricing",
+      "serviceArea": "Service Area",
+      "getQuote": "Get Quote",
+      "cleanerAlt": "Professional cleaner"
+    },
     "terms": {
       "metaTitle": "Terms & Conditions | Saskia Cleaning Services",
       "metaDescription": "Review the terms and conditions for booking cleaning services with Saskia Cleaning Services.",

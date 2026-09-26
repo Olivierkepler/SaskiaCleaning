@@ -76,8 +76,8 @@ export default function CommercialServices({ onCtaClick }: CommercialServicesPro
               text-[clamp(2rem,2.6vw,2.2rem)] leading-[1]
             "
           >
-     
-            Commercial Cleaning <br />
+
+            Commercial Cleaning<br />
             <span className="italic text-stone-400">Services</span>
           </h2>
 

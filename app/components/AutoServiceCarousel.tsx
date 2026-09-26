@@ -1,15 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Check,
+  X,
+} from "lucide-react";
 
 const serviceDefs = [
   {
     id: "residential",
     titleKey: "carouselResidentialTitle",
     subtitleKey: "carouselResidentialSubtitle",
-    detailKeys: ["carouselResidential1", "carouselResidential2", "carouselResidential3"],
+    detailKeys: [
+      "carouselResidential1",
+      "carouselResidential2",
+      "carouselResidential3",
+    ],
     image:
       "https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80",
     startingPrice: "$100+",
@@ -18,7 +35,11 @@ const serviceDefs = [
     id: "commercial",
     titleKey: "carouselCommercialTitle",
     subtitleKey: "carouselCommercialSubtitle",
-    detailKeys: ["carouselCommercial1", "carouselCommercial2", "carouselCommercial3"],
+    detailKeys: [
+      "carouselCommercial1",
+      "carouselCommercial2",
+      "carouselCommercial3",
+    ],
     image:
       "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=900&q=80",
     startingPrice: "$180+",
@@ -27,7 +48,11 @@ const serviceDefs = [
     id: "laundry",
     titleKey: "carouselLaundryTitle",
     subtitleKey: "carouselLaundrySubtitle",
-    detailKeys: ["carouselLaundry1", "carouselLaundry2", "carouselLaundry3"],
+    detailKeys: [
+      "carouselLaundry1",
+      "carouselLaundry2",
+      "carouselLaundry3",
+    ],
     image:
       "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80",
     startingPrice: "$1.75/lb",
@@ -36,7 +61,11 @@ const serviceDefs = [
     id: "airbnb",
     titleKey: "carouselAirbnbTitle",
     subtitleKey: "carouselAirbnbSubtitle",
-    detailKeys: ["carouselAirbnb1", "carouselAirbnb2", "carouselAirbnb3"],
+    detailKeys: [
+      "carouselAirbnb1",
+      "carouselAirbnb2",
+      "carouselAirbnb3",
+    ],
     image:
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80",
     startingPrice: "$120+",
@@ -45,7 +74,11 @@ const serviceDefs = [
     id: "specialty",
     titleKey: "carouselSpecialtyTitle",
     subtitleKey: "carouselSpecialtySubtitle",
-    detailKeys: ["carouselSpecialty1", "carouselSpecialty2", "carouselSpecialty3"],
+    detailKeys: [
+      "carouselSpecialty1",
+      "carouselSpecialty2",
+      "carouselSpecialty3",
+    ],
     image:
       "https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=900&q=80",
     startingPrice: "$45+",
@@ -54,7 +87,11 @@ const serviceDefs = [
     id: "addon",
     titleKey: "carouselAddonTitle",
     subtitleKey: "carouselAddonSubtitle",
-    detailKeys: ["carouselAddon1", "carouselAddon2", "carouselAddon3"],
+    detailKeys: [
+      "carouselAddon1",
+      "carouselAddon2",
+      "carouselAddon3",
+    ],
     image:
       "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=900&q=80",
     startingPrice: "$10+",
@@ -62,6 +99,7 @@ const serviceDefs = [
 ];
 
 type Service = {
+  id: string;
   title: string;
   subtitle: string;
   image: string;
@@ -69,230 +107,26 @@ type Service = {
   startingPrice: string;
 };
 
-const COUNT = serviceDefs.length;
-const AUTO_DELAY = 4000;
-const RESUME_AFTER = 6000;
+const AUTO_DELAY = 4500;
 
-function IconArrowUpRight({ size = 11 }: { size?: number }) {
-  return (
-    <svg
-      aria-hidden="true"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="7" y1="17" x2="17" y2="7" />
-      <polyline points="7 7 17 7 17 17" />
-    </svg>
-  );
+function getRelativeIndex(
+  index: number,
+  activeIndex: number,
+  count: number,
+) {
+  let diff = index - activeIndex;
+
+  if (diff > count / 2) diff -= count;
+  if (diff < -count / 2) diff += count;
+
+  return diff;
 }
 
-function IconClose({ size = 17 }: { size?: number }) {
-  return (
-    <svg
-      aria-hidden="true"
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
-  );
-}
-
-function IconChevron({ dir }: { dir: "left" | "right" }) {
-  return (
-    <svg
-      aria-hidden="true"
-      width={17}
-      height={17}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      {dir === "left" ? (
-        <polyline points="15 18 9 12 15 6" />
-      ) : (
-        <polyline points="9 18 15 12 9 6" />
-      )}
-    </svg>
-  );
-}
-
-function ProgressDot({
-  active,
-  isPlaying,
-  onClick,
-  label,
-}: {
-  active: boolean;
-  isPlaying: boolean;
-  onClick: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      aria-label={label}
-      onClick={onClick}
-      className="relative flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
-      style={{
-        width: active ? 34 : 10,
-        height: 16,
-        transition: "width 300ms ease",
-      }}
-    >
-      {active ? (
-        <svg aria-hidden="true" viewBox="0 0 34 16" width="34" height="16">
-          <rect x="0" y="4" width="34" height="8" rx="4" fill="#e2e8f0" />
-          <rect
-            x="0"
-            y="4"
-            width="34"
-            height="8"
-            rx="4"
-            fill="#0ea5e9"
-            style={{
-              clipPath: "inset(0 0 0 0 round 4px)",
-              transformOrigin: "left center",
-              animation: isPlaying
-                ? `pill-fill ${AUTO_DELAY}ms linear forwards`
-                : "none",
-            }}
-          />
-        </svg>
-      ) : (
-        <svg aria-hidden="true" viewBox="0 0 10 10" width="10" height="10">
-          <circle cx="5" cy="5" r="4" fill="#e2e8f0" />
-        </svg>
-      )}
-    </button>
-  );
-}
-
-function NavButton({
-  dir,
-  onClick,
-}: {
-  dir: "left" | "right";
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={dir === "left" ? "Previous service" : "Next service"}
-      className="
-        grid h-11 w-11 shrink-0 place-items-center rounded-full
-        bg-white text-slate-700 ring-1 ring-slate-200
-        shadow-[0_8px_30px_rgba(15,23,42,0.08)]
-        transition duration-300 hover:bg-slate-950 hover:text-white
-        hover:ring-slate-950 focus-visible:outline-none
-        focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2
-        active:scale-95
-      "
-    >
-      <IconChevron dir={dir} />
-    </button>
-  );
-}
-
-function ServiceCard({
-  service,
-  index,
-  active,
-  onClick,
-}: {
-  service: Service;
-  index: number;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={`View details for ${service.title}`}
-      className={`
-        group relative h-full w-full shrink-0 overflow-hidden rounded-[2rem]
-        bg-white text-left ring-1 transition duration-500
-        ease-[cubic-bezier(0.22,1,0.36,1)]
-        hover:-translate-y-2 hover:ring-sky-200
-        hover:shadow-[0_30px_90px_rgba(14,165,233,0.18)]
-        focus-visible:outline-none focus-visible:ring-2
-        focus-visible:ring-sky-500 focus-visible:ring-offset-2
-        focus-visible:ring-offset-white active:scale-[0.99]
-        motion-reduce:hover:translate-y-0 motion-reduce:active:scale-100
-        ${
-          active
-            ? "ring-sky-300/70 shadow-[0_28px_80px_rgba(14,165,233,0.16)]"
-            : "ring-slate-200/70 shadow-[0_18px_55px_rgba(15,23,42,0.07)]"
-        }
-      `}
-    >
-      <div className="relative overflow-hidden">
-        <img
-          src={service.image}
-          alt={`${service.title} service`}
-          loading={index < 3 ? "eager" : "lazy"}
-          className="
-            h-60 w-full object-cover grayscale-[5%]
-            transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]
-            group-hover:scale-[1.045] group-hover:grayscale-0
-            motion-reduce:transition-none motion-reduce:group-hover:scale-100
-          "
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-slate-950/5 to-transparent" />
-
-        <span className="absolute bottom-4 left-5 rounded-full bg-white/15 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.18em] text-white backdrop-blur-md ring-1 ring-white/20">
-          From {service.startingPrice}
-        </span>
-      </div>
-
-      <div className="p-6">
-        <div
-          className="mb-4 h-[2px] bg-sky-400 transition-all duration-300 group-hover:w-14"
-          style={{ width: active ? 56 : 32 }}
-        />
-
-        <h3 className="text-[1.85rem] font-semibold leading-[0.98] tracking-[-0.05em] text-sky-500">
-          {service.title}
-        </h3>
-
-        <p className="mt-3 line-clamp-2 text-[14px] leading-7 text-slate-600">
-          {service.subtitle}
-        </p>
-
-        <div className="mt-6 flex items-center justify-between gap-3 border-t border-slate-100 pt-5">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-            Details
-          </span>
-
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition duration-300 group-hover:bg-slate-950">
-            View
-            <IconArrowUpRight />
-          </span>
-        </div>
-      </div>
-    </button>
-  );
+function scrollToQuote() {
+  document.getElementById("quote")?.scrollIntoView({
+    behavior: "smooth",
+    block: "start",
+  });
 }
 
 function ServiceModal({
@@ -313,52 +147,63 @@ function ServiceModal({
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        onClose();
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [onClose]);
 
-  const handleRequestService = useCallback(
-    (event: React.MouseEvent<HTMLAnchorElement>) => {
-      event.preventDefault();
-      onClose();
-      requestAnimationFrame(() => {
-        document
-          .getElementById("quote")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    },
-    [onClose]
-  );
+  const handleRequestService = () => {
+    onClose();
+
+    requestAnimationFrame(() => {
+      scrollToQuote();
+    });
+  };
 
   return createPortal(
     <div
-      className="
-        fixed inset-0 z-[90] flex min-h-dvh items-end justify-center
-        bg-slate-950/60 p-0 backdrop-blur-md sm:items-center sm:p-6
-      "
-      style={{
-        paddingTop: "max(0.75rem, env(safe-area-inset-top))",
-        paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
-      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="service-modal-title"
       aria-describedby="service-modal-description"
       onClick={onClose}
+      className="
+        fixed
+        inset-0
+        z-[100]
+        flex
+        items-end
+        justify-center
+        bg-slate-950/65
+        backdrop-blur-lg
+        sm:items-center
+        sm:p-6
+      "
     >
       <div
-        className="
-          relative flex max-h-[90dvh] w-full max-w-[580px]
-          flex-col overflow-hidden rounded-t-[2rem] bg-white
-          shadow-[0_-24px_90px_rgba(15,23,42,0.24)]
-          ring-1 ring-white/70 sm:rounded-[2rem]
-        "
         onClick={(event) => event.stopPropagation()}
+        className="
+          relative
+          max-h-[92dvh]
+          w-full
+          max-w-[640px]
+          overflow-hidden
+          rounded-t-[32px]
+          bg-white
+          shadow-[0_40px_120px_rgba(15,23,42,0.35)]
+          ring-1
+          ring-white/70
+          sm:rounded-[32px]
+        "
       >
-        <div className="relative h-[235px] shrink-0 overflow-hidden sm:h-[285px]">
+        <div className="relative h-[250px] overflow-hidden sm:h-[310px]">
           <img
             src={service.image}
             alt=""
@@ -368,21 +213,49 @@ function ServiceModal({
 
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
 
-          <div className="absolute bottom-6 left-6 right-16 sm:bottom-8 sm:left-8">
-            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-200">
-              Starting at {service.startingPrice}
-            </p>
-
-            <h2
-              id="service-modal-title"
+          <div className="absolute left-6 top-6">
+            <span
               className="
-                text-[clamp(2.25rem,6vw,3.35rem)]
-                font-semibold leading-[0.9]
-                tracking-[-0.055em] text-white
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-white/20
+                bg-slate-950/60
+                px-4
+                py-2
+                text-[9px]
+                font-bold
+                uppercase
+                tracking-[0.18em]
+                text-white
+                backdrop-blur-xl
               "
             >
-              {service.title}
-            </h2>
+              {service.id}
+            </span>
+          </div>
+
+          <div
+            className="
+              absolute
+              right-6
+              top-6
+            
+              px-4
+              py-3
+              shadow-lg
+              backdrop-blur-xl
+            "
+          >
+            <span className="block text-[8px] font-semibold uppercase tracking-[0.15em] text-white">
+              Starting at
+            </span>
+
+            <span className="mt-1 block text-lg font-bold leading-none tracking-[-0.035em] text-white">
+              {service.startingPrice}
+            </span>
           </div>
 
           <button
@@ -390,18 +263,47 @@ function ServiceModal({
             onClick={onClose}
             aria-label="Close service details"
             className="
-              absolute right-4 top-4 grid h-10 w-10 place-items-center
-              rounded-full bg-white/95 text-slate-950 shadow-lg
-              ring-1 ring-white/60 backdrop-blur-sm transition
-              hover:bg-slate-950 hover:text-white focus-visible:outline-none
-              focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2
+              absolute
+              bottom-6
+              right-6
+              grid
+              h-11
+              w-11
+              place-items-center
+              rounded-full
+              bg-white/95
+              text-slate-950
+              shadow-lg
+              transition
+              hover:bg-slate-950
+              hover:text-white
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-sky-500
+              focus-visible:ring-offset-2
             "
           >
-            <IconClose />
+            <X className="h-4 w-4" />
           </button>
+
+          <div className="absolute bottom-6 left-6 right-20">
+            <h2
+              id="service-modal-title"
+              className="
+                font-heading
+                text-[clamp(2.2rem,6vw,3.4rem)]
+                font-semibold
+                leading-[0.92]
+                tracking-[-0.055em]
+                text-white
+              "
+            >
+              {service.title}
+            </h2>
+          </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-6 sm:p-8">
+        <div className="max-h-[55dvh] overflow-y-auto p-6 sm:p-8">
           <p
             id="service-modal-description"
             className="text-[15px] leading-7 text-slate-600"
@@ -409,168 +311,718 @@ function ServiceModal({
             {service.subtitle}
           </p>
 
-          <div className="mt-6 rounded-[1.5rem] bg-slate-50 p-5 ring-1 ring-slate-100 sm:p-6">
-            <p className="mb-4 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400">
-              Service Includes
+          <div
+            className="
+              mt-7
+              rounded-[24px]
+              bg-slate-50
+              p-5
+              ring-1
+              ring-slate-100
+              sm:p-6
+            "
+          >
+            <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+              Service includes
             </p>
 
-            <ul className="flex flex-col gap-3">
+            <ul className="space-y-4">
               {service.details.map((detail) => (
                 <li
                   key={detail}
-                  className="flex gap-3 text-sm leading-7 text-slate-600"
+                  className="flex items-start gap-3 text-sm leading-6 text-slate-600"
                 >
                   <span
-                    aria-hidden="true"
-                    className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-sky-500"
-                  />
+                    className="
+                      mt-0.5
+                      grid
+                      h-6
+                      w-6
+                      shrink-0
+                      place-items-center
+                      rounded-full
+                      bg-sky-50
+                      text-sky-500
+                    "
+                  >
+                    <Check
+                      className="h-3.5 w-3.5"
+                      strokeWidth={2}
+                    />
+                  </span>
+
                   <span>{detail}</span>
                 </li>
               ))}
             </ul>
           </div>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <a
-              href="#quote"
+          <div className="mt-7 grid gap-3 sm:grid-cols-2">
+            <button
+              type="button"
               onClick={handleRequestService}
               className="
-                inline-flex min-h-[48px] flex-1 items-center justify-center
-                rounded-full bg-sky-500 px-5 text-[10px] font-semibold
-                uppercase tracking-[0.16em] text-white
-                shadow-[0_10px_30px_rgba(14,165,233,0.25)]
-                transition hover:bg-slate-950 focus-visible:outline-none
-                focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2
+                inline-flex
+                min-h-[52px]
+                items-center
+                justify-center
+                gap-3
+                rounded-[15px]
+                bg-slate-950
+                px-5
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.16em]
+                text-white
+                transition
+                hover:bg-sky-500
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-sky-500
+                focus-visible:ring-offset-2
               "
             >
-              Request This Service
-            </a>
+              Request this service
+              <ArrowUpRight className="h-4 w-4" />
+            </button>
 
             <button
               type="button"
               onClick={onClose}
               className="
-                min-h-[48px] flex-1 rounded-full border border-slate-200
-                px-5 text-[10px] font-semibold uppercase tracking-[0.14em]
-                text-slate-600 transition hover:border-slate-950 hover:text-slate-950
-                focus-visible:outline-none focus-visible:ring-2
-                focus-visible:ring-sky-500 focus-visible:ring-offset-2
+                min-h-[52px]
+                rounded-[15px]
+                border
+                border-slate-200
+                bg-white
+                px-5
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.15em]
+                text-slate-600
+                transition
+                hover:border-slate-950
+                hover:text-slate-950
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-sky-500
+                focus-visible:ring-offset-2
               "
             >
-              Keep Browsing
+              Keep browsing
             </button>
           </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
+  );
+}
+function DesktopCard({
+  service,
+  relativeIndex,
+  active,
+  onClick,
+}: {
+  service: Service;
+  relativeIndex: number;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const abs = Math.abs(relativeIndex);
+
+  if (abs > 2) return null;
+
+  const width =
+    abs === 0
+      ? 500
+      : abs === 1
+        ? 350
+        : 270;
+
+  const height =
+    abs === 0
+      ? 540
+      : abs === 1
+        ? 470
+        : 400;
+
+  const translateX =
+    relativeIndex === 0
+      ? 0
+      : relativeIndex === -1
+        ? -400
+        : relativeIndex === 1
+          ? 400
+          : relativeIndex === -2
+            ? -675
+            : 675;
+
+  const scale =
+    abs === 0
+      ? 1
+      : abs === 1
+        ? 0.92
+        : 0.84;
+
+  const zIndex =
+    abs === 0
+      ? 30
+      : abs === 1
+        ? 20
+        : 10;
+
+  const opacity =
+    abs === 0
+      ? 1
+      : abs === 1
+        ? 0.92
+        : 0.72;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`View ${service.title}`}
+      className="
+        group
+        absolute
+        left-1/2
+        top-1/2
+        overflow-visible
+        text-left
+        transition-all
+        duration-700
+        ease-[cubic-bezier(0.22,1,0.36,1)]
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-sky-500
+        focus-visible:ring-offset-4
+        focus-visible:ring-offset-white
+      "
+      style={{
+        width,
+        height,
+        zIndex,
+        opacity,
+        transform: `
+          translate(-50%, -50%)
+          translateX(${translateX}px)
+          scale(${scale})
+        `,
+      }}
+    >
+      <article
+        className={`
+          relative
+          h-full
+          overflow-hidden
+          rounded-[30px]
+          bg-white
+          ring-1
+          transition-all
+          duration-700
+          ease-[cubic-bezier(0.22,1,0.36,1)]
+          group-hover:-translate-y-2
+
+          ${active
+            ? `
+                  ring-sky-200
+                  shadow-[0_32px_90px_rgba(14,165,233,0.14)]
+                  group-hover:shadow-[0_40px_110px_rgba(14,165,233,0.18)]
+                `
+            : `
+                  ring-slate-200/80
+                  shadow-[0_18px_55px_rgba(15,23,42,0.08)]
+                  group-hover:ring-sky-200
+                `
+          }
+        `}
+      >
+        {/* Image */}
+        <div
+          className={`
+            relative
+            overflow-hidden
+            ${active ? "h-[61%]" : "h-[58%]"}
+          `}
+        >
+          <img
+            src={service.image}
+            alt={`${service.title} service`}
+            className="
+              h-full
+              w-full
+              object-cover
+              transition-transform
+              duration-[900ms]
+              ease-[cubic-bezier(0.22,1,0.36,1)]
+              group-hover:scale-[1.045]
+            "
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/25 via-transparent to-transparent" />
+
+          {/* Category */}
+          <div className="absolute left-5 top-5">
+            <span
+              className="
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                
+                px-3.5
+                py-2
+                text-[8px]
+                font-bold
+                uppercase
+                tracking-[0.18em]
+                text-white
+                shadow-sm
+                backdrop-blur-xl
+              "
+            >
+              {service.id}
+            </span>
+          </div>
+
+          {/* Price */}
+          <div
+            className="
+              absolute
+              right-5
+              top-5
+             bg-black/20  backdrop-blur-xl
+              px-4
+              py-3
+           
+            "
+          >
+            <span className="block text-[7px] font-semibold uppercase tracking-[0.16em] text-white">
+              Starting at
+            </span>
+
+            <span className="mt-1 block text-[18px] font-bold leading-none tracking-[-0.035em] text-white">
+              {service.startingPrice}
+            </span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div
+          className={`
+            relative
+            z-10
+            flex
+            flex-col
+            bg-white
+
+            ${active
+              ? "-mt-6 h-[225px] rounded-t-[28px] px-7 pb-5 pt-5"
+              : "-mt-5 h-[195px] rounded-t-[25px] px-6 pb-5 pt-5"
+            }
+          `}
+        >
+          {/* Accent / brand */}
+          <div className="mb-3 flex shrink-0 items-center justify-between">
+            <span
+              className="
+                h-[3px]
+                w-8
+                rounded-full
+                bg-sky-500
+                transition-all
+                duration-500
+                group-hover:w-12
+              "
+            />
+
+            <span className="text-[8px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+              Saskia
+            </span>
+          </div>
+
+          {/* Title */}
+          <h3
+            className={`
+              shrink-0
+              font-heading
+              font-semibold
+              tracking-[-0.05em]
+              text-slate-950
+
+              ${active
+                ? "text-[1.9rem] leading-[0.98]"
+                : "text-[1.4rem] leading-none"
+              }
+            `}
+          >
+            {service.title}
+          </h3>
+
+          {/* Description */}
+          <p
+            className={`
+              mt-2
+              shrink-0
+              text-slate-500
+
+              ${active
+                ? "line-clamp-2 max-w-[94%] text-[12px] leading-[1.5]"
+                : "line-clamp-2 text-[11px] leading-5"
+              }
+            `}
+          >
+            {service.subtitle}
+          </p>
+
+          {/* Active details */}
+          {active && (
+            <div className="mt-3 flex shrink-0 flex-col gap-1.5">
+              {service.details
+                .slice(0, 2)
+                .map((detail) => (
+                  <div
+                    key={detail}
+                    className="
+                      flex
+                      min-w-0
+                      items-center
+                      gap-2
+                      rounded-full
+                      bg-slate-50
+                      px-3
+                      py-1.5
+                      text-[8px]
+                      font-medium
+                      leading-4
+                      text-slate-600
+                      ring-1
+                      ring-slate-100
+                    "
+                  >
+                    <span
+                      className="
+                        grid
+                        h-4
+                        w-4
+                        shrink-0
+                        place-items-center
+                        rounded-full
+                        bg-sky-500
+                        text-white
+                      "
+                    >
+                      <Check
+                        className="h-2.5 w-2.5"
+                        strokeWidth={2.5}
+                      />
+                    </span>
+
+                    <span className="truncate">
+                      {detail}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {/* Bottom action */}
+          <div
+            className="
+              mt-auto
+              flex
+              shrink-0
+              items-center
+              justify-between
+              border-t
+              border-slate-100
+              pt-3
+            "
+          >
+            <div>
+              <p className="text-[7px] font-semibold uppercase tracking-[0.2em] text-slate-300">
+                Explore service
+              </p>
+
+              <p className="mt-0.5 text-[10px] font-medium text-slate-600">
+                View details
+              </p>
+            </div>
+
+            <span
+              className="
+                grid
+                h-9
+                w-9
+                place-items-center
+                rounded-full
+                bg-slate-950
+                text-white
+                shadow-[0_7px_18px_rgba(15,23,42,0.14)]
+                transition-all
+                duration-300
+                group-hover:-translate-y-0.5
+                group-hover:rotate-6
+                group-hover:bg-sky-500
+              "
+            >
+              <ArrowUpRight
+                className="h-3.5 w-3.5"
+                strokeWidth={1.8}
+              />
+            </span>
+          </div>
+        </div>
+      </article>
+    </button>
+  );
+}
+
+function MobileCard({
+  service,
+  active,
+  onClick,
+}: {
+  service: Service;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`View ${service.title}`}
+      className="
+        group
+        w-[84vw]
+        max-w-[370px]
+        shrink-0
+        snap-center
+        text-left
+        focus-visible:outline-none
+        focus-visible:ring-2
+        focus-visible:ring-sky-500
+        focus-visible:ring-offset-4
+      "
+    >
+      <article
+        className={`
+          overflow-hidden
+          rounded-[28px]
+          bg-white
+          ring-1
+          transition-all
+          duration-500
+
+          ${active
+            ? "ring-sky-200 shadow-[0_28px_70px_rgba(14,165,233,0.14)]"
+            : "ring-slate-200/80 shadow-[0_16px_46px_rgba(15,23,42,0.07)]"
+          }
+        `}
+      >
+        {/* Image */}
+        <div className="relative h-[250px] overflow-hidden">
+          <img
+            src={service.image}
+            alt={`${service.title} service`}
+            className="
+              h-full
+              w-full
+              object-cover
+              transition-transform
+              duration-700
+              ease-out
+              group-hover:scale-[1.05]
+            "
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent" />
+
+          {/* Category */}
+          <div className="absolute left-4 top-4">
+            <span
+              className="
+                inline-flex
+                items-center
+                gap-2
+                rounded-full
+                border
+                border-white/20
+                bg-slate-950/55
+                px-3
+                py-2
+                text-[8px]
+                font-bold
+                uppercase
+                tracking-[0.16em]
+                text-white
+                backdrop-blur-xl
+              "
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
+
+              {service.id}
+            </span>
+          </div>
+
+          {/* Price */}
+          <div
+            className="
+              absolute
+              right-4
+              top-4
+              rounded-[15px]
+              border
+              border-white/60
+              bg-white/95
+              px-3.5
+              py-2.5
+              shadow-lg
+              backdrop-blur-xl
+            "
+          >
+            <span className="block text-[7px] font-semibold uppercase tracking-[0.14em] text-white">
+              Starting at
+            </span>
+
+            <span className="mt-0.5 block text-[16px] font-bold tracking-[-0.03em] text-white">
+              {service.startingPrice}
+            </span>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div
+          className="
+            relative
+            -mt-6
+            rounded-t-[26px]
+            bg-white
+            px-6
+            pb-6
+            pt-6
+          "
+        >
+          <div className="mb-4 flex items-center justify-between">
+            <span className="h-[3px] w-8 rounded-full bg-sky-500" />
+
+            <span className="text-[8px] font-semibold uppercase tracking-[0.17em] text-slate-300">
+              Saskia
+            </span>
+          </div>
+
+          <h3 className="font-heading text-[1.85rem] font-semibold leading-[0.98] tracking-[-0.05em] text-slate-950">
+            {service.title}
+          </h3>
+
+          <p className="mt-3 line-clamp-2 text-[13px] leading-6 text-slate-500">
+            {service.subtitle}
+          </p>
+
+          <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
+            <div>
+              <p className="text-[8px] font-semibold uppercase tracking-[0.17em] text-slate-300">
+                Explore
+              </p>
+
+              <p className="mt-1 text-[11px] font-medium text-slate-600">
+                View service
+              </p>
+            </div>
+
+            <span
+              className="
+                grid
+                h-10
+                w-10
+                place-items-center
+                rounded-full
+                bg-slate-950
+                text-white
+                shadow-[0_8px_18px_rgba(15,23,42,0.14)]
+                transition-all
+                duration-300
+                group-hover:bg-sky-500
+              "
+            >
+              <ArrowUpRight
+                className="h-4 w-4"
+                strokeWidth={1.8}
+              />
+            </span>
+          </div>
+        </div>
+      </article>
+    </button>
   );
 }
 
 export default function ServiceCarousel() {
   const t = useTranslations("home");
-  const services = serviceDefs.map((s) => ({
-    title: t(s.titleKey),
-    subtitle: t(s.subtitleKey),
-    image: s.image,
-    details: s.detailKeys.map((k) => t(k)),
-    startingPrice: s.startingPrice,
-  }));
 
-  const [selected, setSelected] = useState<Service | null>(null);
-  const [portalReady, setPortalReady] = useState(false);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
+  const services = useMemo<Service[]>(
+    () =>
+      serviceDefs.map((service) => ({
+        id: service.id,
+        title: t(service.titleKey),
+        subtitle: t(service.subtitleKey),
+        image: service.image,
+        details: service.detailKeys.map((key) =>
+          t(key),
+        ),
+        startingPrice: service.startingPrice,
+      })),
+    [t],
+  );
 
-  const activeRef = useRef(activeIndex);
-  const playingRef = useRef(isPlaying);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const scrollRaf = useRef<number | null>(null);
-  const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dotKey = useRef(0);
+  const [activeIndex, setActiveIndex] =
+    useState(0);
 
-  const getNearestIndex = useCallback(() => {
-    const track = trackRef.current;
-    if (!track || cardRefs.current.length === 0) return 0;
+  const [selected, setSelected] =
+    useState<Service | null>(null);
 
-    const trackCenter = track.scrollLeft + track.clientWidth / 2;
-    let nearest = 0;
-    let minDistance = Infinity;
+  const [portalReady, setPortalReady] =
+    useState(false);
 
-    cardRefs.current.forEach((card, index) => {
-      if (!card) return;
-      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-      const distance = Math.abs(cardCenter - trackCenter);
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearest = index;
-      }
-    });
+  const [isPlaying, setIsPlaying] =
+    useState(true);
 
-    return nearest;
-  }, []);
+  const mobileTrackRef =
+    useRef<HTMLDivElement>(null);
 
-  const syncScrollPadding = useCallback(() => {
-    const track = trackRef.current;
-    const card = cardRefs.current[0];
-    if (!track || !card) return;
-
-    const pad = Math.max(16, (track.clientWidth - card.offsetWidth) / 2);
-    track.style.scrollPaddingInline = `${pad}px`;
-  }, []);
-
-  const scrollTo = useCallback((index: number, smooth = true) => {
-    const track = trackRef.current;
-    const card = cardRefs.current[index];
-    if (!track || !card) return;
-
-    const target =
-      card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2;
-    const maxScroll = track.scrollWidth - track.clientWidth;
-
-    track.scrollTo({
-      left: Math.max(0, Math.min(target, maxScroll)),
-      behavior: smooth ? "smooth" : "auto",
-    });
-  }, []);
-
-  const clearResumeTimer = useCallback(() => {
-    if (resumeTimer.current) {
-      clearTimeout(resumeTimer.current);
-      resumeTimer.current = null;
-    }
-  }, []);
-
-  const setAutoplay = useCallback((value: boolean) => {
-    setIsPlaying(value);
-    playingRef.current = value;
-  }, []);
-
-  const pauseThenResume = useCallback(() => {
-    setAutoplay(false);
-    clearResumeTimer();
-
-    resumeTimer.current = setTimeout(() => {
-      setAutoplay(true);
-      resumeTimer.current = null;
-    }, RESUME_AFTER);
-  }, [clearResumeTimer, setAutoplay]);
+  const count = services.length;
 
   const goTo = useCallback(
-    (rawIndex: number, userInitiated = false) => {
-      const index = ((rawIndex % COUNT) + COUNT) % COUNT;
+    (index: number) => {
+      const next =
+        ((index % count) + count) % count;
 
-      setActiveIndex(index);
-      activeRef.current = index;
-      dotKey.current += 1;
-      scrollTo(index);
+      setActiveIndex(next);
 
-      if (userInitiated) {
-        pauseThenResume();
+      const mobileTrack =
+        mobileTrackRef.current;
+
+      if (mobileTrack) {
+        const children =
+          mobileTrack.children;
+
+        const target =
+          children[next] as
+          | HTMLElement
+          | undefined;
+
+        target?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
       }
     },
-    [pauseThenResume, scrollTo]
+    [count],
   );
 
   useEffect(() => {
@@ -578,174 +1030,278 @@ export default function ServiceCarousel() {
   }, []);
 
   useEffect(() => {
-    activeRef.current = activeIndex;
-  }, [activeIndex]);
-
-  useEffect(() => {
-    playingRef.current = isPlaying;
-  }, [isPlaying]);
-
-  useEffect(() => {
-    if (selected) {
-      clearResumeTimer();
-      setAutoplay(false);
-    } else {
-      setAutoplay(true);
+    if (!isPlaying || selected) {
+      return;
     }
-  }, [clearResumeTimer, selected, setAutoplay]);
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (!playingRef.current) return;
-      goTo(activeRef.current + 1);
+    const interval = window.setInterval(() => {
+      setActiveIndex(
+        (current) =>
+          (current + 1) % count,
+      );
     }, AUTO_DELAY);
 
-    return () => clearInterval(intervalId);
-  }, [goTo]);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    const handleScroll = () => {
-      if (scrollRaf.current !== null) {
-        cancelAnimationFrame(scrollRaf.current);
-      }
-
-      scrollRaf.current = requestAnimationFrame(() => {
-        const nearest = getNearestIndex();
-
-        if (nearest !== activeRef.current) {
-          setActiveIndex(nearest);
-          activeRef.current = nearest;
-          dotKey.current += 1;
-        }
-      });
-    };
-
-    track.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
-      track.removeEventListener("scroll", handleScroll);
-      if (scrollRaf.current !== null) {
-        cancelAnimationFrame(scrollRaf.current);
-      }
+      window.clearInterval(interval);
     };
-  }, [getNearestIndex]);
-
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-
-    syncScrollPadding();
-    scrollTo(activeRef.current, false);
-
-    const observer = new ResizeObserver(() => {
-      syncScrollPadding();
-      scrollTo(activeRef.current, false);
-    });
-
-    observer.observe(track);
-    return () => observer.disconnect();
-  }, [scrollTo, syncScrollPadding]);
-
-  useEffect(() => {
-    return () => clearResumeTimer();
-  }, [clearResumeTimer]);
+  }, [count, isPlaying, selected]);
 
   return (
-    <section id="services" className="relative overflow-hidden bg-white py-24 sm:py-28 lg:py-32">
-      <div className="relative mx-auto w-full max-w-[1280px] px-4 sm:px-6">
-        <header className="mx-auto mb-16 max-w-4xl text-center">
-          <h2 className="font-heading text-[clamp(2.8rem,3.5vw,5rem)] leading-[0.9] tracking-[-0.04em] text-slate-950">
-            Elevated cleaning for{" "}
-            <em className="font-light italic text-sky-500">modern living</em>
+    <section
+      id="services"
+      className="
+        relative
+        overflow-hidden
+        bg-white
+        py-24
+        sm:py-28
+        lg:py-32
+      "
+    >
+      {/* Background atmosphere */}
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          left-1/2
+          top-[-12rem]
+          h-[42rem]
+          w-[85rem]
+          -translate-x-1/2
+          rounded-full
+          bg-sky-100/50
+          blur-[120px]
+        "
+      />
+
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none
+          absolute
+          bottom-[-12rem]
+          left-1/2
+          h-[32rem]
+          w-[70rem]
+          -translate-x-1/2
+          rounded-full
+          bg-slate-100/70
+          blur-[120px]
+        "
+      />
+
+      <div className="relative mx-auto max-w-[1440px] px-4 sm:px-6">
+        {/* Header */}
+        <header className="mx-auto max-w-4xl text-center">
+
+
+          <h2 className="font-heading text-[clamp(2.7rem,4vw,4.8rem)] font-semibold leading-[0.94] tracking-[-0.055em] text-slate-950">
+            Cleaning solutions for{" "}
+            <span className="font-light italic text-sky-500">
+              every space.
+            </span>
           </h2>
 
-          <p className="mx-auto mt-6 max-w-xl text-[15px] font-light leading-[1.75] text-slate-500 sm:text-base">
-            Seamless cleaning, laundry, and property care — precise, reliable,
-            and tailored to your space.
-          </p>
+          {/* <p className="mx-auto mt-6 max-w-2xl text-[15px] leading-7 text-slate-500 sm:text-base">
+            From homes to businesses, short-term
+            rentals to specialty care — professional
+            cleaning tailored to your space.
+          </p> */}
         </header>
 
-        <div className="relative w-full">
+        {/* Desktop carousel */}
+        <div
+          className="relative mt-16 hidden h-[650px] lg:block"
+          onMouseEnter={() =>
+            setIsPlaying(false)
+          }
+          onMouseLeave={() => {
+            if (!selected) {
+              setIsPlaying(true);
+            }
+          }}
+        >
+          {/* Previous */}
+          <div className="absolute left-4 top-1/2 z-40 -translate-y-1/2 xl:left-8">
+            <button
+              type="button"
+              aria-label="Previous service"
+              onClick={() =>
+                goTo(activeIndex - 1)
+              }
+              className="
+                grid
+                h-14
+                w-14
+                place-items-center
+                rounded-full
+                bg-white
+                text-slate-950
+                shadow-[0_14px_40px_rgba(15,23,42,0.12)]
+                ring-1
+                ring-slate-200
+                transition
+                hover:bg-slate-950
+                hover:text-white
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-sky-500
+                focus-visible:ring-offset-2
+              "
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Next */}
+          <div className="absolute right-4 top-1/2 z-40 -translate-y-1/2 xl:right-8">
+            <button
+              type="button"
+              aria-label="Next service"
+              onClick={() =>
+                goTo(activeIndex + 1)
+              }
+              className="
+                grid
+                h-14
+                w-14
+                place-items-center
+                rounded-full
+                bg-white
+                text-slate-950
+                shadow-[0_14px_40px_rgba(15,23,42,0.12)]
+                ring-1
+                ring-slate-200
+                transition
+                hover:bg-slate-950
+                hover:text-white
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-sky-500
+                focus-visible:ring-offset-2
+              "
+            >
+              <ArrowRight className="h-5 w-5" />
+            </button>
+          </div>
+
+          {services.map(
+            (service, index) => {
+              const relative =
+                getRelativeIndex(
+                  index,
+                  activeIndex,
+                  count,
+                );
+
+              return (
+                <DesktopCard
+                  key={service.id}
+                  service={service}
+                  relativeIndex={relative}
+                  active={
+                    index === activeIndex
+                  }
+                  onClick={() => {
+                    if (
+                      index !== activeIndex
+                    ) {
+                      goTo(index);
+                    } else {
+                      setSelected(service);
+                    }
+                  }}
+                />
+              );
+            },
+          )}
+        </div>
+
+        {/* Mobile / Tablet */}
+        <div className="mt-14 lg:hidden">
           <div
-            ref={trackRef}
-            onMouseEnter={() => setAutoplay(false)}
-            onMouseLeave={() => {
-              if (!selected) setAutoplay(true);
-            }}
-            aria-label="Cleaning services carousel"
+            ref={mobileTrackRef}
             className="
-              flex w-full snap-x snap-mandatory gap-5 overflow-x-auto
-              overscroll-x-contain scroll-smooth py-8
-              sm:gap-6 lg:gap-7
-              [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+              flex
+              snap-x
+              snap-mandatory
+              gap-5
+              overflow-x-auto
+              px-[8vw]
+              pb-8
+              pt-4
+              [scrollbar-width:none]
+              [&::-webkit-scrollbar]:hidden
             "
           >
-            {services.map((service, index) => (
-              <div
-                key={service.title}
-                ref={(el) => {
-                  cardRefs.current[index] = el;
-                }}
-                className="
-                  w-[min(calc(100vw-2.5rem),380px)] shrink-0 snap-center
-                  sm:w-[min(320px,42vw)] md:w-[340px] lg:w-[380px]
-                "
-              >
-                <ServiceCard
+            {services.map(
+              (service, index) => (
+                <MobileCard
+                  key={service.id}
                   service={service}
-                  index={index}
-                  active={index === activeIndex}
-                  onClick={() => setSelected(service)}
+                  active={
+                    index === activeIndex
+                  }
+                  onClick={() => {
+                    setActiveIndex(index);
+                    setSelected(service);
+                  }}
                 />
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </div>
 
-        <div className="mt-8 flex items-center justify-center gap-4 px-4">
-          <NavButton dir="left" onClick={() => goTo(activeIndex - 1, true)} />
+        {/* Pagination */}
+        <div className="mt-4 flex items-center justify-center gap-3 lg:mt-0">
+          <div className="mr-4 hidden h-px w-20 bg-sky-100 sm:block" />
 
-          <div
-            className="flex items-center gap-2.5"
-            role="tablist"
-            aria-label="Carousel navigation"
-          >
-            {services.map((service, index) => (
-              <ProgressDot
-                key={`${index}-${dotKey.current}`}
-                active={index === activeIndex}
-                isPlaying={isPlaying && index === activeIndex}
-                onClick={() => goTo(index, true)}
-                label={`Go to ${service.title}`}
+          {services.map(
+            (service, index) => (
+              <button
+                key={service.id}
+                type="button"
+                aria-label={`Go to ${service.title}`}
+                aria-current={
+                  index === activeIndex
+                    ? "true"
+                    : undefined
+                }
+                onClick={() =>
+                  goTo(index)
+                }
+                className={`
+                  h-2.5
+                  rounded-full
+                  transition-all
+                  duration-300
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-sky-500
+                  focus-visible:ring-offset-2
+
+                  ${index === activeIndex
+                    ? "w-8 bg-sky-500"
+                    : "w-2.5 bg-sky-100 hover:bg-sky-300"
+                  }
+                `}
               />
-            ))}
-          </div>
+            ),
+          )}
 
-          <NavButton dir="right" onClick={() => goTo(activeIndex + 1, true)} />
+          <div className="ml-4 hidden h-px w-20 bg-sky-100 sm:block" />
         </div>
-
-        <p className="mt-5 text-center text-[9px] font-medium uppercase tracking-[0.2em] text-slate-300">
-          Auto-advancing · hover to pause
-        </p>
       </div>
 
       {portalReady && selected && (
-        <ServiceModal service={selected} onClose={() => setSelected(null)} />
+        <ServiceModal
+          service={selected}
+          onClose={() =>
+            setSelected(null)
+          }
+        />
       )}
-
-      <style>{`
-        @keyframes pill-fill {
-          from {
-            clip-path: inset(0 100% 0 0 round 4px);
-          }
-
-          to {
-            clip-path: inset(0 0% 0 0 round 4px);
-          }
-        }
-      `}</style>
     </section>
   );
 }
