@@ -107,7 +107,9 @@ type Service = {
   startingPrice: string;
 };
 
-const AUTO_DELAY = 4500;
+const AUTO_DELAY = 5200;
+const CARD_TRANSITION_MS = 900;
+const CARD_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 function getRelativeIndex(
   index: number,
@@ -242,7 +244,8 @@ function ServiceModal({
               absolute
               right-6
               top-6
-            
+              rounded-[14px]
+              bg-black/20
               px-4
               py-3
               shadow-lg
@@ -274,7 +277,8 @@ function ServiceModal({
               bg-white/95
               text-slate-950
               shadow-lg
-              transition
+              transition-all
+              duration-300
               hover:bg-slate-950
               hover:text-white
               focus-visible:outline-none
@@ -375,7 +379,8 @@ function ServiceModal({
                 uppercase
                 tracking-[0.16em]
                 text-white
-                transition
+                transition-all
+                duration-300
                 hover:bg-sky-500
                 focus-visible:outline-none
                 focus-visible:ring-2
@@ -384,6 +389,7 @@ function ServiceModal({
               "
             >
               Request this service
+
               <ArrowUpRight className="h-4 w-4" />
             </button>
 
@@ -402,7 +408,8 @@ function ServiceModal({
                 uppercase
                 tracking-[0.15em]
                 text-slate-600
-                transition
+                transition-all
+                duration-300
                 hover:border-slate-950
                 hover:text-slate-950
                 focus-visible:outline-none
@@ -420,6 +427,7 @@ function ServiceModal({
     document.body,
   );
 }
+
 function DesktopCard({
   service,
   relativeIndex,
@@ -432,22 +440,25 @@ function DesktopCard({
   onClick: () => void;
 }) {
   const abs = Math.abs(relativeIndex);
-
-  if (abs > 2) return null;
+  const hidden = abs >= 3;
 
   const width =
     abs === 0
       ? 500
       : abs === 1
         ? 350
-        : 270;
+        : abs === 2
+          ? 270
+          : 240;
 
   const height =
     abs === 0
       ? 540
       : abs === 1
         ? 470
-        : 400;
+        : abs === 2
+          ? 400
+          : 370;
 
   const translateX =
     relativeIndex === 0
@@ -458,34 +469,46 @@ function DesktopCard({
           ? 400
           : relativeIndex === -2
             ? -675
-            : 675;
+            : relativeIndex === 2
+              ? 675
+              : relativeIndex < 0
+                ? -820
+                : 820;
 
   const scale =
     abs === 0
       ? 1
       : abs === 1
         ? 0.92
-        : 0.84;
+        : abs === 2
+          ? 0.84
+          : 0.76;
 
   const zIndex =
     abs === 0
       ? 30
       : abs === 1
         ? 20
-        : 10;
+        : abs === 2
+          ? 10
+          : 0;
 
   const opacity =
     abs === 0
       ? 1
       : abs === 1
         ? 0.92
-        : 0.72;
+        : abs === 2
+          ? 0.72
+          : 0;
 
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label={`View ${service.title}`}
+      tabIndex={hidden ? -1 : 0}
+      aria-hidden={hidden ? "true" : undefined}
       className="
         group
         absolute
@@ -493,9 +516,8 @@ function DesktopCard({
         top-1/2
         overflow-visible
         text-left
-        transition-all
-        duration-700
-        ease-[cubic-bezier(0.22,1,0.36,1)]
+        will-change-[transform,opacity,width,height]
+        transform-gpu
         focus-visible:outline-none
         focus-visible:ring-2
         focus-visible:ring-sky-500
@@ -507,10 +529,17 @@ function DesktopCard({
         height,
         zIndex,
         opacity,
+        pointerEvents: hidden ? "none" : "auto",
         transform: `
-          translate(-50%, -50%)
-          translateX(${translateX}px)
+          translate3d(-50%, -50%, 0)
+          translate3d(${translateX}px, 0, 0)
           scale(${scale})
+        `,
+        transition: `
+          transform ${CARD_TRANSITION_MS}ms ${CARD_EASING},
+          opacity ${CARD_TRANSITION_MS - 100}ms ${CARD_EASING},
+          width ${CARD_TRANSITION_MS}ms ${CARD_EASING},
+          height ${CARD_TRANSITION_MS}ms ${CARD_EASING}
         `,
       }}
     >
@@ -519,13 +548,14 @@ function DesktopCard({
           relative
           h-full
           overflow-hidden
-          rounded-[30px]
+          rounded-[10px]
           bg-white
           ring-1
-          transition-all
-          duration-700
+          transform-gpu
+          transition-[transform,box-shadow]
+          duration-500
           ease-[cubic-bezier(0.22,1,0.36,1)]
-          group-hover:-translate-y-2
+          group-hover:-translate-y-1.5
 
           ${active
             ? `
@@ -546,16 +576,24 @@ function DesktopCard({
           className={`
             relative
             overflow-hidden
+            transition-[height]
+            duration-700
+            ease-[cubic-bezier(0.22,1,0.36,1)]
+
             ${active ? "h-[61%]" : "h-[58%]"}
           `}
         >
           <img
             src={service.image}
             alt={`${service.title} service`}
+            draggable={false}
             className="
               h-full
               w-full
+              select-none
               object-cover
+              will-change-transform
+              transform-gpu
               transition-transform
               duration-[900ms]
               ease-[cubic-bezier(0.22,1,0.36,1)]
@@ -563,7 +601,17 @@ function DesktopCard({
             "
           />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/25 via-transparent to-transparent" />
+          <div
+            aria-hidden="true"
+            className="
+              absolute
+              inset-0
+              bg-gradient-to-t
+              from-slate-950/25
+              via-transparent
+              to-transparent
+            "
+          />
 
           {/* Category */}
           <div className="absolute left-5 top-5">
@@ -573,7 +621,7 @@ function DesktopCard({
                 items-center
                 gap-2
                 rounded-full
-                
+                bg-black/20
                 px-3.5
                 py-2
                 text-[8px]
@@ -595,10 +643,11 @@ function DesktopCard({
               absolute
               right-5
               top-5
-             bg-black/20  backdrop-blur-xl
+              rounded-[14px]
+              bg-black/20
               px-4
               py-3
-           
+              backdrop-blur-xl
             "
           >
             <span className="block text-[7px] font-semibold uppercase tracking-[0.16em] text-white">
@@ -619,6 +668,9 @@ function DesktopCard({
             flex
             flex-col
             bg-white
+            transition-all
+            duration-700
+            ease-[cubic-bezier(0.22,1,0.36,1)]
 
             ${active
               ? "-mt-6 h-[225px] rounded-t-[28px] px-7 pb-5 pt-5"
@@ -634,8 +686,9 @@ function DesktopCard({
                 w-8
                 rounded-full
                 bg-sky-500
-                transition-all
+                transition-[width]
                 duration-500
+                ease-out
                 group-hover:w-12
               "
             />
@@ -653,6 +706,8 @@ function DesktopCard({
               font-semibold
               tracking-[-0.05em]
               text-slate-950
+              transition-[font-size,line-height]
+              duration-500
 
               ${active
                 ? "text-[1.9rem] leading-[0.98]"
@@ -669,6 +724,8 @@ function DesktopCard({
               mt-2
               shrink-0
               text-slate-500
+              transition-all
+              duration-500
 
               ${active
                 ? "line-clamp-2 max-w-[94%] text-[12px] leading-[1.5]"
@@ -680,55 +737,67 @@ function DesktopCard({
           </p>
 
           {/* Active details */}
-          {active && (
-            <div className="mt-3 flex shrink-0 flex-col gap-1.5">
-              {service.details
-                .slice(0, 2)
-                .map((detail) => (
-                  <div
-                    key={detail}
+          <div
+            className={`
+              grid
+              shrink-0
+              overflow-hidden
+              transition-all
+              duration-500
+              ease-[cubic-bezier(0.22,1,0.36,1)]
+
+              ${active
+                ? "mt-3 max-h-[70px] gap-1.5 opacity-100"
+                : "mt-0 max-h-0 gap-0 opacity-0"
+              }
+            `}
+          >
+            {service.details
+              .slice(0, 2)
+              .map((detail) => (
+                <div
+                  key={detail}
+                  className="
+                    flex
+                    min-w-0
+                    items-center
+                    gap-2
+                    rounded-full
+                    bg-slate-50
+                    px-3
+                    py-1.5
+                    text-[8px]
+                    font-medium
+                    leading-4
+                    text-slate-600
+                    ring-1
+                    ring-slate-100
+                  "
+                >
+                  <span
                     className="
-                      flex
-                      min-w-0
-                      items-center
-                      gap-2
+                      grid
+                      h-4
+                      w-4
+                      shrink-0
+                      place-items-center
                       rounded-full
-                      bg-slate-50
-                      px-3
-                      py-1.5
-                      text-[8px]
-                      font-medium
-                      leading-4
-                      text-slate-600
-                      ring-1
-                      ring-slate-100
+                      bg-sky-500
+                      text-white
                     "
                   >
-                    <span
-                      className="
-                        grid
-                        h-4
-                        w-4
-                        shrink-0
-                        place-items-center
-                        rounded-full
-                        bg-sky-500
-                        text-white
-                      "
-                    >
-                      <Check
-                        className="h-2.5 w-2.5"
-                        strokeWidth={2.5}
-                      />
-                    </span>
+                    <Check
+                      className="h-2.5 w-2.5"
+                      strokeWidth={2.5}
+                    />
+                  </span>
 
-                    <span className="truncate">
-                      {detail}
-                    </span>
-                  </div>
-                ))}
-            </div>
-          )}
+                  <span className="truncate">
+                    {detail}
+                  </span>
+                </div>
+              ))}
+          </div>
 
           {/* Bottom action */}
           <div
@@ -763,11 +832,14 @@ function DesktopCard({
                 bg-slate-950
                 text-white
                 shadow-[0_7px_18px_rgba(15,23,42,0.14)]
-                transition-all
+                transform-gpu
+                transition-[transform,background-color,box-shadow]
                 duration-300
+                ease-out
                 group-hover:-translate-y-0.5
                 group-hover:rotate-6
                 group-hover:bg-sky-500
+                group-hover:shadow-[0_9px_22px_rgba(14,165,233,0.20)]
               "
             >
               <ArrowUpRight
@@ -815,12 +887,22 @@ function MobileCard({
           rounded-[28px]
           bg-white
           ring-1
-          transition-all
+          transform-gpu
+          transition-[transform,box-shadow]
           duration-500
+          ease-[cubic-bezier(0.22,1,0.36,1)]
 
           ${active
-            ? "ring-sky-200 shadow-[0_28px_70px_rgba(14,165,233,0.14)]"
-            : "ring-slate-200/80 shadow-[0_16px_46px_rgba(15,23,42,0.07)]"
+            ? `
+                  scale-[1.015]
+                  ring-sky-200
+                  shadow-[0_28px_70px_rgba(14,165,233,0.14)]
+                `
+            : `
+                  scale-100
+                  ring-slate-200/80
+                  shadow-[0_16px_46px_rgba(15,23,42,0.07)]
+                `
           }
         `}
       >
@@ -829,13 +911,16 @@ function MobileCard({
           <img
             src={service.image}
             alt={`${service.title} service`}
+            draggable={false}
             className="
               h-full
               w-full
+              select-none
               object-cover
+              transform-gpu
               transition-transform
               duration-700
-              ease-out
+              ease-[cubic-bezier(0.22,1,0.36,1)]
               group-hover:scale-[1.05]
             "
           />
@@ -876,12 +961,9 @@ function MobileCard({
               right-4
               top-4
               rounded-[15px]
-              border
-              border-white/60
-              bg-white/95
+              bg-black/20
               px-3.5
               py-2.5
-              shadow-lg
               backdrop-blur-xl
             "
           >
@@ -996,33 +1078,40 @@ export default function ServiceCarousel() {
 
   const count = services.length;
 
+  const centerMobileCard = useCallback(
+    (index: number) => {
+      const track = mobileTrackRef.current;
+
+      if (!track) return;
+
+      const target =
+        track.children[index] as
+        | HTMLElement
+        | undefined;
+
+      if (!target) return;
+
+      const left =
+        target.offsetLeft -
+        (track.clientWidth - target.offsetWidth) / 2;
+
+      track.scrollTo({
+        left,
+        behavior: "smooth",
+      });
+    },
+    [],
+  );
+
   const goTo = useCallback(
     (index: number) => {
       const next =
         ((index % count) + count) % count;
 
       setActiveIndex(next);
-
-      const mobileTrack =
-        mobileTrackRef.current;
-
-      if (mobileTrack) {
-        const children =
-          mobileTrack.children;
-
-        const target =
-          children[next] as
-          | HTMLElement
-          | undefined;
-
-        target?.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-          inline: "center",
-        });
-      }
+      centerMobileCard(next);
     },
-    [count],
+    [centerMobileCard, count],
   );
 
   useEffect(() => {
@@ -1030,7 +1119,7 @@ export default function ServiceCarousel() {
   }, []);
 
   useEffect(() => {
-    if (!isPlaying || selected) {
+    if (!isPlaying || selected || count <= 1) {
       return;
     }
 
@@ -1094,28 +1183,26 @@ export default function ServiceCarousel() {
       <div className="relative mx-auto max-w-[1440px] px-4 sm:px-6">
         {/* Header */}
         <header className="mx-auto max-w-4xl text-center">
-
-
           <h2 className="font-heading text-[clamp(2.7rem,4vw,4.8rem)] font-semibold leading-[0.94] tracking-[-0.055em] text-slate-950">
             Cleaning solutions for{" "}
             <span className="font-light italic text-sky-500">
               every space.
             </span>
           </h2>
-
-          {/* <p className="mx-auto mt-6 max-w-2xl text-[15px] leading-7 text-slate-500 sm:text-base">
-            From homes to businesses, short-term
-            rentals to specialty care — professional
-            cleaning tailored to your space.
-          </p> */}
         </header>
 
         {/* Desktop carousel */}
         <div
-          className="relative mt-16 hidden h-[650px] lg:block"
-          onMouseEnter={() =>
-            setIsPlaying(false)
-          }
+          className="
+            relative
+            mt-16
+            hidden
+            h-[650px]
+            lg:block
+          "
+          onMouseEnter={() => {
+            setIsPlaying(false);
+          }}
           onMouseLeave={() => {
             if (!selected) {
               setIsPlaying(true);
@@ -1136,12 +1223,17 @@ export default function ServiceCarousel() {
                 w-14
                 place-items-center
                 rounded-full
-                bg-white
+                bg-white/95
                 text-slate-950
                 shadow-[0_14px_40px_rgba(15,23,42,0.12)]
                 ring-1
                 ring-slate-200
-                transition
+                backdrop-blur-md
+                transform-gpu
+                transition-all
+                duration-300
+                hover:-translate-x-0.5
+                hover:scale-105
                 hover:bg-slate-950
                 hover:text-white
                 focus-visible:outline-none
@@ -1168,12 +1260,17 @@ export default function ServiceCarousel() {
                 w-14
                 place-items-center
                 rounded-full
-                bg-white
+                bg-white/95
                 text-slate-950
                 shadow-[0_14px_40px_rgba(15,23,42,0.12)]
                 ring-1
                 ring-slate-200
-                transition
+                backdrop-blur-md
+                transform-gpu
+                transition-all
+                duration-300
+                hover:translate-x-0.5
+                hover:scale-105
                 hover:bg-slate-950
                 hover:text-white
                 focus-visible:outline-none
@@ -1186,36 +1283,30 @@ export default function ServiceCarousel() {
             </button>
           </div>
 
-          {services.map(
-            (service, index) => {
-              const relative =
-                getRelativeIndex(
-                  index,
-                  activeIndex,
-                  count,
-                );
-
-              return (
-                <DesktopCard
-                  key={service.id}
-                  service={service}
-                  relativeIndex={relative}
-                  active={
-                    index === activeIndex
-                  }
-                  onClick={() => {
-                    if (
-                      index !== activeIndex
-                    ) {
-                      goTo(index);
-                    } else {
-                      setSelected(service);
-                    }
-                  }}
-                />
+          {services.map((service, index) => {
+            const relative =
+              getRelativeIndex(
+                index,
+                activeIndex,
+                count,
               );
-            },
-          )}
+
+            return (
+              <DesktopCard
+                key={service.id}
+                service={service}
+                relativeIndex={relative}
+                active={index === activeIndex}
+                onClick={() => {
+                  if (index !== activeIndex) {
+                    goTo(index);
+                  } else {
+                    setSelected(service);
+                  }
+                }}
+              />
+            );
+          })}
         </div>
 
         {/* Mobile / Tablet */}
@@ -1228,28 +1319,32 @@ export default function ServiceCarousel() {
               snap-mandatory
               gap-5
               overflow-x-auto
+              overscroll-x-contain
+              scroll-smooth
               px-[8vw]
               pb-8
               pt-4
+              touch-pan-x
+              [-webkit-overflow-scrolling:touch]
               [scrollbar-width:none]
               [&::-webkit-scrollbar]:hidden
             "
           >
-            {services.map(
-              (service, index) => (
-                <MobileCard
-                  key={service.id}
-                  service={service}
-                  active={
-                    index === activeIndex
-                  }
-                  onClick={() => {
+            {services.map((service, index) => (
+              <MobileCard
+                key={service.id}
+                service={service}
+                active={index === activeIndex}
+                onClick={() => {
+                  if (index !== activeIndex) {
                     setActiveIndex(index);
+                    centerMobileCard(index);
+                  } else {
                     setSelected(service);
-                  }}
-                />
-              ),
-            )}
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
 
@@ -1257,38 +1352,36 @@ export default function ServiceCarousel() {
         <div className="mt-4 flex items-center justify-center gap-3 lg:mt-0">
           <div className="mr-4 hidden h-px w-20 bg-sky-100 sm:block" />
 
-          {services.map(
-            (service, index) => (
-              <button
-                key={service.id}
-                type="button"
-                aria-label={`Go to ${service.title}`}
-                aria-current={
-                  index === activeIndex
-                    ? "true"
-                    : undefined
-                }
-                onClick={() =>
-                  goTo(index)
-                }
-                className={`
-                  h-2.5
-                  rounded-full
-                  transition-all
-                  duration-300
-                  focus-visible:outline-none
-                  focus-visible:ring-2
-                  focus-visible:ring-sky-500
-                  focus-visible:ring-offset-2
+          {services.map((service, index) => (
+            <button
+              key={service.id}
+              type="button"
+              aria-label={`Go to ${service.title}`}
+              aria-current={
+                index === activeIndex
+                  ? "true"
+                  : undefined
+              }
+              onClick={() => goTo(index)}
+              className={`
+                h-2.5
+                rounded-full
+                transform-gpu
+                transition-[width,background-color,transform]
+                duration-500
+                ease-[cubic-bezier(0.22,1,0.36,1)]
+                focus-visible:outline-none
+                focus-visible:ring-2
+                focus-visible:ring-sky-500
+                focus-visible:ring-offset-2
 
-                  ${index === activeIndex
-                    ? "w-8 bg-sky-500"
-                    : "w-2.5 bg-sky-100 hover:bg-sky-300"
-                  }
-                `}
-              />
-            ),
-          )}
+                ${index === activeIndex
+                  ? "w-8 scale-100 bg-sky-500"
+                  : "w-2.5 scale-90 bg-sky-100 hover:scale-100 hover:bg-sky-300"
+                }
+              `}
+            />
+          ))}
 
           <div className="ml-4 hidden h-px w-20 bg-sky-100 sm:block" />
         </div>
@@ -1297,9 +1390,7 @@ export default function ServiceCarousel() {
       {portalReady && selected && (
         <ServiceModal
           service={selected}
-          onClose={() =>
-            setSelected(null)
-          }
+          onClose={() => setSelected(null)}
         />
       )}
     </section>
