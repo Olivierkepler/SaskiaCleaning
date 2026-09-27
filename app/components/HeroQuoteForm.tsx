@@ -114,15 +114,30 @@ export default function HeroBooking() {
     setStatus("loading");
 
     try {
-      const response = await fetch("/api/booking", {
+      const response = await fetch("/api/service-inquiry", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          fullName: form.name,
+          email: form.email,
+          phone: form.mobile,
+          bedrooms: form.bedrooms,
+          bathrooms: form.bathrooms,
+        }),
       });
 
-      if (!response.ok) throw new Error("Failed to submit booking request");
+      if (!response.ok) {
+        const data = (await response.json().catch(() => null)) as
+          | { error?: unknown }
+          | null;
+        throw new Error(
+          typeof data?.error === "string"
+            ? data.error
+            : t("errorAlert"),
+        );
+      }
 
       setStatus("success");
 
@@ -136,8 +151,7 @@ export default function HeroBooking() {
 
       setTimeout(() => setStatus("idle"), 3500);
     } catch (error) {
-      console.error(error);
-      alert(t("errorAlert"));
+      alert(error instanceof Error ? error.message : t("errorAlert"));
       setStatus("idle");
     }
   };
