@@ -13,8 +13,8 @@ import type { DeepCleanAddonLabel, PriceRange } from "../types";
 import { calc, toggleInSet } from "../utils";
 import { AddonGrid } from "../ui/Addon";
 import { Checklist } from "../ui/Checklist";
-import { ChipGroup } from "../ui/Chip";
 import { CollapsibleGroup } from "../ui/CollapsibleGroup";
+import { DiscreteSlider } from "../ui/DiscreteSlider";
 
 export type DeepCleanPanelProps = {
   onPrice: (price: PriceRange) => void;
@@ -28,58 +28,155 @@ export function DeepCleanPanel({
   onSelectedAddonsChange,
 }: DeepCleanPanelProps) {
   const t = useTranslations("booking");
+
   const translateAddon = (label: string) => {
     const key = ADDON_DISPLAY_KEYS[label];
     return key ? t(key as "insideFridge") : label;
   };
+
   const [sizeIdx, setSize] = useState(1);
   const [condIdx, setCond] = useState(0);
-  const SIZES = ["Studio", "1–2 bed", "3–4 bed", "5+ bed"];
-  const CONDS = ["Good", "Needs work", "Very dirty"];
+
+  const SIZES = [
+    "Studio",
+    "1–2 bed",
+    "3–4 bed",
+    "5+ bed",
+  ];
+
+  const CONDS = [
+    "Good",
+    "Needs work",
+    "Very dirty",
+  ];
 
   const toggle = useCallback(
     (label: DeepCleanAddonLabel) => {
-      onSelectedAddonsChange(toggleInSet(selectedAddons, label));
+      onSelectedAddonsChange(
+        toggleInSet(selectedAddons, label),
+      );
     },
     [selectedAddons, onSelectedAddonsChange],
   );
+
   const addonTotal = DEEP_CLEAN_ADDONS.reduce(
-    (sum, addon) => sum + (selectedAddons.has(addon.label) ? addon.price : 0),
+    (sum, addon) =>
+      sum +
+      (selectedAddons.has(addon.label)
+        ? addon.price
+        : 0),
     0,
   );
 
-  useEffect(
-    () =>
-      onPrice(calc(DEEP_BASE[sizeIdx] + DEEP_COND[condIdx] + addonTotal)),
-    [sizeIdx, condIdx, addonTotal, onPrice],
-  );
+  useEffect(() => {
+    onPrice(
+      calc(
+        DEEP_BASE[sizeIdx] +
+          DEEP_COND[condIdx] +
+          addonTotal,
+      ),
+    );
+  }, [
+    sizeIdx,
+    condIdx,
+    addonTotal,
+    onPrice,
+  ]);
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
-      <CollapsibleGroup title="Home size" defaultOpen>
-        <ChipGroup options={SIZES} selectedIndex={sizeIdx} onSelect={setSize} />
-      </CollapsibleGroup>
+    <div className="grid gap-5">
+      {/* Home Size + Condition */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        {/* Home Size */}
+        <div
+          className="
+            rounded-[24px]
+            border
+            border-slate-200/70
+            bg-white
+            p-5
+            shadow-[0_8px_30px_rgba(15,23,42,0.05)]
+            sm:p-6
+          "
+        >
+          <h3
+            className="
+              mb-5
+              text-[13px]
+              font-bold
+              uppercase
+              tracking-[0.16em]
+              text-slate-900
+            "
+          >
+            Home size
+          </h3>
 
-      <CollapsibleGroup title="Condition" defaultOpen>
-        <ChipGroup
-          options={CONDS}
-          selectedIndex={condIdx}
-          onSelect={setCond}
-          className="grid grid-cols-1 gap-2 sm:grid-cols-3"
-        />
-      </CollapsibleGroup>
+          <DiscreteSlider
+            value={sizeIdx}
+            options={SIZES.map((label, index) => ({
+              label,
+              value: index,
+            }))}
+            onChange={setSize}
+            ariaLabel="Home size"
+          />
+        </div>
 
-      <CollapsibleGroup title={t("deepCleanExtras")}>
+        {/* Condition */}
+        <div
+          className="
+            rounded-[24px]
+            border
+            border-slate-200/70
+            bg-white
+            p-5
+            shadow-[0_8px_30px_rgba(15,23,42,0.05)]
+            sm:p-6
+          "
+        >
+          <h3
+            className="
+              mb-5
+              text-[13px]
+              font-bold
+              uppercase
+              tracking-[0.16em]
+              text-slate-900
+            "
+          >
+            Condition
+          </h3>
+
+          <DiscreteSlider
+            value={condIdx}
+            options={CONDS.map((label, index) => ({
+              label,
+              value: index,
+            }))}
+            onChange={setCond}
+            ariaLabel="Condition"
+          />
+        </div>
+      </div>
+
+      {/* Deep Clean Extras */}
+      <CollapsibleGroup
+        title={t("deepCleanExtras")}
+        defaultOpen
+      >
         <AddonGrid
           addons={DEEP_CLEAN_ADDONS}
           selectedAddons={selectedAddons}
           onToggle={toggle}
           getDisplayLabel={translateAddon}
+          className="grid-cols-1 sm:grid-cols-2"
         />
       </CollapsibleGroup>
 
+      {/* What's Included — collapsed by default */}
       <CollapsibleGroup title="What's included">
-        <div className="rounded-xl bg-slate-50 p-4">
+        <div className="rounded-[20px] bg-slate-50/80 p-5 sm:p-6">
           <Checklist
             items={[
               "Everything in Standard clean",

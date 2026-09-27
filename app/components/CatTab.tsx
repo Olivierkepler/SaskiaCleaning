@@ -203,7 +203,7 @@ bookingPrefill = null,
     () => buildStandardGalleryImages(standardSelectedAddons),
     [standardSelectedAddons],
   );
-  const isDefaultGalleryOnly = standardGalleryImages.length === 2;
+  const isDefaultGalleryOnly = standardGalleryImages.length === 1;
   const deepCleanGalleryImages = useMemo(
     () => buildDeepCleanGalleryImages(deepCleanSelectedAddons),
     [deepCleanSelectedAddons],
@@ -517,9 +517,10 @@ warningReferralCode={referralLinkCode}
         sm:px-6
         sm:py-16
         lg:grid-cols-[minmax(0,1.25fr)_minmax(420px,0.95fr)]
+        lg:items-start
         lg:gap-10
         lg:px-8
-        lg:py-20
+        lg:py-12
         xl:grid-cols-[minmax(0,1.18fr)_minmax(500px,1fr)]
         xl:gap-14
         2xl:max-w-[1480px]

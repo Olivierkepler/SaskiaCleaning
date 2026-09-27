@@ -256,7 +256,9 @@ export function EstimatorSidebar({
                 items-center
                 justify-center
                 overflow-visible
+                lg:translate-x-6
                 xl:min-h-[570px]
+                xl:translate-x-8
               "
             >
               <AnimatePresence mode="wait">

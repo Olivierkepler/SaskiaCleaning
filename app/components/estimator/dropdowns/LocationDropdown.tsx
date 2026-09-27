@@ -48,11 +48,9 @@ export function LocationDropdown({
       </div>
 
       <div
+        className="max-h-[min(320px,calc(100vh-20rem))] overflow-x-hidden overflow-y-auto overscroll-contain lg:max-h-[min(320px,calc(100vh-22rem))]"
         style={{
           padding: 6,
-          maxHeight: 320,
-          overflowY: "auto",
-          overflowX: "hidden",
         }}
       >
         {LOCATIONS[state].map((loc) => {

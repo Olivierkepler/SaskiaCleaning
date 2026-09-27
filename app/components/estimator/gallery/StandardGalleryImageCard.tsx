@@ -9,58 +9,86 @@ import { getStandardGalleryDimensions } from "../utils";
 
 export type StandardGalleryImageCardProps = {
   img: StandardPreviewImage;
+  variant?: "primary" | "addon";
 };
 
 export function StandardGalleryImageCard({
   img,
+  variant = "primary",
 }: StandardGalleryImageCardProps) {
   const { width, height } = getStandardGalleryDimensions(img);
   const hasCustomSize = img.width != null || img.height != null;
 
-  // The Standard bedroom asset has extra transparent visual weight
-  // on one side, so compensate slightly to make the rendered subject
-  // appear centered in the gallery.
-  const isStandardBedroom =
-    img.src === "/images/standard/roomandbedroom.png";
+  const isAddon = variant === "addon";
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.92, y: 8 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.92, y: -8 }}
+      initial={{
+        opacity: 0,
+        scale: 0.92,
+        y: 8,
+      }}
+      animate={{
+        opacity: 1,
+        scale: 1,
+        y: 0,
+      }}
+      exit={{
+        opacity: 0,
+        scale: 0.92,
+        y: -8,
+      }}
       transition={{
         duration: 0.35,
         ease: MOTION_EASE,
       }}
-      className="flex h-full w-full items-center justify-center overflow-hidden"
+      className="
+        flex
+        h-full
+        w-full
+        min-w-0
+        items-center
+        justify-center
+        overflow-visible
+      "
     >
-      <div
-        className="relative max-w-full"
+      <motion.div
+        layout
+        className="relative flex items-center justify-center"
         style={
-          hasCustomSize
+          isAddon
             ? {
-                width,
-                height,
-                transform: isStandardBedroom
-                  ? "translateX(8%)"
-                  : undefined,
-              }
-            : {
                 width: "100%",
-                maxWidth: 260,
-                aspectRatio: "4 / 3",
+                maxWidth: 130,
+                aspectRatio: "1 / 1",
               }
+            : hasCustomSize
+              ? {
+                  width,
+                  height,
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                }
+              : {
+                  width: "100%",
+                  maxWidth: 320,
+                  aspectRatio: "4 / 3",
+                }
         }
       >
         <Image
           src={img.src}
           alt={img.alt}
           fill
-          sizes="(min-width: 1024px) 450px, 50vw"
+          sizes={
+            isAddon
+              ? "(min-width: 1024px) 130px, 25vw"
+              : "(min-width: 1024px) 450px, 50vw"
+          }
           className="object-contain"
         />
-      </div>
+      </motion.div>
     </motion.div>
   );
 }

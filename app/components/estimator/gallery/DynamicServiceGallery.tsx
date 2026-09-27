@@ -17,30 +17,184 @@ export function DynamicServiceGallery({
   images,
   isDefaultOnly,
 }: DynamicServiceGalleryProps) {
+  const [primaryImage, ...addonImages] = images;
+
+  if (!primaryImage) {
+    return null;
+  }
+
   return (
     <motion.div
       key={galleryKey}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.3, ease: MOTION_EASE }}
-      className={`flex min-h-0 flex-1 flex-col ${
-        isDefaultOnly ? "justify-center" : "justify-start"
-      }`}
+      transition={{
+        duration: 0.3,
+        ease: MOTION_EASE,
+      }}
+      className="
+        flex
+        h-full
+        min-h-0
+        w-full
+        flex-1
+      "
     >
-      <div
-        className={
-          isDefaultOnly
-            ? "mx-auto flex w-full max-w-[320px] flex-col gap-3"
-            : "grid w-full grid-cols-2 items-start gap-x-6 gap-y-5 overflow-y-auto pr-1"
-        }
-      >
-        <AnimatePresence mode="popLayout">
-          {images.map((img) => (
-            <StandardGalleryImageCard key={img.src} img={img} />
-          ))}
-        </AnimatePresence>
-      </div>
+      {isDefaultOnly ? (
+        /*
+         * Default state
+         * Keep the service image centered in the right panel.
+         */
+        <div
+          className="
+            flex
+            h-full
+            w-full
+            items-center
+            justify-center
+          "
+        >
+          <AnimatePresence mode="popLayout">
+            <StandardGalleryImageCard
+              key={primaryImage.src}
+              img={primaryImage}
+              variant="primary"
+            />
+          </AnimatePresence>
+        </div>
+      ) : (
+        /*
+         * Customized state
+         * Start from the top instead of vertically centering
+         * the image collection.
+         */
+        <div
+          className="
+            mx-auto
+            flex
+            h-full
+            w-full
+            max-w-[980px]
+            flex-col
+            items-center
+            justify-start
+            px-6
+            pb-8
+            pt-8
+            lg:px-8
+            lg:pt-10
+          "
+        >
+          {/* Main service image */}
+          <motion.div
+            layout
+            className="
+              flex
+              w-full
+              items-center
+              justify-center
+            "
+          >
+            <div
+              className="
+                flex
+                h-[220px]
+                w-full
+                items-center
+                justify-center
+                lg:h-[250px]
+                xl:h-[270px]
+              "
+            >
+              <AnimatePresence mode="popLayout">
+                <StandardGalleryImageCard
+                  key={primaryImage.src}
+                  img={primaryImage}
+                  variant="primary"
+                />
+              </AnimatePresence>
+            </div>
+          </motion.div>
+
+          {/* Selected add-ons */}
+          {addonImages.length > 0 && (
+            <motion.div
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.3,
+                ease: MOTION_EASE,
+              }}
+              className="
+                mt-5
+                flex
+                w-full
+                items-start
+                justify-center
+              "
+            >
+              <div
+                className="
+                  flex
+                  w-full
+                  flex-row
+                  flex-wrap
+                  items-start
+                  justify-center
+                  gap-x-5
+                  gap-y-5
+                  lg:flex-nowrap
+                  lg:gap-x-6
+                  xl:gap-x-8
+                "
+              >
+                <AnimatePresence mode="popLayout">
+                  {addonImages.map((img) => (
+                    <motion.div
+                      key={img.src}
+                      layout
+                      initial={{
+                        opacity: 0,
+                        scale: 0.92,
+                        y: 8,
+                      }}
+                      animate={{
+                        opacity: 1,
+                        scale: 1,
+                        y: 0,
+                      }}
+                      exit={{
+                        opacity: 0,
+                        scale: 0.92,
+                        y: -8,
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        ease: MOTION_EASE,
+                      }}
+                      className="
+                        flex
+                        min-w-[120px]
+                        max-w-[180px]
+                        flex-1
+                        items-start
+                        justify-center
+                      "
+                    >
+                      <StandardGalleryImageCard
+                        img={img}
+                        variant="addon"
+                      />
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          )}
+        </div>
+      )}
     </motion.div>
   );
 }
