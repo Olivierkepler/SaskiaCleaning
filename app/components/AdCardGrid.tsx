@@ -155,8 +155,8 @@ function AdCard({
   }, []);
 
   const tagColor = card.isRedTag
-    ? "bg-rose-600"
-    : "bg-sky-500";
+    ? "bg-rose-700"
+    : "bg-sky-700";
 
   const cardClassName = `
     group
@@ -165,43 +165,48 @@ function AdCard({
     h-full
     flex-col
     overflow-hidden
-    rounded-[24px]
-    border
-    border-slate-200/70
+    rounded-[28px]
     bg-white
-    shadow-[0_14px_40px_rgba(15,23,42,0.07)]
+    shadow-[0_4px_12px_rgba(15,23,42,0.03),0_18px_44px_rgba(15,23,42,0.06)]
     ring-1
-    ring-slate-950/[0.025]
-    transition-[transform,box-shadow,border-color]
+    ring-slate-200/70
+    transition-all
     duration-500
+    ease-[cubic-bezier(0.22,1,0.36,1)]
+
     hover:-translate-y-1.5
-    hover:border-sky-200
-    hover:shadow-[0_26px_65px_rgba(15,23,42,0.13)]
+    hover:shadow-[0_8px_20px_rgba(15,23,42,0.04),0_26px_60px_rgba(15,23,42,0.10)]
+    hover:ring-sky-200/80
+    focus-within:ring-sky-300
   `;
 
   const ctaClassName = `
     group/cta
-    mt-7
-    inline-flex
-    min-h-[50px]
+    mt-8
+    flex
+    min-h-[58px]
     w-full
     cursor-pointer
     items-center
     justify-between
-    rounded-[14px]
-    bg-slate-950
+    gap-4
+    rounded-[17px]
+    bg-[#020617]
     px-5
-    py-3.5
-    text-[10px]
+    py-4
+    text-[11px]
     font-bold
     uppercase
-    tracking-[0.16em]
+    tracking-[0.14em]
     text-white
-    shadow-[0_10px_24px_rgba(15,23,42,0.14)]
+    shadow-[0_12px_28px_rgba(2,6,23,0.16)]
     transition-all
     duration-300
-    hover:bg-sky-500
-    hover:shadow-[0_14px_30px_rgba(14,165,233,0.22)]
+
+    hover:-translate-y-0.5
+    hover:bg-sky-700
+    hover:shadow-[0_16px_34px_rgba(3,105,161,0.20)]
+
     focus:outline-none
     focus-visible:ring-2
     focus-visible:ring-sky-500
@@ -214,8 +219,9 @@ function AdCard({
       <div
         className="
           relative
-          aspect-[4/3]
+          aspect-[1.34/1]
           w-full
+          shrink-0
           overflow-hidden
           bg-slate-100
         "
@@ -225,8 +231,8 @@ function AdCard({
           alt={card.imageAlt}
           fill
           sizes="
-            (max-width: 640px) 84vw,
-            (max-width: 768px) 65vw,
+            (max-width: 640px) 86vw,
+            (max-width: 768px) 68vw,
             33vw
           "
           className="
@@ -234,11 +240,11 @@ function AdCard({
             transition-transform
             duration-700
             ease-[cubic-bezier(0.16,1,0.3,1)]
-            group-hover:scale-[1.045]
+            group-hover:scale-[1.035]
           "
         />
 
-        {/* subtle image treatment */}
+        {/* Subtle image depth */}
         <div
           aria-hidden="true"
           className="
@@ -248,7 +254,7 @@ function AdCard({
             bg-gradient-to-t
             from-slate-950/20
             via-transparent
-            to-black/[0.02]
+            to-white/[0.03]
           "
         />
 
@@ -256,24 +262,28 @@ function AdCard({
         <div
           className={`
             absolute
-            left-5
-            top-5
+            left-6
+            top-6
             z-10
             inline-flex
             items-center
+            justify-center
             rounded-full
-            px-3.5
-            py-2
-            shadow-[0_8px_20px_rgba(15,23,42,0.14)]
+            px-4
+            py-2.5
+            ring-1
+            ring-inset
+            ring-white/20
+            shadow-[0_4px_16px_rgba(15,23,42,0.16)]
             ${tagColor}
           `}
         >
           <span
             className="
-              text-[9px]
+              text-[10px]
               font-extrabold
               uppercase
-              tracking-[0.18em]
+              tracking-[0.16em]
               text-white
             "
           >
@@ -282,69 +292,73 @@ function AdCard({
         </div>
       </div>
 
-      {/* Card content */}
+      {/* Content */}
       <div
         className="
           relative
           flex
           flex-1
           flex-col
-          px-6
-          pb-6
-          pt-7
-          sm:px-7
-          sm:pb-7
+          px-7
+          pb-7
+          pt-8
+          sm:px-8
+          sm:pb-8
         "
       >
-        {/* small accent */}
+        {/* Small blue accent */}
         <div
           aria-hidden="true"
           className="
             absolute
-            left-6
+            left-7
             top-0
             h-[2px]
-            w-10
+            w-11
             -translate-y-px
             rounded-full
             bg-sky-500
-            sm:left-7
+            sm:left-8
           "
         />
 
-        <div className="flex-1">
+        <div className="flex flex-1 flex-col">
+          {/* Editorial title */}
           <h3
             className="
               font-heading
-              text-[clamp(1.75rem,2.2vw,2.2rem)]
+              text-[clamp(2rem,2.5vw,2.65rem)]
               font-medium
-              leading-[0.98]
-              tracking-[-0.045em]
-              text-slate-950
+              leading-[1.08]
+              tracking-[-0.035em]
+              text-[#020617]
             "
           >
             {card.title}
 
             {card.titleSmall && (
-              <span className="mt-1 block">
+              <span className="mt-1.5 block">
                 {card.titleSmall}
               </span>
             )}
           </h3>
 
+          {/* Description */}
           <p
             className="
               mt-5
               max-w-sm
-              text-[14px]
-              leading-6
-              text-slate-500
+              text-[15px]
+              font-normal
+              leading-7
+              text-slate-600
             "
           >
             {card.description}
           </p>
         </div>
 
+        {/* CTA */}
         {onReferralClick ? (
           <button
             type="button"
@@ -359,18 +373,23 @@ function AdCard({
             <span
               className="
                 flex
-                h-8
-                w-8
+                h-9
+                w-9
+                shrink-0
                 items-center
                 justify-center
                 rounded-full
                 bg-white/10
-                transition
+                ring-1
+                ring-inset
+                ring-white/15
+                transition-all
+                duration-300
                 group-hover/cta:bg-white/20
               "
             >
               <ArrowUpRight
-                size={15}
+                size={16}
                 strokeWidth={1.9}
                 className="
                   transition-transform
@@ -396,18 +415,23 @@ function AdCard({
             <span
               className="
                 flex
-                h-8
-                w-8
+                h-9
+                w-9
+                shrink-0
                 items-center
                 justify-center
                 rounded-full
                 bg-white/10
-                transition
+                ring-1
+                ring-inset
+                ring-white/15
+                transition-all
+                duration-300
                 group-hover/cta:bg-white/20
               "
             >
               <ArrowUpRight
-                size={15}
+                size={16}
                 strokeWidth={1.9}
                 className="
                   transition-transform
