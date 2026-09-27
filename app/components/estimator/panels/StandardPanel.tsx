@@ -57,7 +57,9 @@ export function StandardPanel({
     { label: "Monthly", discount: 5 },
   ];
 
-  const freqIdx = FREQS.findIndex((item) => item.label === frequency);
+  const freqIdx = FREQS.findIndex(
+    (item) => item.label === frequency,
+  );
 
   const BEDS = [
     t("studio"),
@@ -69,29 +71,37 @@ export function StandardPanel({
 
   const toggle = useCallback(
     (label: StandardAddonLabel) => {
-      onSelectedAddonsChange(toggleInSet(selectedAddons, label));
+      onSelectedAddonsChange(
+        toggleInSet(selectedAddons, label),
+      );
     },
     [selectedAddons, onSelectedAddonsChange],
   );
 
   const addonTotal = STANDARD_ADDONS.reduce(
     (sum, addon) =>
-      sum + (selectedAddons.has(addon.label) ? addon.price : 0),
+      sum +
+      (selectedAddons.has(addon.label)
+        ? addon.price
+        : 0),
     0,
   );
 
   useEffect(() => {
-    const b =
+    const base =
       BED_BASE[bedIdx] +
       (BATH_VALS[bathIdx] - 1) * 18 +
       addonTotal;
 
-    const discount = freqIdx >= 0 ? FREQS[freqIdx].discount : 0;
+    const discount =
+      freqIdx >= 0
+        ? FREQS[freqIdx].discount
+        : 0;
 
     onPrice(
       calc(
         Math.round(
-          b * (1 - discount / 100),
+          base * (1 - discount / 100),
         ),
       ),
     );
@@ -107,21 +117,17 @@ export function StandardPanel({
     <div
       className="
         grid
-        gap-5
+        gap-6
         lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]
-        xl:gap-6
       "
     >
-      {/* Left Card — Core Cleaning Setup */}
+      {/* Core cleaning setup */}
       <div
         className="
-          rounded-[24px]
-          border
-          border-slate-200/70
-          bg-white
+          rounded-[26px]
+          bg-[#F5F7FA]
           p-5
-          shadow-[0_8px_30px_rgba(15,23,42,0.05)]
-
+          shadow-[8px_8px_20px_#D1D9E6,-8px_-8px_20px_rgba(255,255,255,0.95)]
           sm:p-6
           lg:p-7
         "
@@ -129,19 +135,18 @@ export function StandardPanel({
         <div className="space-y-8">
           {/* Bedrooms */}
           <section>
-            <div className="mb-5 flex items-center justify-between">
-              <h3
-                className="
-                  text-[13px]
-                  font-bold
-                  uppercase
-                  tracking-[0.16em]
-                  text-slate-900
-                "
-              >
-                {t("bedrooms")}
-              </h3>
-            </div>
+            <h3
+              className="
+                mb-5
+                text-[13px]
+                font-bold
+                uppercase
+                tracking-[0.18em]
+                text-slate-900
+              "
+            >
+              {t("bedrooms")}
+            </h3>
 
             <DiscreteSlider
               value={bedIdx}
@@ -154,24 +159,28 @@ export function StandardPanel({
             />
           </section>
 
-          {/* Divider */}
-          <div className="h-px bg-slate-100" />
+          <div
+            className="
+              h-px
+              bg-[#D1D9E6]/60
+              shadow-[0_1px_0_rgba(255,255,255,0.9)]
+            "
+          />
 
           {/* Bathrooms */}
           <section>
-            <div className="mb-5 flex items-center justify-between">
-              <h3
-                className="
-                  text-[13px]
-                  font-bold
-                  uppercase
-                  tracking-[0.16em]
-                  text-slate-900
-                "
-              >
-                {t("bathrooms")}
-              </h3>
-            </div>
+            <h3
+              className="
+                mb-5
+                text-[13px]
+                font-bold
+                uppercase
+                tracking-[0.18em]
+                text-slate-900
+              "
+            >
+              {t("bathrooms")}
+            </h3>
 
             <DiscreteSlider
               value={bathIdx}
@@ -184,29 +193,35 @@ export function StandardPanel({
             />
           </section>
 
-          {/* Divider */}
-          <div className="h-px bg-slate-100" />
+          <div
+            className="
+              h-px
+              bg-[#D1D9E6]/60
+              shadow-[0_1px_0_rgba(255,255,255,0.9)]
+            "
+          />
 
           {/* Frequency */}
           <section>
-            <div className="mb-5 flex items-center justify-between">
-              <h3
-                className="
-                  text-[13px]
-                  font-bold
-                  uppercase
-                  tracking-[0.16em]
-                  text-slate-900
-                "
-              >
-                {t("frequency")}
-              </h3>
-            </div>
+            <h3
+              className="
+                mb-5
+                text-[13px]
+                font-bold
+                uppercase
+                tracking-[0.18em]
+                text-slate-900
+              "
+            >
+              {t("frequency")}
+            </h3>
 
             <DiscreteSlider
               value={frequency}
               options={FREQS.map((frequencyOption) => ({
-                label: translateFreq(frequencyOption.label),
+                label: translateFreq(
+                  frequencyOption.label,
+                ),
                 value: frequencyOption.label,
               }))}
               onChange={onFrequencyChange}
@@ -216,33 +231,29 @@ export function StandardPanel({
         </div>
       </div>
 
-      {/* Right Card — Add-ons */}
+      {/* Add-ons */}
       <div
         className="
-          rounded-[24px]
-          border
-          border-slate-200/70
-          bg-white
+          rounded-[26px]
+          bg-[#F5F7FA]
           p-5
-          shadow-[0_8px_30px_rgba(15,23,42,0.05)]
-
+          shadow-[8px_8px_20px_#D1D9E6,-8px_-8px_20px_rgba(255,255,255,0.95)]
           sm:p-6
           lg:p-7
         "
       >
-        <div className="mb-5">
-          <h3
-            className="
-              text-[13px]
-              font-bold
-              uppercase
-              tracking-[0.16em]
-              text-slate-900
-            "
-          >
-            {t("addOns")}
-          </h3>
-        </div>
+        <h3
+          className="
+            mb-5
+            text-[13px]
+            font-bold
+            uppercase
+            tracking-[0.18em]
+            text-slate-900
+          "
+        >
+          {t("addOns")}
+        </h3>
 
         <AddonGrid
           addons={STANDARD_ADDONS}

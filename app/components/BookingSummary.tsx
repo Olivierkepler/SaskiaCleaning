@@ -1,6 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import {
+  CalendarDays,
+  Check,
+  ChevronDown,
+  MapPin,
+  ReceiptText,
+  Sparkles,
+} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 export interface BookingSummaryProps {
   service: string;
@@ -16,41 +25,70 @@ export interface BookingSummaryProps {
   className?: string;
 }
 
-function formatDate(d: Date) {
-  return d.toLocaleDateString("en-US", {
+function formatDate(date: Date) {
+  return date.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
   });
 }
 
-function CollapseIcon({ collapsed }: { collapsed: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <circle cx="14" cy="14" r="13" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M9 14h10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      {collapsed && (
-        <path d="M14 9v10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      )}
-    </svg>
-  );
-}
-
 function SummaryRow({
   label,
   children,
+  icon,
 }: {
   label: string;
   children: React.ReactNode;
+  icon?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-2">
-      <span className="w-[90px] shrink-0 text-xs font-medium text-slate-400">
-        {label}
-      </span>
-      <span className="text-xs text-slate-300">:</span>
-      <div className="flex flex-1 flex-col gap-0.5 text-xs font-semibold text-slate-900">
-        {children}
+    <div className="flex min-w-0 items-start gap-3 ">
+      {icon && (
+        <div
+          className="
+            mt-0.5
+            flex
+            h-9
+            w-9
+            shrink-0
+            items-center
+            justify-center
+            rounded-[12px]
+            bg-[#ECF0F3]
+            text-sky-500
+            shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_rgba(255,255,255,0.9)]
+          "
+        >
+          {icon}
+        </div>
+      )}
+
+      <div className="min-w-0 flex-1">
+        <p
+          className="
+            text-[10px]
+            font-bold
+            uppercase
+            tracking-[0.2em]
+            text-slate-400
+          "
+        >
+          {label}
+        </p>
+
+        <div
+          className="
+            mt-1
+            min-w-0
+            text-[13px]
+            font-semibold
+            leading-5
+            text-slate-800
+          "
+        >
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -70,56 +108,377 @@ export default function BookingSummary({
 
   return (
     <div
-      className={`w-full overflow-hidden rounded-[10px] border border-sky-100 bg-white shadow-[0_1px_3px_rgba(12,26,46,.04),0_16px_48px_rgba(12,26,46,.07)] ${className}`}
+      className={`
+        w-full
+        overflow-hidden
+        rounded-[26px]
+        bg-[#F5F7FA]
+
+          ${className}
+      `}
     >
-      <div className="flex items-center justify-between border-b border-sky-50 bg-sky-50/60 px-4 py-3">
-        <h3 className="text-lg font-bold text-slate-900">Booking Summary</h3>
+      {/* Header */}
+      <div
+        className="
+          flex
+          items-center
+          justify-between
+          gap-4
+          px-6
+          py-5
+        "
+      >
+        <div className="flex min-w-0 items-center gap-4">
+          <div
+            className="
+              flex
+              h-11
+              w-11
+              shrink-0
+              items-center
+              justify-center
+              rounded-[14px]
+              bg-[#ECF0F3]
+              text-sky-500
+              shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_rgba(255,255,255,0.95)]
+            "
+          >
+            <ReceiptText
+              className="h-[19px] w-[19px]"
+              strokeWidth={2}
+            />
+          </div>
+
+          <div className="min-w-0">
+            <p
+              className="
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.22em]
+                text-slate-400
+              "
+            >
+              Your booking
+            </p>
+
+            <h3
+              className="
+                mt-1
+                text-[18px]
+                font-bold
+                tracking-[-0.025em]
+                text-slate-900
+              "
+            >
+              Booking Summary
+            </h3>
+          </div>
+        </div>
 
         <button
           type="button"
-          onClick={() => setCollapsed((c) => !c)}
-          aria-label={collapsed ? "Expand booking summary" : "Collapse booking summary"}
-          className="text-slate-400 transition-colors hover:text-sky-500 cursor-pointer hover:scale-110"
+          onClick={() => setCollapsed((current) => !current)}
+          aria-expanded={!collapsed}
+          aria-label={
+            collapsed
+              ? "Expand booking summary"
+              : "Collapse booking summary"
+          }
+          className="
+            flex
+            h-10
+            w-10
+            shrink-0
+            cursor-pointer
+            items-center
+            justify-center
+            rounded-full
+            bg-[#ECF0F3]
+            text-slate-500
+            shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_rgba(255,255,255,0.95)]
+            transition-all
+            duration-200
+            hover:text-sky-500
+            active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_rgba(255,255,255,0.9)]
+            focus-visible:outline-none
+            focus-visible:ring-2
+            focus-visible:ring-sky-400
+            focus-visible:ring-offset-2
+            focus-visible:ring-offset-[#ECF0F3]
+          "
         >
-          <CollapseIcon collapsed={collapsed} />
+          <ChevronDown
+            className={`
+              h-4
+              w-4
+              transition-transform
+              duration-300
+              ${collapsed ? "rotate-0" : "rotate-180"}
+            `}
+            strokeWidth={2}
+          />
         </button>
       </div>
 
-      {!collapsed && (
+      <AnimatePresence initial={false}>
+        {!collapsed && (
+          <motion.div
+            key="booking-summary-content"
+            initial={{
+              height: 0,
+              opacity: 0,
+            }}
+            animate={{
+              height: "auto",
+              opacity: 1,
+            }}
+            exit={{
+              height: 0,
+              opacity: 0,
+            }}
+            transition={{
+              duration: 0.28,
+              ease: [0.22, 1, 0.36, 1],
+            }}
+            className="overflow-hidden"
+          >
+            {/* Soft divider */}
+            <div
+              className="
+                mx-6
+                h-px
+                bg-[#D1D9E6]/70
+                shadow-[0_1px_0_rgba(255,255,255,0.9)]
+              "
+            />
+
+            {/* Booking details */}
+            <div
+              className="
+                grid
+                grid-cols-1
+                gap-x-10
+                gap-y-6
+                px-6
+                py-6
+                md:grid-cols-2
+              "
+            >
+              {/* Left column */}
+              <div className="space-y-6">
+                <SummaryRow
+                  label="Service"
+                  icon={
+                    <Sparkles
+                      className="h-4 w-4"
+                      strokeWidth={1.9}
+                    />
+                  }
+                >
+                  {service}
+                </SummaryRow>
+
+                {location && (
+                  <SummaryRow
+                    label="Location"
+                    icon={
+                      <MapPin
+                        className="h-4 w-4"
+                        strokeWidth={1.9}
+                      />
+                    }
+                  >
+                    <span className="break-words">
+                      {location}
+                    </span>
+                  </SummaryRow>
+                )}
+
+                {date && (
+                  <SummaryRow
+                    label="Date"
+                    icon={
+                      <CalendarDays
+                        className="h-4 w-4"
+                        strokeWidth={1.9}
+                      />
+                    }
+                  >
+                    {formatDate(date)}
+                  </SummaryRow>
+                )}
+              </div>
+
+              {/* Right column */}
+              <div className="space-y-6">
+                {frequency && (
+                  <SummaryRow label="Frequency">
+                    {frequency}
+                  </SummaryRow>
+                )}
+
+                {selections.map((item) => (
+                  <SummaryRow
+                    key={item.label}
+                    label={item.label}
+                  >
+                    {item.value}
+                  </SummaryRow>
+                ))}
+
+                {extras.length > 0 && (
+                  <SummaryRow label="Extras">
+                    <div className="flex flex-wrap gap-2">
+                      {extras.map((extra) => (
+                        <span
+                          key={extra}
+                          className="
+                            inline-flex
+                            items-center
+                            gap-1.5
+                            rounded-full
+                            bg-[#ECF0F3]
+                            px-2.5
+                            py-1.5
+                            text-[11px]
+                            font-semibold
+                            text-sky-600
+                            shadow-[3px_3px_7px_#D1D9E6,-3px_-3px_7px_rgba(255,255,255,0.95)]
+                          "
+                        >
+                          <Check
+                            className="h-3 w-3"
+                            strokeWidth={2.5}
+                          />
+
+                          {extra}
+                        </span>
+                      ))}
+                    </div>
+                  </SummaryRow>
+                )}
+              </div>
+            </div>
+
+            {/* Estimated total */}
+            <div className="px-6 pb-6">
+              <div
+                className="
+                  flex
+                  items-center
+                  justify-between
+                  gap-5
+                  rounded-[20px]
+
+
+                  px-5
+                  py-5
+                   bg-[#F5F7FA]
+                  shadow-[inset_4px_4px_12px_#E3EAF1,inset_-4px_-4px_12px_rgba(255,255,255,0.97)]
+
+                "
+              >
+                <div>
+                  <p
+                    className="
+                      text-[10px]
+                      font-bold
+                      uppercase
+                      tracking-[0.22em]
+                      text-slate-400
+                    "
+                  >
+                    Estimated total
+                  </p>
+
+                  <p
+                    className="
+                      mt-1.5
+                      text-[13px]
+                      font-medium
+                      text-slate-500
+                    "
+                  >
+                    Based on your selections
+                  </p>
+                </div>
+
+                <span
+                  className="
+                    whitespace-nowrap
+                    text-[30px]
+                    font-bold
+                    tracking-[-0.045em]
+                    text-slate-900
+                    tabular-nums
+                  "
+                >
+                  ${total.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Collapsed state */}
+      {collapsed && (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 px-4 py-4">
-            <div className="flex flex-col gap-3">
-              <SummaryRow label="Service">{service}</SummaryRow>
-              {location && <SummaryRow label="Location">{location}</SummaryRow>}
-              {date && <SummaryRow label="Date">{formatDate(date)}</SummaryRow>}
-            </div>
-            <div className="flex flex-col gap-3">
-              {frequency && <SummaryRow label="Frequency">{frequency}</SummaryRow>}
-              {selections.map((item) => (
-                <SummaryRow key={item.label} label={item.label}>
-                  {item.value}
-                </SummaryRow>
-              ))}
-              {extras.length > 0 && (
-                <SummaryRow label="Extras">
-                  {extras.map((extra) => (
-                    <span key={extra}>{extra}</span>
-                  ))}
-                </SummaryRow>
-              )}
-            </div>
-          </div>
-     
+          <div
+            className="
+              mx-6
+              h-px
+              bg-[#D1D9E6]/70
+              shadow-[0_1px_0_rgba(255,255,255,0.9)]
+            "
+          />
 
-          <div className="mx-4 border-t border-sky-50" />
+          <div className="px-6 py-5">
+            <div
+              className="
+                flex
+                items-center
+                justify-between
+                gap-5
+                rounded-[18px]
+                bg-[#F5F7FA]
+                px-5
+                py-4
+                shadow-[inset_4px_4px_12px_#E3EAF1,inset_-4px_-4px_12px_rgba(255,255,255,0.97)]
+              "
+            >
+              <div>
+                <p
+                  className="
+                    text-[10px]
+                    font-bold
+                    uppercase
+                    tracking-[0.22em]
+                    text-slate-400
+                  "
+                >
+                  Estimated total
+                </p>
 
-          <div className="flex items-center justify-between px-4 py-4">
-            <span className="text-xs font-black uppercase tracking-[0.2em] text-sky-500">
-              Total
-            </span>
-            <span className="text-2xl font-black text-sky-500">
-              ${total.toFixed(2)}
-            </span>
+                <p className="mt-1 text-xs text-slate-500">
+                  Based on your selections
+                </p>
+              </div>
+
+              <span
+                className="
+                  whitespace-nowrap
+                  text-[24px]
+                  font-bold
+                  tracking-[-0.04em]
+                  text-slate-900
+                  tabular-nums
+                "
+              >
+                ${total.toFixed(2)}
+              </span>
+            </div>
           </div>
         </>
       )}

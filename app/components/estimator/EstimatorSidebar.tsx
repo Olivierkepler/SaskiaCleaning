@@ -56,6 +56,7 @@ export function EstimatorSidebar({
         gap-6
         lg:flex
         lg:self-stretch
+
       "
     >
       {/* Booking Summary — hidden until Customize is opened */}

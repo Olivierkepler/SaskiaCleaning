@@ -36,10 +36,10 @@ export function SearchField({
       }
       transition={{ duration: 0.45, ease: "easeOut" }}
       className={cx(
-        "relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 self-stretch bg-white px-3.5 py-3 transition-colors duration-200",
+        "relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 self-stretch  px-3.5 py-3 transition-colors duration-200",
         "sm:min-h-0 sm:h-full sm:px-4 sm:py-0",
         "max-sm:rounded-xl  max-sm:shadow-sm",
-        error ? "sm:bg-red-50/40" : active ? "sm:bg-white" : "hover:bg-slate-50/80",
+        error ? "sm:bg-red-50/40" : active ? "sm:bg-[#F5F7FA]" : "hover:bg-slate-50/80",
       )}
       style={{ flex }}
     >

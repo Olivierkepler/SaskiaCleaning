@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { DOW, K, MONTHS } from "../constants";
+
+import {
+  DOW,
+  K,
+  MONTHS,
+} from "../constants";
 import { Dropdown } from "../ui/Dropdown";
 
 export function CalendarDropdown({
@@ -13,156 +18,214 @@ export function CalendarDropdown({
 }) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth());
+
+  const [year, setYear] = useState(
+    today.getFullYear(),
+  );
+
+  const [month, setMonth] = useState(
+    today.getMonth(),
+  );
 
   function changeMonth(dir: number) {
-    let m = month + dir,
-      y = year;
+    let m = month + dir;
+    let y = year;
+
     if (m > 11) {
       m = 0;
       y++;
     }
+
     if (m < 0) {
       m = 11;
       y--;
     }
+
     setMonth(m);
     setYear(y);
   }
 
-  const firstDow = new Date(year, month, 1).getDay();
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDow = new Date(
+    year,
+    month,
+    1,
+  ).getDay();
+
+  const daysInMonth = new Date(
+    year,
+    month + 1,
+    0,
+  ).getDate();
 
   return (
-    <Dropdown open={open} minWidth={300}>
-      <div style={{ padding: 16 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 12,
-          }}
-        >
+    <Dropdown open={open} minWidth={320}>
+      <div
+        className="
+          rounded-[18px]
+          bg-[#F5F7FA]
+          p-4
+          shadow-[8px_8px_20px_#D1D9E6,-8px_-8px_20px_rgba(255,255,255,0.95)]
+        "
+      >
+        {/* Header */}
+        <div className="mb-4 flex items-center justify-between">
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               changeMonth(-1);
             }}
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 6,
-              border: `1.5px solid ${K.border}`,
-              background: K.white,
-              cursor: "pointer",
-              fontSize: 14,
-              color: K.textSub,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="
+              flex
+              h-9
+              w-9
+              cursor-pointer
+              items-center
+              justify-center
+              rounded-full
+              bg-[#ECF0F3]
+              text-slate-500
+              shadow-[4px_4px_9px_#D1D9E6,-4px_-4px_9px_rgba(255,255,255,0.95)]
+              transition-all
+              hover:text-sky-500
+              active:shadow-[inset_3px_3px_7px_#D1D9E6,inset_-3px_-3px_7px_rgba(255,255,255,0.95)]
+            "
           >
             ‹
           </button>
-          <span style={{ fontSize: 14, fontWeight: 800, color: K.text }}>
+
+          <span className="text-lg font-bold text-slate-900">
             {MONTHS[month]} {year}
           </span>
+
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               changeMonth(1);
             }}
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 6,
-              border: `1.5px solid ${K.border}`,
-              background: K.white,
-              cursor: "pointer",
-              fontSize: 14,
-              color: K.textSub,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+            className="
+              flex
+              h-9
+              w-9
+              cursor-pointer
+              items-center
+              justify-center
+              rounded-full
+              bg-[#ECF0F3]
+              text-slate-500
+              shadow-[4px_4px_9px_#D1D9E6,-4px_-4px_9px_rgba(255,255,255,0.95)]
+              transition-all
+              hover:text-sky-500
+              active:shadow-[inset_3px_3px_7px_#D1D9E6,inset_-3px_-3px_7px_rgba(255,255,255,0.95)]
+            "
           >
             ›
           </button>
         </div>
 
+        {/* Days */}
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
-            gap: 2,
-          }}
+          className="
+            grid
+            grid-cols-7
+            gap-1
+          "
         >
           {DOW.map((d) => (
             <div
               key={d}
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: K.hint,
-                textAlign: "center",
-                padding: "4px 0",
-                textTransform: "uppercase",
-              }}
+              className="
+                py-1
+                text-center
+                text-[10px]
+                font-bold
+                uppercase
+                tracking-[0.12em]
+                text-slate-400
+              "
             >
               {d}
             </div>
           ))}
-          {Array.from({ length: firstDow }).map((_, i) => (
+
+          {Array.from({
+            length: firstDow,
+          }).map((_, i) => (
             <div key={`e${i}`} />
           ))}
-          {Array.from({ length: daysInMonth }, (_, i) => i + 1).map((d) => {
-            const date = new Date(year, month, d);
+
+          {Array.from(
+            { length: daysInMonth },
+            (_, i) => i + 1,
+          ).map((day) => {
+            const date = new Date(
+              year,
+              month,
+              day,
+            );
+
             const isPast = date < today;
-            const isSel = selected?.toDateString() === date.toDateString();
-            const isToday = date.toDateString() === today.toDateString();
+
+            const isSel =
+              selected?.toDateString() ===
+              date.toDateString();
+
+            const isToday =
+              date.toDateString() ===
+              today.toDateString();
+
             return (
               <button
-                key={d}
+                key={day}
+                type="button"
                 disabled={isPast}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelect(date);
                 }}
-                style={{
-                  width: "100%",
-                  aspectRatio: "1",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
-                  fontWeight: isSel ? 700 : 600,
-                  borderRadius: 6,
-                  borderTop: "none",
-                  borderRight: "none",
-                  borderBottom: "none",
-                  borderLeft: "none",
-                  cursor: isPast ? "default" : "pointer",
-                  background: isSel ? K.blue : "transparent",
-                  color: isSel
-                    ? "#fff"
-                    : isPast
-                      ? "#CBD5E1"
+                className={[
+                  `
+                    flex
+                    aspect-square
+                    w-full
+                    items-center
+                    justify-center
+                    rounded-[10px]
+                    text-xs
+                    font-semibold
+                    transition-all
+                    duration-150
+                  `,
+                  isPast
+                    ? `
+                        cursor-default
+                        text-slate-300
+                      `
+                    : isSel
+                      ? `
+                          cursor-pointer
+                          bg-sky-500
+                          text-white
+                          shadow-[0_6px_14px_rgba(14,165,233,0.22)]
+                        `
                       : isToday
-                        ? K.blue
-                        : K.text,
-                  transition: "all .12s",
-                }}
-                onMouseEnter={(e) => {
-                  if (!isPast && !isSel)
-                    e.currentTarget.style.background = K.blueLight;
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSel) e.currentTarget.style.background = "transparent";
-                }}
+                        ? `
+                            cursor-pointer
+                            bg-[#ECF0F3]
+                            text-sky-600
+                            shadow-[inset_2px_2px_5px_#D1D9E6,inset_-2px_-2px_5px_rgba(255,255,255,0.95)]
+                          `
+                        : `
+                            cursor-pointer
+                            text-slate-700
+                            hover:bg-[#ECF0F3]
+                            hover:text-sky-600
+                            hover:shadow-[3px_3px_7px_#D1D9E6,-3px_-3px_7px_rgba(255,255,255,0.95)]
+                          `,
+                ].join(" ")}
               >
-                {d}
+                {day}
               </button>
             );
           })}

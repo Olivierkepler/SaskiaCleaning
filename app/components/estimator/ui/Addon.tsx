@@ -29,7 +29,7 @@ export function Addon({
       type="button"
       onClick={onClick}
       aria-pressed={selected}
-      whileHover={{ y: -2 }}
+      whileHover={{ y: -1 }}
       whileTap={{ scale: 0.985 }}
       transition={{
         duration: 0.18,
@@ -45,7 +45,7 @@ export function Addon({
           items-center
           gap-3
           overflow-hidden
-
+          rounded-[18px]
           px-4
           py-4
           text-left
@@ -53,45 +53,42 @@ export function Addon({
           transition-all
           duration-200
 
+          focus-visible:ring-2
+          focus-visible:ring-sky-400
+          focus-visible:ring-offset-2
+          focus-visible:ring-offset-[#F5F7FA]
         `,
         selected
           ? `
-              border-sky-300
-              bg-sky-50/80
-              shadow-[0_8px_24px_rgba(14,165,233,0.08)]
+              bg-[#ECF0F3]
+              shadow-[inset_4px_4px_10px_#D1D9E6,inset_-4px_-4px_10px_rgba(255,255,255,0.95)]
             `
           : `
-              border-slate-200/80
-              bg-white
-              shadow-[0_6px_20px_rgba(15,23,42,0.06)]
-              hover:border-sky-200
-              hover:shadow-[0_10px_26px_rgba(15,23,42,0.08)]
+              bg-[#F5F7FA]
+              shadow-[inset_3px_3px_9px_#E3EAF1,inset_-3px_-3px_9px_rgba(255,255,255,0.97)]
+              hover:shadow-[4px_4px_10px_#D1D9E6,-4px_-4px_10px_rgba(255,255,255,0.94)]
             `,
       )}
     >
       {/* Image */}
       <div
-        className={cx(
-          `
-            relative
-            -ml-2
-            flex
-            h-[64px]
-            w-[64px]
-            shrink-0
-            items-center
-            justify-center
-            overflow-hidden
-            transition-all
-            duration-200
-          `,
-          selected
-            ? "text-sky-500"
-            : "text-slate-500",
-        )}
+        className="
+          relative
+          -ml-1
+          flex
+          h-[64px]
+          w-[64px]
+          shrink-0
+          items-center
+          justify-center
+        "
       >
         <motion.div
-          className="relative h-[50px] w-[50px]"
+          className="
+            relative
+            h-[50px]
+            w-[50px]
+          "
           animate={{
             scale: selected ? 1.04 : 1,
           }}
@@ -112,7 +109,7 @@ export function Addon({
       {/* Content */}
       <div className="relative min-w-0 flex-1 pr-10">
         {/* Price */}
-        <div className="absolute right-0 -top-4">
+        <div className="absolute -top-3 right-0">
           <span
             className={cx(
               `
@@ -149,42 +146,52 @@ export function Addon({
           {shown}
         </p>
 
-        {/* Meta */}
-        <div className="mt-1 flex items-center justify-between gap-3">
-          <p className="text-[11px] font-medium text-slate-400">
-            Optional
-          </p>
+        <p
+          className="
+            mt-1
+            text-[11px]
+            font-medium
+            text-slate-400
+          "
+        >
+          Optional
+        </p>
 
-          {/* Selected indicator */}
-          <div
-            className={cx(
-              `
-                absolute
-                bottom-0
-                right-0
-                flex
-                h-7
-                w-7
-                shrink-0
-                items-center
-                justify-center
-                rounded-full
-                border
-                transition-all
-                duration-200
-              `,
-              selected
-                ? "border-sky-500 bg-sky-500"
-                : "border-slate-300 bg-white group-hover:border-sky-300",
-            )}
-          >
-            {selected && (
-              <Check
-                className="h-3.5 w-3.5 text-white"
-                strokeWidth={2.5}
-              />
-            )}
-          </div>
+        {/* Selection control */}
+        <div
+          className={cx(
+            `
+              absolute
+              bottom-0
+              right-0
+              flex
+              h-8
+              w-8
+              items-center
+              justify-center
+              rounded-full
+              transition-all
+              duration-200
+            `,
+            selected
+              ? `
+                  bg-sky-500
+                  text-white
+                  shadow-[3px_3px_7px_#D1D9E6,-3px_-3px_7px_rgba(255,255,255,0.9)]
+                `
+              : `
+                  bg-[#ECF0F3]
+                  text-slate-400
+                  shadow-[3px_3px_7px_#D1D9E6,-3px_-3px_7px_rgba(255,255,255,0.95)]
+                `,
+          )}
+        >
+          {selected && (
+            <Check
+              className="h-4 w-4"
+              strokeWidth={2.5}
+            />
+          )}
         </div>
       </div>
     </motion.button>
@@ -215,11 +222,17 @@ export function AddonGrid<L extends string>({
         <Addon
           key={addon.label}
           label={addon.label}
-          displayLabel={getDisplayLabel?.(addon.label)}
+          displayLabel={getDisplayLabel?.(
+            addon.label,
+          )}
           image={addon.image}
           price={addon.price}
-          selected={selectedAddons.has(addon.label)}
-          onClick={() => onToggle(addon.label)}
+          selected={selectedAddons.has(
+            addon.label,
+          )}
+          onClick={() =>
+            onToggle(addon.label)
+          }
         />
       ))}
     </div>
