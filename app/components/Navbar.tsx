@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   ArrowUpRight,
@@ -27,6 +27,9 @@ export default function Navbar({
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [estimatorReached, setEstimatorReached] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const shouldHideNavbar = hideNavbar || estimatorReached;
 
   const navLinks = [
     {
@@ -64,10 +67,63 @@ export default function Navbar({
   }, []);
 
   useEffect(() => {
-    if (hideNavbar) {
+    const estimatorHeading = document.querySelector<HTMLElement>(
+      "#instant-estimate h2",
+    );
+    const header = headerRef.current;
+    if (!estimatorHeading || !header || !("IntersectionObserver" in window)) {
+      return;
+    }
+
+    let observer: IntersectionObserver | null = null;
+    let previousHeadingTop: number | null = null;
+
+    const observeEstimatorThreshold = () => {
+      observer?.disconnect();
+      previousHeadingTop = null;
+
+      const viewportHeight = window.innerHeight;
+      const headerHeight = header.getBoundingClientRect().height;
+      const threshold = Math.min(headerHeight, Math.max(0, viewportHeight - 2));
+      const bottomMargin = Math.max(0, viewportHeight - threshold - 2);
+
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          if (!entry) return;
+          const currentHeadingTop = entry.boundingClientRect.top;
+
+          if (previousHeadingTop === null) {
+            setEstimatorReached(currentHeadingTop <= threshold);
+          } else if (currentHeadingTop < previousHeadingTop) {
+            setEstimatorReached(true);
+          } else if (currentHeadingTop > previousHeadingTop) {
+            setEstimatorReached(false);
+          }
+
+          previousHeadingTop = currentHeadingTop;
+        },
+        {
+          rootMargin: `-${threshold}px 0px -${bottomMargin}px 0px`,
+          threshold: 0,
+        },
+      );
+      observer.observe(estimatorHeading);
+    };
+
+    observeEstimatorThreshold();
+    window.addEventListener("resize", observeEstimatorThreshold);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", observeEstimatorThreshold);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (shouldHideNavbar) {
       setIsOpen(false);
     }
-  }, [hideNavbar]);
+  }, [shouldHideNavbar]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
@@ -101,17 +157,20 @@ export default function Navbar({
   return (
     <>
       <header
+        ref={headerRef}
         data-native-cursor
+        aria-hidden={shouldHideNavbar}
+        inert={shouldHideNavbar}
         className={`
           fixed inset-x-0 top-0 z-50
           px-3 pt-3
-          transition-all duration-300
+          transition-[opacity,transform] duration-300 ease-out motion-reduce:transition-none
           sm:px-5
           lg:px-8
           ${
-            hideNavbar
-              ? "pointer-events-none invisible -translate-y-4 opacity-0"
-              : "visible translate-y-0 opacity-100"
+            shouldHideNavbar
+              ? "pointer-events-none -translate-y-full opacity-0"
+              : "translate-y-0 opacity-100"
           }
         `}
       >
@@ -761,7 +820,7 @@ export default function Navbar({
       {/* =========================================================
           MOBILE SIDENAV
       ========================================================== */}
-      {!hideNavbar && (
+      {!shouldHideNavbar && (
         <>
           <div
             onClick={() => setIsOpen(false)}
