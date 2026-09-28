@@ -887,7 +887,7 @@ export default function ServiceCarousel() {
       "
     >
       {/* Background atmosphere */}
-      <div
+      {/* <div
         aria-hidden="true"
         className="
           pointer-events-none
@@ -901,8 +901,8 @@ export default function ServiceCarousel() {
           bg-sky-100/50
           blur-[120px]
         "
-      />
-      <div
+      /> */}
+      {/* <div
         aria-hidden="true"
         className="
           pointer-events-none
@@ -916,7 +916,7 @@ export default function ServiceCarousel() {
           bg-slate-100/70
           blur-[120px]
         "
-      />
+      /> */}
       <div className="relative mx-auto max-w-[1440px] px-4 sm:px-6">
         {/* Header */}
         <header className="mx-auto max-w-4xl text-center">

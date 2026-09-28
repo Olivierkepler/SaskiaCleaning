@@ -90,9 +90,7 @@ export function DeepCleanPanel({
         {/* Home Size */}
         <div
           className="
-            rounded-[24px]
-            border
-            border-slate-200/70
+            rounded-[10px]
             bg-white
             p-5
             shadow-[0_8px_30px_rgba(15,23,42,0.05)]
@@ -126,12 +124,10 @@ export function DeepCleanPanel({
         {/* Condition */}
         <div
           className="
-            rounded-[24px]
-            border
-            border-slate-200/70
+            rounded-[10px]
             bg-white
             p-5
-            shadow-[0_8px_30px_rgba(15,23,42,0.05)]
+            shadow-[4px_4px_10px_#E3EAF1,-4px_-4px_10px_rgba(255,255,255,0.97)]
             sm:p-6
           "
         >

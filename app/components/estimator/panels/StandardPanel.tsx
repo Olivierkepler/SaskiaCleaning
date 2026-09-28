@@ -124,10 +124,10 @@ export function StandardPanel({
       {/* Core cleaning setup */}
       <div
         className="
-          rounded-[26px]
+          rounded-[10px]
           bg-[#F5F7FA]
           p-5
-          shadow-[8px_8px_20px_#D1D9E6,-8px_-8px_20px_rgba(255,255,255,0.95)]
+          shadow-[4px_4px_10px_#E3EAF1,-4px_-4px_10px_rgba(255,255,255,0.97)]
           sm:p-6
           lg:p-7
         "
@@ -234,10 +234,10 @@ export function StandardPanel({
       {/* Add-ons */}
       <div
         className="
-          rounded-[26px]
+          rounded-[10px]
           bg-[#F5F7FA]
           p-5
-          shadow-[8px_8px_20px_#D1D9E6,-8px_-8px_20px_rgba(255,255,255,0.95)]
+          shadow-[4px_4px_10px_#E3EAF1,-4px_-4px_10px_rgba(255,255,255,0.97)]
           sm:p-6
           lg:p-7
         "

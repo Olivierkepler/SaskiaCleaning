@@ -146,9 +146,7 @@ export function EstimatorSearchBar({
               flex-col
               gap-2
               rounded-[22px]
-              bg-[#F5F7FA]
               p-2
-              shadow-[8px_8px_20px_#D1D9E6,-8px_-8px_20px_rgba(255,255,255,0.95)]
 
               sm:min-h-[64px]
               sm:flex-row

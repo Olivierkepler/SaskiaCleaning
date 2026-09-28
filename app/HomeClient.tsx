@@ -32,7 +32,7 @@ export default function HomeClient({ catTab }: { catTab: ReactNode }) {
         <div className=" bg-white">
           <AdCardGrid />
         </div>
-        <div className="bg-white">{catTab}</div>
+        <div className="bg-white w-full max-w-9xl mx-auto">{catTab}</div>
 
         <SectionWrapper>
           <AutoServiceCarousel />
@@ -54,9 +54,9 @@ export default function HomeClient({ catTab }: { catTab: ReactNode }) {
         onCtaClick={() => console.log("Start cleaning!")}
       />
 
-      <SectionWrapper>
+      {/* <SectionWrapper>
         <CleaningPricingCalculator />
-      </SectionWrapper>
+      </SectionWrapper> */}
 
       <SectionWrapper>
         <LocationMap />
