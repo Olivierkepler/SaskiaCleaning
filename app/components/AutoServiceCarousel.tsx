@@ -1,12 +1,5 @@
 "use client";
-
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslations } from "next-intl";
 import {
@@ -14,9 +7,10 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
+  Pause,
+  Play,
   X,
 } from "lucide-react";
-
 const serviceDefs = [
   {
     id: "residential",
@@ -48,11 +42,7 @@ const serviceDefs = [
     id: "laundry",
     titleKey: "carouselLaundryTitle",
     subtitleKey: "carouselLaundrySubtitle",
-    detailKeys: [
-      "carouselLaundry1",
-      "carouselLaundry2",
-      "carouselLaundry3",
-    ],
+    detailKeys: ["carouselLaundry1", "carouselLaundry2", "carouselLaundry3"],
     image:
       "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=900&q=80",
     startingPrice: "$1.75/lb",
@@ -61,11 +51,7 @@ const serviceDefs = [
     id: "airbnb",
     titleKey: "carouselAirbnbTitle",
     subtitleKey: "carouselAirbnbSubtitle",
-    detailKeys: [
-      "carouselAirbnb1",
-      "carouselAirbnb2",
-      "carouselAirbnb3",
-    ],
+    detailKeys: ["carouselAirbnb1", "carouselAirbnb2", "carouselAirbnb3"],
     image:
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80",
     startingPrice: "$120+",
@@ -87,17 +73,12 @@ const serviceDefs = [
     id: "addon",
     titleKey: "carouselAddonTitle",
     subtitleKey: "carouselAddonSubtitle",
-    detailKeys: [
-      "carouselAddon1",
-      "carouselAddon2",
-      "carouselAddon3",
-    ],
+    detailKeys: ["carouselAddon1", "carouselAddon2", "carouselAddon3"],
     image:
       "https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=900&q=80",
     startingPrice: "$10+",
   },
 ];
-
 type Service = {
   id: string;
   title: string;
@@ -106,31 +87,21 @@ type Service = {
   details: string[];
   startingPrice: string;
 };
-
 const AUTO_DELAY = 5200;
 const CARD_TRANSITION_MS = 900;
 const CARD_EASING = "cubic-bezier(0.22, 1, 0.36, 1)";
-
-function getRelativeIndex(
-  index: number,
-  activeIndex: number,
-  count: number,
-) {
+function getRelativeIndex(index: number, activeIndex: number, count: number) {
   let diff = index - activeIndex;
-
   if (diff > count / 2) diff -= count;
   if (diff < -count / 2) diff += count;
-
   return diff;
 }
-
 function scrollToQuote() {
   document.getElementById("quote")?.scrollIntoView({
     behavior: "smooth",
     block: "start",
   });
 }
-
 function ServiceModal({
   service,
   onClose,
@@ -138,37 +109,34 @@ function ServiceModal({
   service: Service;
   onClose: () => void;
 }) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-
     return () => {
       document.body.style.overflow = previousOverflow;
     };
   }, []);
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         onClose();
       }
     };
-
     window.addEventListener("keydown", handleKeyDown);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [onClose]);
-
   const handleRequestService = () => {
     onClose();
-
     requestAnimationFrame(() => {
       scrollToQuote();
     });
   };
-
   return createPortal(
     <div
       role="dialog"
@@ -212,61 +180,16 @@ function ServiceModal({
             aria-hidden="true"
             className="h-full w-full object-cover"
           />
-
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent" />
 
-          <div className="absolute left-6 top-6">
-            <span
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-full
-                border
-                border-white/20
-                bg-slate-950/60
-                px-4
-                py-2
-                text-[9px]
-                font-bold
-                uppercase
-                tracking-[0.18em]
-                text-white
-                backdrop-blur-xl
-              "
-            >
-              {service.id}
-            </span>
-          </div>
-
-          <div
-            className="
-              absolute
-              right-6
-              top-6
-              rounded-[14px]
-              bg-black/20
-              px-4
-              py-3
-              shadow-lg
-              backdrop-blur-xl
-            "
-          >
-            <span className="block text-[8px] font-semibold uppercase tracking-[0.15em] text-white">
-              Starting at
-            </span>
-
-            <span className="mt-1 block text-lg font-bold leading-none tracking-[-0.035em] text-white">
-              {service.startingPrice}
-            </span>
-          </div>
-
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
             aria-label="Close service details"
             className="
               absolute
+              cursor-pointer
               bottom-6
               right-6
               grid
@@ -289,7 +212,6 @@ function ServiceModal({
           >
             <X className="h-4 w-4" />
           </button>
-
           <div className="absolute bottom-6 left-6 right-20">
             <h2
               id="service-modal-title"
@@ -306,15 +228,13 @@ function ServiceModal({
             </h2>
           </div>
         </div>
-
         <div className="max-h-[55dvh] overflow-y-auto p-6 sm:p-8">
           <p
             id="service-modal-description"
-            className="text-[15px] leading-7 text-slate-600"
+            className="text-base leading-7 text-slate-600"
           >
             {service.subtitle}
           </p>
-
           <div
             className="
               mt-7
@@ -326,15 +246,14 @@ function ServiceModal({
               sm:p-6
             "
           >
-            <p className="mb-5 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+            <p className="mb-5 text-xs font-bold uppercase tracking-[0.16em] text-slate-400">
               Service includes
             </p>
-
             <ul className="space-y-4">
               {service.details.map((detail) => (
                 <li
                   key={detail}
-                  className="flex items-start gap-3 text-sm leading-6 text-slate-600"
+                  className="flex items-start gap-3 text-base leading-7 text-slate-600"
                 >
                   <span
                     className="
@@ -349,18 +268,13 @@ function ServiceModal({
                       text-sky-500
                     "
                   >
-                    <Check
-                      className="h-3.5 w-3.5"
-                      strokeWidth={2}
-                    />
+                    <Check className="h-3.5 w-3.5" strokeWidth={2} />
                   </span>
-
                   <span>{detail}</span>
                 </li>
               ))}
             </ul>
           </div>
-
           <div className="mt-7 grid gap-3 sm:grid-cols-2">
             <button
               type="button"
@@ -374,7 +288,7 @@ function ServiceModal({
                 rounded-[15px]
                 bg-slate-950
                 px-5
-                text-[10px]
+                text-xs
                 font-bold
                 uppercase
                 tracking-[0.16em]
@@ -389,10 +303,8 @@ function ServiceModal({
               "
             >
               Request this service
-
               <ArrowUpRight className="h-4 w-4" />
             </button>
-
             <button
               type="button"
               onClick={onClose}
@@ -403,7 +315,7 @@ function ServiceModal({
                 border-slate-200
                 bg-white
                 px-5
-                text-[10px]
+                text-xs
                 font-bold
                 uppercase
                 tracking-[0.15em]
@@ -427,7 +339,6 @@ function ServiceModal({
     document.body,
   );
 }
-
 function DesktopCard({
   service,
   relativeIndex,
@@ -441,25 +352,8 @@ function DesktopCard({
 }) {
   const abs = Math.abs(relativeIndex);
   const hidden = abs >= 3;
-
-  const width =
-    abs === 0
-      ? 500
-      : abs === 1
-        ? 350
-        : abs === 2
-          ? 270
-          : 240;
-
-  const height =
-    abs === 0
-      ? 540
-      : abs === 1
-        ? 470
-        : abs === 2
-          ? 400
-          : 370;
-
+  const width = abs === 0 ? 500 : abs === 1 ? 350 : abs === 2 ? 270 : 240;
+  const height = abs === 0 ? 540 : abs === 1 ? 470 : abs === 2 ? 400 : 370;
   const translateX =
     relativeIndex === 0
       ? 0
@@ -474,34 +368,9 @@ function DesktopCard({
               : relativeIndex < 0
                 ? -820
                 : 820;
-
-  const scale =
-    abs === 0
-      ? 1
-      : abs === 1
-        ? 0.92
-        : abs === 2
-          ? 0.84
-          : 0.76;
-
-  const zIndex =
-    abs === 0
-      ? 30
-      : abs === 1
-        ? 20
-        : abs === 2
-          ? 10
-          : 0;
-
-  const opacity =
-    abs === 0
-      ? 1
-      : abs === 1
-        ? 0.92
-        : abs === 2
-          ? 0.72
-          : 0;
-
+  const scale = abs === 0 ? 1 : abs === 1 ? 0.92 : abs === 2 ? 0.84 : 0.76;
+  const zIndex = abs === 0 ? 30 : abs === 1 ? 20 : abs === 2 ? 10 : 0;
+  const opacity = abs === 0 ? 1 : abs === 1 ? 0.92 : abs === 2 ? 0.72 : 0;
   return (
     <button
       type="button"
@@ -511,6 +380,7 @@ function DesktopCard({
       aria-hidden={hidden ? "true" : undefined}
       className="
         group
+        cursor-pointer
         absolute
         left-1/2
         top-1/2
@@ -550,20 +420,20 @@ function DesktopCard({
           overflow-hidden
           rounded-[10px]
           bg-white
-          ring-1
+
           transform-gpu
           transition-[transform,box-shadow]
           duration-500
           ease-[cubic-bezier(0.22,1,0.36,1)]
           group-hover:-translate-y-1.5
+          ${
+            active
+              ? `
 
-          ${active
-            ? `
-                  ring-sky-200
                   shadow-[0_32px_90px_rgba(14,165,233,0.14)]
                   group-hover:shadow-[0_40px_110px_rgba(14,165,233,0.18)]
                 `
-            : `
+              : `
                   ring-slate-200/80
                   shadow-[0_18px_55px_rgba(15,23,42,0.08)]
                   group-hover:ring-sky-200
@@ -579,8 +449,7 @@ function DesktopCard({
             transition-[height]
             duration-700
             ease-[cubic-bezier(0.22,1,0.36,1)]
-
-            ${active ? "h-[61%]" : "h-[58%]"}
+            ${active ? "h-[54%]" : "h-[58%]"}
           `}
         >
           <img
@@ -600,70 +469,13 @@ function DesktopCard({
               group-hover:scale-[1.045]
             "
           />
-
-          <div
-            aria-hidden="true"
-            className="
-              absolute
-              inset-0
-              bg-gradient-to-t
-              from-slate-950/25
-              via-transparent
-              to-transparent
-            "
-          />
-
-          {/* Category */}
-          <div className="absolute left-5 top-5">
-            <span
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-full
-                bg-black/20
-                px-3.5
-                py-2
-                text-[8px]
-                font-bold
-                uppercase
-                tracking-[0.18em]
-                text-white
-                shadow-sm
-                backdrop-blur-xl
-              "
-            >
-              {service.id}
-            </span>
-          </div>
-
-          {/* Price */}
-          <div
-            className="
-              absolute
-              right-5
-              top-5
-              rounded-[14px]
-              bg-black/20
-              px-4
-              py-3
-              backdrop-blur-xl
-            "
-          >
-            <span className="block text-[7px] font-semibold uppercase tracking-[0.16em] text-white">
-              Starting at
-            </span>
-
-            <span className="mt-1 block text-[18px] font-bold leading-none tracking-[-0.035em] text-white">
-              {service.startingPrice}
-            </span>
-          </div>
         </div>
-
         {/* Content */}
         <div
           className={`
             relative
+
+
             z-10
             flex
             flex-col
@@ -671,17 +483,18 @@ function DesktopCard({
             transition-all
             duration-700
             ease-[cubic-bezier(0.22,1,0.36,1)]
-
-            ${active
-              ? "-mt-6 h-[225px] rounded-t-[28px] px-7 pb-5 pt-5"
-              : "-mt-5 h-[195px] rounded-t-[25px] px-6 pb-5 pt-5"
+            ${
+              active
+                ? "-mt-6 h-[250px]  px-7 pb-6 pt-6 "
+                : "-mt-5 h-[215px] px-6 pb-5 pt-5"
             }
           `}
         >
-          {/* Accent / brand */}
-          <div className="mb-3 flex shrink-0 items-center justify-between">
-            <span
-              className="
+          <div className="">
+            {/* Accent / brand */}
+            <div className="mb-3 flex shrink-0 items-center justify-between">
+              <span
+                className="
                 h-[3px]
                 w-8
                 rounded-full
@@ -691,16 +504,14 @@ function DesktopCard({
                 ease-out
                 group-hover:w-12
               "
-            />
-
-            <span className="text-[8px] font-semibold uppercase tracking-[0.2em] text-slate-400">
-              Saskia
-            </span>
-          </div>
-
-          {/* Title */}
-          <h3
-            className={`
+              />
+              <span className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">
+                Saskia
+              </span>
+            </div>
+            {/* Title */}
+            <h3
+              className={`
               shrink-0
               font-heading
               font-semibold
@@ -708,53 +519,49 @@ function DesktopCard({
               text-slate-950
               transition-[font-size,line-height]
               duration-500
-
-              ${active
-                ? "text-[1.9rem] leading-[0.98]"
-                : "text-[1.4rem] leading-none"
+              ${
+                active
+                  ? "text-[1.9rem] leading-[0.98]"
+                  : "text-[1.4rem] leading-none"
               }
             `}
-          >
-            {service.title}
-          </h3>
-
-          {/* Description */}
-          <p
-            className={`
+            >
+              {service.title}
+            </h3>
+            {/* Description */}
+            <p
+              className={`
               mt-2
               shrink-0
               text-slate-500
               transition-all
               duration-500
-
-              ${active
-                ? "line-clamp-2 max-w-[94%] text-[12px] leading-[1.5]"
-                : "line-clamp-2 text-[11px] leading-5"
+              ${
+                active
+                  ? "line-clamp-2 max-w-[94%] text-sm leading-6"
+                  : "line-clamp-2 text-xs leading-5"
               }
             `}
-          >
-            {service.subtitle}
-          </p>
-
-          {/* Active details */}
-          <div
-            className={`
+            >
+              {service.subtitle}
+            </p>
+            {/* Active details */}
+            <div
+              className={`
               grid
               shrink-0
               overflow-hidden
               transition-all
               duration-500
               ease-[cubic-bezier(0.22,1,0.36,1)]
-
-              ${active
-                ? "mt-3 max-h-[70px] gap-1.5 opacity-100"
-                : "mt-0 max-h-0 gap-0 opacity-0"
+              ${
+                active
+                  ? "mt-3 max-h-[84px] gap-2 opacity-100"
+                  : "mt-0 max-h-0 gap-0 opacity-0"
               }
             `}
-          >
-            {service.details
-              .slice(0, 2)
-              .map((detail) => (
+            >
+              {service.details.slice(0, 2).map((detail) => (
                 <div
                   key={detail}
                   className="
@@ -766,7 +573,7 @@ function DesktopCard({
                     bg-slate-50
                     px-3
                     py-1.5
-                    text-[8px]
+                    text-[11px]
                     font-medium
                     leading-4
                     text-slate-600
@@ -786,22 +593,15 @@ function DesktopCard({
                       text-white
                     "
                   >
-                    <Check
-                      className="h-2.5 w-2.5"
-                      strokeWidth={2.5}
-                    />
+                    <Check className="h-2.5 w-2.5" strokeWidth={2.5} />
                   </span>
-
-                  <span className="truncate">
-                    {detail}
-                  </span>
+                  <span className="truncate">{detail}</span>
                 </div>
               ))}
-          </div>
-
-          {/* Bottom action */}
-          <div
-            className="
+            </div>
+            {/* Bottom action */}
+            <div
+              className="
               mt-auto
               flex
               shrink-0
@@ -811,19 +611,17 @@ function DesktopCard({
               border-slate-100
               pt-3
             "
-          >
-            <div>
-              <p className="text-[7px] font-semibold uppercase tracking-[0.2em] text-slate-300">
-                Explore service
-              </p>
-
-              <p className="mt-0.5 text-[10px] font-medium text-slate-600">
-                View details
-              </p>
-            </div>
-
-            <span
-              className="
+            >
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
+                  Explore service
+                </p>
+                <p className="mt-1 text-sm font-medium text-slate-700">
+                  View details
+                </p>
+              </div>
+              <span
+                className="
                 grid
                 h-9
                 w-9
@@ -841,19 +639,16 @@ function DesktopCard({
                 group-hover:bg-sky-500
                 group-hover:shadow-[0_9px_22px_rgba(14,165,233,0.20)]
               "
-            >
-              <ArrowUpRight
-                className="h-3.5 w-3.5"
-                strokeWidth={1.8}
-              />
-            </span>
+              >
+                <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+              </span>
+            </div>
           </div>
         </div>
       </article>
     </button>
   );
 }
-
 function MobileCard({
   service,
   active,
@@ -891,14 +686,14 @@ function MobileCard({
           transition-[transform,box-shadow]
           duration-500
           ease-[cubic-bezier(0.22,1,0.36,1)]
-
-          ${active
-            ? `
+          ${
+            active
+              ? `
                   scale-[1.015]
                   ring-sky-200
                   shadow-[0_28px_70px_rgba(14,165,233,0.14)]
                 `
-            : `
+              : `
                   scale-100
                   ring-slate-200/80
                   shadow-[0_16px_46px_rgba(15,23,42,0.07)]
@@ -924,59 +719,8 @@ function MobileCard({
               group-hover:scale-[1.05]
             "
           />
-
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-transparent" />
-
-          {/* Category */}
-          <div className="absolute left-4 top-4">
-            <span
-              className="
-                inline-flex
-                items-center
-                gap-2
-                rounded-full
-                border
-                border-white/20
-                bg-slate-950/55
-                px-3
-                py-2
-                text-[8px]
-                font-bold
-                uppercase
-                tracking-[0.16em]
-                text-white
-                backdrop-blur-xl
-              "
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-sky-400" />
-
-              {service.id}
-            </span>
-          </div>
-
-          {/* Price */}
-          <div
-            className="
-              absolute
-              right-4
-              top-4
-              rounded-[15px]
-              bg-black/20
-              px-3.5
-              py-2.5
-              backdrop-blur-xl
-            "
-          >
-            <span className="block text-[7px] font-semibold uppercase tracking-[0.14em] text-white">
-              Starting at
-            </span>
-
-            <span className="mt-0.5 block text-[16px] font-bold tracking-[-0.03em] text-white">
-              {service.startingPrice}
-            </span>
-          </div>
         </div>
-
         {/* Content */}
         <div
           className="
@@ -991,31 +735,25 @@ function MobileCard({
         >
           <div className="mb-4 flex items-center justify-between">
             <span className="h-[3px] w-8 rounded-full bg-sky-500" />
-
-            <span className="text-[8px] font-semibold uppercase tracking-[0.17em] text-slate-300">
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
               Saskia
             </span>
           </div>
-
           <h3 className="font-heading text-[1.85rem] font-semibold leading-[0.98] tracking-[-0.05em] text-slate-950">
             {service.title}
           </h3>
-
-          <p className="mt-3 line-clamp-2 text-[13px] leading-6 text-slate-500">
+          <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">
             {service.subtitle}
           </p>
-
           <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-5">
             <div>
-              <p className="text-[8px] font-semibold uppercase tracking-[0.17em] text-slate-300">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">
                 Explore
               </p>
-
-              <p className="mt-1 text-[11px] font-medium text-slate-600">
+              <p className="mt-1 text-sm font-medium text-slate-700">
                 View service
               </p>
             </div>
-
             <span
               className="
                 grid
@@ -1031,10 +769,7 @@ function MobileCard({
                 group-hover:bg-sky-500
               "
             >
-              <ArrowUpRight
-                className="h-4 w-4"
-                strokeWidth={1.8}
-              />
+              <ArrowUpRight className="h-4 w-4" strokeWidth={1.8} />
             </span>
           </div>
         </div>
@@ -1042,10 +777,8 @@ function MobileCard({
     </button>
   );
 }
-
 export default function ServiceCarousel() {
   const t = useTranslations("home");
-
   const services = useMemo<Service[]>(
     () =>
       serviceDefs.map((service) => ({
@@ -1053,91 +786,97 @@ export default function ServiceCarousel() {
         title: t(service.titleKey),
         subtitle: t(service.subtitleKey),
         image: service.image,
-        details: service.detailKeys.map((key) =>
-          t(key),
-        ),
+        details: service.detailKeys.map((key) => t(key)),
         startingPrice: service.startingPrice,
       })),
     [t],
   );
-
-  const [activeIndex, setActiveIndex] =
-    useState(0);
-
-  const [selected, setSelected] =
-    useState<Service | null>(null);
-
-  const [portalReady, setPortalReady] =
-    useState(false);
-
-  const [isPlaying, setIsPlaying] =
-    useState(true);
-
-  const mobileTrackRef =
-    useRef<HTMLDivElement>(null);
-
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [selected, setSelected] = useState<Service | null>(null);
+  const [portalReady, setPortalReady] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [pageVisible, setPageVisible] = useState(true);
+  const mobileTrackRef = useRef<HTMLDivElement>(null);
   const count = services.length;
-
-  const centerMobileCard = useCallback(
-    (index: number) => {
-      const track = mobileTrackRef.current;
-
-      if (!track) return;
-
-      const target =
-        track.children[index] as
-        | HTMLElement
-        | undefined;
-
-      if (!target) return;
-
-      const left =
-        target.offsetLeft -
-        (track.clientWidth - target.offsetWidth) / 2;
-
-      track.scrollTo({
-        left,
-        behavior: "smooth",
-      });
-    },
-    [],
-  );
-
+  const centerMobileCard = useCallback((index: number) => {
+    const track = mobileTrackRef.current;
+    if (!track) return;
+    const target = track.children[index] as HTMLElement | undefined;
+    if (!target) return;
+    const left =
+      target.offsetLeft - (track.clientWidth - target.offsetWidth) / 2;
+    track.scrollTo({
+      left,
+      behavior: "smooth",
+    });
+  }, []);
   const goTo = useCallback(
     (index: number) => {
-      const next =
-        ((index % count) + count) % count;
-
+      const next = ((index % count) + count) % count;
       setActiveIndex(next);
       centerMobileCard(next);
     },
     [centerMobileCard, count],
   );
-
+  const syncMobileActiveCard = useCallback(() => {
+    const track = mobileTrackRef.current;
+    if (!track) return;
+    const trackCenter = track.scrollLeft + track.clientWidth / 2;
+    let closestIndex = 0;
+    let closestDistance = Number.POSITIVE_INFINITY;
+    Array.from(track.children).forEach((child, index) => {
+      const card = child as HTMLElement;
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const distance = Math.abs(cardCenter - trackCenter);
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = index;
+      }
+    });
+    setActiveIndex(closestIndex);
+  }, []);
   useEffect(() => {
     setPortalReady(true);
   }, []);
-
   useEffect(() => {
-    if (!isPlaying || selected || count <= 1) {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotionPreference = () => {
+      setPrefersReducedMotion(media.matches);
+      if (media.matches) setIsPlaying(false);
+    };
+    const updateVisibility = () => setPageVisible(!document.hidden);
+    updateMotionPreference();
+    updateVisibility();
+    media.addEventListener("change", updateMotionPreference);
+    document.addEventListener("visibilitychange", updateVisibility);
+    return () => {
+      media.removeEventListener("change", updateMotionPreference);
+      document.removeEventListener("visibilitychange", updateVisibility);
+    };
+  }, []);
+  useEffect(() => {
+    if (
+      !isPlaying ||
+      selected ||
+      count <= 1 ||
+      prefersReducedMotion ||
+      !pageVisible
+    ) {
       return;
     }
-
     const interval = window.setInterval(() => {
-      setActiveIndex(
-        (current) =>
-          (current + 1) % count,
-      );
+      setActiveIndex((current) => (current + 1) % count);
     }, AUTO_DELAY);
-
     return () => {
       window.clearInterval(interval);
     };
-  }, [count, isPlaying, selected]);
-
+  }, [count, isPlaying, pageVisible, prefersReducedMotion, selected]);
   return (
     <section
       id="services"
+      aria-label="Cleaning services carousel"
+      aria-roledescription="carousel"
       className="
         relative
         overflow-hidden
@@ -1163,7 +902,6 @@ export default function ServiceCarousel() {
           blur-[120px]
         "
       />
-
       <div
         aria-hidden="true"
         className="
@@ -1179,18 +917,14 @@ export default function ServiceCarousel() {
           blur-[120px]
         "
       />
-
       <div className="relative mx-auto max-w-[1440px] px-4 sm:px-6">
         {/* Header */}
         <header className="mx-auto max-w-4xl text-center">
           <h2 className="font-heading text-[clamp(2.7rem,4vw,4.8rem)] font-semibold leading-[0.94] tracking-[-0.055em] text-slate-950">
             Cleaning solutions for{" "}
-            <span className="font-light italic text-sky-500">
-              every space.
-            </span>
+            <span className="font-light italic text-sky-500">every space.</span>
           </h2>
         </header>
-
         {/* Desktop carousel */}
         <div
           className="
@@ -1214,9 +948,7 @@ export default function ServiceCarousel() {
             <button
               type="button"
               aria-label="Previous service"
-              onClick={() =>
-                goTo(activeIndex - 1)
-              }
+              onClick={() => goTo(activeIndex - 1)}
               className="
                 grid
                 h-14
@@ -1245,15 +977,12 @@ export default function ServiceCarousel() {
               <ArrowLeft className="h-5 w-5" />
             </button>
           </div>
-
           {/* Next */}
           <div className="absolute right-4 top-1/2 z-40 -translate-y-1/2 xl:right-8">
             <button
               type="button"
               aria-label="Next service"
-              onClick={() =>
-                goTo(activeIndex + 1)
-              }
+              onClick={() => goTo(activeIndex + 1)}
               className="
                 grid
                 h-14
@@ -1282,15 +1011,8 @@ export default function ServiceCarousel() {
               <ArrowRight className="h-5 w-5" />
             </button>
           </div>
-
           {services.map((service, index) => {
-            const relative =
-              getRelativeIndex(
-                index,
-                activeIndex,
-                count,
-              );
-
+            const relative = getRelativeIndex(index, activeIndex, count);
             return (
               <DesktopCard
                 key={service.id}
@@ -1308,11 +1030,11 @@ export default function ServiceCarousel() {
             );
           })}
         </div>
-
         {/* Mobile / Tablet */}
         <div className="mt-14 lg:hidden">
           <div
             ref={mobileTrackRef}
+            onScroll={syncMobileActiveCard}
             className="
               flex
               snap-x
@@ -1347,21 +1069,18 @@ export default function ServiceCarousel() {
             ))}
           </div>
         </div>
-
         {/* Pagination */}
+        <p className="sr-only" aria-live="polite">
+          {`Service ${activeIndex + 1} of ${count}: ${services[activeIndex]?.title}`}
+        </p>
         <div className="mt-4 flex items-center justify-center gap-3 lg:mt-0">
           <div className="mr-4 hidden h-px w-20 bg-sky-100 sm:block" />
-
           {services.map((service, index) => (
             <button
               key={service.id}
               type="button"
               aria-label={`Go to ${service.title}`}
-              aria-current={
-                index === activeIndex
-                  ? "true"
-                  : undefined
-              }
+              aria-current={index === activeIndex ? "true" : undefined}
               onClick={() => goTo(index)}
               className={`
                 h-2.5
@@ -1374,24 +1093,34 @@ export default function ServiceCarousel() {
                 focus-visible:ring-2
                 focus-visible:ring-sky-500
                 focus-visible:ring-offset-2
-
-                ${index === activeIndex
-                  ? "w-8 scale-100 bg-sky-500"
-                  : "w-2.5 scale-90 bg-sky-100 hover:scale-100 hover:bg-sky-300"
+                ${
+                  index === activeIndex
+                    ? "w-8 scale-100 bg-sky-500"
+                    : "w-2.5 scale-90 bg-sky-100 hover:scale-100 hover:bg-sky-300"
                 }
               `}
             />
           ))}
-
           <div className="ml-4 hidden h-px w-20 bg-sky-100 sm:block" />
+          <button
+            type="button"
+            aria-label={
+              isPlaying ? "Pause automatic carousel" : "Play automatic carousel"
+            }
+            aria-pressed={!isPlaying}
+            onClick={() => setIsPlaying((current) => !current)}
+            className="ml-2 grid h-11 w-11 place-items-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-sky-300 hover:text-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+          >
+            {isPlaying ? (
+              <Pause className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <Play className="h-4 w-4" aria-hidden="true" />
+            )}
+          </button>
         </div>
       </div>
-
       {portalReady && selected && (
-        <ServiceModal
-          service={selected}
-          onClose={() => setSelected(null)}
-        />
+        <ServiceModal service={selected} onClose={() => setSelected(null)} />
       )}
     </section>
   );
