@@ -118,6 +118,12 @@ export default function Navbar({
             Bookings
           </a>
           <a
+            href="/dashboard/leads"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+          >
+            Leads
+          </a>
+          <a
             href="/dashboard/operations"
             className="relative rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >

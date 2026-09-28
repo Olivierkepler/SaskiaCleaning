@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
 import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -55,6 +55,58 @@ const INITIAL_DATA: FormData = {
   productPreference: "Eco-Friendly / Non-Toxic", scentProfile: "Neutral / No Scent", priorityAreas: "",
   allergyConcerns: "No Known Sensitivities", pets: "No Pets", strictAvoidances: "",
 };
+const IDEMPOTENCY_STORAGE_KEY = "saskia:inquiry-key:service_inquiry";
+
+function createIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  if (typeof crypto === "undefined") {
+    throw new Error("Secure request identifiers are unavailable.");
+  }
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+  return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
+}
+
+function getInquiryKey(current: { current: string | null }): string {
+  if (current.current) return current.current;
+  let stored: string | null = null;
+  try {
+    stored = sessionStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+  } catch {
+    // Keep the key in memory if browser storage is unavailable.
+  }
+  const key = stored || createIdempotencyKey();
+  current.current = key;
+  try {
+    sessionStorage.setItem(IDEMPOTENCY_STORAGE_KEY, key);
+  } catch {
+    // The in-memory key still protects retries while this form remains mounted.
+  }
+  return key;
+}
+
+function rotateInquiryKey(current: { current: string | null }): void {
+  const key = createIdempotencyKey();
+  current.current = key;
+  try {
+    sessionStorage.setItem(IDEMPOTENCY_STORAGE_KEY, key);
+  } catch {
+    // The form can continue with its in-memory key.
+  }
+}
+
+function clearInquiryKey(current: { current: string | null }): void {
+  current.current = null;
+  try {
+    sessionStorage.removeItem(IDEMPOTENCY_STORAGE_KEY);
+  } catch {
+    // The next mounted form will create an in-memory key.
+  }
+}
 
 // ─── Shared field components ──────────────────────────────────────────────────
 
@@ -337,6 +389,7 @@ function StepReview({ submitError, successMessage }: ReviewProps) {
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps) {
+  const idempotencyKey = useRef<string | null>(null);
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState<FormData>(INITIAL_DATA);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -386,12 +439,18 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
     setSubmitError("");
     setSuccessMessage("");
     try {
+      const requestKey = getInquiryKey(idempotencyKey);
       const res = await fetch("/api/service-inquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          source: "service_inquiry",
+          idempotencyKey: requestKey,
+        }),
       });
       if (!res.ok) throw new Error("Submission failed");
+      rotateInquiryKey(idempotencyKey);
       setSuccessMessage("Your request has been received. A concierge will be in contact shortly to confirm the next steps.");
     } catch {
       setSubmitError("We were unable to complete your request at this time. Please try again.");
@@ -558,7 +617,10 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
                 </div>
                 {onClose && (
                   <button
-                    onClick={onClose}
+                    onClick={() => {
+                      clearInquiryKey(idempotencyKey);
+                      onClose();
+                    }}
                     type="button"
                     style={{
                       width: "38px", height: "38px", borderRadius: "50%",

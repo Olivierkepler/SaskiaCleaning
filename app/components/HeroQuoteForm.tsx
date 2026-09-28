@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 
 interface CounterField {
@@ -19,6 +19,49 @@ interface FormState {
 }
 
 type SubmitStatus = "idle" | "loading" | "success";
+const IDEMPOTENCY_STORAGE_KEY = "saskia:inquiry-key:hero_quote";
+
+function createIdempotencyKey(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  if (typeof crypto === "undefined") {
+    throw new Error("Secure request identifiers are unavailable.");
+  }
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+  return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
+}
+
+function getInquiryKey(current: { current: string | null }): string {
+  if (current.current) return current.current;
+  let stored: string | null = null;
+  try {
+    stored = sessionStorage.getItem(IDEMPOTENCY_STORAGE_KEY);
+  } catch {
+    // Keep the key in memory if browser storage is unavailable.
+  }
+  const key = stored || createIdempotencyKey();
+  current.current = key;
+  try {
+    sessionStorage.setItem(IDEMPOTENCY_STORAGE_KEY, key);
+  } catch {
+    // The in-memory key still protects retries while this form remains mounted.
+  }
+  return key;
+}
+
+function rotateInquiryKey(current: { current: string | null }): void {
+  const key = createIdempotencyKey();
+  current.current = key;
+  try {
+    sessionStorage.setItem(IDEMPOTENCY_STORAGE_KEY, key);
+  } catch {
+    // The form can continue with its in-memory key.
+  }
+}
 
 function Counter({
   label,
@@ -96,6 +139,7 @@ const IconCheck = () => (
 
 export default function HeroBooking() {
   const t = useTranslations("hero");
+  const idempotencyKey = useRef<string | null>(null);
   const [form, setForm] = useState<FormState>({
     name: "",
     email: "",
@@ -114,12 +158,15 @@ export default function HeroBooking() {
     setStatus("loading");
 
     try {
+      const requestKey = getInquiryKey(idempotencyKey);
       const response = await fetch("/api/service-inquiry", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          source: "hero_quote",
+          idempotencyKey: requestKey,
           fullName: form.name,
           email: form.email,
           phone: form.mobile,
@@ -148,6 +195,7 @@ export default function HeroBooking() {
         bedrooms: 1,
         bathrooms: 1,
       });
+      rotateInquiryKey(idempotencyKey);
 
       setTimeout(() => setStatus("idle"), 3500);
     } catch (error) {
