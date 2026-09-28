@@ -54,8 +54,7 @@ bookingPrefill = null,
   const [locCity, setLocCity] = useState("Boston");
   const [locOpen, setLocOpen] = useState(false);
 // "Boston, MA" is only a pre-filled default, not a real user choice.
-// Customize is blocked until the user actively opens this field and
-// picks a city, even if they end up re-selecting Boston.
+// Track an actively selected location for date-driven Customize expansion.
   const [locConfirmed, setLocConfirmed] = useState(false);
   const [date, setDate] = useState<Date | null>(null);
   const [dateOpen, setDateOpen] = useState(false);
@@ -68,7 +67,7 @@ bookingPrefill = null,
   const [shakeKey, setShakeKey] = useState(0);
   const [requiredFieldsMessage, setRequiredFieldsMessage] = useState("");
   const [frequency, setFrequency] = useState("One-time");
-  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [optionsOpen, setOptionsOpen] = useState(true);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [standardBedIdx, setStandardBedIdx] = useState(1);
   const [standardBathIdx, setStandardBathIdx] = useState(0);
@@ -370,23 +369,6 @@ onConflict: () => {
     setDateOpen((value) => !value);
   }
   function handleCustomizeClick() {
-    const missingLocation = !locConfirmed;
-    const missingDate = !date;
-    if (missingLocation || missingDate) {
-      setLocOpen(false);
-      setDateOpen(false);
-      setLocError(missingLocation);
-      setDateError(missingDate);
-      setShakeKey((value) => value + 1);
-      const missingLabels = [
-        missingLocation ? "a location" : null,
-        missingDate ? "a date" : null,
-      ].filter(Boolean);
-      setRequiredFieldsMessage(
-        `Please select ${missingLabels.join(" and ")} before customizing your clean.`,
-      );
-      return;
-    }
     setLocError(false);
     setDateError(false);
     setRequiredFieldsMessage("");
