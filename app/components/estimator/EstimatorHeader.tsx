@@ -25,7 +25,7 @@ export function EstimatorHeader({
   warningReferralCode,
 }: EstimatorHeaderProps) {
   return (
-    <div className="mx-auto mt-12 max-w-4xl px-4 text-center sm:mt-16 sm:px-6 lg:mt-20">
+    <div id="instant-estimate" className="mx-auto mt-12 scroll-mt-24 max-w-4xl px-4 text-center sm:mt-16 sm:px-6 lg:mt-20">
       <motion.div
         initial="hidden"
         whileInView="visible"

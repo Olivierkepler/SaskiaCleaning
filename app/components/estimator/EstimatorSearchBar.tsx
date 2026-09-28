@@ -99,7 +99,7 @@ export function EstimatorSearchBar({
 }: EstimatorSearchBarProps) {
   return (
     <>
-      <div className="p-3 sm:p-5">
+      <div id="booking-requirements" className="scroll-mt-28 p-3 sm:p-5">
         {/* Mobile summary */}
         <button
           type="button"
@@ -178,7 +178,7 @@ export function EstimatorSearchBar({
               <SearchField
                 icon={<MapPin size={18} />}
                 label="Location"
-                value={`${locationCity}, ${locationState}`}
+                value={locationConfirmed ? `${locationCity}, ${locationState}` : "Select location"}
                 active={locationOpen}
                 onClick={onLocationFieldClick}
                 placeholder={!locationConfirmed}

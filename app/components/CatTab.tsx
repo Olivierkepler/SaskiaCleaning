@@ -39,6 +39,22 @@ import { EstimatorHeader } from "./estimator/EstimatorHeader";
 import { useEstimatorAvailability } from "./estimator/hooks/useEstimatorAvailability";
 import { buildBookingPayload } from "./estimator/booking/bookingWorkflow";
 import { useBookingSubmission } from "./estimator/hooks/useBookingSubmission";
+
+function getBookingRequirementsMessage(
+  hasLocation: boolean,
+  hasDate: boolean,
+  hasTime: boolean,
+): string {
+  const missing: string[] = [];
+  if (!hasLocation) missing.push("a location");
+  if (!hasDate) missing.push("a date");
+  if (!hasTime) missing.push("an available time");
+  if (missing.length === 0) return "";
+  if (missing.length === 1) return `Please select ${missing[0]}.`;
+  if (missing.length === 2) return `Please select ${missing[0]} and ${missing[1]}.`;
+  return `Please select ${missing.slice(0, -1).join(", ")}, and ${missing[missing.length - 1]}.`;
+}
+
 // ── Root ──────────────────────────────────────────────────────────────────────
 export default function CleaningEstimator({
 bookingPrefill = null,
@@ -51,17 +67,15 @@ bookingPrefill = null,
   const [serviceIdx, setServiceIdx] = useState<ServiceIndex>(0);
   const [prices, setPrices] = useState({ low: 144, mid: 180, high: 216 });
   const [locState, setLocState] = useState<StateKey>("MA");
-  const [locCity, setLocCity] = useState("Boston");
+  const [locCity, setLocCity] = useState("");
   const [locOpen, setLocOpen] = useState(false);
-// "Boston, MA" is only a pre-filled default, not a real user choice.
-// Track an actively selected location for date-driven Customize expansion.
+// Track explicit location selection for validation and date-driven expansion.
   const [locConfirmed, setLocConfirmed] = useState(false);
   const [date, setDate] = useState<Date | null>(null);
   const [dateOpen, setDateOpen] = useState(false);
   const svc = SERVICES[serviceIdx];
   const rootRef = useRef<HTMLElement>(null);
-// Drives the shake animation + inline error state on the Location/Date
-// fields when "Customize" is clicked before both are confirmed.
+// Drives the shake animation + inline error state on required booking fields.
   const [locError, setLocError] = useState(false);
   const [dateError, setDateError] = useState(false);
   const [shakeKey, setShakeKey] = useState(0);
@@ -108,21 +122,6 @@ bookingPrefill = null,
       setContactMobile(result.contact.phone);
       setLocationMode(result.locationMode);
       setSelectedAddressId(result.selectedAddressId);
-      if (
-        result.selectedAddressId &&
-        bookingPrefill.defaultAddress &&
-        result.selectedAddressId === bookingPrefill.defaultAddress.id
-      ) {
-        const matched = matchServiceAreaFromAddress(
-          bookingPrefill.defaultAddress,
-          LOCATIONS,
-        );
-        if (matched) {
-          setLocCity(matched.city);
-          setLocState(matched.state as StateKey);
-          setLocConfirmed(true);
-        }
-      }
       prefillAppliedRef.current = true;
     },
     [bookingPrefill],
@@ -151,6 +150,7 @@ bookingPrefill = null,
     setSelectedAddressId(null);
   }, []);
   const bookingLocationSummary = useMemo(() => {
+    if (!locConfirmed) return "";
     if (locationMode === "saved" && selectedAddressId && bookingPrefill) {
       const address = bookingPrefill.savedAddresses.find(
         (entry) => entry.id === selectedAddressId,
@@ -161,7 +161,8 @@ bookingPrefill = null,
   }, [
     locationMode,
     selectedAddressId,
-    bookingPrefill,
+      bookingPrefill,
+    locConfirmed,
     locCity,
     locState,
   ]);
@@ -245,7 +246,7 @@ bookingPrefill = null,
     commercialGalleryImages,
     isCommercialDefaultGalleryOnly,
   ]);
-  const mobileSearchSummary = `${locCity}, ${locState} · ${date ? formatDate(date, locale) : t("selectDate")} · ${optionsOpen ? t("detailsOpen") : t("customize")}`;
+  const mobileSearchSummary = `${locConfirmed ? `${locCity}, ${locState}` : "Select location"} · ${date ? formatDate(date, locale) : t("selectDate")} · ${optionsOpen ? t("detailsOpen") : t("customize")}`;
   useEffect(() => {
     const prefilledReferralCode = parseReferralCodeFromSearchParams(
       window.location.search,
@@ -382,7 +383,15 @@ onConflict: () => {
     setLocOpen(false);
     setDateOpen(false);
     setLocConfirmed(true);
+    setLocationMode("manual");
+    setSelectedAddressId(null);
     setLocError(false);
+    if (requiredFieldsMessage) {
+      setRequiredFieldsMessage(
+        getBookingRequirementsMessage(true, Boolean(date), Boolean(bookingTime)),
+      );
+      setDateError(!date);
+    }
   }
   function handleDateSelect(d: Date) {
     setDate(d);
@@ -390,27 +399,61 @@ onConflict: () => {
     setDateOpen(false);
     setDateError(false);
     clearSelectedTime();
+    if (requiredFieldsMessage) {
+      setRequiredFieldsMessage(
+        getBookingRequirementsMessage(locConfirmed, true, false),
+      );
+      setLocError(!locConfirmed);
+    }
 // Automatically open Customize once both required fields are valid.
     if (locConfirmed) {
       setLocError(false);
-      setRequiredFieldsMessage("");
+      if (!requiredFieldsMessage) setRequiredFieldsMessage("");
       setOptionsOpen(true);
     }
   }
   function handleBookingTimeSelect(time: string) {
     selectBookingTime(time);
-    setRequiredFieldsMessage("");
+    if (requiredFieldsMessage) {
+      setRequiredFieldsMessage(
+        getBookingRequirementsMessage(locConfirmed, Boolean(date), true),
+      );
+      setLocError(!locConfirmed);
+      setDateError(!date);
+    } else {
+      setRequiredFieldsMessage("");
+    }
   }
   function openBookingForm() {
-    if (!date || !bookingTime) {
-      setDateError(!date);
-      setRequiredFieldsMessage(
-        !date
-          ? "Please select a date and available time."
-          : "Please select an available time.",
-      );
+    const hasLocation = locConfirmed && Boolean(locCity);
+    const hasDate = Boolean(date);
+    const hasTime = Boolean(bookingTime);
+    const requirementMessage = getBookingRequirementsMessage(
+      hasLocation,
+      hasDate,
+      hasTime,
+    );
+    if (requirementMessage) {
+      setLocOpen(false);
+      setDateOpen(false);
+      setLocError(!hasLocation);
+      setDateError(!hasDate);
+      setShakeKey((value) => value + 1);
+      setRequiredFieldsMessage(requirementMessage);
+      setMobileSearchOpen(true);
+      requestAnimationFrame(() => {
+        document.getElementById("booking-requirements")?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
+      });
       return;
     }
+    setLocError(false);
+    setDateError(false);
+    setRequiredFieldsMessage("");
     setBookingFormOpen(true);
     resetSubmission();
     clearReferralCodeError();
@@ -441,7 +484,7 @@ onConflict: () => {
       new CustomEvent("open-chatbot", {
         detail: {
           service: svc.label,
-          location: `${locCity}, ${locState}`,
+          location: locConfirmed ? `${locCity}, ${locState}` : undefined,
           date: date ? formatDate(date, locale) : undefined,
           frequency,
           extras: summaryExtras,
@@ -604,7 +647,7 @@ onBookNow={openBookingForm}
 optionsOpen={optionsOpen}
 serviceLabel={svc.label}
 frequency={frequency}
-location={`${locCity}, ${locState}`}
+          location={locConfirmed ? bookingLocationSummary : "Select location"}
 date={date}
 extras={summaryExtras}
 prices={prices}
