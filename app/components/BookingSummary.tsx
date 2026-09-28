@@ -104,14 +104,14 @@ export default function BookingSummary({
   total,
   className = "",
 }: BookingSummaryProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <div
       className={`
         w-full
         overflow-hidden
-        rounded-[26px]
+        rounded-[18px]
         bg-[#F5F7FA]
 
           ${className}

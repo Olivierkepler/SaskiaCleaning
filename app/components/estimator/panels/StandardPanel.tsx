@@ -125,7 +125,7 @@ export function StandardPanel({
       <div
         className="
           rounded-[10px]
-          bg-[#F5F7FA]
+          bg-white
           p-5
           shadow-[4px_4px_10px_#E3EAF1,-4px_-4px_10px_rgba(255,255,255,0.97)]
           sm:p-6
@@ -235,7 +235,7 @@ export function StandardPanel({
       <div
         className="
           rounded-[10px]
-          bg-[#F5F7FA]
+          bg-white
           p-5
           shadow-[4px_4px_10px_#E3EAF1,-4px_-4px_10px_rgba(255,255,255,0.97)]
           sm:p-6

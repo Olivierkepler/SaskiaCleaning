@@ -30,6 +30,114 @@ export type EstimatorSidebarProps = {
   isDefaultGalleryOnly: boolean;
 };
 
+type EstimateRangeProps = Pick<
+  EstimatorSidebarProps,
+  | "optionsOpen"
+  | "prices"
+  | "locale"
+  | "estimateLabel"
+  | "lowLabel"
+  | "midLabel"
+  | "highLabel"
+> & {
+  placement: "top" | "bottom";
+};
+
+function EstimateRange({
+  optionsOpen,
+  prices,
+  locale,
+  estimateLabel,
+  lowLabel,
+  midLabel,
+  highLabel,
+  placement,
+}: EstimateRangeProps) {
+  return (
+    <AnimatePresence initial={false}>
+      {optionsOpen && (
+        <motion.div
+          initial={{
+            opacity: 0,
+            height: 0,
+          }}
+          animate={{
+            opacity: 1,
+            height: "auto",
+          }}
+          exit={{
+            opacity: 0,
+            height: 0,
+          }}
+          transition={{
+            duration: 0.25,
+            ease: MOTION_EASE,
+          }}
+          className={`
+            relative
+            z-10
+            overflow-hidden
+            ${placement === "top" ? "border-b" : "border-t"}
+            border-slate-200/70
+            bg-white/95
+            backdrop-blur-xl
+          `}
+        >
+          <div className="px-5 py-4 xl:px-6">
+            <div
+              className="
+                flex
+                flex-col
+                gap-4
+                xl:flex-row
+                xl:items-center
+                xl:justify-between
+              "
+            >
+              <div>
+                <p
+                  className="
+                    text-[10px]
+                    font-bold
+                    uppercase
+                    tracking-[0.22em]
+                    text-slate-400
+                  "
+                >
+                  {estimateLabel}
+                </p>
+              </div>
+
+              <div
+                className="
+                  grid
+                  grid-cols-3
+                  items-center
+                  overflow-hidden
+                  rounded-xl
+                "
+              >
+                <PricePill label={lowLabel} value={prices.low} locale={locale} />
+
+                <div className="px-2">
+                  <PricePill
+                    label={midLabel}
+                    value={prices.mid}
+                    accent
+                    locale={locale}
+                  />
+                </div>
+
+                <PricePill label={highLabel} value={prices.high} locale={locale} />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 export function EstimatorSidebar({
   optionsOpen,
   serviceLabel,
@@ -119,96 +227,16 @@ export function EstimatorSidebar({
           xl:min-h-[610px]
         "
       >
-        {/* Estimate Header */}
-        <AnimatePresence initial={false}>
-          {optionsOpen && (
-            <motion.div
-              initial={{
-                opacity: 0,
-                height: 0,
-              }}
-              animate={{
-                opacity: 1,
-                height: "auto",
-              }}
-              exit={{
-                opacity: 0,
-                height: 0,
-              }}
-              transition={{
-                duration: 0.25,
-                ease: MOTION_EASE,
-              }}
-              className="
-                relative
-                z-10
-                overflow-hidden
-                border-b
-                border-slate-200/70
-                bg-white/95
-                backdrop-blur-xl
-              "
-            >
-              <div className="px-5 py-4 xl:px-6">
-                <div
-                  className="
-                    flex
-                    flex-col
-                    gap-4
-                    xl:flex-row
-                    xl:items-center
-                    xl:justify-between
-                  "
-                >
-                  <div>
-                    <p
-                      className="
-                        text-[10px]
-                        font-bold
-                        uppercase
-                        tracking-[0.22em]
-                        text-slate-400
-                      "
-                    >
-                      {estimateLabel}
-                    </p>
-                  </div>
-
-                  <div
-                    className="
-                      grid
-                      grid-cols-3
-                      items-center
-                      overflow-hidden
-                      rounded-xl
-                    "
-                  >
-                    <PricePill
-                      label={lowLabel}
-                      value={prices.low}
-                      locale={locale}
-                    />
-
-                    <div className="px-2">
-                      <PricePill
-                        label={midLabel}
-                        value={prices.mid}
-                        accent
-                        locale={locale}
-                      />
-                    </div>
-
-                    <PricePill
-                      label={highLabel}
-                      value={prices.high}
-                      locale={locale}
-                    />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <EstimateRange
+          optionsOpen={optionsOpen}
+          prices={prices}
+          locale={locale}
+          estimateLabel={estimateLabel}
+          lowLabel={lowLabel}
+          midLabel={midLabel}
+          highLabel={highLabel}
+          placement="top"
+        />
 
         {/* Gallery */}
         <div
@@ -272,6 +300,18 @@ export function EstimatorSidebar({
             </div>
           </div>
         </div>
+
+        {/* Estimate range below the gallery */}
+        <EstimateRange
+          optionsOpen={optionsOpen}
+          prices={prices}
+          locale={locale}
+          estimateLabel={estimateLabel}
+          lowLabel={lowLabel}
+          midLabel={midLabel}
+          highLabel={highLabel}
+          placement="bottom"
+        />
       </motion.div>
     </div>
   );

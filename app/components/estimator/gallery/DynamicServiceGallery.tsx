@@ -23,6 +23,8 @@ export function DynamicServiceGallery({
     return null;
   }
 
+  const hasFourAddonImages = addonImages.length === 4;
+
   return (
     <motion.div
       key={galleryKey}
@@ -136,19 +138,16 @@ export function DynamicServiceGallery({
               "
             >
               <div
-                className="
-                  flex
+                className={`
                   w-full
-                  flex-row
-                  flex-wrap
                   items-start
                   justify-center
-                  gap-x-5
-                  gap-y-5
-                  lg:flex-nowrap
-                  lg:gap-x-6
-                  xl:gap-x-8
-                "
+                  ${
+                    hasFourAddonImages
+                      ? "grid grid-cols-4 gap-3 xl:gap-4"
+                      : "flex flex-row flex-wrap gap-x-5 gap-y-5 lg:flex-nowrap lg:gap-x-6 xl:gap-x-8"
+                  }
+                `}
               >
                 <AnimatePresence mode="popLayout">
                   {addonImages.map((img) => (
@@ -174,14 +173,11 @@ export function DynamicServiceGallery({
                         duration: 0.3,
                         ease: MOTION_EASE,
                       }}
-                      className="
-                        flex
-                        min-w-[120px]
-                        max-w-[180px]
-                        flex-1
-                        items-start
-                        justify-center
-                      "
+                      className={
+                        hasFourAddonImages
+                          ? "flex min-w-0 w-full items-center justify-center"
+                          : "flex min-w-[120px] max-w-[180px] flex-1 items-start justify-center"
+                      }
                     >
                       <StandardGalleryImageCard
                         img={img}
