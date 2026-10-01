@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, type FormEvent } from "react";
+import { useIsClient } from "@/app/lib/use-is-client";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -90,11 +91,7 @@ export function BookingModal({
   const tBooking = useTranslations("booking");
   const tEstimate = useTranslations("estimate");
   const locale = useLocale();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   // Lock body scroll while the modal is open so the fixed backdrop never
   // appears to "scroll away" on mobile browsers.

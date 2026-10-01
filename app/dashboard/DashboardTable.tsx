@@ -429,9 +429,13 @@ export default function DashboardTable({
     return result;
   }, [bookings, search, sort, bedroomFilter, bathroomFilter, statusFilter, referralFilter, assignmentFilter, assignedSet]);
 
-  useEffect(() => {
+  // Return to page 1 whenever filters, sort or page size change.
+  const filterKey = JSON.stringify([search, sort, bedroomFilter, bathroomFilter, statusFilter, referralFilter, assignmentFilter, itemsPerPage]);
+  const [pageFilterKey, setPageFilterKey] = useState(filterKey);
+  if (pageFilterKey !== filterKey) {
+    setPageFilterKey(filterKey);
     setCurrentPage(1);
-  }, [search, sort, bedroomFilter, bathroomFilter, statusFilter, referralFilter, assignmentFilter, itemsPerPage]);
+  }
 
   const totalPages = useMemo(
     () => Math.max(1, Math.ceil(filteredBookings.length / itemsPerPage)),
@@ -456,11 +460,9 @@ export default function DashboardTable({
     return Math.min(page * itemsPerPage, filteredBookings.length);
   }, [filteredBookings.length, currentPage, itemsPerPage, totalPages]);
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+  if (currentPage > totalPages) {
+    setCurrentPage(totalPages);
+  }
 
   const metrics = useMemo(() => {
     const total = bookings.length;

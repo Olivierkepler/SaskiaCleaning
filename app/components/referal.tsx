@@ -313,13 +313,13 @@ function PopupAd({ onClose }: ReferralAdProps) {
       >
         {/* Hero */}
         <div className="relative flex flex-col items-center overflow-hidden bg-gradient-to-br from-sky-600 via-sky-500 to-cyan-400 px-8 pt-10 pb-8 text-center text-white">
-          {[
+          {([
             { top: "12%", left: "8%", size: 20, delay: "0s" },
             { top: "18%", right: "10%", size: 14, delay: "0.3s" },
             { bottom: "20%", left: "15%", size: 12, delay: "0.6s" },
             { bottom: "28%", right: "8%", size: 18, delay: "0.9s" },
-          ].map((s, i) => (
-            <div key={i} className="absolute animate-pulse text-white/40" style={{ top: s.top, left: s.left, right: (s as any).right, bottom: (s as any).bottom, animationDelay: s.delay }}>
+          ] as { top?: string; left?: string; right?: string; bottom?: string; size: number; delay: string }[]).map((s, i) => (
+            <div key={i} className="absolute animate-pulse text-white/40" style={{ top: s.top, left: s.left, right: s.right, bottom: s.bottom, animationDelay: s.delay }}>
               <Sparkle size={s.size} />
             </div>
           ))}

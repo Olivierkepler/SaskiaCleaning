@@ -27,11 +27,26 @@ export default function BookingAssignControl({
   const [error, setError] = useState("");
   const [staffId, setStaffId] = useState("");
 
+  // Enter the loading state when opened, or when the booking changes while open.
+  function toggleOpen() {
+    if (!open) {
+      setLoading(true);
+      setError("");
+    }
+    setOpen(!open);
+  }
+  const [loadedBookingId, setLoadedBookingId] = useState(bookingId);
+  if (loadedBookingId !== bookingId) {
+    setLoadedBookingId(bookingId);
+    if (open) {
+      setLoading(true);
+      setError("");
+    }
+  }
+
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    setLoading(true);
-    setError("");
     fetch(
       `/api/dashboard/bookings/${bookingId}/assignment`,
     )
@@ -95,7 +110,7 @@ export default function BookingAssignControl({
     <div className="mt-2">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={toggleOpen}
         className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700"
       >
         {assignment?.staffName

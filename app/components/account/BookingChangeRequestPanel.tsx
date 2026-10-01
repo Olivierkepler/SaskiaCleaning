@@ -59,17 +59,18 @@ export default function BookingChangeRequestPanel({
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
   const minDate = tomorrow.toISOString().slice(0, 10);
 
-  useEffect(() => {
-    if (!requestedDate) {
-      setAvailableSlots([]);
-      setRequestedTime(null);
-      return;
-    }
-
-    let cancelled = false;
-    setSlotsLoading(true);
+  // Clear the previous date's slots/selection whenever the date changes.
+  function changeRequestedDate(value: string) {
+    setRequestedDate(value);
     setRequestedTime(null);
     setAvailableSlots([]);
+    if (value) setSlotsLoading(true);
+  }
+
+  useEffect(() => {
+    if (!requestedDate) return;
+
+    let cancelled = false;
 
     fetch(`/api/availability?date=${encodeURIComponent(requestedDate)}`)
       .then(async (response) => {
@@ -131,7 +132,7 @@ export default function BookingChangeRequestPanel({
       );
       setMode("idle");
       setReason("");
-      setRequestedDate("");
+      changeRequestedDate("");
       setRequestedTime(null);
       router.refresh();
     } catch {
@@ -245,7 +246,7 @@ export default function BookingChangeRequestPanel({
                   required
                   min={minDate}
                   value={requestedDate}
-                  onChange={(event) => setRequestedDate(event.target.value)}
+                  onChange={(event) => changeRequestedDate(event.target.value)}
                   className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
                 />
               </label>

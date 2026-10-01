@@ -15,7 +15,7 @@ export const SERVICES: readonly EstimatorService[] = [
     image: "/images/standard/Designer(15).png",
     label: "Standard",
     photo: "/images/booking/Designer(9).png",
-    headline: <>Find the right cleaner<br />from Boston's best<span style={{ color: K.blue }}>.</span></>,
+    headline: <>Find the right cleaner<br />from Boston&apos;s best<span style={{ color: K.blue }}>.</span></>,
     bookLabel: "Book now",
   },
   {

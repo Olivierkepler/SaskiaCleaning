@@ -37,6 +37,31 @@ const DAY_LABELS = [
   "Saturday",
 ];
 
+async function fetchAvailabilitySettings(): Promise<{
+  days: DayRow[];
+  jobBufferMinutes: number | null;
+  blocks: BlockRow[];
+}> {
+  const [availRes, blocksRes] = await Promise.all([
+    fetch(`/api/dashboard/availability`),
+    fetch(
+      `/api/dashboard/scheduling-blocks`,
+    ),
+  ]);
+  const availData = await availRes.json();
+  const blocksData = await blocksRes.json();
+  if (!availRes.ok) throw new Error(availData.error || "Failed to load hours");
+  if (!blocksRes.ok) throw new Error(blocksData.error || "Failed to load blocks");
+  return {
+    days: availData.days ?? [],
+    jobBufferMinutes:
+      typeof availData.jobBufferMinutes === "number"
+        ? availData.jobBufferMinutes
+        : null,
+    blocks: blocksData.blocks ?? [],
+  };
+}
+
 export default function AvailabilityAdminClient() {
   const [days, setDays] = useState<DayRow[]>([]);
   const [blocks, setBlocks] = useState<BlockRow[]>([]);
@@ -53,32 +78,39 @@ export default function AvailabilityAdminClient() {
   const [capacitySlots, setCapacitySlots] = useState<CapacitySlot[]>([]);
   const [capacityLoading, setCapacityLoading] = useState(false);
 
-  const load = useCallback(async () => {
-    setError("");
-    try {
-      const [availRes, blocksRes] = await Promise.all([
-        fetch(`/api/dashboard/availability`),
-        fetch(
-          `/api/dashboard/scheduling-blocks`,
-        ),
-      ]);
-      const availData = await availRes.json();
-      const blocksData = await blocksRes.json();
-      if (!availRes.ok) throw new Error(availData.error || "Failed to load hours");
-      if (!blocksRes.ok) throw new Error(blocksData.error || "Failed to load blocks");
-      setDays(availData.days ?? []);
-      if (typeof availData.jobBufferMinutes === "number") {
-        setJobBufferMinutes(availData.jobBufferMinutes);
+  const applySettings = useCallback(
+    (settings: Awaited<ReturnType<typeof fetchAvailabilitySettings>>) => {
+      setDays(settings.days);
+      if (settings.jobBufferMinutes !== null) {
+        setJobBufferMinutes(settings.jobBufferMinutes);
       }
-      setBlocks(blocksData.blocks ?? []);
+      setBlocks(settings.blocks);
+    },
+    [],
+  );
+
+  const load = useCallback(async () => {
+    try {
+      applySettings(await fetchAvailabilitySettings());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
     }
-  }, []);
+  }, [applySettings]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    fetchAvailabilitySettings().then(
+      (settings) => {
+        if (!cancelled) applySettings(settings);
+      },
+      (err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [applySettings]);
 
   async function loadCapacity() {
     if (!capacityDate) return;

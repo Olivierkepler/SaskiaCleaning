@@ -191,7 +191,7 @@ describe("ownership and mutation rules (unit)", () => {
   });
 
   it("double approval prevented by pending gate", () => {
-    let request = { status: "approved" };
+    const request = { status: "approved" };
     const canApproveAgain = request.status === "pending";
     assert.equal(canApproveAgain, false);
   });

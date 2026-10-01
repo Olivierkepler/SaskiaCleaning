@@ -1,6 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/app/lib/use-is-client";
 import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
@@ -793,7 +794,7 @@ export default function ServiceCarousel() {
   );
   const [activeIndex, setActiveIndex] = useState(0);
   const [selected, setSelected] = useState<Service | null>(null);
-  const [portalReady, setPortalReady] = useState(false);
+  const portalReady = useIsClient();
   const [isPlaying, setIsPlaying] = useState(true);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [pageVisible, setPageVisible] = useState(true);
@@ -835,9 +836,6 @@ export default function ServiceCarousel() {
       }
     });
     setActiveIndex(closestIndex);
-  }, []);
-  useEffect(() => {
-    setPortalReady(true);
   }, []);
   useEffect(() => {
     const media = window.matchMedia("(prefers-reduced-motion: reduce)");

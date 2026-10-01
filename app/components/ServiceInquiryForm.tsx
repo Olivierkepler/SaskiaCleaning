@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { useState, useRef, ChangeEvent } from "react";
 import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -398,7 +398,12 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
 
-  useEffect(() => { setImgLoaded(false); }, [step]);
+  // Reset the image fade-in whenever the step changes.
+  const [imgStep, setImgStep] = useState(step);
+  if (imgStep !== step) {
+    setImgStep(step);
+    setImgLoaded(false);
+  }
 
   const handleChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -462,11 +467,11 @@ export default function ServiceInquiryForm({ onClose }: ServiceInquiryFormProps)
   const isLast = step === STEPS.length - 1;
 
   const stepComponents: React.ReactNode[] = [
-    <StepIdentity data={formData} onChange={handleChange} errors={errors} />,
-    <StepResidence data={formData} onChange={handleChange} errors={errors} />,
-    <StepPreferences data={formData} onChange={handleChange} errors={errors} />,
-    <StepSensitivities data={formData} onChange={handleChange} />,
-    <StepReview submitError={submitError} successMessage={successMessage} />,
+    <StepIdentity key="identity" data={formData} onChange={handleChange} errors={errors} />,
+    <StepResidence key="residence" data={formData} onChange={handleChange} errors={errors} />,
+    <StepPreferences key="preferences" data={formData} onChange={handleChange} errors={errors} />,
+    <StepSensitivities key="sensitivities" data={formData} onChange={handleChange} />,
+    <StepReview key="review" submitError={submitError} successMessage={successMessage} />,
   ];
 
   return (

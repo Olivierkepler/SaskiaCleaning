@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient, useMediaQuery } from "@/app/lib/use-is-client";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -126,33 +127,8 @@ function AdCard({
   index: number;
   onReferralClick?: () => void;
 }) {
-  const [isMobile, setIsMobile] = useState(false);
-  const [hasMounted, setHasMounted] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(
-      "(max-width: 767px)",
-    );
-
-    const updateIsMobile = () => {
-      setIsMobile(mediaQuery.matches);
-    };
-
-    updateIsMobile();
-    setHasMounted(true);
-
-    mediaQuery.addEventListener(
-      "change",
-      updateIsMobile,
-    );
-
-    return () => {
-      mediaQuery.removeEventListener(
-        "change",
-        updateIsMobile,
-      );
-    };
-  }, []);
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const hasMounted = useIsClient();
 
   const tagColor = card.isRedTag
     ? "bg-rose-700"

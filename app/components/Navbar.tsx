@@ -119,11 +119,12 @@ export default function Navbar({
     };
   }, []);
 
-  useEffect(() => {
-    if (shouldHideNavbar) {
-      setIsOpen(false);
-    }
-  }, [shouldHideNavbar]);
+  // Close the mobile menu whenever the navbar becomes hidden.
+  const [wasHidden, setWasHidden] = useState(shouldHideNavbar);
+  if (wasHidden !== shouldHideNavbar) {
+    setWasHidden(shouldHideNavbar);
+    if (shouldHideNavbar) setIsOpen(false);
+  }
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";

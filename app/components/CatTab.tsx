@@ -1,5 +1,5 @@
 "use client";
-import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, useSyncExternalStore } from "react";
 import { motion } from "framer-motion";
 import { normalizeReferralCode, parseReferralCodeFromSearchParams } from "@/app/lib/referrals";
 import {
@@ -56,6 +56,8 @@ function getBookingRequirementsMessage(
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
+const subscribeToNothing = () => () => {};
+
 export default function CleaningEstimator({
 bookingPrefill = null,
 }: {
@@ -86,18 +88,40 @@ bookingPrefill = null,
   const [standardBedIdx, setStandardBedIdx] = useState(1);
   const [standardBathIdx, setStandardBathIdx] = useState(0);
   const [bookingFormOpen, setBookingFormOpen] = useState(false);
-  const [contactName, setContactName] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactMobile, setContactMobile] = useState("");
+  // Apply the profile prefill once, at mount, via lazy initial state.
+  const [initialPrefill] = useState(() =>
+    applyBookingPrefillOnce({ alreadyApplied: false, prefill: bookingPrefill }),
+  );
+  const [contactName, setContactName] = useState(initialPrefill.contact.name);
+  const [contactEmail, setContactEmail] = useState(initialPrefill.contact.email);
+  const [contactMobile, setContactMobile] = useState(initialPrefill.contact.phone);
   const [contactNotes, setContactNotes] = useState("");
-  const [locationMode, setLocationMode] = useState<"saved" | "manual">("manual");
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
-  const prefillAppliedRef = useRef(false);
+  const [locationMode, setLocationMode] = useState<"saved" | "manual">(initialPrefill.locationMode);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(initialPrefill.selectedAddressId);
+  const prefillAppliedRef = useRef(true);
   const [referralCode, setReferralCode] = useState("");
-  const [referralValidation, setReferralValidation] =
-    useState<ReferralValidationState>({ status: "idle" });
+  // Latest validation result, tagged with the code it belongs to.
+  const [referralCheck, setReferralCheck] = useState<{
+    code: string;
+    result: ReferralValidationState;
+  } | null>(null);
+  const normalizedReferralCode = normalizeReferralCode(referralCode);
+  const referralValidation = useMemo<ReferralValidationState>(() => {
+    if (!normalizedReferralCode) return { status: "idle" };
+    if (referralCheck?.code === normalizedReferralCode) return referralCheck.result;
+    return { status: "checking" };
+  }, [normalizedReferralCode, referralCheck]);
+  // Referral code from the page URL (?ref=...), applied once after hydration.
+  const urlReferralCode = useSyncExternalStore(
+    subscribeToNothing,
+    () => parseReferralCodeFromSearchParams(window.location.search),
+    () => null,
+  );
   const [referralLinkCode, setReferralLinkCode] = useState<string | null>(null);
-  const urlPrefilledReferralCode = useRef<string | null>(null);
+  if (urlReferralCode && referralLinkCode === null) {
+    setReferralLinkCode(urlReferralCode);
+    setReferralCode(urlReferralCode);
+  }
   const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(new Set());
   const applyPrefillSnapshot = useCallback(
     (force = false) => {
@@ -126,9 +150,6 @@ bookingPrefill = null,
     },
     [bookingPrefill],
   );
-  useEffect(() => {
-    applyPrefillSnapshot(false);
-  }, [applyPrefillSnapshot]);
   const handleSelectSavedAddress = useCallback(
     (addressId: string) => {
       const address = bookingPrefill?.savedAddresses.find((a) => a.id === addressId);
@@ -248,26 +269,8 @@ bookingPrefill = null,
   ]);
   const mobileSearchSummary = `${locConfirmed ? `${locCity}, ${locState}` : "Select location"} · ${date ? formatDate(date, locale) : t("selectDate")} · ${optionsOpen ? t("detailsOpen") : t("customize")}`;
   useEffect(() => {
-    const prefilledReferralCode = parseReferralCodeFromSearchParams(
-      window.location.search,
-    );
-    if (!prefilledReferralCode) return;
-    urlPrefilledReferralCode.current = prefilledReferralCode;
-    setReferralLinkCode(prefilledReferralCode);
-    setReferralCode(prefilledReferralCode);
-  }, []);
-  useEffect(() => {
-    const trimmed = referralCode.trim();
-    if (!trimmed) {
-      setReferralValidation({ status: "idle" });
-      return;
-    }
-    const normalizedCode = normalizeReferralCode(referralCode);
-    if (!normalizedCode) {
-      setReferralValidation({ status: "idle" });
-      return;
-    }
-    setReferralValidation({ status: "checking" });
+    const normalizedCode = normalizedReferralCode;
+    if (!normalizedCode) return;
     const timer = window.setTimeout(async () => {
       try {
         const response = await fetch("/api/referral-codes/validate", {
@@ -281,24 +284,24 @@ bookingPrefill = null,
           friendDiscountAmount?: number;
         };
         if (!response.ok) {
-          setReferralValidation({ status: "idle" });
+          setReferralCheck({ code: normalizedCode, result: { status: "idle" } });
           return;
         }
         if (data.valid && data.code && data.friendDiscountAmount != null) {
-          setReferralValidation({
+          setReferralCheck({ code: normalizedCode, result: {
             status: "valid",
             code: data.code,
             friendDiscountAmount: data.friendDiscountAmount,
-          });
+          } });
           return;
         }
-        setReferralValidation({ status: "invalid" });
+        setReferralCheck({ code: normalizedCode, result: { status: "invalid" } });
       } catch {
-        setReferralValidation({ status: "idle" });
+        setReferralCheck({ code: normalizedCode, result: { status: "idle" } });
       }
     }, 400);
     return () => window.clearTimeout(timer);
-  }, [referralCode]);
+  }, [normalizedReferralCode]);
   const {
     bookingStatus,
     bookingErrorMessage,
@@ -332,7 +335,7 @@ bookingPrefill = null,
       }),
 onSuccess: ({ clearReferralCodeError: clearSubmissionReferralError }) => {
       setContactNotes("");
-      setReferralCode(urlPrefilledReferralCode.current ?? "");
+      setReferralCode(referralLinkCode ?? "");
       clearSubmissionReferralError();
       clearSelectedTime();
 // Re-apply initial profile snapshot for a subsequent booking — never
@@ -462,7 +465,7 @@ onConflict: () => {
     if (bookingStatus === "loading") return;
     setBookingFormOpen(false);
     resetSubmission();
-    setReferralCode(urlPrefilledReferralCode.current ?? "");
+    setReferralCode(referralLinkCode ?? "");
     clearReferralCodeError();
   }
   function handleReferralCodeChange(value: string) {

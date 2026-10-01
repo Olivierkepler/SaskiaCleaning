@@ -8,6 +8,15 @@ type Rule = {
   durationMinutes: number;
 };
 
+async function fetchRules(): Promise<Rule[]> {
+  const res = await fetch(
+    `/api/dashboard/service-durations`,
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to load");
+  return data.rules ?? [];
+}
+
 export default function ServiceDurationsClient() {
   const [rules, setRules] = useState<Rule[]>([]);
   const [error, setError] = useState("");
@@ -17,22 +26,27 @@ export default function ServiceDurationsClient() {
   const [newMinutes, setNewMinutes] = useState("120");
 
   const load = useCallback(async () => {
-    setError("");
     try {
-      const res = await fetch(
-        `/api/dashboard/service-durations`,
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load");
-      setRules(data.rules ?? []);
+      setRules(await fetchRules());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
     }
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    fetchRules().then(
+      (nextRules) => {
+        if (!cancelled) setRules(nextRules);
+      },
+      (err) => {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
+      },
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   async function saveRule(rule: Rule) {
     setSaving(true);

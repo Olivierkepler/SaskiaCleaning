@@ -34,11 +34,13 @@ export function CollapsibleGroup({
   children: ReactNode;
 }) {
   const isLargeScreen = useIsLargeScreen();
-  const [open, setOpen] = useState(defaultOpen);
-
-  useEffect(() => {
+  const [open, setOpen] = useState(isLargeScreen ? true : defaultOpen);
+  // Re-sync when the breakpoint or default changes (adjusting state during render).
+  const [syncedFor, setSyncedFor] = useState({ isLargeScreen, defaultOpen });
+  if (syncedFor.isLargeScreen !== isLargeScreen || syncedFor.defaultOpen !== defaultOpen) {
+    setSyncedFor({ isLargeScreen, defaultOpen });
     setOpen(isLargeScreen ? true : defaultOpen);
-  }, [isLargeScreen, defaultOpen]);
+  }
 
   return (
     <section className="overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06),0_4px_10px_rgba(15,23,42,0.04)] transition-shadow duration-200 hover:shadow-[0_2px_4px_rgba(15,23,42,0.08),0_8px_16px_rgba(15,23,42,0.06)]">

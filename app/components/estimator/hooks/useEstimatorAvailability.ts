@@ -61,7 +61,13 @@ export function useEstimatorAvailability({
     });
   }, [selectedDateOnly, serviceLabel, bedrooms, bathrooms]);
 
-  useEffect(() => {
+  // When the query changes, reset (no date) or enter the loading state
+  // during render; the effect below only performs the fetch.
+  const [appliedQuery, setAppliedQuery] = useState<string | null | undefined>(
+    undefined,
+  );
+  if (appliedQuery !== availabilityQuery) {
+    setAppliedQuery(availabilityQuery);
     if (!availabilityQuery) {
       const resetState = getNullAvailabilityQueryState();
       setAvailableSlots(resetState.slots);
@@ -69,16 +75,20 @@ export function useEstimatorAvailability({
       setSlotsLoading(resetState.loading);
       setSlotsError(resetState.error);
       setEstimatedDurationMinutes(resetState.estimatedDurationMinutes);
-      return;
+    } else {
+      const startState = getAvailabilityRequestStartState();
+      setSlotsLoading(startState.loading);
+      setSlotsError(startState.error);
+      setAvailableSlots(startState.slots);
+      setBookingTime(startState.selectedTime);
+      setSlotRefreshMessage(startState.refreshMessage);
     }
+  }
+
+  useEffect(() => {
+    if (!availabilityQuery) return;
 
     const requestId = ++slotsRequestIdRef.current;
-    const startState = getAvailabilityRequestStartState();
-    setSlotsLoading(startState.loading);
-    setSlotsError(startState.error);
-    setAvailableSlots(startState.slots);
-    setBookingTime(startState.selectedTime);
-    setSlotRefreshMessage(startState.refreshMessage);
 
     fetch(`/api/availability?${availabilityQuery}`)
       .then(async (response) => {

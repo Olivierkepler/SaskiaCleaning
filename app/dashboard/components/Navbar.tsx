@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import AdminSignOutButton from "@/app/components/admin/AdminSignOutButton";
 
@@ -167,32 +168,32 @@ export default function Navbar({
           >
             Availability
           </a>
-          <a
+          <Link
             href="/dashboard/service-durations"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Durations
-          </a>
-          <a
+          </Link>
+          <Link
             href="/dashboard/staff"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Staff
-          </a>
+          </Link>
           {isOwner ? (
-            <a
+            <Link
               href="/dashboard/admins"
               className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               Admins
-            </a>
+            </Link>
           ) : null}
-          <a
+          <Link
             href="/"
             className="rounded-lg bg-sky-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-sky-600"
           >
             Home
-          </a>
+          </Link>
           <AdminSignOutButton />
 
           <div className="relative" ref={dropdownRef}>

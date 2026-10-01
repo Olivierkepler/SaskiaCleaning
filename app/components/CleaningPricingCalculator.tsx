@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/app/lib/use-is-client";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 
@@ -75,9 +76,7 @@ export default function CleaningServicesPricing() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryDef | null>(
     null,
   );
-  const [portalReady, setPortalReady] = useState(false);
-
-  useEffect(() => setPortalReady(true), []);
+  const portalReady = useIsClient();
 
   const modal =
     portalReady &&

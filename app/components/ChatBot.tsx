@@ -209,11 +209,13 @@ export default function ChatBot() {
     };
   }, []);
 
+  // Clear the mobile viewport sizing as soon as the chat closes.
+  if (!isOpen && visibleViewport !== null) {
+    setVisibleViewport(null);
+  }
+
   useLayoutEffect(() => {
-    if (!isOpen) {
-      setVisibleViewport(null);
-      return;
-    }
+    if (!isOpen) return;
 
     const mobileQuery = window.matchMedia("(max-width: 768px)");
 

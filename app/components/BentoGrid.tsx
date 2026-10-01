@@ -27,7 +27,7 @@ export default function BentoGrid() {
           {/* Medium Card */}
           <div className="md:col-span-8 bg-zinc-900 p-12 flex items-center justify-between border border-white/10">
             <div className="text-5xl font-serif tracking-tighter">0.01%</div>
-            <p className="max-w-xs text-right text-xs uppercase tracking-widest text-gray-500">The tolerance for dust in our "Molecular Clean" protocol.</p>
+            <p className="max-w-xs text-right text-xs uppercase tracking-widest text-gray-500">The tolerance for dust in our &quot;Molecular Clean&quot; protocol.</p>
           </div>
   
         </div>

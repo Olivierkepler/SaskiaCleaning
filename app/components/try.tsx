@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useCallback, useRef, useEffect, useMemo, type FormEvent, type ReactNode } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { useIsClient } from "@/app/lib/use-is-client";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, ChevronDown, MapPin, SlidersHorizontal } from "lucide-react";
@@ -644,11 +645,13 @@ function useIsLargeScreen() {
     children: React.ReactNode;
   }) {
     const isLargeScreen = useIsLargeScreen();
-    const [open, setOpen] = useState(defaultOpen);
-  
-    useEffect(() => {
+    const [open, setOpen] = useState(isLargeScreen ? true : defaultOpen);
+    // Re-sync when the breakpoint or default changes (adjusting state during render).
+    const [syncedFor, setSyncedFor] = useState({ isLargeScreen, defaultOpen });
+    if (syncedFor.isLargeScreen !== isLargeScreen || syncedFor.defaultOpen !== defaultOpen) {
+      setSyncedFor({ isLargeScreen, defaultOpen });
       setOpen(isLargeScreen ? true : defaultOpen);
-    }, [isLargeScreen, defaultOpen]);
+    }
   
     return (
       <section className="overflow-hidden rounded-xl bg-white shadow-[0_1px_2px_rgba(15,23,42,0.06),0_4px_10px_rgba(15,23,42,0.04)] transition-shadow duration-200 hover:shadow-[0_2px_4px_rgba(15,23,42,0.08),0_8px_16px_rgba(15,23,42,0.06)]">
@@ -1149,7 +1152,7 @@ function MoveOutPanel({
                   Deposit-back guarantee.
                 </strong>{" "}
                 Our move-out clean meets most landlord inspection standards. If
-                your deposit is withheld for cleaning reasons, we'll re-clean for
+                your deposit is withheld for cleaning reasons, we&apos;ll re-clean for
                 free.
               </>
             }
@@ -1228,7 +1231,7 @@ function CommercialPanel({
 
 // ── Service config ─────────────────────────────────────────────────────────────
 const SERVICES = [
-  { image: "/images/standard/Designer(15).png", label: "Standard",  photo: "/images/booking/Designer(9).png", headline: <>Find the right cleaner<br />from Boston's best<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book now"            },
+  { image: "/images/standard/Designer(15).png", label: "Standard",  photo: "/images/booking/Designer(9).png", headline: <>Find the right cleaner<br />from Boston&apos;s best<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book now"            },
   { image: "/images/deepclean/Designer(19).png",        label: "Deep clean", photo: "/images/boston.jpg", headline: <>Book a deep clean<br />that actually goes deep<span style={{ color: K.blue }}>.</span></>,   bookLabel: "Book deep clean"     },
   { image: "/images/moveout/moveout.png",          label: "Move-out",   photo: "/images/boston.jpg", headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,        bookLabel: "Book move-out clean" },
   { image: "/images/commercial/commercial.png",        label: "Commercial", photo: "/images/boston.jpg", headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,      bookLabel: "Get a quote"         },
@@ -1280,11 +1283,7 @@ function BookingModal({
   onNotesChange: (value: string) => void;
   onReferralCodeChange: (value: string) => void;
 }) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   // Lock body scroll while the modal is open so the fixed backdrop never
   // appears to "scroll away" on mobile browsers.
@@ -1557,6 +1556,8 @@ function BookingModal({
 }
 
 // ── Root ──────────────────────────────────────────────────────────────────────
+const subscribeToNothing = () => () => {};
+
 export default function CleaningEstimator() {
   const [serviceIdx, setServiceIdx] = useState<ServiceIndex>(0);
   const [prices,     setPrices]     = useState({ low: 144, mid: 180, high: 216 });
@@ -1596,10 +1597,28 @@ export default function CleaningEstimator() {
   const [contactNotes, setContactNotes] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [referralCodeError, setReferralCodeError] = useState("");
-  const [referralValidation, setReferralValidation] =
-    useState<ReferralValidationState>({ status: "idle" });
+  // Latest validation result, tagged with the code it belongs to.
+  const [referralCheck, setReferralCheck] = useState<{
+    code: string;
+    result: ReferralValidationState;
+  } | null>(null);
+  const normalizedReferralCode = normalizeReferralCode(referralCode);
+  const referralValidation = useMemo<ReferralValidationState>(() => {
+    if (!normalizedReferralCode) return { status: "idle" };
+    if (referralCheck?.code === normalizedReferralCode) return referralCheck.result;
+    return { status: "checking" };
+  }, [normalizedReferralCode, referralCheck]);
+  // Referral code from the page URL (?ref=...), applied once after hydration.
+  const urlReferralCode = useSyncExternalStore(
+    subscribeToNothing,
+    () => parseReferralCodeFromSearchParams(window.location.search),
+    () => null,
+  );
   const [referralLinkCode, setReferralLinkCode] = useState<string | null>(null);
-  const urlPrefilledReferralCode = useRef<string | null>(null);
+  if (urlReferralCode && referralLinkCode === null) {
+    setReferralLinkCode(urlReferralCode);
+    setReferralCode(urlReferralCode);
+  }
   const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(new Set());
 
   const handleStandardAddonsChange = useCallback((addons: Set<string>) => {
@@ -1672,30 +1691,8 @@ export default function CleaningEstimator() {
   const mobileSearchSummary = `${locCity}, ${locState} · ${date ? formatDate(date) : "Select date"} · ${optionsOpen ? "Details open" : "Customize"}`;
 
   useEffect(() => {
-    const prefilledReferralCode = parseReferralCodeFromSearchParams(
-      window.location.search,
-    );
-    if (!prefilledReferralCode) return;
-
-    urlPrefilledReferralCode.current = prefilledReferralCode;
-    setReferralLinkCode(prefilledReferralCode);
-    setReferralCode(prefilledReferralCode);
-  }, []);
-
-  useEffect(() => {
-    const trimmed = referralCode.trim();
-    if (!trimmed) {
-      setReferralValidation({ status: "idle" });
-      return;
-    }
-
-    const normalizedCode = normalizeReferralCode(referralCode);
-    if (!normalizedCode) {
-      setReferralValidation({ status: "idle" });
-      return;
-    }
-
-    setReferralValidation({ status: "checking" });
+    const normalizedCode = normalizedReferralCode;
+    if (!normalizedCode) return;
 
     const timer = window.setTimeout(async () => {
       try {
@@ -1712,27 +1709,27 @@ export default function CleaningEstimator() {
         };
 
         if (!response.ok) {
-          setReferralValidation({ status: "idle" });
+          setReferralCheck({ code: normalizedCode, result: { status: "idle" } });
           return;
         }
 
         if (data.valid && data.code && data.friendDiscountAmount != null) {
-          setReferralValidation({
+          setReferralCheck({ code: normalizedCode, result: {
             status: "valid",
             code: data.code,
             friendDiscountAmount: data.friendDiscountAmount,
-          });
+          } });
           return;
         }
 
-        setReferralValidation({ status: "invalid" });
+        setReferralCheck({ code: normalizedCode, result: { status: "invalid" } });
       } catch {
-        setReferralValidation({ status: "idle" });
+        setReferralCheck({ code: normalizedCode, result: { status: "idle" } });
       }
     }, 400);
 
     return () => window.clearTimeout(timer);
-  }, [referralCode]);
+  }, [normalizedReferralCode]);
 
   useEffect(() => {
     function handle(e: MouseEvent) {
@@ -1816,7 +1813,7 @@ export default function CleaningEstimator() {
     setBookingFormOpen(false);
     setBookingStatus("idle");
     setBookingErrorMessage("");
-    setReferralCode(urlPrefilledReferralCode.current ?? "");
+    setReferralCode(referralLinkCode ?? "");
     setReferralCodeError("");
   }
 
@@ -1897,7 +1894,7 @@ export default function CleaningEstimator() {
       setContactEmail("");
       setContactMobile("");
       setContactNotes("");
-      setReferralCode(urlPrefilledReferralCode.current ?? "");
+      setReferralCode(referralLinkCode ?? "");
       setReferralCodeError("");
     } catch (error) {
       setBookingStatus("error");

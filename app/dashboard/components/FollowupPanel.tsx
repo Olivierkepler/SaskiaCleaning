@@ -36,6 +36,15 @@ function formatNy(iso: string | null): string {
   }).format(new Date(iso));
 }
 
+async function fetchFollowups(bookingId: number): Promise<FollowupRow[]> {
+  const res = await fetch(
+    `/api/dashboard/bookings/${bookingId}/followups`,
+  );
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "Failed to load follow-ups");
+  return data.followups ?? [];
+}
+
 export default function FollowupPanel({
   bookingId,
   status,
@@ -64,16 +73,17 @@ export default function FollowupPanel({
   const [note, setNote] = useState("");
   const [nextLocal, setNextLocal] = useState("");
 
-  const load = useCallback(async () => {
+  // Show the loading state again if the panel switches to another booking.
+  const [loadedBookingId, setLoadedBookingId] = useState(bookingId);
+  if (loadedBookingId !== bookingId) {
+    setLoadedBookingId(bookingId);
     setLoading(true);
     setError("");
+  }
+
+  const load = useCallback(async () => {
     try {
-      const res = await fetch(
-        `/api/dashboard/bookings/${bookingId}/followups`,
-      );
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load follow-ups");
-      setFollowups(data.followups ?? []);
+      setFollowups(await fetchFollowups(bookingId));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load");
     } finally {
@@ -82,8 +92,23 @@ export default function FollowupPanel({
   }, [bookingId]);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    let cancelled = false;
+    fetchFollowups(bookingId)
+      .then(
+        (rows) => {
+          if (!cancelled) setFollowups(rows);
+        },
+        (err) => {
+          if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
+        },
+      )
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [bookingId]);
 
   async function save() {
     setSaving(true);
@@ -113,6 +138,7 @@ export default function FollowupPanel({
       setNote("");
       setNextLocal("");
       setMessage("Follow-up saved.");
+      setLoading(true);
       await load();
       onSaved?.();
     } catch (err) {
@@ -139,6 +165,7 @@ export default function FollowupPanel({
       setMessage(
         data.alreadyResolved ? "Already resolved." : "Follow-up resolved.",
       );
+      setLoading(true);
       await load();
       onSaved?.();
     } catch (err) {

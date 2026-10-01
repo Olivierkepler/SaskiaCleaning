@@ -536,7 +536,7 @@ export default function FloatingLeadWidget() {
                     lineHeight: 1.5,
                   }}
                 >
-                  We'll text{" "}
+                  We&apos;ll text{" "}
                   <strong style={{ color: "#0f172a" }}>{form.phone}</strong>{" "}
                   your price within 5 minutes.
                 </p>
