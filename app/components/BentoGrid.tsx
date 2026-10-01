@@ -5,7 +5,7 @@ export default function BentoGrid() {
           
           {/* Large Card */}
           <div className="md:col-span-8 group relative overflow-hidden bg-zinc-900 aspect-video md:aspect-auto">
-            <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=2070" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" />
+            <img src="https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=2070" alt="" className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700" />
             <div className="relative p-12 h-full flex flex-col justify-between">
               <h3 className="text-3xl font-serif text-white">Estate Management</h3>
               <p className="max-w-xs text-sm text-gray-300 font-light">Full-spectrum cleaning for properties exceeding 10,000 sq ft.</p>

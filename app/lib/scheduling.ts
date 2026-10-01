@@ -2,7 +2,6 @@ import "server-only";
 
 import { sql } from "@/app/lib/db";
 import {
-  generateAvailableSlots,
   parseBookingTime,
   getZonedDateParts,
   SASKIA_TIME_ZONE,

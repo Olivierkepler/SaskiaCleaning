@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/app/lib/admin-auth";
 import { sql } from "../../../lib/db";
 
-export async function PATCH(req: Request) {
+export async function PATCH(_req: Request) {
   try {
     const gate = await requireAdminApi();
     if (!gate.ok) return gate.response;

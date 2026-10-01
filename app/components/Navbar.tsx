@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 
 import {
   ArrowUpRight,
@@ -237,13 +238,16 @@ export default function Navbar({
                   width: "92px",
                 }}
               >
-                <img
+                <Image
                   src={
                     isScrolled
                       ? "/images/logoSaskia.png"
                       : "/images/whitelogo.png"
                   }
                   alt="Saskia Cleaning"
+                  width={93}
+                  height={62}
+                  loading="eager"
                   className="object-contain transition-all duration-300"
                   style={{
                     height: "62px",

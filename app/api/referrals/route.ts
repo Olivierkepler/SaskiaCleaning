@@ -6,7 +6,7 @@ import {
   type ReferralTrackingRow,
 } from "../../lib/referrals";
 
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
   try {
     const gate = await requireAdminApi();
   if (!gate.ok) return gate.response;

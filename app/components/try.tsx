@@ -375,7 +375,7 @@ function CalendarDropdown({
 
 // ── Search field ──────────────────────────────────────────────────────────────
 function SF({
-  icon, label, value, flex = 1, last = false, active = false, onClick, placeholder = false,
+  icon, label, value, flex = 1, active = false, onClick, placeholder = false,
   error = false, shakeKey = 0,
 }: {
   icon: ReactNode; label: string; value: string; flex?: number;
@@ -955,6 +955,13 @@ function buildCommercialGalleryImages(selectedAddons: Set<string>): StandardPrev
 }
 
 // ── Service panels ─────────────────────────────────────────────────────────────
+const FREQS = [
+  { label: "One-time",  discount: 0  },
+  { label: "Bi-weekly", discount: 10 },
+  { label: "Weekly",    discount: 15 },
+  { label: "Monthly",   discount: 5  },
+];
+
 function StandardPanel({
     onPrice,
     frequency,
@@ -976,12 +983,6 @@ function StandardPanel({
     onBedIdxChange: (index: number) => void;
     onBathIdxChange: (index: number) => void;
   }) {
-  const FREQS = [
-    { label: "One-time",  discount: 0  },
-    { label: "Bi-weekly", discount: 10 },
-    { label: "Weekly",    discount: 15 },
-    { label: "Monthly",   discount: 5  },
-  ];
   const freqIdx = FREQS.findIndex(
     (item) => item.label === frequency
   );
@@ -1163,6 +1164,8 @@ function MoveOutPanel({
   );
 }
 
+const SCHEDS    = [{ label: "Daily", mult: 1.4 }, { label: "3x/week", mult: 1 }, { label: "Weekly", mult: .7 }, { label: "One-time", mult: .5 }];
+
 function CommercialPanel({
   onPrice,
   selectedAddons,
@@ -1180,7 +1183,6 @@ function CommercialPanel({
 
   const TYPES     = ["Office","Retail","Restaurant","Medical","Gym"];
   const SQFTS     = ["Under 1k","1k–2.5k","2.5k–5k","5k+"];
-  const SCHEDS    = [{ label: "Daily", mult: 1.4 }, { label: "3x/week", mult: 1 }, { label: "Weekly", mult: .7 }, { label: "One-time", mult: .5 }];
   const TIMINGS   = ["Before open","After close","Weekend"];
   const CONTRACTS = ["No contract","3 months","6 months","Annual"];
 

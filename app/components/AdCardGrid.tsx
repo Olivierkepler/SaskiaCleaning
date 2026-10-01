@@ -35,45 +35,6 @@ interface AdCardItem {
   isRedTag?: boolean;
 }
 
-const fallbackCards: AdCardItem[] = [
-  {
-    id: 1,
-    tag: "REFERRAL",
-    title: "Give $20,",
-    titleSmall: "Get $20",
-    description: "Refer a friend — you both save $20.",
-    ctaLabel: "Refer Now",
-    ctaHref: "https://saskiaservices.com/#quote",
-    imageUrl: "/images/friend_sharing.jpg",
-    imageAlt: "Refer a friend to Saskia Cleaning",
-  },
-  {
-    id: 2,
-    tag: "LIMITED TIME",
-    title: "$20 Off",
-    titleSmall: "Deep Clean",
-    description:
-      "Refer a friend and they save $20 on their first cleaning.",
-    ctaLabel: "Refer Now",
-    ctaHref: "https://saskiaservices.com/#quote",
-    imageUrl: "/images/limited_deal.jpg",
-    imageAlt: "Professional deep cleaning service",
-    isRedTag: true,
-  },
-  {
-    id: 3,
-    tag: "NEW",
-    title: "Airbnb",
-    titleSmall: "Turnover",
-    description:
-      "Know an Airbnb host? Refer them and earn referral rewards.",
-    ctaLabel: "Refer Now",
-    ctaHref: "https://saskiaservices.com/#services",
-    imageUrl: "/images/towel-folder.jpg",
-    imageAlt: "Airbnb turnover cleaning service",
-  },
-];
-
 const cardVariants = {
   hidden: {
     opacity: 0,

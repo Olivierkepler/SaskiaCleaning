@@ -20,6 +20,13 @@ export type CommercialPanelProps = {
   onSelectedAddonsChange: (addons: Set<string>) => void;
 };
 
+const SCHEDS = [
+  { label: "Daily", mult: 1.4 },
+  { label: "3x/week", mult: 1 },
+  { label: "Weekly", mult: 0.7 },
+  { label: "One-time", mult: 0.5 },
+];
+
 export function CommercialPanel({
   onPrice,
   selectedAddons,
@@ -56,13 +63,6 @@ export function CommercialPanel({
     "1k–2.5k",
     "2.5k–5k",
     "5k+",
-  ];
-
-  const SCHEDS = [
-    { label: "Daily", mult: 1.4 },
-    { label: "3x/week", mult: 1 },
-    { label: "Weekly", mult: 0.7 },
-    { label: "One-time", mult: 0.5 },
   ];
 
   const TIMINGS = [

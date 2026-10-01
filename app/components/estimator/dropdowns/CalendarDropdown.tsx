@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import {
   DOW,
-  K,
   MONTHS,
 } from "../constants";
 import { Dropdown } from "../ui/Dropdown";

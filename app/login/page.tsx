@@ -6,7 +6,6 @@ import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import GoogleSignInButton from "@/app/components/auth/GoogleSignInButton";
-import LanguageSwitcher from "@/app/components/i18n/LanguageSwitcher";
 
 type LoginPageProps = {
   searchParams: Promise<{

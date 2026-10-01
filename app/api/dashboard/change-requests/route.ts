@@ -6,7 +6,7 @@ import {
   rejectBookingChangeRequest,
 } from "@/app/lib/booking-change-requests";
 
-export async function GET(req: Request) {
+export async function GET(_req: Request) {
   const gate = await requireAdminApi();
   if (!gate.ok) return gate.response;
 

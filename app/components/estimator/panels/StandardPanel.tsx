@@ -27,6 +27,13 @@ export type StandardPanelProps = {
   onBathIdxChange: (index: number) => void;
 };
 
+const FREQS = [
+  { label: "One-time", discount: 0 },
+  { label: "Bi-weekly", discount: 10 },
+  { label: "Weekly", discount: 15 },
+  { label: "Monthly", discount: 5 },
+];
+
 export function StandardPanel({
   onPrice,
   frequency,
@@ -49,13 +56,6 @@ export function StandardPanel({
     const key = FREQ_DISPLAY_KEYS[label];
     return key ? t(key as "oneTime") : label;
   };
-
-  const FREQS = [
-    { label: "One-time", discount: 0 },
-    { label: "Bi-weekly", discount: 10 },
-    { label: "Weekly", discount: 15 },
-    { label: "Monthly", discount: 5 },
-  ];
 
   const freqIdx = FREQS.findIndex(
     (item) => item.label === frequency,

@@ -5,7 +5,7 @@ import { useIsClient } from "@/app/lib/use-is-client";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 
 import {
   formatSavedAddressLabel,
@@ -76,7 +76,6 @@ export function BookingModal({
   locationMode,
   selectedAddressId,
   emailReadOnly,
-  bookingTime,
   bookingTimeLabel,
   onClose,
   onSubmit,
@@ -89,8 +88,6 @@ export function BookingModal({
   onSelectManualLocation,
 }: BookingModalProps) {
   const tBooking = useTranslations("booking");
-  const tEstimate = useTranslations("estimate");
-  const locale = useLocale();
   const mounted = useIsClient();
 
   // Lock body scroll while the modal is open so the fixed backdrop never

@@ -12,7 +12,6 @@ import Image from "next/image";
 import ServiceInquiryForm from "./ServiceInquiryForm";
 import ArchitecturalCarousel from "./ArchitecturalCarousel";
 import CostEstimationModal from "./CostEstimationModal";
-import LeadCaptureTabs from "./LeadCaptureTabs";
 
 type ContactIconType = "phone" | "mail";
 type TrustIconType = "shield" | "building" | "map" | "sparkle";

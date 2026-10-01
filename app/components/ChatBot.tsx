@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { FaTimes, FaPaperPlane } from "react-icons/fa";
 
 type Message = {
@@ -107,9 +108,12 @@ function Avatar({
         height: size,
       }}
     >
-      <img
+      <Image
         src="/images/Designer(14).png"
         alt="Saskia Assistant"
+        width={size}
+        height={size}
+        loading="eager"
         style={{
           width: size,
           height: size,

@@ -7,7 +7,6 @@ export function SearchField({
   label,
   value,
   flex = 1,
-  last = false,
   active = false,
   onClick,
   placeholder = false,

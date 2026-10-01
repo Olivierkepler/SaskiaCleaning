@@ -5,7 +5,6 @@ import {
   formatStaffRole,
   hasOverlappingStaffConflict,
   isStaffRole,
-  isTimeWithinStaffAvailability,
   normalizeStaffEmail,
   normalizeStaffName,
   normalizeStaffPhone,
