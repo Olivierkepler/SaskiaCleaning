@@ -68,55 +68,46 @@ export default function Navbar({
   }, []);
 
   useEffect(() => {
-    const estimatorHeading = document.querySelector<HTMLElement>(
-      "#instant-estimate h2",
-    );
+    const estimator = document.getElementById("instant-estimate");
     const header = headerRef.current;
-    if (!estimatorHeading || !header || !("IntersectionObserver" in window)) {
-      return;
-    }
+    let animationFrame = 0;
 
-    let observer: IntersectionObserver | null = null;
-    let previousHeadingTop: number | null = null;
+    const updateEstimatorVisibility = () => {
+      animationFrame = 0;
 
-    const observeEstimatorThreshold = () => {
-      observer?.disconnect();
-      previousHeadingTop = null;
+      if (!estimator || !header || window.scrollY <= 16) {
+        setEstimatorReached(false);
+        return;
+      }
 
-      const viewportHeight = window.innerHeight;
-      const headerHeight = header.getBoundingClientRect().height;
-      const threshold = Math.min(headerHeight, Math.max(0, viewportHeight - 2));
-      const bottomMargin = Math.max(0, viewportHeight - threshold - 2);
-
-      observer = new IntersectionObserver(
-        ([entry]) => {
-          if (!entry) return;
-          const currentHeadingTop = entry.boundingClientRect.top;
-
-          if (previousHeadingTop === null) {
-            setEstimatorReached(currentHeadingTop <= threshold);
-          } else if (currentHeadingTop < previousHeadingTop) {
-            setEstimatorReached(true);
-          } else if (currentHeadingTop > previousHeadingTop) {
-            setEstimatorReached(false);
-          }
-
-          previousHeadingTop = currentHeadingTop;
-        },
-        {
-          rootMargin: `-${threshold}px 0px -${bottomMargin}px 0px`,
-          threshold: 0,
-        },
-      );
-      observer.observe(estimatorHeading);
+      const triggerPosition = header.offsetHeight;
+      const estimatorTop = estimator.getBoundingClientRect().top;
+      setEstimatorReached(estimatorTop <= triggerPosition);
     };
 
-    observeEstimatorThreshold();
-    window.addEventListener("resize", observeEstimatorThreshold);
+    const scheduleEstimatorUpdate = () => {
+      if (animationFrame !== 0) return;
+      animationFrame = window.requestAnimationFrame(
+        updateEstimatorVisibility,
+      );
+    };
+
+    scheduleEstimatorUpdate();
+    window.addEventListener("scroll", scheduleEstimatorUpdate, {
+      passive: true,
+    });
+    window.addEventListener("resize", scheduleEstimatorUpdate);
+    window.addEventListener("hashchange", scheduleEstimatorUpdate);
+    window.addEventListener("pageshow", scheduleEstimatorUpdate);
 
     return () => {
-      observer?.disconnect();
-      window.removeEventListener("resize", observeEstimatorThreshold);
+      if (animationFrame !== 0) {
+        window.cancelAnimationFrame(animationFrame);
+      }
+      window.removeEventListener("scroll", scheduleEstimatorUpdate);
+      window.removeEventListener("resize", scheduleEstimatorUpdate);
+      window.removeEventListener("hashchange", scheduleEstimatorUpdate);
+      window.removeEventListener("pageshow", scheduleEstimatorUpdate);
     };
   }, []);
 
