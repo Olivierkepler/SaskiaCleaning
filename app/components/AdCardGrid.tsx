@@ -3,6 +3,7 @@
 import {
   useCallback,
   useEffect,
+  useRef,
   useState,
   type FormEvent,
 } from "react";
@@ -10,11 +11,23 @@ import { createPortal } from "react-dom";
 import { useIsClient, useMediaQuery } from "@/app/lib/use-is-client";
 import Image from "next/image";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import {
   AnimatePresence,
   motion,
+  useReducedMotion,
 } from "framer-motion";
-import { ArrowUpRight, Copy, X } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Copy,
+  Gift,
+  LogIn,
+  Mail,
+  UserRound,
+  X,
+} from "lucide-react";
 import {
   buildReferralLink,
   buildReferralShareMessage,
@@ -35,6 +48,57 @@ interface AdCardItem {
   isRedTag?: boolean;
 }
 
+function ReferralAccountPrompt({
+  variant,
+}: {
+  variant: "form" | "success";
+}) {
+  const { data: session, status } = useSession();
+
+  if (status === "loading") return null;
+
+  const isSignedIn = Boolean(session?.user);
+  const promptTitle = isSignedIn
+    ? "Your referral rewards are tracked in your account."
+    : variant === "success"
+      ? "Want to track this reward?"
+      : "Want to track your rewards?";
+  const promptDescription = isSignedIn
+    ? null
+    : "Sign in to your Saskia account to view your referral activity and reward status.";
+
+  return (
+    <aside className={`flex flex-col gap-3 rounded-[17px] bg-[#ECF0F3] p-4 shadow-[4px_4px_10px_#D1D9E6,-4px_-4px_10px_#FFFFFF] sm:flex-row sm:items-center sm:justify-between ${variant === "form" ? "mb-5" : "mb-0"}`}>
+      <div className="flex min-w-0 items-start gap-3 sm:items-center">
+        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-[#ECF0F3] text-sky-700 shadow-[3px_3px_7px_#D1D9E6,-3px_-3px_7px_#FFFFFF] sm:mt-0">
+          {isSignedIn ? (
+            <Gift size={17} aria-hidden="true" />
+          ) : (
+            <LogIn size={17} aria-hidden="true" />
+          )}
+        </span>
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold leading-5 text-slate-900">
+            {promptTitle}
+          </p>
+          {promptDescription ? (
+            <p className="mt-0.5 text-xs leading-5 text-slate-600">
+              {promptDescription}
+            </p>
+          ) : null}
+        </div>
+      </div>
+      <Link
+        href={isSignedIn ? "/account/rewards" : "/login"}
+        className="inline-flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-[13px] bg-[#ECF0F3] px-4 py-2 text-sm font-semibold text-sky-700 shadow-[3px_3px_7px_#D1D9E6,-3px_-3px_7px_#FFFFFF] transition hover:-translate-y-0.5 hover:text-sky-800 active:translate-y-0 active:shadow-[inset_3px_3px_6px_#D1D9E6,inset_-3px_-3px_6px_#FFFFFF] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 sm:min-h-12"
+      >
+        {isSignedIn ? "View rewards" : "Sign in"}
+        {isSignedIn ? <ArrowRight size={16} aria-hidden="true" /> : null}
+      </Link>
+    </aside>
+  );
+}
+
 const cardVariants = {
   hidden: {
     opacity: 0,
@@ -47,37 +111,6 @@ const cardVariants = {
     scale: 1,
   },
 };
-
-const inputClassName = `
-  w-full
-  rounded-[14px]
-  border
-  border-slate-200
-  bg-slate-50/80
-  px-4
-  py-3.5
-  text-sm
-  text-slate-900
-  outline-none
-  transition-all
-  duration-300
-  placeholder:text-slate-400
-  hover:border-slate-300
-  focus:border-sky-400
-  focus:bg-white
-  focus:ring-4
-  focus:ring-sky-100/70
-`;
-
-const labelClassName = `
-  mb-2
-  block
-  text-[10px]
-  font-bold
-  uppercase
-  tracking-[0.16em]
-  text-slate-500
-`;
 
 function AdCard({
   card,
@@ -433,6 +466,12 @@ function ReferralModal({
   onClose: () => void;
 }) {
   const t = useTranslations("home");
+  const reduceMotion = useReducedMotion();
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const successTitleRef = useRef<HTMLHeadingElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   const [referrerName, setReferrerName] =
     useState("");
@@ -445,6 +484,8 @@ function ReferralModal({
 
   const [generatedCode, setGeneratedCode] =
     useState<ReferralCode | null>(null);
+  const [showSuccess, setShowSuccess] =
+    useState(false);
 
   const [copyFeedback, setCopyFeedback] =
     useState<string | null>(null);
@@ -455,16 +496,30 @@ function ReferralModal({
   useEffect(() => {
     if (!open) return;
 
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     const previousOverflow =
       document.body.style.overflow;
 
     document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
 
     return () => {
       document.body.style.overflow =
         previousOverflow;
+      previousFocusRef.current?.focus();
     };
   }, [open]);
+
+  useEffect(() => {
+    if (open && generatedCode && showSuccess) {
+      successTitleRef.current?.focus();
+    } else if (open && generatedCode && !showSuccess) {
+      nameInputRef.current?.focus();
+    }
+  }, [generatedCode, open, showSuccess]);
 
   function resetModal() {
     setReferrerName("");
@@ -472,6 +527,7 @@ function ReferralModal({
     setErrorMessage("");
     setIsSubmitting(false);
     setGeneratedCode(null);
+    setShowSuccess(false);
     setCopyFeedback(null);
   }
 
@@ -490,6 +546,24 @@ function ReferralModal({
     ) => {
       if (event.key === "Escape") {
         handleClose();
+        return;
+      }
+
+      if (event.key === "Tab") {
+        const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        );
+        if (!focusable?.length) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
       }
     };
 
@@ -510,6 +584,11 @@ function ReferralModal({
     event: FormEvent<HTMLFormElement>,
   ) {
     event.preventDefault();
+
+    if (generatedCode) {
+      setShowSuccess(true);
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMessage("");
@@ -550,6 +629,7 @@ function ReferralModal({
       }
 
       setGeneratedCode(data.referralCode);
+      setShowSuccess(true);
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -627,58 +707,89 @@ function ReferralModal({
             flex
             items-center
             justify-center
-            bg-slate-950/55
-            p-4
-            backdrop-blur-[10px]
+            overflow-y-auto
+            bg-slate-950/45
+            px-3
+            py-3
+            backdrop-blur-[7px]
+            sm:px-6
+            sm:py-5
           "
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="referral-modal-title"
+          style={{
+            paddingTop: "max(0.75rem, env(safe-area-inset-top))",
+            paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))",
+          }}
           onClick={handleClose}
         >
           <motion.div
-            initial={{
-              opacity: 0,
-              scale: 0.96,
-              y: 16,
-            }}
+            initial={reduceMotion
+              ? { opacity: 0 }
+              : { opacity: 0, scale: 0.96, y: 16 }}
             animate={{
               opacity: 1,
               scale: 1,
               y: 0,
             }}
-            exit={{
-              opacity: 0,
-              scale: 0.96,
-              y: 10,
-            }}
+            exit={reduceMotion
+              ? { opacity: 0 }
+              : { opacity: 0, scale: 0.96, y: 10 }}
             transition={{
               duration: 0.22,
               ease: [0.22, 1, 0.36, 1],
             }}
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="referral-modal-title"
             className="
-              relative
-              max-h-[90dvh]
-              w-full
-              max-w-xl
-              overflow-y-auto
-              overscroll-contain
-              rounded-[26px]
-              border
-              border-white/80
-              bg-white
-              p-6
-              shadow-[0_35px_100px_rgba(15,23,42,0.25)]
-              ring-1
-              ring-slate-950/[0.04]
-              md:p-8
+              relative grid max-h-[min(94dvh,900px)] w-full max-w-[1024px]
+              grid-cols-1 grid-rows-[auto_minmax(0,1fr)] overflow-hidden
+              rounded-[24px] border border-white/70 bg-[#ECF0F3]
+              shadow-[8px_8px_22px_rgba(15,23,42,0.18),-8px_-8px_22px_rgba(255,255,255,0.12)]
+              sm:rounded-[30px] sm:shadow-[14px_14px_34px_rgba(15,23,42,0.2),-14px_-14px_34px_rgba(255,255,255,0.12)]
+              lg:grid-cols-[46fr_54fr] lg:grid-rows-1
             "
             onClick={(event) =>
               event.stopPropagation()
             }
           >
+            <section
+              className="
+                relative isolate flex min-h-0 flex-col overflow-hidden
+                bg-[linear-gradient(145deg,#F9FBFD_0%,#F2F8FC_54%,#F6FAFC_100%)]
+
+                px-6 pb-5 pt-7 sm:px-8 sm:pb-7 sm:pt-8
+                lg:min-h-[690px] lg:px-10 lg:pb-9 lg:pt-10
+              "
+              aria-label="Saskia referral rewards"
+            >
+
+
+              <h2 id="referral-modal-title" className="mt-3 max-w-full font-heading text-[clamp(1.4rem,3vw,2.25rem)] font-medium leading-[0.98] tracking-[-0.045em] text-sky-500">
+                Refer a friend<br />and save together
+              </h2>
+
+
+              <p className="mt-4 max-w-[390px] text-[14px] leading-6 text-slate-600 sm:text-[15px] sm:leading-7">
+                Share your unique referral code and help a friend save on their first cleaning. You’ll both get rewarded!
+              </p>
+              <div className="relative mt-6 min-h-[148px] flex-1 overflow-hidden rounded-[22px] sm:min-h-[175px] lg:mt-8 lg:min-h-[280px]">
+                <Image
+                  src="/images/friend_sharing.jpg"
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 1023px) 100vw, 470px"
+                  className="object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/50 via-slate-950/5 to-transparent" />
+
+              </div>
+            </section>
+            <section className="relative min-h-0 overflow-y-auto overscroll-contain bg-[#ECF0F3] px-6 pb-6 pt-7 [scrollbar-color:#0EA5E9_#ECF0F3] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-[#ECF0F3] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#0EA5E9] [&::-webkit-scrollbar-thumb:hover]:bg-sky-600 sm:px-9 sm:pb-8 sm:pt-9 lg:px-11 lg:pb-10 lg:pt-10">
             {/* Close */}
             <button
+              ref={closeButtonRef}
               type="button"
               onClick={handleClose}
               disabled={isSubmitting}
@@ -694,60 +805,72 @@ function ReferralModal({
                 items-center
                 justify-center
                 rounded-full
-                border
-                border-slate-200
-                bg-white
+                border border-white/70
+                bg-[#ECF0F3]
                 text-slate-500
-                transition
-                hover:border-slate-300
-                hover:bg-slate-50
+                shadow-[4px_4px_9px_#D1D9E6,-4px_-4px_9px_#FFFFFF]
+                transition-all
+                hover:shadow-[2px_2px_5px_#D1D9E6,-2px_-2px_5px_#FFFFFF]
+                active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF]
                 hover:text-slate-900
                 disabled:cursor-not-allowed
                 disabled:opacity-50
+                focus-visible:outline-none
+                focus-visible:ring-4
+                focus-visible:ring-sky-200
               "
             >
               <X size={16} />
             </button>
 
-            {/* Heading */}
-            <div className="mb-7 pr-12">
-              <div
-                aria-hidden="true"
-                className="
-                  mb-4
-                  h-[3px]
-                  w-9
-                  rounded-full
-                  bg-sky-500
-                "
-              />
+            {/* <div className="space-y-4 pr-1 pt-9 sm:space-y-5 sm:pt-7">
+              <div className="flex gap-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#ECF0F3] text-[13px] font-bold text-sky-700 shadow-[4px_4px_8px_#D1D9E6,-4px_-4px_8px_#FFFFFF]">1</span>
+                <p className="pt-0.5 text-[12px] leading-[1.55] text-slate-500 sm:text-[13px]">
+                  <span className="block font-semibold text-slate-900">Your friend gets $20 off</span>
+                  their first cleaning when they book with your code.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#ECF0F3] text-[13px] font-bold text-sky-700 shadow-[4px_4px_8px_#D1D9E6,-4px_-4px_8px_#FFFFFF]">2</span>
+                <p className="pt-0.5 text-[12px] leading-[1.55] text-slate-500 sm:text-[13px]">
+                  <span className="block font-semibold text-slate-900">You receive your $20 referral reward</span>
+                  after your referred friend completes a paid service.
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#ECF0F3] text-[13px] font-bold text-sky-700 shadow-[4px_4px_8px_#D1D9E6,-4px_-4px_8px_#FFFFFF]">3</span>
+                <p className="pt-0.5 text-[12px] leading-[1.55] text-slate-500 sm:text-[13px]">
+                  <span className="block font-semibold text-slate-900">Rewards are reviewed</span>
+                  after the referred booking is completed.
+                </p>
+              </div>
+            </div> */}
 
-              <p
-                className="
-                  mb-2
-                  text-[10px]
-                  font-bold
-                  uppercase
-                  tracking-[0.18em]
-                  text-sky-500
-                "
-              >
-                Saskia rewards
-              </p>
+            {/* <div className="my-6 border-t border-slate-300/50 sm:my-7" /> */}
+
+            {/* Heading */}
+            <div className="my-6 pr-12">
+
+
+
 
               <h3
-                id="referral-modal-title"
+                ref={successTitleRef}
+                tabIndex={-1}
                 className="
                   font-heading
                   text-[30px]
                   font-medium
                   leading-none
                   tracking-[-0.04em]
-                  text-slate-950
+                  text-black
                 "
               >
-                Refer a friend
+                {showSuccess ? "Your referral code is ready" : "Get your referral code"}
               </h3>
+
+
 
               <p
                 className="
@@ -758,63 +881,32 @@ function ReferralModal({
                   text-slate-500
                 "
               >
-                Share your referral code and
-                help a friend save on their
-                first cleaning.
+                {showSuccess
+                  ? "Share your code or referral link with a friend."
+                  : "Enter your details to create a unique code to share."}
               </p>
             </div>
 
-            {generatedCode ? (
+            {generatedCode && showSuccess ? (
               <div className="space-y-4">
-                {/* Reward information */}
                 <div
-                  className="
-                    space-y-3
-                    rounded-[18px]
-                    border
-                    border-sky-100
-                    bg-sky-50/70
-                    p-5
-                    text-sm
-                    leading-6
-                    text-slate-600
-                  "
+                  className="rounded-[18px] bg-[#ECF0F3] p-4 text-sm leading-6 text-slate-600 shadow-[inset_4px_4px_8px_rgba(209,217,230,0.75),inset_-4px_-4px_8px_rgba(255,255,255,0.9)]"
                 >
-                  <p>
-                    Your friend gets{" "}
-                    <span className="font-semibold text-slate-900">
-                      $20 off
-                    </span>{" "}
-                    their first cleaning when
-                    they book with your code.
-                  </p>
-
-                  <p>
-                    You receive your{" "}
-                    <span className="font-semibold text-slate-900">
-                      $20 referral reward
-                    </span>{" "}
-                    after your referred friend
-                    completes a paid service.
-                  </p>
-
-                  <p>
-                    Referral rewards are
-                    reviewed after the referred
-                    booking is completed.
-                  </p>
+                  Your referral code is ready to share. Your friend saves $20 on
+                  their first cleaning, and you receive a $20 reward after their
+                  paid service is completed.
                 </div>
 
                 {/* Code */}
                 <div
                   className="
                     rounded-[18px]
-                    border
-                    border-slate-200/80
-                    bg-slate-50/80
+                    border border-slate-300/40
+                    bg-[#ECF0F3]
                     px-5
                     py-6
                     text-center
+                    shadow-[inset_6px_6px_12px_rgba(209,217,230,0.85),inset_-6px_-6px_12px_rgba(255,255,255,0.95)]
                   "
                 >
                   <p
@@ -847,10 +939,9 @@ function ReferralModal({
                 <div
                   className="
                     rounded-[18px]
-                    border
-                    border-slate-200/80
-                    bg-white
+                    bg-[#ECF0F3]
                     p-5
+                    shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF]
                   "
                 >
                   <p
@@ -895,14 +986,17 @@ function ReferralModal({
                       justify-center
                       gap-2
                       rounded-[13px]
-                      bg-slate-950
+                      bg-sky-700
                       px-4
                       py-3.5
                       text-sm
                       font-semibold
                       text-white
-                      transition
-                      hover:bg-sky-500
+                      shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF]
+                      transition-all hover:-translate-y-0.5
+                      hover:bg-sky-600 active:translate-y-0
+                      active:shadow-[inset_4px_4px_8px_rgba(3,105,161,0.55),inset_-4px_-4px_8px_rgba(255,255,255,0.16)]
+                      focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300
                     "
                   >
                     <Copy size={15} />
@@ -914,10 +1008,9 @@ function ReferralModal({
                 <div
                   className="
                     rounded-[18px]
-                    border
-                    border-slate-200/80
-                    bg-white
+                    bg-[#ECF0F3]
                     p-5
+                    shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF]
                   "
                 >
                   <p
@@ -961,24 +1054,24 @@ function ReferralModal({
                       justify-center
                       gap-2
                       rounded-[13px]
-                      border
-                      border-slate-200
-                      bg-white
+                      bg-[#ECF0F3]
                       px-4
                       py-3.5
                       text-sm
                       font-semibold
                       text-slate-700
-                      transition
-                      hover:border-sky-300
-                      hover:bg-sky-50
-                      hover:text-sky-700
+                      shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF]
+                      transition-all hover:text-sky-700
+                      active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF]
+                      focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300
                     "
                   >
                     <Copy size={15} />
                     Copy message
                   </button>
                 </div>
+
+                <ReferralAccountPrompt variant="success" />
 
                 {copyFeedback && (
                   <p
@@ -1007,17 +1100,19 @@ function ReferralModal({
                     href="/referrals"
                     className="
                       rounded-[13px]
-                      border
-                      border-sky-500
-                      bg-white
+                      border border-sky-700/20
+                      bg-[#ECF0F3]
                       px-4
                       py-3.5
                       text-center
                       text-sm
                       font-semibold
                       text-sky-600
-                      transition
-                      hover:bg-sky-50
+                      shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF]
+                      transition-all hover:-translate-y-0.5
+                      active:translate-y-0
+                      active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF]
+                      focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300
                     "
                   >
                     Check your referral rewards
@@ -1031,97 +1126,64 @@ function ReferralModal({
                     className="
                       cursor-pointer
                       rounded-[13px]
-                      border
-                      border-slate-200
-                      bg-white
+                      border border-white/70
+                      bg-[#ECF0F3]
                       px-4
                       py-3.5
                       text-sm
                       font-semibold
                       text-slate-700
-                      transition
-                      hover:bg-slate-50
+                      shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF]
+                      transition-all hover:-translate-y-0.5
+                      active:translate-y-0
+                      active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF]
+                      focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300
                     "
                   >
                     Book a cleaning
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    className="
-                      cursor-pointer
-                      rounded-[13px]
-                      px-4
-                      py-3
-                      text-sm
-                      font-semibold
-                      text-slate-400
-                      transition
-                      hover:bg-slate-50
-                      hover:text-slate-700
-                    "
-                  >
-                    Close
-                  </button>
+                  <div className="grid grid-cols-2 gap-3 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setShowSuccess(false)}
+                      aria-label="Previous: return to referral details"
+                      className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-[15px] bg-[#ECF0F3] px-4 py-3 text-sm font-semibold text-slate-700 shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF] transition hover:-translate-y-0.5 active:translate-y-0 active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300"
+                    >
+                      <ArrowLeft size={17} aria-hidden="true" />
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleClose}
+                      className="min-h-[52px] rounded-[15px] bg-[#ECF0F3] px-4 py-3 text-sm font-semibold text-slate-700 shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF] transition hover:-translate-y-0.5 active:translate-y-0 active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
+              <>
+              <ReferralAccountPrompt variant="form" />
               <form
                 onSubmit={handleSubmit}
                 className="space-y-5"
               >
-                <div
-                  className="
-                    space-y-3
-                    rounded-[18px]
-                    border
-                    border-sky-100
-                    bg-sky-50/70
-                    p-5
-                    text-sm
-                    leading-6
-                    text-slate-600
-                  "
-                >
-                  <p>
-                    Your friend gets{" "}
-                    <span className="font-semibold text-slate-900">
-                      $20 off
-                    </span>{" "}
-                    their first cleaning when
-                    they book with your code.
-                  </p>
-
-                  <p>
-                    You receive your{" "}
-                    <span className="font-semibold text-slate-900">
-                      $20 referral reward
-                    </span>{" "}
-                    after your referred friend
-                    completes a paid service.
-                  </p>
-
-                  <p>
-                    Referral rewards are
-                    reviewed after the referred
-                    booking is completed.
-                  </p>
-                </div>
-
                 <div>
                   <label
                     htmlFor="referrer-name"
-                    className={
-                      labelClassName
-                    }
+                    className="mb-2 block text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600"
                   >
                     {t(
                       "referralYourName",
                     )}
                   </label>
 
+                  <div className="relative">
+                  <UserRound size={18} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
+                    ref={nameInputRef}
                     id="referrer-name"
                     type="text"
                     required
@@ -1131,26 +1193,27 @@ function ReferralModal({
                         event.target.value,
                       )
                     }
-                    className={
-                      inputClassName
-                    }
+                    className="h-[58px] w-full rounded-[16px] border border-slate-400/25 bg-[#ECF0F3] pl-12 pr-4 text-sm text-slate-900 shadow-[inset_5px_5px_10px_rgba(209,217,230,0.9),inset_-5px_-5px_10px_rgba(255,255,255,0.95)] outline-none transition placeholder:text-slate-500 focus:border-sky-600/40 focus:ring-4 focus:ring-sky-500/25"
                     placeholder={t(
                       "referralYourName",
                     )}
                     autoComplete="name"
+                    aria-invalid={Boolean(errorMessage)}
+                    aria-describedby={errorMessage ? "referral-error" : undefined}
                   />
+                  </div>
                 </div>
 
                 <div>
                   <label
                     htmlFor="referrer-email"
-                    className={
-                      labelClassName
-                    }
+                    className="mb-2 block text-[10px] font-bold uppercase tracking-[0.15em] text-slate-600"
                   >
                     Your email (optional)
                   </label>
 
+                  <div className="relative">
+                  <Mail size={18} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                   <input
                     id="referrer-email"
                     type="email"
@@ -1160,16 +1223,18 @@ function ReferralModal({
                         event.target.value,
                       )
                     }
-                    className={
-                      inputClassName
-                    }
+                    className="h-[58px] w-full rounded-[16px] border border-slate-400/25 bg-[#ECF0F3] pl-12 pr-4 text-sm text-slate-900 shadow-[inset_5px_5px_10px_rgba(209,217,230,0.9),inset_-5px_-5px_10px_rgba(255,255,255,0.95)] outline-none transition placeholder:text-slate-500 focus:border-sky-600/40 focus:ring-4 focus:ring-sky-500/25"
                     placeholder="you@example.com"
                     autoComplete="email"
+                    aria-invalid={Boolean(errorMessage)}
+                    aria-describedby={errorMessage ? "referral-error" : undefined}
                   />
+                  </div>
                 </div>
 
                 {errorMessage && (
                   <div
+                    id="referral-error"
                     role="alert"
                     className="
                       rounded-[14px]
@@ -1187,70 +1252,64 @@ function ReferralModal({
                   </div>
                 )}
 
-                <div
-                  className="
-                    flex
-                    flex-col
-                    gap-2.5
-                    pt-1
-                    sm:flex-row
-                    sm:justify-end
-                  "
-                >
-                  <button
-                    type="button"
-                    onClick={handleClose}
-                    disabled={isSubmitting}
-                    className="
-                      cursor-pointer
-                      rounded-[13px]
-                      border
-                      border-slate-200
-                      bg-white
-                      px-5
-                      py-3.5
-                      text-sm
-                      font-semibold
-                      text-slate-600
-                      transition
-                      hover:bg-slate-50
-                      disabled:cursor-not-allowed
-                      disabled:opacity-50
-                    "
-                  >
-                    Cancel
-                  </button>
-
+                <div className="grid gap-3 pt-1">
                   <button
                     type="submit"
                     disabled={isSubmitting}
                     className="
-                      cursor-pointer
-                      rounded-[13px]
-                      bg-sky-500
-                      px-5
-                      py-3.5
-                      text-sm
-                      font-bold
-                      text-white
-                      shadow-[0_10px_24px_rgba(14,165,233,0.20)]
-                      transition
-                      hover:bg-sky-600
-                      disabled:cursor-not-allowed
-                      disabled:opacity-50
+                      group inline-flex min-h-[60px] w-full cursor-pointer
+                      items-center justify-between gap-3 rounded-[16px]
+                      bg-sky-600 px-5 py-4 text-[15px] font-semibold text-white
+                      shadow-[7px_7px_15px_rgba(209,217,230,0.9),-7px_-7px_15px_rgba(255,255,255,0.95)] transition-all
+                      hover:-translate-y-0.5 hover:bg-sky-500
+                      hover:shadow-[8px_8px_17px_rgba(209,217,230,0.9),-8px_-8px_17px_rgba(255,255,255,0.95)]
+                      active:translate-y-0 active:shadow-[inset_4px_4px_8px_rgba(3,105,161,0.55),inset_-4px_-4px_8px_rgba(255,255,255,0.16)] focus-visible:outline-none
+                      focus-visible:ring-4 focus-visible:ring-sky-200
+                      disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none
                     "
                   >
-                    {isSubmitting
-                      ? t(
-                          "referralCreating",
-                        )
-                      : t(
-                          "referralGetCode",
-                        )}
+                    <span className="inline-flex min-w-0 items-center gap-3">
+                      <Gift size={19} aria-hidden="true" />
+                      <span>
+                        {isSubmitting
+                          ? t(
+                              "referralCreating",
+                            )
+                          : t(
+                              "referralGetCode",
+                            )}
+                      </span>
+                    </span>
+                    {!isSubmitting && (
+                      <span className="inline-flex shrink-0 items-center gap-1.5">
+                        <span className="text-sm">Next</span>
+                        <ArrowRight size={18} aria-hidden="true" className="transition-transform group-hover:translate-x-0.5" />
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleClose}
+                    disabled={isSubmitting}
+                    className="min-h-[54px] w-full cursor-pointer rounded-[16px] border border-white/70 bg-[#ECF0F3] px-5 py-3.5 text-sm font-semibold text-slate-700 shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF] transition-all hover:-translate-y-0.5 active:translate-y-0 active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none"
+                  >
+                    Cancel
                   </button>
                 </div>
               </form>
+              <p className="mx-auto mt-5 max-w-sm text-center text-[11px] leading-5 text-slate-400">
+                By continuing, you agree to our{" "}
+                <Link
+                  href="/referral-terms"
+                  className="rounded-sm font-medium text-sky-600 underline decoration-sky-300 underline-offset-2 transition hover:text-sky-700 hover:decoration-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+                >
+                  Referral Program Terms
+                </Link>
+                . Rewards are reviewed after the referred booking is completed.
+              </p>
+              </>
             )}
+            </section>
           </motion.div>
         </motion.div>
       ) : null}
