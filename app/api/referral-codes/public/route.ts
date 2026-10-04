@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { getCurrentCustomer } from "@/app/lib/customer-auth";
+import { resolveReferralCodeOwnerId } from "@/app/lib/customer-referral-ownership";
 import { sql } from "../../../lib/db";
 import {
   generatePublicReferralCodeCandidates,
@@ -13,6 +15,7 @@ async function insertReferralCode(data: {
   code: string;
   referrerName: string;
   referrerEmail: string | null;
+  customerId: string | null;
   rewardAmount: number;
   friendDiscountAmount: number;
   isActive: boolean;
@@ -22,6 +25,7 @@ async function insertReferralCode(data: {
       code,
       referrer_name,
       referrer_email,
+      customer_id,
       reward_amount,
       friend_discount_amount,
       is_active
@@ -30,6 +34,7 @@ async function insertReferralCode(data: {
       ${data.code},
       ${data.referrerName},
       ${data.referrerEmail},
+      ${data.customerId},
       ${data.rewardAmount},
       ${data.friendDiscountAmount},
       ${data.isActive}
@@ -55,6 +60,8 @@ export async function POST(req: Request) {
     }
 
     const { data } = parsed;
+    const currentCustomer = await getCurrentCustomer();
+    const customerId = resolveReferralCodeOwnerId(currentCustomer);
     const candidateCodes = generatePublicReferralCodeCandidates(data.referrerName);
 
     let created: ReferralCodeRow | null = null;
@@ -66,6 +73,7 @@ export async function POST(req: Request) {
           code,
           referrerName: data.referrerName,
           referrerEmail: data.referrerEmail,
+          customerId,
           rewardAmount: 20,
           friendDiscountAmount: 20,
           isActive: true,

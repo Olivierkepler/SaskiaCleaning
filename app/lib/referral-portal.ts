@@ -5,7 +5,9 @@ import {
   isValidReferralEmail,
   normalizeReferralCode,
   normalizeReferralLookupEmail,
+  computeReferralRewardWallet,
   type ReferralCodeRow,
+  type ReferralRewardWallet,
   type ReferralRow,
   type ReferralStatus,
 } from "./referrals";
@@ -19,19 +21,7 @@ export type ReferralPortalPayoutSummary = {
   outstandingRewards: number;
 };
 
-export type ReferralPortalRewardWallet = {
-  pendingRewards: number;
-  availableRewards: number;
-  paidRewards: number;
-  lifetimeEarnings: number;
-  outstandingRewards: number;
-  totalReferrals: number;
-  completedReferrals: number;
-  rewardedReferrals: number;
-  referralsStarted: number;
-  completedCleanings: number;
-  rewardsPaid: number;
-};
+export type ReferralPortalRewardWallet = ReferralRewardWallet;
 
 export type ReferralPortalMilestoneKey =
   | "first_referral"
@@ -87,6 +77,9 @@ export type ReferralPortalHistoryItem = {
   status: ReferralStatus;
   createdAt: string;
   rewardedAt: string | null;
+  rewardAmount: number;
+  payoutAmount: number | null;
+  payoutMethod: string | null;
 };
 
 export type ReferralPortalCodeSummary = {
@@ -96,6 +89,7 @@ export type ReferralPortalCodeSummary = {
   friendDiscountAmount: number;
   usageCount: number;
   isActive: boolean;
+  createdAt: string;
   statusCounts: ReferralPortalStatusCounts;
   payoutSummary: ReferralPortalPayoutSummary;
   referrals: ReferralPortalHistoryItem[];
@@ -116,54 +110,6 @@ function emptyStatusCounts(): ReferralPortalStatusCounts {
     completed: 0,
     rewarded: 0,
     cancelled: 0,
-  };
-}
-
-export function computeRewardWallet(
-  referrals: ReferralRow[],
-): ReferralPortalRewardWallet {
-  let pendingRewards = 0;
-  let availableRewards = 0;
-  let paidRewards = 0;
-  let lifetimeEarnings = 0;
-  let outstandingRewards = 0;
-  let pendingReferrals = 0;
-  let completedReferrals = 0;
-  let rewardedReferrals = 0;
-
-  for (const referral of referrals) {
-    if (referral.status === "cancelled") continue;
-
-    if (referral.status === "pending") {
-      pendingRewards += referral.reward_amount;
-      pendingReferrals += 1;
-    } else if (referral.status === "completed") {
-      availableRewards += referral.reward_amount;
-      outstandingRewards += referral.reward_amount;
-      lifetimeEarnings += referral.reward_amount;
-      completedReferrals += 1;
-    } else if (referral.status === "rewarded") {
-      paidRewards += referral.payout_amount ?? referral.reward_amount;
-      lifetimeEarnings += referral.reward_amount;
-      rewardedReferrals += 1;
-    }
-  }
-
-  const totalReferrals = pendingReferrals + completedReferrals + rewardedReferrals;
-  const completedCleanings = completedReferrals + rewardedReferrals;
-
-  return {
-    pendingRewards,
-    availableRewards,
-    paidRewards,
-    lifetimeEarnings,
-    outstandingRewards,
-    totalReferrals,
-    completedReferrals,
-    rewardedReferrals,
-    referralsStarted: totalReferrals,
-    completedCleanings,
-    rewardsPaid: rewardedReferrals,
   };
 }
 
@@ -257,6 +203,7 @@ function buildCodeSummary(
     friendDiscountAmount: codeRow.friend_discount_amount,
     usageCount: codeRow.usage_count,
     isActive: codeRow.is_active,
+    createdAt: codeRow.created_at,
     statusCounts,
     payoutSummary,
     referrals: referrals.map((referral) => ({
@@ -267,7 +214,58 @@ function buildCodeSummary(
       status: referral.status,
       createdAt: referral.created_at,
       rewardedAt: referral.rewarded_at,
+      rewardAmount: referral.reward_amount,
+      payoutAmount: referral.payout_amount,
+      payoutMethod: referral.payout_method,
     })),
+  };
+}
+
+export async function buildReferralPortalResultFromCodes(
+  codes: ReferralCodeRow[],
+): Promise<ReferralPortalLookupResult> {
+  if (codes.length === 0) {
+    return { found: false, message: "No referral codes found." };
+  }
+
+  const summaries: ReferralPortalCodeSummary[] = [];
+  const allReferrals: ReferralRow[] = [];
+
+  for (const codeRow of codes) {
+    const referralRows = await sql`
+      SELECT
+        id,
+        referral_code_id,
+        code,
+        booking_request_id,
+        referred_name,
+        referred_email,
+        reward_amount,
+        friend_discount_amount,
+        status,
+        payout_amount,
+        payout_method,
+        payout_notes,
+        rewarded_at,
+        created_at,
+        updated_at
+      FROM referrals
+      WHERE code = ${codeRow.code}
+      ORDER BY created_at DESC, id DESC
+    `;
+
+    const typedReferrals = referralRows as ReferralRow[];
+    allReferrals.push(...typedReferrals);
+    summaries.push(buildCodeSummary(codeRow, typedReferrals));
+  }
+
+  const wallet = computeReferralRewardWallet(allReferrals);
+
+  return {
+    found: true,
+    codes: summaries,
+    wallet,
+    milestones: computeReferralMilestones(wallet.completedCleanings),
   };
 }
 
@@ -330,51 +328,5 @@ export async function lookupReferrerPortal(input: {
         ORDER BY created_at DESC, id DESC
       `;
 
-  const codes = codeRows as ReferralCodeRow[];
-  if (codes.length === 0) {
-    return {
-      found: false,
-      message: "No referral codes found.",
-    };
-  }
-
-  const summaries: ReferralPortalCodeSummary[] = [];
-  const allReferrals: ReferralRow[] = [];
-
-  for (const codeRow of codes) {
-    const referralRows = await sql`
-      SELECT
-        id,
-        referral_code_id,
-        code,
-        booking_request_id,
-        referred_name,
-        referred_email,
-        reward_amount,
-        friend_discount_amount,
-        status,
-        payout_amount,
-        payout_method,
-        payout_notes,
-        rewarded_at,
-        created_at,
-        updated_at
-      FROM referrals
-      WHERE code = ${codeRow.code}
-      ORDER BY created_at DESC, id DESC
-    `;
-
-    const typedReferrals = referralRows as ReferralRow[];
-    allReferrals.push(...typedReferrals);
-    summaries.push(buildCodeSummary(codeRow, typedReferrals));
-  }
-
-  const wallet = computeRewardWallet(allReferrals);
-
-  return {
-    found: true,
-    codes: summaries,
-    wallet,
-    milestones: computeReferralMilestones(wallet.completedCleanings),
-  };
+  return buildReferralPortalResultFromCodes(codeRows as ReferralCodeRow[]);
 }

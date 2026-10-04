@@ -7,9 +7,24 @@ export const REFERRAL_STATUSES = [
 
 export type ReferralStatus = (typeof REFERRAL_STATUSES)[number];
 
+export type ReferralRewardWallet = {
+  pendingRewards: number;
+  availableRewards: number;
+  paidRewards: number;
+  lifetimeEarnings: number;
+  outstandingRewards: number;
+  totalReferrals: number;
+  completedReferrals: number;
+  rewardedReferrals: number;
+  referralsStarted: number;
+  completedCleanings: number;
+  rewardsPaid: number;
+};
+
 export type ReferralCodeRow = {
   id: number;
   code: string;
+  customer_id: string | null;
   referrer_name: string;
   referrer_email: string | null;
   reward_amount: number;
@@ -37,6 +52,54 @@ export type ReferralRow = {
   created_at: string;
   updated_at: string;
 };
+
+export function computeReferralRewardWallet(
+  referrals: ReferralRow[],
+): ReferralRewardWallet {
+  let pendingRewards = 0;
+  let availableRewards = 0;
+  let paidRewards = 0;
+  let lifetimeEarnings = 0;
+  let outstandingRewards = 0;
+  let pendingReferrals = 0;
+  let completedReferrals = 0;
+  let rewardedReferrals = 0;
+
+  for (const referral of referrals) {
+    if (referral.status === "cancelled") continue;
+
+    if (referral.status === "pending") {
+      pendingRewards += referral.reward_amount;
+      pendingReferrals += 1;
+    } else if (referral.status === "completed") {
+      availableRewards += referral.reward_amount;
+      outstandingRewards += referral.reward_amount;
+      lifetimeEarnings += referral.reward_amount;
+      completedReferrals += 1;
+    } else if (referral.status === "rewarded") {
+      paidRewards += referral.payout_amount ?? referral.reward_amount;
+      lifetimeEarnings += referral.reward_amount;
+      rewardedReferrals += 1;
+    }
+  }
+
+  const totalReferrals = pendingReferrals + completedReferrals + rewardedReferrals;
+  const completedCleanings = completedReferrals + rewardedReferrals;
+
+  return {
+    pendingRewards,
+    availableRewards,
+    paidRewards,
+    lifetimeEarnings,
+    outstandingRewards,
+    totalReferrals,
+    completedReferrals,
+    rewardedReferrals,
+    referralsStarted: totalReferrals,
+    completedCleanings,
+    rewardsPaid: rewardedReferrals,
+  };
+}
 
 export type ReferralCode = {
   id: number;

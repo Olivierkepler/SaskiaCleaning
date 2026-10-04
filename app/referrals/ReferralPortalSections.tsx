@@ -365,6 +365,9 @@ export function PortalCodeSection({
             {summary.isActive ? "Active" : "Inactive"} · {summary.usageCount}{" "}
             use{summary.usageCount === 1 ? "" : "s"}
           </p>
+          <p className="mt-1 text-xs text-slate-500">
+            Created {formatDate(summary.createdAt)}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <CopyButton value={summary.code} label="Copy code" />
@@ -475,6 +478,83 @@ export function PortalCodeSection({
         )}
       </div>
     </div>
+  );
+}
+
+export function ReferralRewardHistorySection({
+  codes,
+}: {
+  codes: ReferralPortalCodeSummary[];
+}) {
+  const activity = codes
+    .flatMap((summary) =>
+      summary.referrals.map((referral) => ({
+        ...referral,
+        code: summary.code,
+      })),
+    )
+    .sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() -
+        new Date(left.createdAt).getTime(),
+    );
+
+  return (
+    <section className="rounded-[28px] bg-[#ECF0F3] p-6 shadow-[14px_14px_32px_rgba(163,177,198,0.45),-14px_-14px_32px_rgba(255,255,255,0.95)] sm:p-8">
+      <div className="mb-5">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-sky-600">
+          Reward history
+        </p>
+        <h2 className="font-heading mt-2 text-2xl font-semibold tracking-[-0.04em] text-slate-950 sm:text-3xl">
+          Activity by referral
+        </h2>
+      </div>
+      {activity.length === 0 ? (
+        <p className="rounded-[20px] bg-[#ECF0F3] px-4 py-7 text-center text-sm text-slate-600 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]">
+          There is no reward activity yet.
+        </p>
+      ) : (
+        <ul className="space-y-3">
+          {activity.map((referral, index) => (
+            <li
+              key={`${referral.code}-${referral.createdAt}-${index}`}
+              className="flex flex-col gap-3 rounded-[20px] bg-[#ECF0F3] p-4 shadow-[8px_8px_18px_rgba(163,177,198,0.38),-8px_-8px_18px_rgba(255,255,255,0.9)] sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0">
+                <p className="font-semibold text-slate-900">
+                  {referral.referredLabel}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Code {referral.code} · Referred {formatDate(referral.createdAt)}
+                </p>
+                {referral.rewardedAt ? (
+                  <p className="mt-1 text-xs text-slate-600">
+                    Rewarded {formatDate(referral.rewardedAt)}
+                    {referral.payoutMethod
+                      ? ` · ${referral.payoutMethod}`
+                      : ""}
+                  </p>
+                ) : null}
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <span
+                  className={`inline-flex w-fit rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${statusBadgeClass(referral.status)}`}
+                >
+                  {referral.status}
+                </span>
+                <span className="text-sm font-bold tabular-nums text-slate-900">
+                  ${
+                    referral.status === "rewarded"
+                      ? referral.payoutAmount ?? referral.rewardAmount
+                      : referral.rewardAmount
+                  }
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
 
