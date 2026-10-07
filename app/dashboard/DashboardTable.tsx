@@ -3,6 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  CalendarDays,
+  ChevronDown,
+  ClipboardList,
+  MoreHorizontal,
+  Search,
+  Trash2,
+  UserRoundX,
+} from "lucide-react";
+import {
   BOOKING_STATUS_BADGE_CLASS,
   BOOKING_STATUS_LABELS,
   BOOKING_STATUSES,
@@ -28,7 +37,7 @@ type ItemsPerPage = 5 | 10 | 25 | 50;
 const ITEMS_PER_PAGE_OPTIONS: ItemsPerPage[] = [5, 10, 25, 50];
 
 const selectClassName =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+  "min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
 
 const escapeCsvValue = (value: string) => `"${value.replace(/"/g, '""')}"`;
 
@@ -480,23 +489,11 @@ export default function DashboardTable({
         nyDateFormatter.format(new Date(booking.created_at)) === todayKey
     ).length;
 
-    const avgBedrooms =
-      total > 0
-        ? (
-            bookings.reduce((sum, booking) => sum + booking.bedrooms, 0) / total
-          ).toFixed(1)
-        : "0.0";
+    const needsAction = bookings.filter((booking) => !booking.seen).length;
+    const unassigned = bookings.filter((booking) => !assignedSet.has(booking.id)).length;
 
-    const avgBathrooms =
-      total > 0
-        ? (
-            bookings.reduce((sum, booking) => sum + booking.bathrooms, 0) /
-            total
-          ).toFixed(1)
-        : "0.0";
-
-    return { total, todayCount, avgBedrooms, avgBathrooms };
-  }, [bookings]);
+    return { total, todayCount, needsAction, unassigned };
+  }, [bookings, assignedSet]);
 
   const unseenCount = useMemo(
     () => bookings.filter((booking) => !booking.seen).length,
@@ -684,84 +681,64 @@ export default function DashboardTable({
   };
 
   return (
-    <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+    <section id="booking-workspace" className="space-y-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {[
+          { label: "Total bookings", value: metrics.total, note: "All requests", icon: ClipboardList, tone: "bg-sky-50 text-sky-700" },
+          { label: "Today’s bookings", value: metrics.todayCount, note: "Received today", icon: CalendarDays, tone: "bg-emerald-50 text-emerald-700" },
+          { label: "Needs action", value: metrics.needsAction, note: "New requests", icon: CalendarDays, tone: "bg-rose-50 text-rose-700" },
+          { label: "Unassigned", value: metrics.unassigned, note: "Awaiting a cleaner", icon: UserRoundX, tone: "bg-amber-50 text-amber-700" },
+        ].map(({ label, value, note, icon: Icon, tone }) => (
+          <article key={label} className="rounded-[17px] border border-slate-200/80 bg-white p-4 shadow-[0_1px_6px_rgba(15,23,42,0.025)]">
+            <div className="flex items-start justify-between gap-2.5">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-slate-500">{label}</p>
+                <p className="mt-1.5 text-[26px] font-semibold leading-7 tracking-tight text-slate-950">{value}</p>
+                <p className="mt-1 text-[11px] text-slate-500">{note}</p>
+              </div>
+              <span className={`flex size-9 shrink-0 items-center justify-center rounded-[11px] ${tone}`}>
+                <Icon aria-hidden="true" className="size-[18px]" strokeWidth={1.8} />
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.035)]">
       {bookings.length === 0 ? (
         <div className="p-8 text-center text-slate-500">
           No booking requests yet.
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 border-b border-slate-200 p-4 sm:gap-4 sm:p-5 lg:grid-cols-4">
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-sky-50 to-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Total bookings
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {metrics.total}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-emerald-50 to-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Today&apos;s bookings
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {metrics.todayCount}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-violet-50 to-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Avg bedrooms
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {metrics.avgBedrooms}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Avg bathrooms
-              </p>
-              <p className="mt-2 text-2xl font-bold text-slate-900">
-                {metrics.avgBathrooms}
-              </p>
-            </div>
-          </div>
-
           {unseenCount > 0 && (
-            <div className="flex flex-col gap-3 border-b border-sky-200 bg-sky-50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-              <p className="text-sm font-medium text-sky-900">
-                You have{" "}
-                <span className="font-bold">{unseenCount}</span> new booking
-                request{unseenCount === 1 ? "" : "s"}.
-              </p>
-              <button
-                type="button"
-                onClick={handleMarkAllSeen}
-                className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-600"
-              >
-                Mark all as seen
-              </button>
+            <div className="flex flex-col gap-2.5 border-b border-sky-100 bg-sky-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-100/80 text-sky-700"><CalendarDays aria-hidden="true" className="size-4" /></span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">{unseenCount} new booking request{unseenCount === 1 ? "" : "s"} need review.</p>
+                  <p className="mt-0.5 text-xs text-slate-600">These requests have not been reviewed yet.</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pl-11 sm:pl-0">
+                <a href="#booking-list" className="min-h-9 rounded-lg border border-sky-200 bg-white px-3 py-2 text-xs font-semibold text-sky-800 transition hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">View new requests</a>
+                <button type="button" onClick={handleMarkAllSeen} className="min-h-9 rounded-lg px-3 py-2 text-xs font-semibold text-slate-600 transition hover:bg-white/80 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500">Mark all as seen</button>
+              </div>
             </div>
           )}
 
-          <div className="space-y-4 border-b border-slate-200 p-4 sm:p-5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div className="w-full lg:max-w-md">
-                <label
-                  htmlFor="booking-search"
-                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                >
-                  Search
-                </label>
+          <div id="booking-list" className="space-y-4 border-b border-slate-100 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+              <div className="relative w-full xl:max-w-xl">
+                <label htmlFor="booking-search" className="sr-only">Search bookings</label>
+                <Search aria-hidden="true" className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                 <input
                   id="booking-search"
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search name, email, service, location, referral code..."
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  className="h-11 w-full rounded-xl border border-slate-200 bg-slate-50/70 pl-10 pr-3 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:bg-white focus:ring-2 focus:ring-sky-100"
                 />
               </div>
 
@@ -770,7 +747,7 @@ export default function DashboardTable({
                   type="button"
                   onClick={handleExportCsv}
                   disabled={filteredBookings.length === 0}
-                  className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-11 rounded-xl bg-sky-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Export CSV
                 </button>
@@ -779,14 +756,14 @@ export default function DashboardTable({
                   type="button"
                   onClick={clearFilters}
                   disabled={isClearFiltersDisabled}
-                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-slate-100 disabled:bg-slate-50 disabled:text-slate-400 disabled:opacity-100"
                 >
                   Clear filters
                 </button>
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto]">
               <div>
                 <label
                   htmlFor="booking-sort"
@@ -806,54 +783,6 @@ export default function DashboardTable({
                   <option value="name-desc">Name Z-A</option>
                   <option value="bedrooms-desc">Bedrooms high-low</option>
                   <option value="bathrooms-desc">Bathrooms high-low</option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="bedroom-filter"
-                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                >
-                  Bedrooms
-                </label>
-                <select
-                  id="bedroom-filter"
-                  value={bedroomFilter}
-                  onChange={(e) =>
-                    setBedroomFilter(e.target.value as BedroomFilter)
-                  }
-                  className={selectClassName}
-                >
-                  <option value="all">All</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5+">5+</option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  htmlFor="bathroom-filter"
-                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                >
-                  Bathrooms
-                </label>
-                <select
-                  id="bathroom-filter"
-                  value={bathroomFilter}
-                  onChange={(e) =>
-                    setBathroomFilter(e.target.value as BathroomFilter)
-                  }
-                  className={selectClassName}
-                >
-                  <option value="all">All</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                  <option value="5+">5+</option>
                 </select>
               </div>
 
@@ -883,26 +812,6 @@ export default function DashboardTable({
 
               <div>
                 <label
-                  htmlFor="referral-filter"
-                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
-                >
-                  Referral
-                </label>
-                <select
-                  id="referral-filter"
-                  value={referralFilter}
-                  onChange={(e) =>
-                    setReferralFilter(e.target.value as ReferralFilter)
-                  }
-                  className={selectClassName}
-                >
-                  <option value="all">All bookings</option>
-                  <option value="referral">Referral bookings only</option>
-                </select>
-              </div>
-
-              <div>
-                <label
                   htmlFor="assignment-filter"
                   className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500"
                 >
@@ -923,6 +832,34 @@ export default function DashboardTable({
                   <option value="assigned">Assigned</option>
                 </select>
               </div>
+
+              <details className="group relative self-end">
+                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 [&::-webkit-details-marker]:hidden">
+                  More filters
+                  <span className="ml-2 text-[11px] text-slate-400">{bedroomFilter !== "all" || bathroomFilter !== "all" || referralFilter !== "all" ? "Active" : ""}</span>
+                  <ChevronDown aria-hidden="true" className="ml-1 size-3.5 text-slate-400 transition group-open:rotate-180" />
+                </summary>
+                <div className="absolute right-0 z-20 mt-2 grid w-[min(88vw,23rem)] gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xl sm:grid-cols-2">
+                  <div className="sm:col-span-2">
+                    <label htmlFor="referral-filter" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Referral</label>
+                    <select id="referral-filter" value={referralFilter} onChange={(e) => setReferralFilter(e.target.value as ReferralFilter)} className={selectClassName}>
+                      <option value="all">All bookings</option><option value="referral">Referral bookings only</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="bedroom-filter" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Bedrooms</label>
+                    <select id="bedroom-filter" value={bedroomFilter} onChange={(e) => setBedroomFilter(e.target.value as BedroomFilter)} className={selectClassName}>
+                      <option value="all">All</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="bathroom-filter" className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">Bathrooms</label>
+                    <select id="bathroom-filter" value={bathroomFilter} onChange={(e) => setBathroomFilter(e.target.value as BathroomFilter)} className={selectClassName}>
+                      <option value="all">All</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5+">5+</option>
+                    </select>
+                  </div>
+                </div>
+              </details>
             </div>
 
             <p className="text-sm text-slate-500">
@@ -936,22 +873,20 @@ export default function DashboardTable({
             </div>
           ) : (
             <>
+          <div>
           {/* Desktop / tablet table */}
           <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[1280px] border-collapse text-left text-sm">
-              <thead className="bg-sky-500 text-sm text-white">
+            <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
+              <thead className="border-b border-slate-200 bg-[#f7f9fc] text-[11px] uppercase tracking-[0.08em] text-slate-500">
                 <tr>
-                  <th className="p-3 font-semibold">Name</th>
-                  <th className="p-3 font-semibold">Contact</th>
-                  <th className="p-3 font-semibold">Service</th>
-                  <th className="p-3 font-semibold">Location</th>
-                  <th className="p-3 font-semibold">Requested</th>
-                  <th className="p-3 font-semibold">Rooms</th>
-                  <th className="p-3 font-semibold">Estimate</th>
-                  <th className="min-w-[180px] p-3 font-semibold">Extras / Notes</th>
-                  <th className="p-3 font-semibold">Status</th>
-                  <th className="p-3 font-semibold">Submitted</th>
-                  <th className="p-3 font-semibold">Action</th>
+                  <th className="p-4 font-semibold">Customer</th>
+                  <th className="p-4 font-semibold">Service</th>
+                  <th className="p-4 font-semibold">Appointment</th>
+                  <th className="p-4 font-semibold">Property</th>
+                  <th className="p-4 font-semibold">Estimate</th>
+                  <th className="min-w-[190px] p-4 font-semibold">Assignment</th>
+                  <th className="p-4 font-semibold">Status</th>
+                  <th className="p-4 text-right font-semibold">Actions</th>
                 </tr>
               </thead>
 
@@ -969,54 +904,45 @@ export default function DashboardTable({
                       highlightBookingId === booking.id
                         ? "bg-amber-50 ring-2 ring-inset ring-amber-300 hover:bg-amber-50"
                         : isUnseen
-                          ? "bg-sky-50 hover:bg-sky-100"
+                          ? "bg-sky-50/60 hover:bg-sky-50"
                           : "hover:bg-slate-50"
                     }`}
                   >
-                    <td className="p-3 font-medium text-slate-900">
-                      <div className="flex items-center gap-2">
-                        <span>{booking.name}</span>
+                    <td className="max-w-[230px] p-4">
+                      <div className="flex items-center gap-2 font-semibold text-slate-900">
+                        <span className="truncate">{booking.name}</span>
                         {isUnseen && (
-                          <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
+                          <span className="shrink-0 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-800">
                             New
                           </span>
                         )}
                       </div>
-                      {booking.frequency && (
-                        <p className="mt-1 text-xs text-slate-500">
-                          {booking.frequency}
-                        </p>
-                      )}
-                      <ReferralBadge
-                        code={booking.referral_code}
-                        friendDiscountAmount={booking.friend_discount_amount}
-                      />
+                      <p className="mt-1 truncate text-xs text-slate-600" title={booking.email}>{booking.email}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{booking.mobile || "—"}</p>
+                      <details className="group mt-2">
+                        <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-md py-0.5 text-[11px] font-medium text-sky-700 transition hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 [&::-webkit-details-marker]:hidden">More details <ChevronDown aria-hidden="true" className="size-3 text-slate-400 transition group-open:rotate-180" /></summary>
+                        <div className="mt-2 space-y-1 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-600">
+                          <p><span className="font-medium text-slate-700">Frequency:</span> {booking.frequency || "—"}</p>
+                          <p><span className="font-medium text-slate-700">Submitted:</span> {formatDate(booking.created_at)}</p>
+                          <ReferralBadge code={booking.referral_code} friendDiscountAmount={booking.friend_discount_amount} />
+                          <div className="border-t border-slate-200 pt-1"><BookingDetails extras={booking.extras} notes={booking.notes} compact /></div>
+                        </div>
+                      </details>
                     </td>
-                    <td className="p-3 text-slate-700">
-                      <p className="break-all">{booking.email}</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {booking.mobile || "—"}
-                      </p>
+                    <td className="p-4 text-slate-700">
+                      <p className="font-medium text-slate-800">{booking.service || "—"}</p>
+                      <p className="mt-1 text-xs text-slate-500">{booking.frequency || "One-time"}</p>
                     </td>
-                    <td className="p-3 text-slate-700">
-                      {booking.service || "—"}
+                    <td className="whitespace-nowrap p-4 text-slate-700">
+                      <p className="font-medium">{formatRequestedAppointment(booking.booking_date, booking.booking_time)}</p>
+                      <p className="mt-1 text-xs text-slate-500">Submitted {formatRequestedDate(booking.created_at)}</p>
                     </td>
-                    <td className="max-w-[140px] p-3 text-slate-700">
-                      <span className="line-clamp-2" title={booking.location ?? undefined}>
-                        {booking.location || "—"}
-                      </span>
-                    </td>
-                    <td className="whitespace-nowrap p-3 text-slate-700">
-                      {formatRequestedAppointment(
-                        booking.booking_date,
-                        booking.booking_time,
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap p-3 text-slate-700">
-                      {booking.bedrooms} bed / {booking.bathrooms} bath
+                    <td className="max-w-[180px] p-4 text-slate-700">
+                      <p className="whitespace-nowrap text-xs font-medium text-slate-800">{booking.bedrooms} bed · {booking.bathrooms} bath</p>
+                      <span className="mt-1 block line-clamp-2 text-xs text-slate-500" title={booking.location ?? undefined}>{booking.location || "—"}</span>
                     </td>
                     <td
-                      className={`p-3 font-medium text-slate-800 ${
+                      className={`p-4 font-medium text-slate-800 ${
                         estimate.hasDiscount ? "min-w-[9rem] whitespace-normal" : "whitespace-nowrap"
                       }`}
                       title={
@@ -1029,45 +955,30 @@ export default function DashboardTable({
                     >
                       <EstimateDisplay booking={booking} />
                     </td>
-                    <td className="max-w-[220px] p-3">
-                      <BookingDetails
-                        extras={booking.extras}
-                        notes={booking.notes}
-                        compact
-                      />
+                    <td className="p-4">
+                      {!assignedSet.has(booking.id) ? <span className="mb-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">Unassigned</span> : null}
+                      <BookingAssignControl bookingId={booking.id} />
                     </td>
-                    <td className="p-3">
+                    <td className="p-4">
                       <div className="flex flex-wrap items-center gap-1">
                         <select
+                          aria-label={`Status for ${booking.name}`}
                           value={bookingStatus}
-                          onChange={(e) =>
-                            handleStatusChange(
-                              booking.id,
-                              e.target.value as BookingStatus
-                            )
-                          }
+                          onChange={(e) => handleStatusChange(booking.id, e.target.value as BookingStatus)}
                           className={`rounded-lg border px-2.5 py-1.5 text-xs font-semibold shadow-sm outline-none transition focus:ring-2 focus:ring-sky-100 ${BOOKING_STATUS_BADGE_CLASS[bookingStatus]}`}
                         >
-                          {BOOKING_STATUSES.map((status) => (
-                            <option key={status} value={status}>
-                              {BOOKING_STATUS_LABELS[status]}
-                            </option>
-                          ))}
+                          {BOOKING_STATUSES.map((status) => <option key={status} value={status}>{BOOKING_STATUS_LABELS[status]}</option>)}
                         </select>
                         {capacityBadge(booking.id)}
                       </div>
                     </td>
-                    <td className="whitespace-nowrap p-3 text-xs text-slate-500">
-                      {formatDate(booking.created_at)}
-                    </td>
-                    <td className="p-3">
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(booking.id)}
-                        className="rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600 active:scale-95"
-                      >
-                        Delete
-                      </button>
+                    <td className="p-4 text-right">
+                      <details className="relative inline-block text-left">
+                        <summary aria-label={`Actions for ${booking.name}`} className="flex size-10 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 [&::-webkit-details-marker]:hidden"><MoreHorizontal aria-hidden="true" className="size-[18px]" /></summary>
+                        <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                          <button type="button" onClick={() => handleDelete(booking.id)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"><Trash2 aria-hidden="true" className="size-4" />Delete booking</button>
+                        </div>
+                      </details>
                     </td>
                   </tr>
                   );
@@ -1090,7 +1001,7 @@ export default function DashboardTable({
                   highlightBookingId === booking.id
                     ? "border-amber-400 bg-amber-50 ring-2 ring-amber-200"
                     : isUnseen
-                      ? "border-sky-300 bg-sky-50"
+                      ? "border-sky-200 bg-sky-50/60"
                       : "border-slate-200 bg-white"
                 }`}
               >
@@ -1122,13 +1033,12 @@ export default function DashboardTable({
                     />
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(booking.id)}
-                    className="shrink-0 rounded-lg bg-red-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-600 active:scale-95"
-                  >
-                    Delete
-                  </button>
+                  <details className="relative shrink-0">
+                    <summary aria-label={`Actions for ${booking.name}`} className="flex size-10 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 [&::-webkit-details-marker]:hidden"><MoreHorizontal aria-hidden="true" className="size-[18px]" /></summary>
+                    <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                      <button type="button" onClick={() => handleDelete(booking.id)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"><Trash2 aria-hidden="true" className="size-4" />Delete booking</button>
+                    </div>
+                  </details>
                 </div>
 
                 <div className="mb-3">
@@ -1230,6 +1140,7 @@ export default function DashboardTable({
               );
             })}
           </div>
+          </div>
 
           <div className="flex flex-col gap-4 border-t border-slate-200 p-4 sm:p-5">
             <p className="text-sm text-slate-500">
@@ -1307,6 +1218,7 @@ export default function DashboardTable({
           )}
         </>
       )}
-    </div>
+      </div>
+    </section>
   );
 }

@@ -7,6 +7,7 @@ import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-reques
 import { listAssignmentBookingIds } from "@/app/lib/staff";
 import { listAdminCapacityHints } from "@/app/lib/capacity-release";
 import { countOpsNeedsAttention } from "@/app/lib/ops-exceptions";
+import AdminSidebar from "./components/AdminSidebar";
 
 type BookingRequest = {
   id: number;
@@ -92,34 +93,44 @@ export default async function DashboardPage({
   const opsNeedsAttentionCount = await countOpsNeedsAttention();
 
   return (
-    <main className="min-h-screen bg-slate-100  py-6 ">
-      <Navbar
-        unseenCount={unseenCount}
-        unseenBookings={unseenBookings}
-        pendingChangeRequestCount={pendingChangeRequestCount}
-        opsNeedsAttentionCount={opsNeedsAttentionCount}
-        isOwner={admin.role === "OWNER"}
-      />
-      <div className="mx-auto max-w-full px-20">
-        <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-            Booking Requests
-          </h1>
-
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">
-            Total bookings:{" "}
-            <span className="font-semibold text-slate-900">
-              {bookings.length}
-            </span>
-          </p>
-        </div>
-
-        <DashboardTable
-          bookings={typedBookings}
-          assignedBookingIds={assignedBookingIds}
-          capacityHints={capacityHints}
-          highlightBookingId={highlightBookingId}
+    <main className="min-h-screen bg-[#f5f7fb]">
+      <div className="flex min-h-screen">
+        <AdminSidebar
+          unseenCount={unseenCount}
+          pendingChangeRequestCount={pendingChangeRequestCount}
+          opsNeedsAttentionCount={opsNeedsAttentionCount}
+          isOwner={admin.role === "OWNER"}
         />
+        <div className="min-w-0 flex-1">
+          <div className="mx-auto w-full max-w-[1680px] px-4 py-4 sm:px-6 sm:py-6 xl:px-8">
+            <Navbar
+              unseenCount={unseenCount}
+              unseenBookings={unseenBookings}
+              pendingChangeRequestCount={pendingChangeRequestCount}
+              opsNeedsAttentionCount={opsNeedsAttentionCount}
+              isOwner={admin.role === "OWNER"}
+              mode="utility"
+            />
+            <header id="overview" className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-sky-700">Booking workspace</p>
+                <h1 className="text-[28px] font-semibold leading-8 tracking-tight text-slate-950">
+                  Booking Requests
+                </h1>
+                <p className="mt-1.5 text-sm text-slate-500">
+                  Review, assign and manage incoming cleaning requests.
+                </p>
+              </div>
+            </header>
+
+            <DashboardTable
+              bookings={typedBookings}
+              assignedBookingIds={assignedBookingIds}
+              capacityHints={capacityHints}
+              highlightBookingId={highlightBookingId}
+            />
+          </div>
+        </div>
       </div>
     </main>
   );

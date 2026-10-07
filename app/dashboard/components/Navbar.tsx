@@ -20,6 +20,7 @@ type NavbarProps = {
   pendingChangeRequestCount?: number;
   opsNeedsAttentionCount?: number;
   isOwner?: boolean;
+  mode?: "navigation" | "utility";
 };
 
 const formatDate = (date: string) => {
@@ -50,6 +51,7 @@ export default function Navbar({
   pendingChangeRequestCount = 0,
   opsNeedsAttentionCount = 0,
   isOwner = false,
+  mode = "navigation",
 }: NavbarProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -104,14 +106,15 @@ export default function Navbar({
   };
 
   return (
-    <nav className="relative z-30 mb-6 rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-slate-200">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <nav className={`relative z-30 ${mode === "utility" ? "mb-4 min-h-16 rounded-xl border border-slate-200/80 bg-white px-4 py-2.5 shadow-[0_1px_5px_rgba(15,23,42,0.025)] sm:px-5" : "mb-6 rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-slate-200"}`}>
+      <div className={`flex gap-3 ${mode === "utility" ? "min-h-[42px] items-center justify-between" : "flex-col sm:flex-row sm:items-center sm:justify-between"}`}>
         <div>
-          <h2 className="text-lg font-bold text-slate-900">Dashboard</h2>
-          <p className="text-sm text-slate-500">Manage booking requests</p>
+          <h2 className={`font-semibold leading-5 text-slate-900 ${mode === "utility" ? "text-[13px]" : "text-lg font-bold"}`}>{mode === "utility" ? "Operations workspace" : "Dashboard"}</h2>
+          <p className="text-[11px] leading-4 text-slate-500">{mode === "utility" ? "Saskia Cleaning" : "Manage booking requests"}</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className={`flex items-center gap-2 ${mode === "utility" ? "shrink-0" : "flex-wrap"}`}>
+          {mode === "navigation" ? <div className="contents">
           <a
             href="/dashboard"
             className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
@@ -195,6 +198,7 @@ export default function Navbar({
             Home
           </Link>
           <AdminSignOutButton />
+          </div> : null}
 
           <div className="relative" ref={dropdownRef}>
             <button
@@ -291,6 +295,12 @@ export default function Navbar({
               </div>
             )}
           </div>
+          {mode === "utility" ? (
+            <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2.5 sm:gap-2 sm:pl-3">
+              <span className="flex size-8 items-center justify-center rounded-full bg-slate-100 text-[11px] font-bold text-slate-700" aria-hidden="true">{isOwner ? "O" : "A"}</span>
+              <span className="text-[11px] font-semibold text-slate-600 sm:text-xs">{isOwner ? "Owner" : "Admin"}</span>
+            </div>
+          ) : null}
         </div>
       </div>
     </nav>
