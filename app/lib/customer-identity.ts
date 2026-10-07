@@ -5,6 +5,7 @@ import {
   normalizeCustomerEmail,
   isGoogleEmailVerified,
 } from "@/app/lib/customer-auth-pure";
+import { resolveGoogleIdentity } from "@/app/lib/customer-credentials-pure";
 
 export type CustomerRecord = {
   id: string;
@@ -66,52 +67,84 @@ export async function upsertCustomerFromGoogle(input: {
       AND a.provider_account_id = ${input.providerAccountId}
     LIMIT 1
   `;
-
-  let customer = (existingByProvider[0] as CustomerRecord | undefined) ?? null;
-
-  if (!customer) {
-    customer = await findCustomerByEmail(email);
+  const providerCustomer =
+    (existingByProvider[0] as CustomerRecord | undefined) ?? null;
+  let emailCustomer = providerCustomer ? null : await findCustomerByEmail(email);
+  let hasPasswordCredential = false;
+  if (emailCustomer) {
+    const credentials = await sql`
+      SELECT customer_id
+      FROM customer_credentials
+      WHERE customer_id = ${emailCustomer.id}
+      LIMIT 1
+    `;
+    hasPasswordCredential = credentials.length > 0;
   }
 
-  if (customer) {
-    // Preserve customer-edited preferred name and phone.
-    // Google may refresh the provider image; never overwrite non-empty name.
-    const updated = await sql`
-      UPDATE customers
-      SET
-        name = CASE
-          WHEN name IS NULL OR btrim(name) = '' THEN COALESCE(${input.name}, name)
-          ELSE name
-        END,
-        image = COALESCE(${input.image}, image),
-        email_verified = COALESCE(email_verified, ${now}::timestamptz),
-        updated_at = now()
-      WHERE id = ${customer.id}
-      RETURNING *
-    `;
-    customer = updated[0] as CustomerRecord;
+  const resolution = resolveGoogleIdentity({
+    providerCustomerId: providerCustomer?.id ?? null,
+    emailCustomerId: emailCustomer?.id ?? null,
+    emailCustomerHasPassword: hasPasswordCredential,
+  });
+
+  if (resolution.kind === "reject_password_customer") {
+    throw new Error("Google and password accounts are not linked automatically.");
+  }
+
+  let customer: CustomerRecord | null = null;
+  if (resolution.kind === "provider") {
+    customer = providerCustomer;
+  } else if (resolution.kind === "email") {
+    customer = emailCustomer;
   } else {
     const inserted = await sql`
       INSERT INTO customers (email, name, image, email_verified)
-      VALUES (
-        ${email},
-        ${input.name},
-        ${input.image},
-        ${now}::timestamptz
-      )
-      ON CONFLICT (email) DO UPDATE SET
-        name = CASE
-          WHEN customers.name IS NULL OR btrim(customers.name) = ''
-            THEN COALESCE(EXCLUDED.name, customers.name)
-          ELSE customers.name
-        END,
-        image = COALESCE(EXCLUDED.image, customers.image),
-        email_verified = COALESCE(customers.email_verified, EXCLUDED.email_verified),
-        updated_at = now()
+      VALUES (${email}, ${input.name}, ${input.image}, ${now}::timestamptz)
+      ON CONFLICT (email) DO NOTHING
       RETURNING *
     `;
-    customer = inserted[0] as CustomerRecord;
+    customer = (inserted[0] as CustomerRecord | undefined) ?? null;
+
+    // A concurrent registration may have won the unique-email race. Never
+    // merge that password customer by email; only an already linked provider
+    // identity may resolve to its existing customer.
+    if (!customer) {
+      emailCustomer = await findCustomerByEmail(email);
+      if (emailCustomer) {
+        const credentials = await sql`
+          SELECT customer_id
+          FROM customer_credentials
+          WHERE customer_id = ${emailCustomer.id}
+          LIMIT 1
+        `;
+        if (credentials.length > 0) {
+          throw new Error("Google and password accounts are not linked automatically.");
+        }
+        customer = emailCustomer;
+      }
+    }
   }
+
+  if (!customer) {
+    throw new Error("Unable to resolve Google customer identity.");
+  }
+
+  // Preserve customer-edited preferred name and phone. An existing provider
+  // identity remains attached to its original customer; email never reassigns it.
+  const updated = await sql`
+    UPDATE customers
+    SET
+      name = CASE
+        WHEN name IS NULL OR btrim(name) = '' THEN COALESCE(${input.name}, name)
+        ELSE name
+      END,
+      image = COALESCE(${input.image}, image),
+      email_verified = COALESCE(email_verified, ${now}::timestamptz),
+      updated_at = now()
+    WHERE id = ${customer.id}
+    RETURNING *
+  `;
+  customer = (updated[0] as CustomerRecord | undefined) ?? customer;
 
   await sql`
     INSERT INTO customer_oauth_accounts (
@@ -124,10 +157,19 @@ export async function upsertCustomerFromGoogle(input: {
       'google',
       ${input.providerAccountId}
     )
-    ON CONFLICT (provider, provider_account_id) DO UPDATE SET
-      customer_id = EXCLUDED.customer_id,
-      updated_at = now()
+    ON CONFLICT (provider, provider_account_id) DO NOTHING
   `;
+
+  const linkedIdentity = await sql`
+    SELECT customer_id
+    FROM customer_oauth_accounts
+    WHERE provider = 'google'
+      AND provider_account_id = ${input.providerAccountId}
+    LIMIT 1
+  `;
+  if (linkedIdentity[0]?.customer_id !== customer.id) {
+    throw new Error("Google identity is already linked to another customer.");
+  }
 
   return customer;
 }

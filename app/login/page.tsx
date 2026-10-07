@@ -6,10 +6,12 @@ import { getTranslations } from "next-intl/server";
 
 import { auth } from "@/auth";
 import GoogleSignInButton from "@/app/components/auth/GoogleSignInButton";
+import CredentialsLoginForm from "@/app/components/auth/CredentialsLoginForm";
 
 type LoginPageProps = {
   searchParams: Promise<{
     error?: string;
+    registered?: string;
   }>;
 };
 
@@ -25,6 +27,7 @@ export default async function LoginPage({
 
   const params = await searchParams;
   const errorKey = params.error ?? "";
+  const registered = params.registered === "1";
 
   const errorMessage =
     errorKey === "Configuration"
@@ -231,7 +234,13 @@ export default async function LoginPage({
                 </div>
               ) : null}
 
-              <GoogleSignInButton callbackUrl="/account" />
+              {registered ? (
+                <p role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  Account created. Sign in to continue.
+                </p>
+              ) : null}
+
+              <CredentialsLoginForm />
 
               <div className="mt-7 flex items-center gap-4">
                 <div className="h-px flex-1 bg-slate-300/70" />
@@ -241,6 +250,10 @@ export default async function LoginPage({
                 </span>
 
                 <div className="h-px flex-1 bg-slate-300/70" />
+              </div>
+
+              <div className="mt-6">
+                <GoogleSignInButton callbackUrl="/account" />
               </div>
 
               <p
@@ -255,6 +268,9 @@ export default async function LoginPage({
                 "
               >
                 {t("privacyNote")}
+              </p>
+              <p className="mt-4 text-center text-sm text-slate-600">
+                New to Saskia? <Link href="/register" className="font-semibold text-sky-700 underline-offset-2 hover:underline">Create an account</Link>
               </p>
             </div>
 

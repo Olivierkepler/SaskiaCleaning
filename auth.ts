@@ -1,5 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
+import Credentials from "next-auth/providers/credentials";
 import type { JWT } from "@auth/core/jwt";
 import {
   isGoogleEmailVerified,
@@ -15,6 +16,8 @@ import {
   ADMIN_AUTH_PORTAL_VALUE,
 } from "@/app/lib/admin-auth-pure";
 import { cookies } from "next/headers";
+import { authenticateCustomerCredentials } from "@/app/lib/customer-credentials";
+import { credentialsTokenIdentity } from "@/app/lib/customer-credentials-pure";
 
 declare module "next-auth" {
   interface Session {
@@ -71,6 +74,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         },
       },
     }),
+    Credentials({
+      id: "credentials",
+      name: "Email and password",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        try {
+          // Shared distributed throttling must wrap this service before production.
+          const result = await authenticateCustomerCredentials({
+            email: credentials?.email,
+            password: credentials?.password,
+          });
+          return result;
+        } catch {
+          console.error("Credentials authentication failed.");
+          return null;
+        }
+      },
+    }),
   ],
   session: {
     strategy: "jwt",
@@ -81,7 +105,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   trustHost: true,
   callbacks: {
-    async signIn({ account, profile }) {
+    async signIn({ account, profile, user }) {
+      if (account?.provider === "credentials") {
+        return typeof user?.id === "string" && user.id.length > 0;
+      }
       if (account?.provider !== "google") {
         return false;
       }
@@ -168,8 +195,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
     },
 
-    async jwt({ token, account, profile }) {
+    async jwt({ token, account, profile, user }) {
       const appToken = token as AppJWT;
+
+      if (account?.provider === "credentials" && typeof user?.id === "string") {
+        Object.assign(
+          appToken,
+          credentialsTokenIdentity({
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          }),
+        );
+        delete appToken.staffId;
+      }
 
       if (account?.provider === "google" && profile?.email) {
         if (!isGoogleEmailVerified(profile)) {
