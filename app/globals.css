@@ -60,3 +60,42 @@ button {
 .font-heading {
   font-family: var(--font-heading);
 }
+
+@media (min-width: 64rem) {
+  [data-estimator-layout="account"] .account-estimator-grid {
+    grid-template-columns: minmax(0, 7.1fr) minmax(250px, 2.9fr);
+    transition: grid-template-columns 300ms ease-out;
+  }
+
+  [data-account-sidebar-collapsed="true"]
+    [data-estimator-layout="account"]
+    .account-estimator-grid {
+    grid-template-columns: minmax(0, 6.2fr) minmax(280px, 3.8fr);
+  }
+
+  [data-estimator-layout="account"] .account-booking-summary > div:first-child {
+    gap: 0.5rem;
+    padding-inline: 1rem;
+  }
+
+  [data-estimator-layout="account"]
+    .account-booking-summary
+    > div:first-child
+    > div:first-child {
+    gap: 0.5rem;
+  }
+
+  [data-estimator-layout="account"]
+    .account-booking-summary
+    > div:first-child
+    > div:first-child
+    > div:first-child {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+
+  [data-estimator-layout="account"] .account-booking-summary h3 {
+    white-space: nowrap;
+    font-size: 1rem;
+  }
+}

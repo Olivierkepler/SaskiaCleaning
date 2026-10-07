@@ -10,12 +10,14 @@ export type DynamicServiceGalleryProps = {
   galleryKey: string;
   images: StandardPreviewImage[];
   isDefaultOnly: boolean;
+  layoutVariant?: "public" | "account";
 };
 
 export function DynamicServiceGallery({
   galleryKey,
   images,
   isDefaultOnly,
+  layoutVariant = "public",
 }: DynamicServiceGalleryProps) {
   const [primaryImage, ...addonImages] = images;
 
@@ -72,21 +74,10 @@ export function DynamicServiceGallery({
          * the image collection.
          */
         <div
-          className="
-            mx-auto
-            flex
-            h-full
-            w-full
-            max-w-[980px]
-            flex-col
-            items-center
-            justify-start
-            px-6
-            pb-8
-            pt-8
-            lg:px-8
-            lg:pt-10
-          "
+          className={`
+            mx-auto flex h-full w-full max-w-[980px] flex-col items-center justify-start
+            ${layoutVariant === "account" ? "px-3 pb-6 pt-6 lg:px-3 lg:pt-8" : "px-6 pb-8 pt-8 lg:px-8 lg:pt-10"}
+          `}
         >
           {/* Main service image */}
           <motion.div
@@ -138,19 +129,16 @@ export function DynamicServiceGallery({
               "
             >
               <div
-                className={`
-                  w-full
-                  items-start
-                  justify-center
-                  ${
-                    hasFourAddonImages
-                      ? "grid grid-cols-4 gap-3 xl:gap-4"
-                      : "flex flex-row flex-wrap gap-x-5 gap-y-5 lg:flex-nowrap lg:gap-x-6 xl:gap-x-8"
-                  }
-                `}
+                className={
+                  layoutVariant === "account"
+                    ? `grid w-full min-w-0 ${
+                        addonImages.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                      } items-start justify-items-center gap-3 lg:gap-4`
+                    : `w-full items-start justify-center ${hasFourAddonImages ? "grid grid-cols-4 gap-3 xl:gap-4" : "flex flex-row flex-wrap gap-x-5 gap-y-5 lg:flex-nowrap lg:gap-x-6 xl:gap-x-8"}`
+                }
               >
                 <AnimatePresence mode="popLayout">
-                  {addonImages.map((img) => (
+                  {addonImages.map((img, index) => (
                     <motion.div
                       key={img.src}
                       layout
@@ -174,9 +162,17 @@ export function DynamicServiceGallery({
                         ease: MOTION_EASE,
                       }}
                       className={
-                        hasFourAddonImages
-                          ? "flex min-w-0 w-full items-center justify-center"
-                          : "flex min-w-[120px] max-w-[180px] flex-1 items-start justify-center"
+                        layoutVariant === "account"
+                          ? `flex min-w-0 w-full items-center justify-center ${
+                              addonImages.length > 1 &&
+                              addonImages.length % 2 === 1 &&
+                              index === addonImages.length - 1
+                                ? "col-span-2 max-w-[150px] justify-self-center"
+                                : ""
+                            }`
+                          : hasFourAddonImages
+                            ? "flex min-w-0 w-full items-center justify-center"
+                            : "flex min-w-[120px] max-w-[180px] flex-1 items-start justify-center"
                       }
                     >
                       <StandardGalleryImageCard

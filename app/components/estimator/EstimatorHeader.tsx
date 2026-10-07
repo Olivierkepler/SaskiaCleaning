@@ -10,6 +10,7 @@ import {
 } from "./constants";
 
 export type EstimatorHeaderProps = {
+  showMarketingHeader?: boolean;
   showReferralSuccess: boolean;
   showReferralWarning: boolean;
   successfulReferralCode: string;
@@ -18,21 +19,35 @@ export type EstimatorHeaderProps = {
 };
 
 export function EstimatorHeader({
+  showMarketingHeader = true,
   showReferralSuccess,
   showReferralWarning,
   successfulReferralCode,
   referralDiscountAmount,
   warningReferralCode,
 }: EstimatorHeaderProps) {
+  const hasReferralMessage = showReferralSuccess || showReferralWarning;
+
+  if (!showMarketingHeader && !hasReferralMessage) {
+    return null;
+  }
+
   return (
-    <div id="instant-estimate" className="mx-auto mt-12 scroll-mt-24 max-w-4xl px-4 text-center sm:mt-16 sm:px-6 lg:mt-20">
+    <div
+      id="instant-estimate"
+      className={`mx-auto scroll-mt-24 ${
+        showMarketingHeader
+          ? "mt-12 max-w-4xl px-4 text-center sm:mt-16 sm:px-6 lg:mt-20"
+          : "max-w-4xl px-4 pt-4 sm:px-6"
+      }`}
+    >
       <motion.div
         initial="hidden"
         whileInView="visible"
         viewport={SCROLL_VIEWPORT}
         variants={staggerContainer}
       >
-        <motion.h2
+        {showMarketingHeader ? <motion.h2
           variants={fadeUp}
           className="
             font-heading
@@ -53,14 +68,14 @@ export function EstimatorHeader({
         >
           See Your Cleaning Price.{" "}
           <span style={{ color: K.blue }}>Instantly</span>
-        </motion.h2>
+        </motion.h2> : null}
 
-        <motion.p
+        {showMarketingHeader ? <motion.p
           variants={fadeUp}
           className="my-4 mx-auto w-[80%] text-[16px] font-medium uppercase tracking-[0.09em] text-slate-600"
         >
           Instant estimate. Book when you&apos;re ready.
-        </motion.p>
+        </motion.p> : null}
 
         {(showReferralSuccess || showReferralWarning) && (
           <div className="mx-auto max-w-4xl px-4 pt-8 sm:px-6 sm:pt-10">

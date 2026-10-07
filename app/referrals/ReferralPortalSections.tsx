@@ -36,7 +36,7 @@ function statusBadgeClass(status: ReferralPortalHistoryItem["status"]) {
   }
 }
 
-function CopyButton({ value, label }: { value: string; label: string }) {
+export function CopyButton({ value, label }: { value: string; label: string }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {

@@ -192,9 +192,9 @@ describe("ownership query rules (unit)", () => {
 });
 
 describe("Book Again behavior", () => {
-  it("returns estimator navigation and does not create a booking", () => {
-    const href = buildBookAgainHref({ service: "Standard" });
-    assert.equal(href, "/#quote");
+  it("links to the account estimator with only the booking id", () => {
+    const href = buildBookAgainHref(90);
+    assert.equal(href, "/account/book?repeat=90");
     // No mutation side effect — pure href builder only.
   });
 });

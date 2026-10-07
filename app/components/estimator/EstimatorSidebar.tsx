@@ -13,6 +13,7 @@ import type { PriceRange, StandardPreviewImage } from "./types";
 import { PricePill } from "./ui/PricePill";
 
 export type EstimatorSidebarProps = {
+  layoutVariant?: "public" | "account";
   optionsOpen: boolean;
   serviceLabel: string;
   frequency: string;
@@ -139,6 +140,7 @@ function EstimateRange({
 }
 
 export function EstimatorSidebar({
+  layoutVariant = "public",
   optionsOpen,
   serviceLabel,
   frequency,
@@ -203,6 +205,7 @@ export function EstimatorSidebar({
               date={date}
               extras={extras}
               total={prices.mid}
+              className={layoutVariant === "account" ? "account-booking-summary" : ""}
             />
           </motion.div>
         )}
@@ -228,6 +231,7 @@ export function EstimatorSidebar({
         "
       >
         <EstimateRange
+          placement="top"
           optionsOpen={optionsOpen}
           prices={prices}
           locale={locale}
@@ -235,7 +239,6 @@ export function EstimatorSidebar({
           lowLabel={lowLabel}
           midLabel={midLabel}
           highLabel={highLabel}
-          placement="top"
         />
 
         {/* Gallery */}
@@ -276,7 +279,7 @@ export function EstimatorSidebar({
             "
           >
             <div
-              className="
+              className={`
                 relative
                 flex
                 h-full
@@ -285,33 +288,35 @@ export function EstimatorSidebar({
                 items-center
                 justify-center
                 overflow-visible
-                lg:translate-x-6
                 xl:min-h-[570px]
-                xl:translate-x-8
-              "
+                ${layoutVariant === "account" ? "" : "lg:translate-x-6 xl:translate-x-8"}
+              `}
             >
               <AnimatePresence mode="wait">
                 <DynamicServiceGallery
                   galleryKey={galleryKey}
                   images={galleryImages}
                   isDefaultOnly={isDefaultGalleryOnly}
+                  layoutVariant={layoutVariant}
                 />
               </AnimatePresence>
             </div>
           </div>
         </div>
 
-        {/* Estimate range below the gallery */}
-        <EstimateRange
-          optionsOpen={optionsOpen}
-          prices={prices}
-          locale={locale}
-          estimateLabel={estimateLabel}
-          lowLabel={lowLabel}
-          midLabel={midLabel}
-          highLabel={highLabel}
-          placement="bottom"
-        />
+        {layoutVariant !== "account" && (
+          <EstimateRange
+            placement="bottom"
+            optionsOpen={optionsOpen}
+            prices={prices}
+            locale={locale}
+            estimateLabel={estimateLabel}
+            lowLabel={lowLabel}
+            midLabel={midLabel}
+            highLabel={highLabel}
+          />
+        )}
+
       </motion.div>
     </div>
   );

@@ -9,6 +9,8 @@ import {
   type BookingPrefill,
 } from "@/app/lib/booking-prefill";
 import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import type { RepeatBookingPrefill } from "@/app/lib/repeat-booking-prefill";
 import type {
   ReferralValidationState,
   ServiceIndex,
@@ -28,7 +30,10 @@ import {
   formatDate,
   getBookingRoomCounts,
 } from "./estimator/utils";
-import { BookingModal } from "./estimator/booking/BookingModal";
+import {
+  BookingModal,
+  type ManualBookingAddress,
+} from "./estimator/booking/BookingModal";
 import { ServiceSelector } from "./estimator/ServiceSelector";
 import { SERVICES } from "./estimator/services";
 import { EstimatorSearchBar } from "./estimator/EstimatorSearchBar";
@@ -59,20 +64,41 @@ function getBookingRequirementsMessage(
 const subscribeToNothing = () => () => {};
 
 export default function CleaningEstimator({
-bookingPrefill = null,
+  bookingPrefill = null,
+  repeatBookingPrefill = null,
+  showMarketingHeader = true,
+layoutVariant = "public",
 }: {
   bookingPrefill?: BookingPrefill | null;
+  repeatBookingPrefill?: RepeatBookingPrefill | null;
+  showMarketingHeader?: boolean;
+  layoutVariant?: "public" | "account";
 } = {}) {
   const t = useTranslations("booking");
   const tEstimate = useTranslations("estimate");
   const locale = useLocale();
-  const [serviceIdx, setServiceIdx] = useState<ServiceIndex>(0);
+  const router = useRouter();
+  const repeatSavedAddress = repeatBookingPrefill?.savedAddressId
+    ? bookingPrefill?.savedAddresses.find(
+        (address) => address.id === repeatBookingPrefill.savedAddressId,
+      )
+    : undefined;
+  const repeatSavedAddressArea = repeatSavedAddress
+    ? matchServiceAreaFromAddress(repeatSavedAddress, LOCATIONS)
+    : null;
+  const [serviceIdx, setServiceIdx] = useState<ServiceIndex>(
+    repeatBookingPrefill?.serviceIndex ?? 0,
+  );
   const [prices, setPrices] = useState({ low: 144, mid: 180, high: 216 });
-  const [locState, setLocState] = useState<StateKey>("MA");
-  const [locCity, setLocCity] = useState("");
+  const [locState, setLocState] = useState<StateKey>(
+    (repeatSavedAddressArea?.state as StateKey | undefined) ?? "MA",
+  );
+  const [locCity, setLocCity] = useState(repeatSavedAddressArea?.city ?? "");
   const [locOpen, setLocOpen] = useState(false);
 // Track explicit location selection for validation and date-driven expansion.
-  const [locConfirmed, setLocConfirmed] = useState(false);
+  const [locConfirmed, setLocConfirmed] = useState(
+    Boolean(repeatSavedAddressArea),
+  );
   const [date, setDate] = useState<Date | null>(null);
   const [dateOpen, setDateOpen] = useState(false);
   const svc = SERVICES[serviceIdx];
@@ -82,11 +108,17 @@ bookingPrefill = null,
   const [dateError, setDateError] = useState(false);
   const [shakeKey, setShakeKey] = useState(0);
   const [requiredFieldsMessage, setRequiredFieldsMessage] = useState("");
-  const [frequency, setFrequency] = useState("One-time");
+  const [frequency, setFrequency] = useState(
+    repeatBookingPrefill?.frequency ?? "One-time",
+  );
   const [optionsOpen, setOptionsOpen] = useState(true);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-  const [standardBedIdx, setStandardBedIdx] = useState(1);
-  const [standardBathIdx, setStandardBathIdx] = useState(0);
+  const [standardBedIdx, setStandardBedIdx] = useState(
+    repeatBookingPrefill?.standardBedroomIndex ?? 1,
+  );
+  const [standardBathIdx, setStandardBathIdx] = useState(
+    repeatBookingPrefill?.standardBathroomIndex ?? 0,
+  );
   const [bookingFormOpen, setBookingFormOpen] = useState(false);
   // Apply the profile prefill once, at mount, via lazy initial state.
   const [initialPrefill] = useState(() =>
@@ -96,8 +128,21 @@ bookingPrefill = null,
   const [contactEmail, setContactEmail] = useState(initialPrefill.contact.email);
   const [contactMobile, setContactMobile] = useState(initialPrefill.contact.phone);
   const [contactNotes, setContactNotes] = useState("");
-  const [locationMode, setLocationMode] = useState<"saved" | "manual">(initialPrefill.locationMode);
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(initialPrefill.selectedAddressId);
+  const [manualAddress, setManualAddress] = useState<ManualBookingAddress>({
+    streetAddress: "",
+    apartmentUnit: "",
+    city: null,
+    state: null,
+    postalCode: "",
+  });
+  const [locationMode, setLocationMode] = useState<"saved" | "manual">(
+    repeatSavedAddressArea ? "saved" : initialPrefill.locationMode,
+  );
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(
+    repeatSavedAddressArea && repeatSavedAddress
+      ? repeatSavedAddress.id
+      : initialPrefill.selectedAddressId,
+  );
   const prefillAppliedRef = useRef(true);
   const [referralCode, setReferralCode] = useState("");
   // Latest validation result, tagged with the code it belongs to.
@@ -122,7 +167,9 @@ bookingPrefill = null,
     setReferralLinkCode(urlReferralCode);
     setReferralCode(urlReferralCode);
   }
-  const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(new Set());
+  const [standardSelectedAddons, setStandardSelectedAddons] = useState<Set<string>>(
+    () => new Set(repeatBookingPrefill?.selectedAddons.standard ?? []),
+  );
   const applyPrefillSnapshot = useCallback(
     (force = false) => {
       if (!force && prefillAppliedRef.current) return;
@@ -187,6 +234,29 @@ bookingPrefill = null,
     locCity,
     locState,
   ]);
+  const manualAddressSummary = useMemo(() => {
+    const locality = [
+      manualAddress.city ?? locCity,
+      manualAddress.state ?? locState,
+      manualAddress.postalCode.trim(),
+    ]
+      .filter(Boolean)
+      .join(" ");
+
+    return [
+      manualAddress.streetAddress.trim(),
+      manualAddress.apartmentUnit.trim(),
+      locality,
+    ]
+      .filter(Boolean)
+      .join(", ");
+  }, [manualAddress, locCity, locState]);
+  const handleManualAddressFieldChange = useCallback(
+    (field: keyof ManualBookingAddress, value: string) => {
+      setManualAddress((current) => ({ ...current, [field]: value }));
+    },
+    [],
+  );
   const emailReadOnly = Boolean(bookingPrefill?.email);
   const selectedDateOnly = useMemo(
     () => (date ? formatBookingDateForApi(date) ?? null : null),
@@ -216,7 +286,9 @@ bookingPrefill = null,
   const handleStandardAddonsChange = useCallback((addons: Set<string>) => {
     setStandardSelectedAddons(new Set(addons));
   }, []);
-  const [deepCleanSelectedAddons, setDeepCleanSelectedAddons] = useState<Set<string>>(new Set());
+  const [deepCleanSelectedAddons, setDeepCleanSelectedAddons] = useState<Set<string>>(
+    () => new Set(repeatBookingPrefill?.selectedAddons.deepClean ?? []),
+  );
   const handleDeepCleanAddonsChange = useCallback((addons: Set<string>) => {
     setDeepCleanSelectedAddons(new Set(addons));
   }, []);
@@ -230,7 +302,9 @@ bookingPrefill = null,
     [deepCleanSelectedAddons],
   );
   const isDeepCleanDefaultGalleryOnly = deepCleanGalleryImages.length === 1;
-  const [moveOutSelectedAddons, setMoveOutSelectedAddons] = useState<Set<string>>(new Set());
+  const [moveOutSelectedAddons, setMoveOutSelectedAddons] = useState<Set<string>>(
+    () => new Set(repeatBookingPrefill?.selectedAddons.moveOut ?? []),
+  );
   const handleMoveOutAddonsChange = useCallback((addons: Set<string>) => {
     setMoveOutSelectedAddons(new Set(addons));
   }, []);
@@ -239,7 +313,9 @@ bookingPrefill = null,
     [moveOutSelectedAddons],
   );
   const isMoveOutDefaultGalleryOnly = moveOutGalleryImages.length === 1;
-  const [commercialSelectedAddons, setCommercialSelectedAddons] = useState<Set<string>>(new Set());
+  const [commercialSelectedAddons, setCommercialSelectedAddons] = useState<Set<string>>(
+    () => new Set(repeatBookingPrefill?.selectedAddons.commercial ?? []),
+  );
   const handleCommercialAddonsChange = useCallback((addons: Set<string>) => {
     setCommercialSelectedAddons(new Set(addons));
   }, []);
@@ -319,7 +395,10 @@ bookingPrefill = null,
         serviceIndex: serviceIdx,
         serviceLabel: svc.label,
         frequency,
-        bookingLocationSummary,
+        bookingLocationSummary:
+          locationMode === "manual"
+            ? manualAddressSummary
+            : bookingLocationSummary,
         date,
         bookingTime,
         standardBedIndex: standardBedIdx,
@@ -512,7 +591,30 @@ onConflict: () => {
   const showReferralLinkWarningBanner =
     isLinkReferralCodeActive && referralValidation.status === "invalid";
   return (
+    <>
+    {layoutVariant === "account" && repeatBookingPrefill ? (
+      <div className="mx-4 mb-5 flex flex-col gap-3 rounded-2xl border border-sky-100 bg-sky-50 px-4 py-3 sm:mx-6 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-900">
+            Booking again from #{repeatBookingPrefill.bookingId}
+          </p>
+          <p className="mt-1 text-sm leading-5 text-slate-600">
+            {repeatBookingPrefill.serviceIndex === null
+              ? "This previous service is no longer available. Choose a current service, then select a new date and time."
+              : "Supported service details are ready. Choose a new date and time before submitting."}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => router.replace("/account/book", { scroll: false })}
+          className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-full border border-sky-200 bg-white px-4 py-2 text-sm font-semibold text-sky-700 transition hover:border-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+        >
+          Start fresh
+        </button>
+      </div>
+    ) : null}
     <motion.section
+data-estimator-layout={layoutVariant}
 id="quote"
 ref={rootRef}
 initial={{ opacity: 0, y: 70 }}
@@ -522,6 +624,7 @@ transition={{ duration: 0.7, ease: "easeOut" }}
 className="overflow-x-hidden bg-white"
     >
       <EstimatorHeader
+showMarketingHeader={showMarketingHeader}
 showReferralSuccess={showReferralLinkSuccessBanner}
 showReferralWarning={showReferralLinkWarningBanner}
 successfulReferralCode={
@@ -531,7 +634,7 @@ referralDiscountAmount={referralDiscountAmount}
 warningReferralCode={referralLinkCode}
       />
       <div
-      className="
+      className="account-estimator-grid
         mx-auto
         grid
         w-full
@@ -647,6 +750,7 @@ onBookNow={openBookingForm}
         </div>
         {/* right side */}
         <EstimatorSidebar
+layoutVariant={layoutVariant}
 optionsOpen={optionsOpen}
 serviceLabel={svc.label}
 frequency={frequency}
@@ -683,6 +787,8 @@ locationSummary={bookingLocationSummary}
 bookingPrefill={bookingPrefill}
 locationMode={locationMode}
 selectedAddressId={selectedAddressId}
+manualAddress={manualAddress}
+manualAddressDefaults={{ city: locCity, state: locState }}
 emailReadOnly={emailReadOnly}
 bookingTime={bookingTime}
 bookingTimeLabel={bookingTimeLabel}
@@ -695,7 +801,9 @@ onNotesChange={setContactNotes}
 onReferralCodeChange={handleReferralCodeChange}
 onSelectSavedAddress={handleSelectSavedAddress}
 onSelectManualLocation={handleSelectManualLocation}
+onManualAddressFieldChange={handleManualAddressFieldChange}
       />
     </motion.section>
+    </>
   );
 }

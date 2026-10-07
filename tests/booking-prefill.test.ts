@@ -309,7 +309,7 @@ describe("booking snapshot behavior", () => {
 
 describe("Book Again / regressions", () => {
   it("Book Again does not create booking automatically", () => {
-    assert.equal(buildBookAgainHref(), "/#quote");
+    assert.equal(buildBookAgainHref(90), "/account/book?repeat=90");
   });
 
   it("existing pricing logic unchanged conceptually", () => {
@@ -324,7 +324,7 @@ describe("Book Again / regressions", () => {
   });
 
   it("My Bookings unchanged — Book Again still navigates only", () => {
-    assert.equal(buildBookAgainHref(), "/#quote");
+    assert.equal(buildBookAgainHref(90), "/account/book?repeat=90");
   });
 
   it("change requests unchanged — reschedule is date-only conceptually", () => {

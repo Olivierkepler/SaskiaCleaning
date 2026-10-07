@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 import AccountNavbar from "@/app/components/account/AccountNavbar";
-import AccountSidebar from "@/app/components/account/AccountSidebar";
+import AccountSidebarLayout from "@/app/components/account/AccountSidebarLayout";
 
 type AccountPageShellProps = {
   children: ReactNode;
@@ -17,19 +17,15 @@ export default function AccountPageShell({
   customerImage,
 }: AccountPageShellProps) {
   return (
-    <div className="min-h-screen bg-[#f5f9fc] px-6 py-8 md:px-8 md:py-12">
-      <div className="mx-auto w-full max-w-7xl">
+    <div className="min-h-screen bg-[#f5f9fc] px-6 py-8 md:px-8 ">
+      <div className="mx-auto w-full max-w-full">
         <AccountNavbar
           customerName={customerName}
           customerEmail={customerEmail}
           customerImage={customerImage}
         />
 
-        <div className="lg:grid lg:grid-cols-[250px_minmax(0,1fr)] lg:items-start lg:gap-6">
-          <AccountSidebar />
-
-          <main className="min-w-0">{children}</main>
-        </div>
+        <AccountSidebarLayout>{children}</AccountSidebarLayout>
       </div>
     </div>
   );

@@ -35,8 +35,24 @@ type BookingModalService = {
   bookLabel: string;
 };
 
+export type ManualBookingAddress = {
+  streetAddress: string;
+  apartmentUnit: string;
+  city: string | null;
+  state: string | null;
+  postalCode: string;
+};
+
+type ManualAddressDefaults = {
+  city: string;
+  state: string;
+};
+
 const bookingInputClassName =
-  "w-full rounded-[17px] border border-slate-300/80 bg-[#ECF0F3] py-3.5 pl-12 pr-4 text-sm font-medium text-slate-800 shadow-[inset_4px_4px_8px_rgba(209,217,230,0.82),inset_-4px_-4px_8px_rgba(255,255,255,0.96)] outline-none transition placeholder:text-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40 read-only:text-slate-600";
+  "w-full rounded-[13px] border border-slate-300/80 bg-[#ECF0F3] py-3 pl-10 pr-3 text-[13px] font-medium text-slate-800 shadow-[inset_4px_4px_8px_rgba(209,217,230,0.82),inset_-4px_-4px_8px_rgba(255,255,255,0.96)] outline-none transition placeholder:text-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40 read-only:text-slate-600 sm:rounded-[17px] sm:py-3.5 sm:pl-12 sm:pr-4 sm:text-sm";
+
+const addressInputClassName =
+  "w-full min-w-0 rounded-[13px] border border-slate-300/80 bg-white px-3 py-3 text-[13px] font-medium text-slate-800 shadow-[inset_3px_3px_7px_rgba(209,217,230,0.55),inset_-3px_-3px_7px_rgba(255,255,255,0.95)] outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40 sm:rounded-[15px] sm:px-4 sm:text-sm";
 
 const raisedButtonClassName =
   "inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-[#ECF0F3] px-5 py-3 text-sm font-semibold text-slate-700 shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF] transition hover:text-slate-900 active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#ECF0F3] disabled:cursor-not-allowed disabled:opacity-55";
@@ -60,6 +76,8 @@ export type BookingModalProps = {
   bookingPrefill: BookingPrefill | null;
   locationMode: "saved" | "manual";
   selectedAddressId: string | null;
+  manualAddress: ManualBookingAddress;
+  manualAddressDefaults: ManualAddressDefaults;
   emailReadOnly: boolean;
   bookingTime: string | null;
   bookingTimeLabel: string | null;
@@ -72,6 +90,10 @@ export type BookingModalProps = {
   onReferralCodeChange: (value: string) => void;
   onSelectSavedAddress: (addressId: string) => void;
   onSelectManualLocation: () => void;
+  onManualAddressFieldChange: (
+    field: keyof ManualBookingAddress,
+    value: string,
+  ) => void;
 };
 
 export function BookingModal({
@@ -93,6 +115,8 @@ export function BookingModal({
   bookingPrefill,
   locationMode,
   selectedAddressId,
+  manualAddress,
+  manualAddressDefaults,
   emailReadOnly,
   bookingTimeLabel,
   onClose,
@@ -104,6 +128,7 @@ export function BookingModal({
   onReferralCodeChange,
   onSelectSavedAddress,
   onSelectManualLocation,
+  onManualAddressFieldChange,
 }: BookingModalProps) {
   const tBooking = useTranslations("booking");
   const mounted = useIsClient();
@@ -129,7 +154,7 @@ export function BookingModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
-          className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[1000] flex items-end justify-center bg-slate-950/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           onClick={onClose}
         >
           <motion.div
@@ -137,25 +162,25 @@ export function BookingModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.97 }}
             transition={{ duration: 0.22, ease: MOTION_EASE }}
-            className="relative flex h-[calc(100dvh-2rem)] max-h-[820px] w-full max-w-[960px] flex-col overflow-hidden rounded-[24px] bg-[#ECF0F3] shadow-[18px_18px_40px_rgba(15,23,42,0.22),-18px_-18px_40px_rgba(255,255,255,0.32)] ring-1 ring-white/35 sm:rounded-[30px]"
+            className="relative flex h-[100dvh] max-h-none w-full flex-col overflow-hidden rounded-t-[24px] bg-[#ECF0F3] shadow-[18px_18px_40px_rgba(15,23,42,0.22),-18px_-18px_40px_rgba(255,255,255,0.32)] ring-1 ring-white/35 sm:h-[calc(100dvh-2rem)] sm:max-h-[820px] sm:max-w-[720px] sm:rounded-[30px] lg:max-w-[900px] xl:max-w-[960px]"
             onClick={(event) => event.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-labelledby="booking-form-title"
           >
-            <header className="flex shrink-0 items-start gap-4 px-5 pb-4 pt-5 sm:px-8 sm:pb-5 sm:pt-7">
+            <header className="flex shrink-0 items-start gap-3 px-4 pb-3 pt-4 sm:gap-4 sm:px-6 sm:pb-5 sm:pt-6 lg:px-8 lg:pt-7">
               {/* <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#ECF0F3] text-sky-600 shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF] sm:h-14 sm:w-14">
                 <CalendarDays size={23} aria-hidden="true" />
               </div> */}
-              <div className="min-w-0 flex-1 pr-10">
+              <div className="min-w-0 flex-1 pr-9 sm:pr-10">
 
                 <h3
                   id="booking-form-title"
-                  className="font-serif text-2xl font-semibold leading-tight text-sky-600 sm:text-3xl"
+                  className="font-serif text-xl font-semibold leading-tight text-sky-600 sm:text-2xl lg:text-3xl"
                 >
                   Complete your booking
                 </h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-slate-600 sm:text-base">
+                <p className="mt-1 text-xs leading-relaxed text-slate-600 sm:mt-1.5 sm:text-sm lg:text-base">
                   Share your details and we&apos;ll confirm your booking request.
                 </p>
               </div>
@@ -163,7 +188,7 @@ export function BookingModal({
                 type="button"
                 onClick={onClose}
                 aria-label="Close booking dialog"
-                className="absolute right-4 top-4 flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-[#ECF0F3] text-slate-600 shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF] transition hover:text-slate-900 active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#ECF0F3]"
+                className="absolute right-3 top-3 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-[#ECF0F3] text-slate-600 shadow-[5px_5px_12px_#D1D9E6,-5px_-5px_12px_#FFFFFF] transition hover:text-slate-900 active:shadow-[inset_4px_4px_8px_#D1D9E6,inset_-4px_-4px_8px_#FFFFFF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#ECF0F3] sm:right-4 sm:top-4 sm:h-10 sm:w-10"
               >
                 <X size={18} aria-hidden="true" />
               </button>
@@ -171,12 +196,12 @@ export function BookingModal({
 
             {bookingStatus === "success" ? (
               <div className="flex min-h-0 flex-1 flex-col">
-                <div className="flex-1 overflow-y-auto px-5 pb-6 sm:px-8">
+                <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6 sm:pb-6 lg:px-8">
                   <div className="rounded-[22px] bg-[#ECF0F3] px-5 py-5 text-sm font-semibold leading-relaxed text-emerald-800 shadow-[inset_4px_4px_8px_rgba(209,217,230,0.7),inset_-4px_-4px_8px_rgba(255,255,255,0.9)] sm:px-6 sm:py-6">
                   Thanks! Your booking request was submitted successfully.
                   </div>
                 </div>
-                <div className="shrink-0 border-t border-slate-300/50 bg-[#ECF0F3]/95 px-5 py-4 backdrop-blur sm:px-8">
+                <div className="shrink-0 border-t border-slate-300/50 bg-[#ECF0F3]/95 px-4 py-3 backdrop-blur sm:px-6 sm:py-4 lg:px-8">
                   <button type="button" onClick={onClose} className="w-full cursor-pointer rounded-2xl bg-sky-500 px-5 py-3.5 text-sm font-bold text-white shadow-[7px_7px_15px_rgba(209,217,230,0.9),-7px_-7px_15px_rgba(255,255,255,0.95)] transition hover:bg-sky-600 active:translate-y-0.5 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 focus-visible:ring-offset-[#ECF0F3]">
                     Close
                   </button>
@@ -184,12 +209,17 @@ export function BookingModal({
               </div>
             ) : (
               <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
-                <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 pb-6 sm:px-8 sm:pb-7 [scrollbar-color:#0EA5E9_#ECF0F3] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-[#ECF0F3] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#0EA5E9] [&::-webkit-scrollbar-thumb:hover]:bg-[#0284C7]">
-                  <section aria-label="Booking summary" className="rounded-[22px] bg-[#ECF0F3] p-4 shadow-[7px_7px_16px_rgba(209,217,230,0.85),-7px_-7px_16px_rgba(255,255,255,0.95)] sm:p-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#ECF0F3] text-sky-600 shadow-[4px_4px_9px_#D1D9E6,-4px_-4px_9px_#FFFFFF]">
-                        <Sparkles size={19} aria-hidden="true" />
+                <div className="min-h-0 flex-1 space-y-4 overflow-x-hidden overflow-y-auto px-4 pb-4 pt-4 sm:space-y-5 sm:px-6 sm:pb-6 lg:space-y-6 lg:px-8 lg:pb-7 [scrollbar-color:#0EA5E9_#ECF0F3] [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-[#ECF0F3] [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-[#0EA5E9] [&::-webkit-scrollbar-thumb:hover]:bg-[#0284C7]">
+                  <section aria-label="Booking summary" className="min-w-0 rounded-[10px] bg-[#ECF0F3] p-3.5 shadow-[7px_7px_16px_rgba(209,217,230,0.85),-7px_-7px_16px_rgba(255,255,255,0.95)] sm:p-5">
+                    <div className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center sm:h-16 sm:w-16 lg:h-20 lg:w-20">
+                        <img
+                          src="/check.png"
+                          alt="Checkmark"
+                          className="h-full w-full object-contain"
+                        />
                       </div>
+
                       <div className="min-w-0 flex-1">
                         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500 sm:text-xs">
                           {tBooking("serviceType")}
@@ -198,10 +228,10 @@ export function BookingModal({
                           {svc.label}
                         </p>
                       </div>
-<div>
-{bookingPrefill && bookingPrefill.savedAddresses.length > 0 && (
-                  <fieldset className="space-y-2">
-                    <legend className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">
+<div className="col-span-3 w-full min-w-0">
+                {bookingPrefill && bookingPrefill.savedAddresses.length > 0 ? (
+                  <fieldset className="mb-4 min-w-0 space-y-2">
+                    <legend className="mb-1.5 block text-[11px] font-semibold uppercase tracking-wide text-slate-500 sm:text-xs">
                       Service location
                     </legend>
                     <div className="space-y-2">
@@ -212,7 +242,7 @@ export function BookingModal({
                         return (
                           <label
                             key={address.id}
-                            className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
+                            className={`flex w-full cursor-pointer items-start gap-3 rounded-lg border px-2.5 py-2.5 text-xs transition sm:px-3 sm:text-sm ${
                               checked
                                 ? "border-sky-300 bg-sky-50"
                                 : "border-slate-200 bg-white hover:border-slate-300"
@@ -221,18 +251,18 @@ export function BookingModal({
                             <input
                               type="radio"
                               name="booking-location-mode"
-                              className="mt-1"
+                              className="mt-1 shrink-0"
                               checked={checked}
                               onChange={() => onSelectSavedAddress(address.id)}
                             />
-                            <span className="text-slate-700">
+                            <span className="min-w-0 flex-1 break-words text-slate-700 [overflow-wrap:anywhere]">
                               {formatSavedAddressLabel(address)}
                             </span>
                           </label>
                         );
                       })}
                       <label
-                        className={`flex cursor-pointer items-start gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
+                        className={`flex w-full cursor-pointer items-start gap-3 rounded-lg border px-2.5 py-2.5 text-xs transition sm:px-3 sm:text-sm ${
                           locationMode === "manual"
                             ? "border-sky-300 bg-sky-50"
                             : "border-slate-200 bg-white hover:border-slate-300"
@@ -241,31 +271,147 @@ export function BookingModal({
                         <input
                           type="radio"
                           name="booking-location-mode"
-                          className="mt-1"
+                          className="mt-1 shrink-0"
                           checked={locationMode === "manual"}
                           onChange={onSelectManualLocation}
                         />
-                        <span className="text-slate-700">
+                        <span className="min-w-0 flex-1 break-words text-slate-700 [overflow-wrap:anywhere]">
                           Enter another location
-                          {locationMode === "manual" ? (
-                            <span className="mt-0.5 block text-xs text-slate-500">
-                              Uses the city/state selected in the estimator
-                              above.
-                            </span>
-                          ) : null}
                         </span>
                       </label>
                     </div>
-                    {!bookingPrefill.defaultAddress &&
-                      locationMode === "manual" &&
-                      !selectedAddressId && (
-                        <p className="text-xs text-slate-500">
-                          Choose a saved address or continue with the estimator
-                          location.
-                        </p>
-                      )}
                   </fieldset>
-                )}
+                ) : null}
+
+                {locationMode === "manual" ? (
+                  <fieldset
+                    aria-labelledby="manual-service-address-heading"
+                    className="min-w-0 rounded-xl border border-sky-100 bg-white/80 p-3 shadow-[0_3px_12px_rgba(15,65,100,0.04)] sm:rounded-2xl sm:p-4"
+                  >
+                    <legend className="sr-only">Service address</legend>
+                    <div className="mb-3">
+                      <h4
+                        id="manual-service-address-heading"
+                        className="text-sm font-bold text-slate-900 sm:text-base"
+                      >
+                        Enter service address
+                      </h4>
+                      <p className="mt-1 text-xs leading-5 text-slate-600 sm:text-sm">
+                        City and state start with your selected service area.
+                      </p>
+                    </div>
+                    <div className="grid min-w-0 grid-cols-1 gap-3 md:grid-cols-2">
+                      <div className="min-w-0 md:col-span-2">
+                        <label
+                          htmlFor="booking-street-address"
+                          className="mb-1.5 block text-xs font-semibold text-slate-700"
+                        >
+                          Street address <span className="text-sky-700" aria-hidden="true">*</span>
+                        </label>
+                        <input
+                          id="booking-street-address"
+                          type="text"
+                          required
+                          autoComplete="address-line1"
+                          value={manualAddress.streetAddress}
+                          onChange={(event) =>
+                            onManualAddressFieldChange(
+                              "streetAddress",
+                              event.target.value,
+                            )
+                          }
+                          className={addressInputClassName}
+                          placeholder="Street address"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="booking-apartment-unit"
+                          className="mb-1.5 block text-xs font-semibold text-slate-700"
+                        >
+                          Apartment / Unit <span className="font-normal text-slate-500">(optional)</span>
+                        </label>
+                        <input
+                          id="booking-apartment-unit"
+                          type="text"
+                          autoComplete="address-line2"
+                          value={manualAddress.apartmentUnit}
+                          onChange={(event) =>
+                            onManualAddressFieldChange(
+                              "apartmentUnit",
+                              event.target.value,
+                            )
+                          }
+                          className={addressInputClassName}
+                          placeholder="Apartment or unit"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="booking-address-city"
+                          className="mb-1.5 block text-xs font-semibold text-slate-700"
+                        >
+                          City <span className="text-sky-700" aria-hidden="true">*</span>
+                        </label>
+                        <input
+                          id="booking-address-city"
+                          type="text"
+                          required
+                          autoComplete="address-level2"
+                          value={manualAddress.city ?? manualAddressDefaults.city}
+                          onChange={(event) =>
+                            onManualAddressFieldChange("city", event.target.value)
+                          }
+                          className={addressInputClassName}
+                          placeholder="City"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="booking-address-state"
+                          className="mb-1.5 block text-xs font-semibold text-slate-700"
+                        >
+                          State <span className="text-sky-700" aria-hidden="true">*</span>
+                        </label>
+                        <input
+                          id="booking-address-state"
+                          type="text"
+                          required
+                          autoComplete="address-level1"
+                          value={manualAddress.state ?? manualAddressDefaults.state}
+                          onChange={(event) =>
+                            onManualAddressFieldChange("state", event.target.value)
+                          }
+                          className={addressInputClassName}
+                          placeholder="State"
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <label
+                          htmlFor="booking-address-postal-code"
+                          className="mb-1.5 block text-xs font-semibold text-slate-700"
+                        >
+                          ZIP code <span className="text-sky-700" aria-hidden="true">*</span>
+                        </label>
+                        <input
+                          id="booking-address-postal-code"
+                          type="text"
+                          required
+                          autoComplete="postal-code"
+                          value={manualAddress.postalCode}
+                          onChange={(event) =>
+                            onManualAddressFieldChange(
+                              "postalCode",
+                              event.target.value,
+                            )
+                          }
+                          className={addressInputClassName}
+                          placeholder="ZIP code"
+                        />
+                      </div>
+                    </div>
+                  </fieldset>
+                ) : null}
 
                     <div className="hidden grid-cols-1 gap-3 sm:grid sm:grid-cols-2">
                       <div className="flex  items-start gap-3 ">
@@ -286,7 +432,7 @@ export function BookingModal({
 </div>
 
 
-                      <div className="shrink-0 text-right">
+                      <div className="col-start-3 row-start-1 shrink-0 self-start pt-1 text-right sm:self-center sm:pt-0">
                         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500 sm:text-xs">
                           {tBooking("mid")}
                         </p>
@@ -302,7 +448,7 @@ export function BookingModal({
                     </div>
                   </section>
 
-                  <section aria-labelledby="booking-contact-heading" className="space-y-4">
+                <section aria-labelledby="booking-contact-heading" className="space-y-3 sm:space-y-4">
                     <div>
                       <h4 id="booking-contact-heading" className="text-lg font-bold text-slate-900 sm:text-xl">Your contact details</h4>
                       <p className="mt-1 text-sm text-slate-600">We&apos;ll use this information to confirm your booking.</p>
@@ -315,7 +461,7 @@ export function BookingModal({
                         </Link>
                       </p>
                     )}
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="grid grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2">
                 <div>
                   <label
                     htmlFor="booking-name"
@@ -324,7 +470,7 @@ export function BookingModal({
                     {tBooking("fullName")} <span className="text-sky-700" aria-hidden="true">*</span>
                   </label>
                   <div className="relative">
-                    <UserRound size={18} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <UserRound size={18} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 sm:left-4" />
                     <input id="booking-name" type="text" required value={contactName} onChange={(event) => onNameChange(event.target.value)} className={bookingInputClassName} placeholder={tBooking("yourName")} autoComplete="name" />
                   </div>
                 </div>
@@ -337,7 +483,7 @@ export function BookingModal({
                     {tBooking("email")} <span className="text-sky-700" aria-hidden="true">*</span>
                   </label>
                   <div className="relative">
-                    <Mail size={18} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Mail size={18} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 sm:left-4" />
                     <input id="booking-email" type="email" required value={contactEmail} onChange={(event) => onEmailChange(event.target.value)} className={`${bookingInputClassName}${emailReadOnly ? " cursor-default" : ""}`} placeholder="you@example.com" autoComplete="email" readOnly={emailReadOnly} aria-readonly={emailReadOnly || undefined} />
                   </div>
                 </div>
@@ -350,7 +496,7 @@ export function BookingModal({
                     {tBooking("mobile")}
                   </label>
                   <div className="relative">
-                    <Phone size={18} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Phone size={18} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 sm:left-4" />
                     <input id="booking-mobile" type="tel" value={contactMobile} onChange={(event) => onMobileChange(event.target.value)} className={bookingInputClassName} placeholder="Phone number" autoComplete="tel" />
                   </div>
                   {bookingPrefill && !bookingPrefill.phone && (
@@ -369,7 +515,7 @@ export function BookingModal({
                     Referral code (optional)
                   </label>
                   <div className="relative">
-                    <Gift size={18} aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" />
+                    <Gift size={18} aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 sm:left-4" />
                     <input
                       id="booking-referral-code"
                       type="text"
@@ -405,13 +551,13 @@ export function BookingModal({
                     />
                   </div>
                   {referralValidation.status === "checking" && (
-                    <p role="status" className="mt-2 rounded-xl bg-sky-50/80 px-3 py-2 text-sm font-medium text-sky-800">Checking referral code…</p>
+                    <p role="status" className="mt-2 rounded-lg bg-sky-50/80 px-3 py-2 text-xs font-medium text-sky-800 sm:rounded-xl sm:text-sm">Checking referral code…</p>
                   )}
                   {referralValidation.status === "invalid" &&
                     !referralCodeError && (
                       <p
                         id="booking-referral-code-validation"
-                        className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-800"
+                        className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-800 sm:rounded-xl sm:text-sm"
                       >
                         Invalid referral code.
                       </p>
@@ -419,7 +565,7 @@ export function BookingModal({
                   {referralCodeError && (
                     <p
                       id="booking-referral-code-error"
-                      className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-800"
+                      className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-medium text-red-800 sm:rounded-xl sm:text-sm"
                     >
                       {referralCodeError}
                     </p>
@@ -427,28 +573,28 @@ export function BookingModal({
                   {referralValidation.status === "valid" && (
                     <div
                       id="booking-referral-code-success"
-                      className="mt-3 space-y-3 rounded-xl bg-emerald-50 px-4 py-3 text-sm shadow-[inset_3px_3px_6px_rgba(16,185,129,0.12),inset_-3px_-3px_6px_rgba(255,255,255,0.85)]"
+                      className="mt-3 space-y-2 rounded-lg bg-emerald-50 px-3 py-3 text-xs shadow-[inset_3px_3px_6px_rgba(16,185,129,0.12),inset_-3px_-3px_6px_rgba(255,255,255,0.85)] sm:space-y-3 sm:rounded-xl sm:px-4 sm:text-sm"
                     >
                       <p className="font-medium text-emerald-800">
                         Referral applied: ${referralDiscountAmount} off your
                         first cleaning.
                       </p>
                       <div className="space-y-1 text-slate-700">
-                        <div className="flex items-center justify-between gap-4">
-                          <span>Original estimate</span>
-                          <span className="font-semibold text-slate-900">
+                        <div className="flex items-start justify-between gap-2 sm:gap-4">
+                          <span className="min-w-0 break-words">Original estimate</span>
+                          <span className="shrink-0 whitespace-nowrap font-semibold text-slate-900">
                             ${prices.mid}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between gap-4 text-emerald-700">
-                          <span>Referral discount</span>
-                          <span className="font-semibold">
+                        <div className="flex items-start justify-between gap-2 text-emerald-700 sm:gap-4">
+                          <span className="min-w-0 break-words">Referral discount</span>
+                          <span className="shrink-0 whitespace-nowrap font-semibold">
                             -${referralDiscountAmount}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between gap-4 border-t border-emerald-200 pt-2 font-bold text-slate-900">
-                          <span>Estimated total after discount</span>
-                          <span>${estimatedTotalAfterDiscount}</span>
+                        <div className="flex items-start justify-between gap-2 border-t border-emerald-200 pt-2 font-bold text-slate-900 sm:gap-4">
+                          <span className="min-w-0 break-words">Estimated total after discount</span>
+                          <span className="shrink-0 whitespace-nowrap">${estimatedTotalAfterDiscount}</span>
                         </div>
                       </div>
                     </div>
@@ -561,7 +707,7 @@ export function BookingModal({
                     rows={3}
                     value={contactNotes}
                     onChange={(event) => onNotesChange(event.target.value)}
-                    className="w-full resize-none rounded-[17px] border border-slate-300/80 bg-[#ECF0F3] px-4 py-3.5 text-sm font-medium text-slate-800 shadow-[inset_4px_4px_8px_rgba(209,217,230,0.82),inset_-4px_-4px_8px_rgba(255,255,255,0.96)] outline-none transition placeholder:text-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40"
+                    className="w-full resize-none rounded-[13px] border border-slate-300/80 bg-[#ECF0F3] px-3 py-3 text-[13px] font-medium text-slate-800 shadow-[inset_4px_4px_8px_rgba(209,217,230,0.82),inset_-4px_-4px_8px_rgba(255,255,255,0.96)] outline-none transition placeholder:text-slate-500 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/40 sm:rounded-[17px] sm:px-4 sm:py-3.5 sm:text-sm"
                     placeholder="Access instructions, pets, special requests..."
                   />
                 </section>
@@ -573,27 +719,25 @@ export function BookingModal({
                 )}
 
                 </div>
-                <div className="flex shrink-0 flex-col gap-3 border-t border-slate-300/50 bg-[#ECF0F3]/95 px-5 py-4 shadow-[0_-8px_24px_rgba(15,23,42,0.06)] backdrop-blur sm:flex-row sm:items-center sm:justify-end sm:px-8 sm:py-5">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <div className="grid shrink-0 grid-cols-1 gap-2 border-t border-slate-300/50 bg-[#ECF0F3]/95 px-4 py-3 shadow-[0_-8px_24px_rgba(15,23,42,0.06)] backdrop-blur sm:grid-cols-2 sm:gap-3 sm:px-6 sm:py-4 lg:px-8 lg:py-5">
                   <button
                     type="button"
                     onClick={onClose}
                     disabled={bookingStatus === "loading"}
-                    className={raisedButtonClassName}
+                    className={`${raisedButtonClassName} w-full`}
                   >
                     {tBooking("cancel")}
                   </button>
                   <button
                     type="submit"
                     disabled={bookingStatus === "loading"}
-                    className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-2xl bg-sky-500 px-6 py-3 text-sm font-bold text-white shadow-[7px_7px_15px_rgba(209,217,230,0.9),-7px_-7px_15px_rgba(255,255,255,0.95)] transition hover:-translate-y-0.5 hover:bg-sky-600 active:translate-y-0.5 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 focus-visible:ring-offset-[#ECF0F3] disabled:cursor-not-allowed disabled:opacity-55"
+                    className="inline-flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-2xl bg-sky-500 px-6 py-3 text-sm font-bold text-white shadow-[7px_7px_15px_rgba(209,217,230,0.9),-7px_-7px_15px_rgba(255,255,255,0.95)] transition hover:-translate-y-0.5 hover:bg-sky-600 active:translate-y-0.5 active:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 focus-visible:ring-offset-[#ECF0F3] disabled:cursor-not-allowed disabled:opacity-55"
                   >
                     {bookingStatus === "loading"
                       ? tBooking("submitting")
                       : tBooking("submitRequest")}
                     <ArrowRight size={17} aria-hidden="true" />
                   </button>
-                  </div>
                 </div>
               </form>
             )}

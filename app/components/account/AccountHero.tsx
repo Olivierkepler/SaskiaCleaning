@@ -22,7 +22,7 @@ export default function AccountHero({
   imageAlt = DEFAULT_HERO_ALT,
 }: AccountHeroProps) {
   return (
-    <section className="relative mb-8 min-h-[240px] overflow-hidden rounded-[10px] md:min-h-[300px]">
+    <section className="relative mb-8 min-h-[140px] overflow-hidden rounded-[10px] md:min-h-[180px]">
       <Image
         src={imageSrc}
         alt={imageAlt}
@@ -35,7 +35,7 @@ export default function AccountHero({
         aria-hidden="true"
         className="absolute inset-0 bg-gradient-to-r from-white/90 via-white/70 to-transparent md:from-white/85 md:via-white/55 md:to-transparent"
       />
-      <div className="relative z-10 flex h-full min-h-[240px] max-w-xl flex-col justify-center px-6 py-10 md:min-h-[300px] md:px-10 md:py-12">
+      <div className="relative z-10 flex h-full min-h-[140px] max-w-xl flex-col justify-center px-6 py-6 md:min-h-[180px] md:px-10 md:py-8">
         {eyebrow ? (
           <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-sky-600">
             {eyebrow}

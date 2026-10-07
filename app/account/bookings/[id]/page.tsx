@@ -121,7 +121,7 @@ export default async function AccountBookingDetailPage({
           ← My Bookings
         </Link>
         <Link
-          href={buildBookAgainHref({ service: booking.service })}
+          href={buildBookAgainHref(booking.id)}
           className="rounded-full border border-sky-500 bg-sky-500 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-sky-600"
         >
           Book Again

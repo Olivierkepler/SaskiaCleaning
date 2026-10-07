@@ -3,7 +3,7 @@ import { requireCustomer } from "@/app/lib/customer-auth";
 import { getCustomerBookings } from "@/app/lib/customer-bookings";
 import { getPendingChangeRequestBookingIds } from "@/app/lib/booking-change-requests";
 import { partitionCustomerBookings } from "@/app/lib/customer-bookings-pure";
-import CustomerBookingCard from "@/app/components/account/CustomerBookingCard";
+import BookingsExplorer from "@/app/components/account/BookingsExplorer";
 import AccountHero from "@/app/components/account/AccountHero";
 
 export default async function AccountBookingsPage() {
@@ -38,7 +38,7 @@ export default async function AccountBookingsPage() {
 
       <div className="mb-4 flex justify-end">
         <Link
-          href="/#quote"
+          href="/account/book"
           className="rounded-full border border-sky-500 bg-sky-500 px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-sky-600"
         >
           Book a Cleaning
@@ -64,72 +64,18 @@ export default async function AccountBookingsPage() {
               cleaning.
             </p>
             <Link
-              href="/#quote"
+              href="/account/book"
               className="mt-6 inline-flex items-center justify-center rounded-full border border-slate-900 bg-slate-900 px-6 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition hover:bg-transparent hover:text-slate-900"
             >
               Book a Cleaning
             </Link>
           </div>
         ) : (
-          <div className="space-y-10">
-            <section aria-labelledby="upcoming-bookings-heading">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h2
-                  id="upcoming-bookings-heading"
-                  className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500"
-                >
-                  Upcoming
-                </h2>
-                <span className="rounded-full bg-sky-50 px-2.5 py-1 text-[11px] font-semibold text-sky-700">
-                  {upcoming.length}
-                </span>
-              </div>
-              {upcoming.length === 0 ? (
-                <p className="rounded-[20px] bg-[#ECF0F3] px-4 py-5 text-sm text-slate-500 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]">
-                  No upcoming bookings.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {upcoming.map((booking) => (
-                    <CustomerBookingCard
-                      key={booking.id}
-                      booking={booking}
-                      hasPendingChangeRequest={pendingIds.has(booking.id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            <section aria-labelledby="past-bookings-heading">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h2
-                  id="past-bookings-heading"
-                  className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500"
-                >
-                  Past
-                </h2>
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">
-                  {past.length}
-                </span>
-              </div>
-              {past.length === 0 ? (
-                <p className="rounded-[20px] bg-[#ECF0F3] px-4 py-5 text-sm text-slate-500 shadow-[inset_5px_5px_12px_rgba(163,177,198,0.30),inset_-5px_-5px_12px_rgba(255,255,255,0.95)]">
-                  No past bookings yet.
-                </p>
-              ) : (
-                <div className="space-y-4">
-                  {past.map((booking) => (
-                    <CustomerBookingCard
-                      key={booking.id}
-                      booking={booking}
-                      hasPendingChangeRequest={pendingIds.has(booking.id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
+          <BookingsExplorer
+            upcoming={upcoming}
+            past={past}
+            pendingBookingIds={[...pendingIds]}
+          />
         )}
       </section>
     </>

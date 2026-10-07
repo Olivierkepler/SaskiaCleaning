@@ -248,7 +248,7 @@ describe("booking submission rules (unit)", () => {
 
 describe("regressions", () => {
   it("Book Again does not copy old appointment time", () => {
-    assert.equal(buildBookAgainHref(), "/#quote");
+    assert.equal(buildBookAgainHref(90), "/account/book?repeat=90");
   });
 
   it("pricing unchanged conceptually", () => {

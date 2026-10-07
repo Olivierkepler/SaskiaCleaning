@@ -177,6 +177,22 @@ describe("booking payload construction", () => {
 
     assert.equal(payload.bookingDate, "2026-07-04");
   });
+
+  it("repeat submissions use newly selected date, time, and current estimate without an old booking id", () => {
+    const payload = buildBookingPayload(
+      bookingInput({
+        date: null,
+        bookingTime: null,
+        prices: { low: 205, mid: 240, high: 283 },
+      }),
+    ) as Record<string, unknown>;
+
+    assert.equal(payload.bookingDate, undefined);
+    assert.equal(payload.bookingTime, undefined);
+    assert.equal(payload.estimateMid, 240);
+    assert.equal("bookingId" in payload, false);
+    assert.equal("previousPrice" in payload, false);
+  });
 });
 
 describe("booking response classification", () => {

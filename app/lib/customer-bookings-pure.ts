@@ -169,11 +169,7 @@ export function partitionCustomerBookings<
   return { upcoming, past };
 }
 
-/** Book Again must never create a booking by itself — navigation only. */
-export function buildBookAgainHref(input?: {
-  service?: string | null;
-}): string {
-  // Prefill deferred — estimator does not accept safe query prefill yet.
-  void input;
-  return "/#quote";
+/** Book Again only opens the authenticated estimator with an owned lookup key. */
+export function buildBookAgainHref(bookingId: number): string {
+  return `/account/book?repeat=${encodeURIComponent(String(bookingId))}`;
 }

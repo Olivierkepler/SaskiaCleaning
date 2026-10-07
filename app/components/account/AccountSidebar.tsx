@@ -5,8 +5,11 @@ import { usePathname } from "next/navigation";
 
 import {
   CalendarDays,
+  CalendarPlus,
   Gift,
   House,
+  ChevronLeft,
+  ChevronRight,
   Star,
   UserRound,
   type LucideIcon,
@@ -29,6 +32,12 @@ const NAV_ITEMS: AccountNavItem[] = [
     label: "Account Overview",
     href: "/account",
     icon: House,
+    exact: true,
+  },
+  {
+    label: "Book a Cleaning",
+    href: "/account/book",
+    icon: CalendarPlus,
     exact: true,
   },
   {
@@ -146,7 +155,13 @@ function linkClassName(
   );
 }
 
-export default function AccountSidebar() {
+export default function AccountSidebar({
+  collapsed,
+  onToggle,
+}: {
+  collapsed: boolean;
+  onToggle: () => void;
+}) {
   const pathname = usePathname() || "";
 
   return (
@@ -191,7 +206,8 @@ export default function AccountSidebar() {
           top-6
           hidden
           h-fit
-          w-[250px]
+          w-full
+          min-w-0
           shrink-0
           rounded-[22px]
           bg-[#ECF0F3]
@@ -199,8 +215,26 @@ export default function AccountSidebar() {
           shadow-[10px_10px_24px_rgba(163,177,198,0.38),-10px_-10px_24px_rgba(255,255,255,0.95)]
           lg:block
         "
+        style={{ padding: collapsed ? "0.5rem" : "1rem" }}
       >
-        <ul className="flex flex-col gap-3">
+        <div className={`mb-3 flex ${collapsed ? "justify-center" : "justify-end"}`}>
+          <button
+            type="button"
+            onClick={onToggle}
+            aria-label={collapsed ? "Expand account navigation" : "Collapse account navigation"}
+            title={collapsed ? "Expand account navigation" : "Collapse account navigation"}
+            aria-expanded={!collapsed}
+            aria-controls="account-sidebar-links"
+            className="grid h-9 w-9 place-items-center rounded-xl bg-[#ECF0F3] text-slate-600 shadow-[4px_4px_10px_rgba(163,177,198,0.28),-4px_-4px_10px_rgba(255,255,255,0.95)] transition-colors hover:text-sky-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#ECF0F3]"
+          >
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            )}
+          </button>
+        </div>
+        <ul id="account-sidebar-links" className="flex min-w-0 flex-col gap-3">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon;
             const active = isItemActive(pathname, item);
@@ -210,14 +244,18 @@ export default function AccountSidebar() {
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={linkClassName(active)}
+                  aria-label={item.label}
+                  title={collapsed ? item.label : undefined}
+                  className={`${linkClassName(active)} ${collapsed ? "justify-center gap-0 px-2" : ""}`}
                 >
                   <Icon
                     className="h-5 w-5 shrink-0"
                     aria-hidden="true"
                   />
 
-                  <span>{item.label}</span>
+                  <span className={collapsed ? "sr-only" : "min-w-0 truncate"}>
+                    {item.label}
+                  </span>
                 </Link>
               </li>
             );
