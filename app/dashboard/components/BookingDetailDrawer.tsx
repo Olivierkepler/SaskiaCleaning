@@ -1,0 +1,314 @@
+"use client";
+
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { X } from "lucide-react";
+import {
+  BOOKING_STATUS_BADGE_CLASS,
+  BOOKING_STATUS_LABELS,
+  BOOKING_STATUSES,
+  type BookingStatus,
+} from "../../lib/booking-status";
+import BookingAssignControl from "../BookingAssignControl";
+import type { BookingRequest } from "../DashboardTable";
+
+type BookingDetailDrawerProps = {
+  booking: BookingRequest | null;
+  isOpen: boolean;
+  submittedLabel: string;
+  appointmentLabel: string;
+  extras: string[];
+  capacityBadge: ReactNode;
+  estimateContent: ReactNode;
+  referralContent: ReactNode;
+  assigned: boolean;
+  onClose: () => void;
+  onStatusChange: (bookingId: number, status: BookingStatus) => void | Promise<void>;
+  onDelete: (bookingId: number) => void | Promise<void>;
+};
+
+function DetailSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="border-b border-slate-100 py-4 last:border-b-0">
+      <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
+function DetailValue({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="min-w-0">
+      <p className="text-xs text-slate-500">{label}</p>
+      <div className="mt-1 break-words text-sm font-medium leading-5 text-slate-800">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export default function BookingDetailDrawer({
+  booking,
+  isOpen,
+  submittedLabel,
+  appointmentLabel,
+  extras,
+  capacityBadge,
+  estimateContent,
+  referralContent,
+  assigned,
+  onClose,
+  onStatusChange,
+  onDelete,
+}: BookingDetailDrawerProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
+  const [entered, setEntered] = useState(false);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+      const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), select:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable?.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocusRef.current?.focus();
+    };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setEntered(false);
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => setEntered(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, [isOpen]);
+
+  if (!booking || !isOpen) return null;
+
+  const isNew = !booking.seen;
+
+  return (
+    <div className="fixed inset-0 z-[80]">
+      <button
+        type="button"
+        aria-label="Close booking details"
+        onClick={onClose}
+        className="absolute inset-0 bg-slate-950/20 transition-opacity focus-visible:outline-none"
+      />
+      <aside
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-detail-title"
+        className={`absolute inset-y-0 right-0 flex h-dvh w-full flex-col border-l border-slate-200 bg-white shadow-[-16px_0_40px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-out sm:w-[min(450px,92vw)] ${entered ? "translate-x-0" : "translate-x-full"}`}
+      >
+        <header className="shrink-0 border-b border-slate-100 px-5 py-4 sm:px-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-700">
+                Booking workspace
+              </p>
+              <h2
+                id="booking-detail-title"
+                className="mt-1 text-xl font-semibold tracking-tight text-slate-950"
+              >
+                Booking details
+              </h2>
+              <p className="mt-1 break-words text-xs leading-5 text-slate-500">
+                Submitted {submittedLabel}
+              </p>
+            </div>
+            <button
+              ref={closeButtonRef}
+              type="button"
+              onClick={onClose}
+              aria-label="Close booking details"
+              className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+            >
+              <X aria-hidden="true" className="size-[18px]" />
+            </button>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {isNew && (
+              <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-800">
+                Needs review
+              </span>
+            )}
+            <span
+              className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${BOOKING_STATUS_BADGE_CLASS[booking.status]}`}
+            >
+              {BOOKING_STATUS_LABELS[booking.status]}
+            </span>
+            {capacityBadge}
+          </div>
+        </header>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 sm:px-6">
+          <DetailSection title="Customer">
+            <div className="space-y-3">
+              <DetailValue label="Name">{booking.name}</DetailValue>
+              <DetailValue label="Email">{booking.email}</DetailValue>
+              <DetailValue label="Phone">{booking.mobile || "—"}</DetailValue>
+            </div>
+          </DetailSection>
+
+          <DetailSection title="Appointment">
+            <DetailValue label="Requested date and time">
+              {appointmentLabel}
+            </DetailValue>
+          </DetailSection>
+
+          <DetailSection title="Service">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <DetailValue label="Service">{booking.service || "—"}</DetailValue>
+              <DetailValue label="Frequency">{booking.frequency || "One-time"}</DetailValue>
+              <DetailValue label="Bedrooms">{booking.bedrooms}</DetailValue>
+              <DetailValue label="Bathrooms">{booking.bathrooms}</DetailValue>
+            </div>
+          </DetailSection>
+
+          <DetailSection title="Property">
+            <DetailValue label="Address / location">
+              {booking.location || "—"}
+            </DetailValue>
+          </DetailSection>
+
+          <DetailSection title="Extras">
+            {extras.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {extras.map((extra, index) => (
+                  <span
+                    key={`${extra}-${index}`}
+                    className="max-w-full break-words rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+                  >
+                    {extra}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500">No extras selected</p>
+            )}
+          </DetailSection>
+
+          <DetailSection title="Notes">
+            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
+              {booking.notes?.trim() || "No additional notes."}
+            </p>
+          </DetailSection>
+
+          <DetailSection title="Estimate">
+            <div className="rounded-xl bg-slate-50 px-3.5 py-3 text-sm">
+              {estimateContent}
+            </div>
+          </DetailSection>
+
+          <DetailSection title="Assignment">
+            {!assigned && (
+              <span className="mb-2 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-800">
+                Unassigned
+              </span>
+            )}
+            <BookingAssignControl bookingId={booking.id} />
+          </DetailSection>
+
+          <DetailSection title="Status">
+            <label
+              htmlFor={`drawer-status-${booking.id}`}
+              className="mb-1.5 block text-xs text-slate-500"
+            >
+              Booking status
+            </label>
+            <select
+              id={`drawer-status-${booking.id}`}
+              aria-label={`Status for ${booking.name}`}
+              value={booking.status}
+              onChange={(event) =>
+                onStatusChange(booking.id, event.target.value as BookingStatus)
+              }
+              className={`min-h-11 w-full rounded-xl border px-3 text-sm font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-sky-200 ${BOOKING_STATUS_BADGE_CLASS[booking.status]}`}
+            >
+              {BOOKING_STATUSES.map((status) => (
+                <option key={status} value={status}>
+                  {BOOKING_STATUS_LABELS[status]}
+                </option>
+              ))}
+            </select>
+          </DetailSection>
+
+          <DetailSection title="Referral">
+            {referralContent ?? (
+              <p className="text-sm text-slate-500">No referral</p>
+            )}
+          </DetailSection>
+        </div>
+
+        <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
+          <button
+            type="button"
+            onClick={() => void onDelete(booking.id)}
+            className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
+          >
+            <span aria-hidden="true">×</span>
+            Delete booking
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+          >
+            Close
+          </button>
+        </footer>
+      </aside>
+    </div>
+  );
+}

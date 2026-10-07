@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ChevronDown,
   ClipboardList,
+  Eye,
   MoreHorizontal,
   Search,
   Trash2,
@@ -18,7 +19,7 @@ import {
   type BookingStatus,
   isBookingStatus,
 } from "../lib/booking-status";
-import BookingAssignControl from "./BookingAssignControl";
+import BookingDetailDrawer from "./components/BookingDetailDrawer";
 
 type SortOption =
   | "newest"
@@ -41,7 +42,7 @@ const selectClassName =
 
 const escapeCsvValue = (value: string) => `"${value.replace(/"/g, '""')}"`;
 
-type BookingRequest = {
+export type BookingRequest = {
   id: number;
   name: string;
   email: string;
@@ -313,6 +314,8 @@ export default function DashboardTable({
   >("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<ItemsPerPage>(10);
+  const [selectedBookingId, setSelectedBookingId] = useState<number | null>(null);
+  const selectedBooking = bookings.find((booking) => booking.id === selectedBookingId) ?? null;
   const assignedSet = useMemo(
     () => new Set(assignedBookingIds),
     [assignedBookingIds],
@@ -537,6 +540,7 @@ export default function DashboardTable({
       return;
     }
 
+    if (selectedBookingId === id) setSelectedBookingId(null);
     router.refresh();
   };
 
@@ -910,7 +914,13 @@ export default function DashboardTable({
                   >
                     <td className="max-w-[230px] p-4">
                       <div className="flex items-center gap-2 font-semibold text-slate-900">
-                        <span className="truncate">{booking.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBookingId(booking.id)}
+                          className="truncate text-left transition hover:text-sky-700 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                        >
+                          {booking.name}
+                        </button>
                         {isUnseen && (
                           <span className="shrink-0 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-800">
                             New
@@ -919,15 +929,6 @@ export default function DashboardTable({
                       </div>
                       <p className="mt-1 truncate text-xs text-slate-600" title={booking.email}>{booking.email}</p>
                       <p className="mt-0.5 text-xs text-slate-500">{booking.mobile || "—"}</p>
-                      <details className="group mt-2">
-                        <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-md py-0.5 text-[11px] font-medium text-sky-700 transition hover:text-sky-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 [&::-webkit-details-marker]:hidden">More details <ChevronDown aria-hidden="true" className="size-3 text-slate-400 transition group-open:rotate-180" /></summary>
-                        <div className="mt-2 space-y-1 rounded-lg bg-slate-50 p-2.5 text-xs text-slate-600">
-                          <p><span className="font-medium text-slate-700">Frequency:</span> {booking.frequency || "—"}</p>
-                          <p><span className="font-medium text-slate-700">Submitted:</span> {formatDate(booking.created_at)}</p>
-                          <ReferralBadge code={booking.referral_code} friendDiscountAmount={booking.friend_discount_amount} />
-                          <div className="border-t border-slate-200 pt-1"><BookingDetails extras={booking.extras} notes={booking.notes} compact /></div>
-                        </div>
-                      </details>
                     </td>
                     <td className="p-4 text-slate-700">
                       <p className="font-medium text-slate-800">{booking.service || "—"}</p>
@@ -957,7 +958,13 @@ export default function DashboardTable({
                     </td>
                     <td className="p-4">
                       {!assignedSet.has(booking.id) ? <span className="mb-1 inline-flex rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-800">Unassigned</span> : null}
-                      <BookingAssignControl bookingId={booking.id} />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBookingId(booking.id)}
+                        className="block rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                      >
+                        Manage assignment
+                      </button>
                     </td>
                     <td className="p-4">
                       <div className="flex flex-wrap items-center gap-1">
@@ -976,6 +983,16 @@ export default function DashboardTable({
                       <details className="relative inline-block text-left">
                         <summary aria-label={`Actions for ${booking.name}`} className="flex size-10 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 [&::-webkit-details-marker]:hidden"><MoreHorizontal aria-hidden="true" className="size-[18px]" /></summary>
                         <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                          <button
+                            type="button"
+                            onClick={(event) => {
+                              event.currentTarget.closest("details")?.removeAttribute("open");
+                              setSelectedBookingId(booking.id);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-sky-50 hover:text-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                          >
+                            <Eye aria-hidden="true" className="size-4" />View details
+                          </button>
                           <button type="button" onClick={() => handleDelete(booking.id)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"><Trash2 aria-hidden="true" className="size-4" />Delete booking</button>
                         </div>
                       </details>
@@ -1008,9 +1025,13 @@ export default function DashboardTable({
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-bold text-slate-900">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedBookingId(booking.id)}
+                        className="text-left text-lg font-bold text-slate-900 transition hover:text-sky-700 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                      >
                         {booking.name}
-                      </h2>
+                      </button>
                       {isUnseen && (
                         <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
                           New
@@ -1036,6 +1057,16 @@ export default function DashboardTable({
                   <details className="relative shrink-0">
                     <summary aria-label={`Actions for ${booking.name}`} className="flex size-10 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 [&::-webkit-details-marker]:hidden"><MoreHorizontal aria-hidden="true" className="size-[18px]" /></summary>
                     <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.currentTarget.closest("details")?.removeAttribute("open");
+                          setSelectedBookingId(booking.id);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-slate-700 transition hover:bg-sky-50 hover:text-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+                      >
+                        <Eye aria-hidden="true" className="size-4" />View details
+                      </button>
                       <button type="button" onClick={() => handleDelete(booking.id)} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium text-red-700 transition hover:bg-red-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-400"><Trash2 aria-hidden="true" className="size-4" />Delete booking</button>
                     </div>
                   </details>
@@ -1102,9 +1133,13 @@ export default function DashboardTable({
                         Unassigned
                       </span>
                     ) : null}
-                    <BookingAssignControl
-                      bookingId={booking.id}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setSelectedBookingId(booking.id)}
+                      className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-sky-200 hover:bg-sky-50 hover:text-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                    >
+                      Manage assignment
+                    </button>
                   </div>
 
                   <div className="flex justify-between gap-4">
@@ -1214,8 +1249,28 @@ export default function DashboardTable({
               </div>
             </div>
           </div>
-            </>
-          )}
+
+          <BookingDetailDrawer
+            booking={selectedBooking}
+            isOpen={selectedBooking !== null}
+            submittedLabel={selectedBooking ? formatDate(selectedBooking.created_at) : ""}
+            appointmentLabel={selectedBooking ? formatRequestedAppointment(selectedBooking.booking_date, selectedBooking.booking_time) : ""}
+            extras={selectedBooking ? normalizeExtras(selectedBooking.extras) : []}
+            capacityBadge={selectedBooking ? capacityBadge(selectedBooking.id) : null}
+            estimateContent={selectedBooking ? <EstimateDisplay booking={selectedBooking} /> : null}
+            referralContent={selectedBooking && hasReferralCode(selectedBooking) ? (
+              <ReferralBadge
+                code={selectedBooking.referral_code}
+                friendDiscountAmount={selectedBooking.friend_discount_amount}
+              />
+            ) : null}
+            assigned={!selectedBooking ? false : assignedSet.has(selectedBooking.id)}
+            onClose={() => setSelectedBookingId(null)}
+            onStatusChange={handleStatusChange}
+            onDelete={handleDelete}
+          />
+        </>
+      )}
         </>
       )}
       </div>
