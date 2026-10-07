@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 type GoogleSignInButtonProps = {
   callbackUrl?: string;
   className?: string;
+  buttonAppearance?: "default" | "registration";
 };
 
 function GoogleIcon() {
@@ -41,10 +42,15 @@ function GoogleIcon() {
 export default function GoogleSignInButton({
   callbackUrl = "/account",
   className = "",
+  buttonAppearance = "default",
 }: GoogleSignInButtonProps) {
   const t = useTranslations("login");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const buttonClassName =
+    buttonAppearance === "registration"
+      ? "flex min-h-14 w-full items-center justify-center gap-3 rounded-[14px] border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:border-slate-300 hover:bg-slate-50 active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sky-200 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+      : "flex w-full items-center justify-center gap-3 rounded-full border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:scale-[1.02] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60";
 
   async function handleClick() {
     if (loading) return;
@@ -67,7 +73,7 @@ export default function GoogleSignInButton({
         onClick={handleClick}
         disabled={loading}
         aria-label={t("continueWithGoogle")}
-        className="flex w-full items-center justify-center gap-3 rounded-full border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-900 shadow-sm transition hover:scale-[1.02] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+        className={buttonClassName}
       >
         <GoogleIcon />
         <span>{loading ? t("connecting") : t("continueWithGoogle")}</span>
