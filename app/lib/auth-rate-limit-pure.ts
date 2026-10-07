@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { isIP } from "node:net";
 import { normalizeCustomerEmail } from "@/app/lib/customer-auth-pure";
 
-export type AuthRateLimitAction = "registration" | "credentials_login" | "verification_resend" | "password_reset_request";
+export type AuthRateLimitAction = "registration" | "credentials_login" | "verification_resend" | "password_reset_request" | "password_method_add" | "google_link_intent";
 export type AuthRateLimitScope = "email_ip" | "network";
 
 export const AUTH_RATE_LIMIT_POLICIES = Object.freeze({
@@ -25,6 +25,18 @@ export const AUTH_RATE_LIMIT_POLICIES = Object.freeze({
     networkLimit: 10,
   }),
   password_reset_request: Object.freeze({
+    windowSeconds: 60 * 60,
+    cooldownSeconds: 60 * 60,
+    emailIpLimit: 3,
+    networkLimit: 10,
+  }),
+  password_method_add: Object.freeze({
+    windowSeconds: 60 * 60,
+    cooldownSeconds: 60 * 60,
+    emailIpLimit: 3,
+    networkLimit: 10,
+  }),
+  google_link_intent: Object.freeze({
     windowSeconds: 60 * 60,
     cooldownSeconds: 60 * 60,
     emailIpLimit: 3,

@@ -81,6 +81,14 @@ describe("authentication rate-limit key privacy", () => {
       emailIpLimit: 3,
       networkLimit: 10,
     });
+    for (const action of ["password_method_add", "google_link_intent"] as const) {
+      assert.deepEqual(AUTH_RATE_LIMIT_POLICIES[action], {
+        windowSeconds: 3600,
+        cooldownSeconds: 3600,
+        emailIpLimit: 3,
+        networkLimit: 10,
+      });
+    }
   });
 });
 

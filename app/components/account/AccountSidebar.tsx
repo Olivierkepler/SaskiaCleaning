@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Star,
+  ShieldCheck,
   UserRound,
   type LucideIcon,
 } from "lucide-react";
@@ -61,6 +62,12 @@ const NAV_ITEMS: AccountNavItem[] = [
     label: "Profile",
     href: "/account/profile",
     icon: UserRound,
+    exact: true,
+  },
+  {
+    label: "Security",
+    href: "/account/security",
+    icon: ShieldCheck,
     exact: true,
   },
 ];

@@ -34,6 +34,12 @@ import {
   resetSuccessfulLoginBucket,
 } from "@/app/lib/auth-rate-limit";
 import { trustedClientIp } from "@/app/lib/auth-rate-limit-pure";
+import { completeGoogleLinkIntent } from "@/app/lib/customer-auth-linking";
+import {
+  authSessionCookiePairsFromHeader,
+  GOOGLE_LINK_INTENT_COOKIE,
+  hashAuthSessionCookies,
+} from "@/app/lib/customer-auth-linking-pure";
 
 class TemporaryCredentialsSignin extends CredentialsSignin {
   code = "try_again_later";
@@ -173,7 +179,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return false;
       }
 
+      const cookieStore = await cookies();
+      const linkNonce = cookieStore.get(GOOGLE_LINK_INTENT_COOKIE)?.value;
+
       if (!isGoogleEmailVerified(profile)) {
+        if (linkNonce) cookieStore.delete(GOOGLE_LINK_INTENT_COOKIE);
         const portalIntent = await readPortalIntent();
         await clearPortalIntent();
         if (portalIntent === "admin") {
@@ -188,6 +198,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       const email =
         typeof profile?.email === "string" ? profile.email : null;
       if (!email) {
+        if (linkNonce) cookieStore.delete(GOOGLE_LINK_INTENT_COOKIE);
         const portalIntent = await readPortalIntent();
         await clearPortalIntent();
         if (portalIntent === "admin") {
@@ -197,6 +208,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return "/staff/login?error=unverified_email";
         }
         return "/login?error=unverified_email";
+      }
+
+      // An intent cookie is issued only after a server-validated Credentials
+      // session starts linking. Bind the callback to that exact session cookie
+      // and consume the one-time database intent before normal Google handling.
+      if (linkNonce) {
+        cookieStore.delete(GOOGLE_LINK_INTENT_COOKIE);
+        let linked = false;
+        try {
+          linked = await completeGoogleLinkIntent({
+            nonce: linkNonce,
+            sessionBindingHash: hashAuthSessionCookies(
+              authSessionCookiePairsFromHeader(cookieStore.toString()),
+            ),
+            providerAccountId: account.providerAccountId,
+            googleEmail: email,
+            emailVerified: true,
+          });
+        } catch {
+          linked = false;
+        }
+        if (!linked) return "/account/security?googleLink=failed";
       }
 
       const portalIntent = await readPortalIntent();
