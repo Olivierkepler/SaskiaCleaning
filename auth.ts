@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+import { CredentialsSignin } from "next-auth";
 import type { JWT } from "@auth/core/jwt";
 import {
   isGoogleEmailVerified,
@@ -18,6 +19,16 @@ import {
 import { cookies } from "next/headers";
 import { authenticateCustomerCredentials } from "@/app/lib/customer-credentials";
 import { credentialsTokenIdentity } from "@/app/lib/customer-credentials-pure";
+import {
+  AuthRateLimitUnavailableError,
+  checkAuthRateLimit,
+  resetSuccessfulLoginBucket,
+} from "@/app/lib/auth-rate-limit";
+import { trustedClientIp } from "@/app/lib/auth-rate-limit-pure";
+
+class TemporaryCredentialsSignin extends CredentialsSignin {
+  code = "try_again_later";
+}
 
 declare module "next-auth" {
   interface Session {
@@ -81,18 +92,49 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
+        const email = credentials?.email;
+        const clientIp = trustedClientIp(
+          request.headers,
+          process.env.VERCEL === "1",
+        );
+
         try {
-          // Shared distributed throttling must wrap this service before production.
-          const result = await authenticateCustomerCredentials({
-            email: credentials?.email,
+          const rateLimit = await checkAuthRateLimit({
+            action: "credentials_login",
+            email,
+            clientIp,
+          });
+          if (!rateLimit.allowed) {
+            throw new TemporaryCredentialsSignin();
+          }
+        } catch (error) {
+          if (error instanceof TemporaryCredentialsSignin) throw error;
+          if (error instanceof AuthRateLimitUnavailableError) {
+            throw new TemporaryCredentialsSignin();
+          }
+          throw new TemporaryCredentialsSignin();
+        }
+
+        let result: Awaited<ReturnType<typeof authenticateCustomerCredentials>>;
+        try {
+          result = await authenticateCustomerCredentials({
+            email,
             password: credentials?.password,
           });
-          return result;
         } catch {
           console.error("Credentials authentication failed.");
           return null;
         }
+
+        if (result) {
+          try {
+            await resetSuccessfulLoginBucket({ email, clientIp });
+          } catch {
+            throw new TemporaryCredentialsSignin();
+          }
+        }
+        return result;
       },
     }),
   ],

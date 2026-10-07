@@ -23,7 +23,11 @@ export default function CredentialsLoginForm() {
         redirect: false,
       });
       if (!result || result.error) {
-        setError("Invalid email or password.");
+        setError(
+          result?.code === "try_again_later"
+            ? "Too many attempts. Please try again later."
+            : "Invalid email or password.",
+        );
         return;
       }
       router.replace(result.url || "/account");

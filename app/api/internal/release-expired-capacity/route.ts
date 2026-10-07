@@ -3,11 +3,12 @@ import {
   countExpiredCompletedCapacity,
   releaseExpiredCompletedCapacity,
 } from "@/app/lib/capacity-release";
+import { pruneExpiredAuthRateLimits } from "@/app/lib/auth-rate-limit";
 
 /**
  * Internal cron: soft-release completed capacity after window_end.
  * Auth: Authorization: Bearer <CRON_SECRET>
- * Cadence: every 15 minutes (see vercel.json).
+ * Cadence: daily (see vercel.json); also prunes expired auth throttle rows.
  * Response contains aggregate counts only — no PII.
  */
 
@@ -46,9 +47,17 @@ export async function GET(req: Request) {
     }
 
     const result = await releaseExpiredCompletedCapacity({ source: "cron" });
+    let rateLimitRowsPruned = 0;
+    try {
+      rateLimitRowsPruned = await pruneExpiredAuthRateLimits();
+    } catch {
+      // Rate-limit cleanup is housekeeping and must not undo capacity release.
+      console.error("Auth rate-limit cleanup failed.");
+    }
     return NextResponse.json({
       ok: true,
       released: result.released,
+      rateLimitRowsPruned,
     });
   } catch (error) {
     console.error("Capacity release cron failed");
