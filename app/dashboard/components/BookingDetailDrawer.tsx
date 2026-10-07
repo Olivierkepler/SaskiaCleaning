@@ -46,14 +46,18 @@ function DetailSection({
 function DetailValue({
   label,
   children,
+  valueClassName = "",
 }: {
   label: string;
   children: ReactNode;
+  valueClassName?: string;
 }) {
   return (
     <div className="min-w-0">
       <p className="text-xs text-slate-500">{label}</p>
-      <div className="mt-1 break-words text-sm font-medium leading-5 text-slate-800">
+      <div
+        className={`mt-1 min-w-0 break-words text-sm leading-5 text-slate-800 [overflow-wrap:anywhere] ${valueClassName}`}
+      >
         {children}
       </div>
     </div>
@@ -106,7 +110,11 @@ export default function BookingDetailDrawer({
       if (!focusable?.length) return;
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      const activeIsInDialog = dialogRef.current?.contains(document.activeElement);
+      if (!activeIsInDialog) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -142,30 +150,24 @@ export default function BookingDetailDrawer({
         type="button"
         aria-label="Close booking details"
         onClick={onClose}
-        className="absolute inset-0 bg-slate-950/20 transition-opacity focus-visible:outline-none"
+        className="absolute inset-0 bg-slate-950/15 transition-opacity focus-visible:outline-none"
       />
       <aside
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="booking-detail-title"
-        className={`absolute inset-y-0 right-0 flex h-dvh w-full flex-col border-l border-slate-200 bg-white shadow-[-16px_0_40px_rgba(15,23,42,0.12)] transition-transform duration-300 ease-out sm:w-[min(450px,92vw)] ${entered ? "translate-x-0" : "translate-x-full"}`}
+        className={`absolute inset-y-0 right-0 flex h-dvh w-full max-w-full flex-col border-l border-slate-200 bg-white shadow-[-16px_0_40px_rgba(15,23,42,0.12)] transition-transform duration-200 ease-out motion-reduce:transition-none sm:w-[min(450px,92vw)] ${entered ? "translate-x-0" : "translate-x-full"}`}
       >
-        <header className="shrink-0 border-b border-slate-100 px-5 py-4 sm:px-6">
+        <header className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white px-5 pb-3 pt-[max(0.875rem,env(safe-area-inset-top))] sm:px-6">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-sky-700">
-                Booking workspace
-              </p>
               <h2
                 id="booking-detail-title"
-                className="mt-1 text-xl font-semibold tracking-tight text-slate-950"
+                className="text-xl font-semibold tracking-tight text-slate-950"
               >
                 Booking details
               </h2>
-              <p className="mt-1 break-words text-xs leading-5 text-slate-500">
-                Submitted {submittedLabel}
-              </p>
             </div>
             <button
               ref={closeButtonRef}
@@ -177,7 +179,7 @@ export default function BookingDetailDrawer({
               <X aria-hidden="true" className="size-[18px]" />
             </button>
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             {isNew && (
               <span className="rounded-full bg-sky-50 px-2.5 py-1 text-xs font-semibold text-sky-800">
                 Needs review
@@ -190,19 +192,31 @@ export default function BookingDetailDrawer({
             </span>
             {capacityBadge}
           </div>
+          <p className="mt-2 break-words text-xs leading-5 text-slate-500 [overflow-wrap:anywhere]">
+            Submitted {submittedLabel}
+          </p>
         </header>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 sm:px-6">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-3 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:px-6">
           <DetailSection title="Customer">
             <div className="space-y-3">
-              <DetailValue label="Name">{booking.name}</DetailValue>
-              <DetailValue label="Email">{booking.email}</DetailValue>
-              <DetailValue label="Phone">{booking.mobile || "—"}</DetailValue>
+              <DetailValue label="Name" valueClassName="font-semibold text-slate-900">
+                {booking.name}
+              </DetailValue>
+              <DetailValue label="Email" valueClassName="text-slate-600">
+                {booking.email}
+              </DetailValue>
+              <DetailValue label="Phone" valueClassName="text-slate-600">
+                {booking.mobile || "—"}
+              </DetailValue>
             </div>
           </DetailSection>
 
           <DetailSection title="Appointment">
-            <DetailValue label="Requested date and time">
+            <DetailValue
+              label="Requested date and time"
+              valueClassName="font-semibold text-slate-900"
+            >
               {appointmentLabel}
             </DetailValue>
           </DetailSection>
@@ -217,7 +231,7 @@ export default function BookingDetailDrawer({
           </DetailSection>
 
           <DetailSection title="Property">
-            <DetailValue label="Address / location">
+            <DetailValue label="Address / location" valueClassName="whitespace-normal">
               {booking.location || "—"}
             </DetailValue>
           </DetailSection>
@@ -228,7 +242,7 @@ export default function BookingDetailDrawer({
                 {extras.map((extra, index) => (
                   <span
                     key={`${extra}-${index}`}
-                    className="max-w-full break-words rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+                    className="max-w-full break-words rounded-full bg-slate-100/80 px-3 py-1 text-xs font-medium text-slate-700 [overflow-wrap:anywhere]"
                   >
                     {extra}
                   </span>
@@ -240,13 +254,13 @@ export default function BookingDetailDrawer({
           </DetailSection>
 
           <DetailSection title="Notes">
-            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
+            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 [overflow-wrap:anywhere]">
               {booking.notes?.trim() || "No additional notes."}
             </p>
           </DetailSection>
 
           <DetailSection title="Estimate">
-            <div className="rounded-xl bg-slate-50 px-3.5 py-3 text-sm">
+            <div className="text-sm [&>span]:text-xl [&>span]:font-semibold [&>span]:text-slate-900 [&>div>p:last-child]:text-base [&>div>p:last-child]:font-semibold">
               {estimateContent}
             </div>
           </DetailSection>
@@ -257,7 +271,9 @@ export default function BookingDetailDrawer({
                 Unassigned
               </span>
             )}
-            <BookingAssignControl bookingId={booking.id} />
+            <div className="min-w-0 [&_button]:max-w-full [&_button]:whitespace-normal [&_select]:min-w-0">
+              <BookingAssignControl bookingId={booking.id} />
+            </div>
           </DetailSection>
 
           <DetailSection title="Status">
@@ -291,21 +307,20 @@ export default function BookingDetailDrawer({
           </DetailSection>
         </div>
 
-        <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-white px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
-          <button
-            type="button"
-            onClick={() => void onDelete(booking.id)}
-            className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400"
-          >
-            <span aria-hidden="true">×</span>
-            Delete booking
-          </button>
+        <footer className="grid shrink-0 grid-cols-2 gap-3 border-t border-slate-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:px-6">
           <button
             type="button"
             onClick={onClose}
-            className="min-h-10 rounded-lg border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
           >
             Close
+          </button>
+          <button
+            type="button"
+            onClick={() => void onDelete(booking.id)}
+            className="min-h-10 rounded-lg border border-rose-200 bg-white px-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2"
+          >
+            Delete booking
           </button>
         </footer>
       </aside>
