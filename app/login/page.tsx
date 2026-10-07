@@ -12,6 +12,7 @@ type LoginPageProps = {
   searchParams: Promise<{
     error?: string;
     registered?: string;
+    verified?: string;
   }>;
 };
 
@@ -28,6 +29,7 @@ export default async function LoginPage({
   const params = await searchParams;
   const errorKey = params.error ?? "";
   const registered = params.registered === "1";
+  const verified = params.verified === "1";
 
   const errorMessage =
     errorKey === "Configuration"
@@ -237,6 +239,12 @@ export default async function LoginPage({
               {registered ? (
                 <p role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
                   Account created. Sign in to continue.
+                </p>
+              ) : null}
+
+              {verified ? (
+                <p role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  Email verified. You can sign in now.
                 </p>
               ) : null}
 

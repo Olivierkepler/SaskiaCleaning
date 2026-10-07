@@ -116,6 +116,7 @@ export type CredentialRecord = {
   name: string | null;
   image: string | null;
   passwordHash: string | null;
+  emailVerifiedAt: Date | string | null;
 };
 
 export async function authenticateCredentialInput(
@@ -138,6 +139,7 @@ export async function authenticateCredentialInput(
     email: record.email,
     name: record.name,
     image: record.image,
+    emailVerifiedAt: record.emailVerifiedAt ?? null,
   };
 }
 

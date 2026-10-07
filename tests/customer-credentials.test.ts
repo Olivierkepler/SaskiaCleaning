@@ -151,6 +151,7 @@ describe("Credentials authentication", () => {
     name: "Ada Lovelace",
     image: null,
     passwordHash: "stored-hash",
+    emailVerifiedAt: null,
   };
 
   it("normalizes email and returns safe customer identity on correct password", async () => {
@@ -161,7 +162,7 @@ describe("Credentials authentication", () => {
       async (password, hash) => password === "correct horse battery staple" && hash === "stored-hash",
     );
     assert.equal(lookedUpEmail, "ada@example.com");
-    assert.deepEqual(result, { id: "customer-a", email: "ada@example.com", name: "Ada Lovelace", image: null });
+    assert.deepEqual(result, { id: "customer-a", email: "ada@example.com", name: "Ada Lovelace", image: null, emailVerifiedAt: null });
     assert.equal("passwordHash" in (result ?? {}), false);
   });
 
@@ -185,6 +186,28 @@ describe("Credentials authentication", () => {
     assert.equal(unknownEmail, null);
     assert.equal(googleOnly, null);
     assert.deepEqual(verifyCalls, ["stored-hash", null, null]);
+  });
+
+  it("exposes verification state only after the password has been proven", async () => {
+    const unverified = await authenticateCredentialInput(
+      { email: customer.email, password: "correct horse battery staple" },
+      async () => ({ ...customer, emailVerifiedAt: null }),
+      async (password, hash) => password === "correct horse battery staple" && hash === "stored-hash",
+    );
+    const wrongPassword = await authenticateCredentialInput(
+      { email: customer.email, password: "wrong password" },
+      async () => ({ ...customer, emailVerifiedAt: null }),
+      async () => false,
+    );
+    const verified = await authenticateCredentialInput(
+      { email: customer.email, password: "correct horse battery staple" },
+      async () => ({ ...customer, emailVerifiedAt: "2026-10-07T12:00:00.000Z" }),
+      async (password, hash) => password === "correct horse battery staple" && hash === "stored-hash",
+    );
+
+    assert.equal(unverified?.emailVerifiedAt, null);
+    assert.equal(wrongPassword, null);
+    assert.equal(verified?.emailVerifiedAt, "2026-10-07T12:00:00.000Z");
   });
 
   it("rejects unknown credential properties and malformed values", () => {

@@ -90,6 +90,7 @@ export type AuthenticatedCredentialCustomer = {
   email: string;
   name: string | null;
   image: string | null;
+  emailVerifiedAt: Date | string | null;
 };
 
 export async function authenticateCustomerCredentials(
@@ -99,7 +100,7 @@ export async function authenticateCustomerCredentials(
     rawCredentials,
     async (email) => {
       const rows = await sql`
-        SELECT c.id, c.email, c.name, c.image, cc.password_hash
+        SELECT c.id, c.email, c.name, c.image, c.email_verified, cc.password_hash
         FROM customers c
         LEFT JOIN customer_credentials cc ON cc.customer_id = c.id
         WHERE c.email = ${normalizeCustomerEmail(email)}
@@ -111,6 +112,7 @@ export async function authenticateCustomerCredentials(
             email: string;
             name: string | null;
             image: string | null;
+            email_verified: Date | string | null;
             password_hash: string | null;
           }
         | undefined;
@@ -121,6 +123,7 @@ export async function authenticateCustomerCredentials(
             name: row.name,
             image: row.image,
             passwordHash: row.password_hash,
+            emailVerifiedAt: row.email_verified,
           }
         : null;
     },

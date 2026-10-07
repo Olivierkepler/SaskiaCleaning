@@ -9,6 +9,7 @@ import {
   checkAuthRateLimit,
 } from "@/app/lib/auth-rate-limit";
 import { trustedClientIp } from "@/app/lib/auth-rate-limit-pure";
+import { sendCustomerVerificationEmail } from "@/app/lib/customer-email-verification";
 
 const MAX_BODY_BYTES = 16_384;
 const GENERIC_REGISTRATION_ERROR = "Unable to create account. Please check your details and try again.";
@@ -84,7 +85,23 @@ export async function POST(request: Request) {
   }
 
   try {
-    await createRegisteredCustomer(parsed.data);
+    const customer = await createRegisteredCustomer(parsed.data);
+    let emailSent = false;
+    try {
+      emailSent = await sendCustomerVerificationEmail(customer);
+    } catch {
+      // Account creation is committed; a later resend can issue a fresh token.
+      console.error("Verification email delivery failed.");
+    }
+    if (!emailSent) {
+      return NextResponse.json(
+        {
+          code: "verification_delivery_failed",
+          error: "Your account was created, but we could not send the verification email. Please try resending it.",
+        },
+        { status: 503 },
+      );
+    }
     return NextResponse.json({ success: true }, { status: 201 });
   } catch (error) {
     if (error instanceof CustomerRegistrationConflictError) {

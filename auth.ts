@@ -30,6 +30,10 @@ class TemporaryCredentialsSignin extends CredentialsSignin {
   code = "try_again_later";
 }
 
+class EmailVerificationRequiredSignin extends CredentialsSignin {
+  code = "email_not_verified";
+}
+
 declare module "next-auth" {
   interface Session {
     user: {
@@ -132,6 +136,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             await resetSuccessfulLoginBucket({ email, clientIp });
           } catch {
             throw new TemporaryCredentialsSignin();
+          }
+          if (!result.emailVerifiedAt) {
+            throw new EmailVerificationRequiredSignin();
           }
         }
         return result;

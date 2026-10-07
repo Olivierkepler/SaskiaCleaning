@@ -3,15 +3,18 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import ResendVerificationForm from "@/app/components/auth/ResendVerificationForm";
 
 export default function RegistrationForm() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
+  const [resendEmail, setResendEmail] = useState("");
   const [pending, setPending] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setResendEmail("");
     setPending(true);
     const form = new FormData(event.currentTarget);
 
@@ -32,12 +35,15 @@ export default function RegistrationForm() {
 
       if (!response.ok) {
         const result = (await response.json().catch(() => null)) as
-          | { error?: string }
+          | { error?: string; code?: string }
           | null;
         setError(result?.error ?? "Unable to create account. Please check your details.");
+        if (result?.code === "verification_delivery_failed") {
+          setResendEmail(String(form.get("email") ?? ""));
+        }
         return;
       }
-      router.replace("/login?registered=1");
+      router.replace("/verify-email");
     } catch {
       setError("Unable to create account right now. Please try again.");
     } finally {
@@ -46,6 +52,7 @@ export default function RegistrationForm() {
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
@@ -83,5 +90,7 @@ export default function RegistrationForm() {
         {pending ? "Creating account…" : "Create account"}
       </button>
     </form>
+    {resendEmail ? <ResendVerificationForm initialEmail={resendEmail} compact /> : null}
+    </>
   );
 }

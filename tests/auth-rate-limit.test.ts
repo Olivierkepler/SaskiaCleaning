@@ -69,6 +69,12 @@ describe("authentication rate-limit key privacy", () => {
       emailIpLimit: 5,
       networkLimit: 30,
     });
+    assert.deepEqual(AUTH_RATE_LIMIT_POLICIES.verification_resend, {
+      windowSeconds: 3600,
+      cooldownSeconds: 3600,
+      emailIpLimit: 3,
+      networkLimit: 10,
+    });
   });
 });
 
