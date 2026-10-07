@@ -96,6 +96,17 @@ export default function BookingDetailDrawer({
     name: string | null;
     phone: string | null;
   } | null>(null);
+  const [editingBooking, setEditingBooking] = useState(false);
+  const [bookingLocation, setBookingLocation] = useState("");
+  const [bookingNotes, setBookingNotes] = useState("");
+  const [savingBooking, setSavingBooking] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
+  const [bookingSaved, setBookingSaved] = useState(false);
+  const [bookingOverride, setBookingOverride] = useState<{
+    id: number;
+    location: string | null;
+    notes: string | null;
+  } | null>(null);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -106,6 +117,10 @@ export default function BookingDetailDrawer({
     setCustomerError(null);
     setCustomerSaved(false);
     setProfileOverride(null);
+    setEditingBooking(false);
+    setBookingError(null);
+    setBookingSaved(false);
+    setBookingOverride(null);
   }, [booking?.id]);
 
   useEffect(() => {
@@ -172,6 +187,12 @@ export default function BookingDetailDrawer({
       ? profileOverride.phone
       : booking.profile_phone ?? booking.mobile;
   const customerEmailValue = booking.profile_email ?? booking.email;
+  const bookingLocationValue =
+    bookingOverride?.id === booking.id
+      ? bookingOverride.location
+      : booking.location;
+  const bookingNotesValue =
+    bookingOverride?.id === booking.id ? bookingOverride.notes : booking.notes;
 
   const beginCustomerEdit = () => {
     setCustomerName(customerNameValue);
@@ -214,6 +235,63 @@ export default function BookingDetailDrawer({
     }
   };
 
+  const beginBookingEdit = () => {
+    setBookingLocation(bookingLocationValue ?? "");
+    setBookingNotes(bookingNotesValue ?? "");
+    setBookingError(null);
+    setBookingSaved(false);
+    setEditingBooking(true);
+  };
+
+  const cancelBookingEdit = () => {
+    setEditingBooking(false);
+    setBookingError(null);
+  };
+
+  const saveBookingDetails = async () => {
+    if (savingBooking) return;
+    const originalLocation = (bookingLocationValue ?? "").trim();
+    const originalNotes = (bookingNotesValue ?? "").trim();
+    const patch: { location?: string; notes?: string | null } = {};
+    if (bookingLocation.trim() !== originalLocation) {
+      patch.location = bookingLocation;
+    }
+    if (bookingNotes.trim() !== originalNotes) {
+      patch.notes = bookingNotes;
+    }
+    if (Object.keys(patch).length === 0) {
+      setEditingBooking(false);
+      return;
+    }
+    setSavingBooking(true);
+    setBookingError(null);
+    try {
+      const response = await fetch(
+        `/api/dashboard/bookings/${booking.id}/details`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        },
+      );
+      const result = (await response.json().catch(() => null)) as
+        | { booking?: { id: number; location: string | null; notes: string | null }; error?: string }
+        | null;
+      if (!response.ok || !result?.booking) {
+        setBookingError(result?.error || "Booking details could not be saved. Try again.");
+        return;
+      }
+      setBookingOverride(result.booking);
+      setEditingBooking(false);
+      setBookingSaved(true);
+      router.refresh();
+    } catch {
+      setBookingError("Booking details could not be saved. Check your connection and try again.");
+    } finally {
+      setSavingBooking(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[80]">
       <button
@@ -230,7 +308,7 @@ export default function BookingDetailDrawer({
         className={`absolute inset-y-0 right-0 flex h-dvh w-full max-w-full flex-col border-l border-slate-200 bg-white shadow-[-16px_0_40px_rgba(15,23,42,0.12)] transition-transform duration-200 ease-out motion-reduce:transition-none sm:w-[min(450px,92vw)] ${entered ? "translate-x-0" : "translate-x-full"}`}
       >
         <header className="sticky top-0 z-10 shrink-0 border-b border-slate-100 bg-white px-5 pb-3 pt-[max(0.875rem,env(safe-area-inset-top))] sm:px-6">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2
                 id="booking-detail-title"
@@ -238,16 +316,30 @@ export default function BookingDetailDrawer({
               >
                 Booking details
               </h2>
+              {editingBooking && (
+                <p className="mt-1 text-xs font-medium text-sky-700">Editing booking location and notes</p>
+              )}
             </div>
-            <button
-              ref={closeButtonRef}
-              type="button"
-              onClick={onClose}
-              aria-label="Close booking details"
-              className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
-            >
-              <X aria-hidden="true" className="size-[18px]" />
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              {!editingBooking && !editingCustomer && (
+                <button
+                  type="button"
+                  onClick={beginBookingEdit}
+                  className="min-h-10 rounded-lg px-2 text-sm font-semibold text-sky-700 transition hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 sm:px-3"
+                >
+                  Edit booking
+                </button>
+              )}
+              <button
+                ref={closeButtonRef}
+                type="button"
+                onClick={onClose}
+                aria-label="Close booking details"
+                className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+              >
+                <X aria-hidden="true" className="size-[18px]" />
+              </button>
+            </div>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {isNew && (
@@ -273,7 +365,7 @@ export default function BookingDetailDrawer({
               <span className="text-xs text-slate-500">
                 {booking.profile_customer_id ? "Customer profile" : "Booking contact"}
               </span>
-              {booking.profile_customer_id && !editingCustomer && (
+              {booking.profile_customer_id && !editingCustomer && !editingBooking && (
                 <button
                   type="button"
                   onClick={beginCustomerEdit}
@@ -380,9 +472,22 @@ export default function BookingDetailDrawer({
           </DetailSection>
 
           <DetailSection title="Property">
-            <DetailValue label="Address / location" valueClassName="whitespace-normal">
-              {booking.location || "—"}
-            </DetailValue>
+            {editingBooking ? (
+              <label className="block text-xs font-medium text-slate-600">
+                Booking address / location
+                <input
+                  autoComplete="street-address"
+                  maxLength={500}
+                  value={bookingLocation}
+                  onChange={(event) => setBookingLocation(event.target.value)}
+                  className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-base text-slate-900 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                />
+              </label>
+            ) : (
+              <DetailValue label="Address / location" valueClassName="whitespace-normal">
+                {bookingLocationValue || "—"}
+              </DetailValue>
+            )}
           </DetailSection>
 
           <DetailSection title="Extras">
@@ -403,9 +508,36 @@ export default function BookingDetailDrawer({
           </DetailSection>
 
           <DetailSection title="Notes">
-            <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 [overflow-wrap:anywhere]">
-              {booking.notes?.trim() || "No additional notes."}
-            </p>
+            {editingBooking ? (
+              <label className="block text-xs font-medium text-slate-600">
+                Booking notes
+                <textarea
+                  rows={4}
+                  maxLength={4_000}
+                  value={bookingNotes}
+                  onChange={(event) => setBookingNotes(event.target.value)}
+                  className="mt-1.5 min-h-28 w-full resize-y rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-base leading-6 text-slate-900 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  placeholder="Access instructions, pets, special requests..."
+                />
+                <span className="mt-1 block text-right text-[11px] text-slate-400">
+                  {bookingNotes.length}/4,000
+                </span>
+              </label>
+            ) : (
+              <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 [overflow-wrap:anywhere]">
+                {bookingNotesValue?.trim() || "No additional notes."}
+              </p>
+            )}
+            {bookingError && editingBooking && (
+              <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                {bookingError}
+              </p>
+            )}
+            {bookingSaved && !editingBooking && (
+              <p role="status" className="mt-3 text-sm font-medium text-emerald-700">
+                Booking details updated.
+              </p>
+            )}
           </DetailSection>
 
           <DetailSection title="Estimate">
@@ -457,20 +589,43 @@ export default function BookingDetailDrawer({
         </div>
 
         <footer className="grid shrink-0 grid-cols-2 gap-3 border-t border-slate-200 bg-white px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:px-6">
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
-          >
-            Close
-          </button>
-          <button
-            type="button"
-            onClick={() => void onDelete(booking.id)}
-            className="min-h-10 rounded-lg border border-rose-200 bg-white px-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2"
-          >
-            Delete booking
-          </button>
+          {editingBooking ? (
+            <>
+              <button
+                type="button"
+                disabled={savingBooking}
+                onClick={cancelBookingEdit}
+                className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={savingBooking}
+                onClick={() => void saveBookingDetails()}
+                className="min-h-11 rounded-xl bg-sky-700 px-3 text-sm font-semibold text-white transition hover:bg-sky-800 disabled:cursor-wait disabled:opacity-60"
+              >
+                {savingBooking ? "Saving..." : "Save changes"}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={onClose}
+                className="min-h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => void onDelete(booking.id)}
+                className="min-h-10 rounded-lg border border-rose-200 bg-white px-3 text-sm font-semibold text-rose-700 transition hover:border-rose-300 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 focus-visible:ring-offset-2"
+              >
+                Delete booking
+              </button>
+            </>
+          )}
         </footer>
       </aside>
     </div>
