@@ -5,6 +5,7 @@ import {
 } from "@/app/lib/capacity-release";
 import { pruneExpiredAuthRateLimits } from "@/app/lib/auth-rate-limit";
 import { pruneEmailVerificationTokens } from "@/app/lib/customer-email-verification";
+import { prunePasswordResetTokens } from "@/app/lib/customer-password-reset";
 
 /**
  * Internal cron: soft-release completed capacity after window_end.
@@ -50,6 +51,7 @@ export async function GET(req: Request) {
     const result = await releaseExpiredCompletedCapacity({ source: "cron" });
     let rateLimitRowsPruned = 0;
     let verificationTokenRowsPruned = 0;
+    let passwordResetTokenRowsPruned = 0;
     try {
       rateLimitRowsPruned = await pruneExpiredAuthRateLimits();
     } catch {
@@ -61,11 +63,17 @@ export async function GET(req: Request) {
     } catch {
       console.error("Email verification token cleanup failed.");
     }
+    try {
+      passwordResetTokenRowsPruned = await prunePasswordResetTokens();
+    } catch {
+      console.error("Password reset token cleanup failed.");
+    }
     return NextResponse.json({
       ok: true,
       released: result.released,
       rateLimitRowsPruned,
       verificationTokenRowsPruned,
+      passwordResetTokenRowsPruned,
     });
   } catch (error) {
     console.error("Capacity release cron failed");

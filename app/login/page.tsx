@@ -13,6 +13,7 @@ type LoginPageProps = {
     error?: string;
     registered?: string;
     verified?: string;
+    passwordReset?: string;
   }>;
 };
 
@@ -30,6 +31,7 @@ export default async function LoginPage({
   const errorKey = params.error ?? "";
   const registered = params.registered === "1";
   const verified = params.verified === "1";
+  const passwordReset = params.passwordReset === "1";
 
   const errorMessage =
     errorKey === "Configuration"
@@ -248,7 +250,18 @@ export default async function LoginPage({
                 </p>
               ) : null}
 
+              {passwordReset ? (
+                <p role="status" className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+                  Password updated successfully. Sign in with your new password.
+                </p>
+              ) : null}
+
               <CredentialsLoginForm />
+              <p className="mt-3 text-right text-sm">
+                <Link href="/forgot-password" className="font-medium text-sky-700 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">
+                  Forgot password?
+                </Link>
+              </p>
 
               <div className="mt-7 flex items-center gap-4">
                 <div className="h-px flex-1 bg-slate-300/70" />

@@ -75,6 +75,12 @@ describe("authentication rate-limit key privacy", () => {
       emailIpLimit: 3,
       networkLimit: 10,
     });
+    assert.deepEqual(AUTH_RATE_LIMIT_POLICIES.password_reset_request, {
+      windowSeconds: 3600,
+      cooldownSeconds: 3600,
+      emailIpLimit: 3,
+      networkLimit: 10,
+    });
   });
 });
 
@@ -127,5 +133,40 @@ describe("atomic fixed-window throttle behavior", () => {
     assert.equal(attempts.filter(Boolean).length, 5);
     assert.equal(attempts.filter((allowed) => !allowed).length, 35);
     assert.equal(bucket.state?.attemptCount, 6);
+  });
+
+  it("applies password-reset email/IP and trusted-network limits independently", () => {
+    const policy = AUTH_RATE_LIMIT_POLICIES.password_reset_request;
+    let emailBucket: AuthRateLimitState | null = null;
+    for (let index = 0; index < policy.emailIpLimit; index += 1) {
+      const result = applyFixedWindowAttempt(emailBucket, 20_000 + index, {
+        windowMs: policy.windowSeconds * 1000,
+        cooldownMs: policy.cooldownSeconds * 1000,
+        limit: policy.emailIpLimit,
+      });
+      assert.equal(result.allowed, true);
+      emailBucket = result.state;
+    }
+    assert.equal(applyFixedWindowAttempt(emailBucket, 20_100, {
+      windowMs: policy.windowSeconds * 1000,
+      cooldownMs: policy.cooldownSeconds * 1000,
+      limit: policy.emailIpLimit,
+    }).allowed, false);
+
+    let networkBucket: AuthRateLimitState | null = null;
+    for (let index = 0; index < policy.networkLimit; index += 1) {
+      const result = applyFixedWindowAttempt(networkBucket, 30_000 + index, {
+        windowMs: policy.windowSeconds * 1000,
+        cooldownMs: policy.cooldownSeconds * 1000,
+        limit: policy.networkLimit,
+      });
+      assert.equal(result.allowed, true);
+      networkBucket = result.state;
+    }
+    assert.equal(applyFixedWindowAttempt(networkBucket, 30_100, {
+      windowMs: policy.windowSeconds * 1000,
+      cooldownMs: policy.cooldownSeconds * 1000,
+      limit: policy.networkLimit,
+    }).allowed, false);
   });
 });
