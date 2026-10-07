@@ -17,8 +17,17 @@ import {
   ADMIN_AUTH_PORTAL_VALUE,
 } from "@/app/lib/admin-auth-pure";
 import { cookies } from "next/headers";
-import { authenticateCustomerCredentials } from "@/app/lib/customer-credentials";
-import { credentialsTokenIdentity } from "@/app/lib/customer-credentials-pure";
+import {
+  authenticateCustomerCredentials,
+  findCustomerCredentialAuthVersion,
+} from "@/app/lib/customer-credentials";
+import {
+  credentialsTokenIdentity,
+  customerIdForSession,
+  googleTokenIdentity,
+  hasValidCustomerSessionProvenance,
+  type CustomerAuthMethod,
+} from "@/app/lib/customer-credentials-pure";
 import {
   AuthRateLimitUnavailableError,
   checkAuthRateLimit,
@@ -51,6 +60,8 @@ declare module "next-auth" {
 
 type AppJWT = JWT & {
   customerId?: string;
+  authMethod?: CustomerAuthMethod;
+  authVersion?: number;
   staffId?: string;
   isAdmin?: boolean;
 };
@@ -255,9 +266,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: user.email,
             name: user.name,
             image: user.image,
+            authVersion: (user as typeof user & { authVersion?: number }).authVersion,
           }),
         );
         delete appToken.staffId;
+      }
+
+      if (account?.provider === "google") {
+        Object.assign(appToken, googleTokenIdentity());
+        delete appToken.authVersion;
       }
 
       if (account?.provider === "google" && profile?.email) {
@@ -344,6 +361,38 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       }
 
+      // Legacy JWTs have no reliable provider provenance. Require a fresh login
+      // rather than guessing whether the old session came from Google or Credentials.
+      if (appToken.customerId && !account) {
+        if (appToken.authMethod === "credentials") {
+          try {
+            const currentAuthVersion = await findCustomerCredentialAuthVersion(appToken.customerId);
+            if (!hasValidCustomerSessionProvenance({
+              customerId: appToken.customerId,
+              authMethod: appToken.authMethod,
+              authVersion: appToken.authVersion,
+              currentAuthVersion,
+            })) {
+              delete appToken.customerId;
+              delete appToken.authVersion;
+            }
+          } catch {
+            // Fail closed for customer access when the authoritative version is unavailable.
+            delete appToken.customerId;
+            delete appToken.authVersion;
+          }
+        } else if (appToken.authMethod !== "google") {
+          delete appToken.customerId;
+          delete appToken.authVersion;
+        }
+      }
+
+      if (account?.provider === "credentials" &&
+          !Number.isSafeInteger(appToken.authVersion)) {
+        delete appToken.customerId;
+        delete appToken.authVersion;
+      }
+
       // On subsequent requests, drop staffId if staff was deactivated.
       if (appToken.staffId && !account) {
         try {
@@ -378,10 +427,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     async session({ session, token }) {
       const appToken = token as AppJWT;
       if (session.user) {
-        session.user.id =
-          typeof appToken.customerId === "string"
-            ? appToken.customerId
-            : "";
+        session.user.id = customerIdForSession(appToken);
         if (typeof appToken.email === "string") {
           session.user.email = appToken.email;
         }

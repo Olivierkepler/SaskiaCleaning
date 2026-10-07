@@ -91,6 +91,7 @@ export type AuthenticatedCredentialCustomer = {
   name: string | null;
   image: string | null;
   emailVerifiedAt: Date | string | null;
+  authVersion: number;
 };
 
 export async function authenticateCustomerCredentials(
@@ -100,7 +101,7 @@ export async function authenticateCustomerCredentials(
     rawCredentials,
     async (email) => {
       const rows = await sql`
-        SELECT c.id, c.email, c.name, c.image, c.email_verified, cc.password_hash
+        SELECT c.id, c.email, c.name, c.image, c.email_verified, cc.password_hash, cc.auth_version
         FROM customers c
         LEFT JOIN customer_credentials cc ON cc.customer_id = c.id
         WHERE c.email = ${normalizeCustomerEmail(email)}
@@ -114,6 +115,7 @@ export async function authenticateCustomerCredentials(
             image: string | null;
             email_verified: Date | string | null;
             password_hash: string | null;
+            auth_version: number;
           }
         | undefined;
       return row
@@ -124,11 +126,23 @@ export async function authenticateCustomerCredentials(
             image: row.image,
             passwordHash: row.password_hash,
             emailVerifiedAt: row.email_verified,
+            authVersion: row.auth_version,
           }
         : null;
     },
     verifyCustomerPassword,
   );
+}
+
+export async function findCustomerCredentialAuthVersion(customerId: string): Promise<number | null> {
+  const rows = await sql`
+    SELECT auth_version
+    FROM customer_credentials
+    WHERE customer_id = ${customerId}
+    LIMIT 1
+  `;
+  const row = rows[0] as { auth_version: number } | undefined;
+  return row?.auth_version ?? null;
 }
 
 export const currentLegalAcceptanceVersions = Object.freeze({

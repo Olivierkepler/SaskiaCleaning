@@ -117,6 +117,7 @@ export type CredentialRecord = {
   image: string | null;
   passwordHash: string | null;
   emailVerifiedAt: Date | string | null;
+  authVersion: number;
 };
 
 export async function authenticateCredentialInput(
@@ -140,6 +141,7 @@ export async function authenticateCredentialInput(
     name: record.name,
     image: record.image,
     emailVerifiedAt: record.emailVerifiedAt ?? null,
+    authVersion: record.authVersion,
   };
 }
 
@@ -148,11 +150,47 @@ export function credentialsTokenIdentity(user: {
   email?: string | null;
   name?: string | null;
   image?: string | null;
+  authVersion?: number;
 }) {
   return {
     customerId: user.id,
     email: user.email ?? undefined,
     name: user.name ?? null,
     picture: user.image ?? null,
+    authMethod: "credentials" as const,
+    authVersion: user.authVersion,
   };
+}
+
+export function googleTokenIdentity() {
+  return { authMethod: "google" as const };
+}
+
+export type CustomerAuthMethod = "google" | "credentials";
+
+export function hasValidCustomerSessionProvenance(input: {
+  customerId: unknown;
+  authMethod: unknown;
+  authVersion?: unknown;
+  currentAuthVersion?: unknown;
+}): boolean {
+  if (typeof input.customerId !== "string" || input.customerId.length === 0) return false;
+  if (input.authMethod === "google") return true;
+  if (input.authMethod !== "credentials") return false;
+  return Number.isSafeInteger(input.authVersion) &&
+    Number.isSafeInteger(input.currentAuthVersion) &&
+    input.authVersion === input.currentAuthVersion;
+}
+
+export function customerIdForSession(input: {
+  customerId?: unknown;
+  authMethod?: unknown;
+  authVersion?: unknown;
+}): string {
+  if (typeof input.customerId !== "string" || !input.customerId) return "";
+  if (input.authMethod === "google") return input.customerId;
+  if (input.authMethod === "credentials" && Number.isSafeInteger(input.authVersion)) {
+    return input.customerId;
+  }
+  return "";
 }

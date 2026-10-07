@@ -1,9 +1,13 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
+import { readFile } from "node:fs/promises";
 import {
   authenticateCredentialInput,
   credentialsSchema,
   credentialsTokenIdentity,
+  customerIdForSession,
+  googleTokenIdentity,
+  hasValidCustomerSessionProvenance,
   isUniqueConstraintViolation,
   PRIVACY_DOCUMENT_VERSION,
   registerCustomer,
@@ -152,6 +156,7 @@ describe("Credentials authentication", () => {
     image: null,
     passwordHash: "stored-hash",
     emailVerifiedAt: null,
+    authVersion: 1,
   };
 
   it("normalizes email and returns safe customer identity on correct password", async () => {
@@ -162,7 +167,7 @@ describe("Credentials authentication", () => {
       async (password, hash) => password === "correct horse battery staple" && hash === "stored-hash",
     );
     assert.equal(lookedUpEmail, "ada@example.com");
-    assert.deepEqual(result, { id: "customer-a", email: "ada@example.com", name: "Ada Lovelace", image: null, emailVerifiedAt: null });
+    assert.deepEqual(result, { id: "customer-a", email: "ada@example.com", name: "Ada Lovelace", image: null, emailVerifiedAt: null, authVersion: 1 });
     assert.equal("passwordHash" in (result ?? {}), false);
   });
 
@@ -221,6 +226,7 @@ describe("Credentials authentication", () => {
       email: "ada@example.com",
       name: "Ada Lovelace",
       image: null,
+      authVersion: 7,
       password: "never included",
       passwordHash: "never included",
     } as { id: string; email?: string | null; name?: string | null; image?: string | null });
@@ -229,9 +235,61 @@ describe("Credentials authentication", () => {
       email: "ada@example.com",
       name: "Ada Lovelace",
       picture: null,
+      authMethod: "credentials",
+      authVersion: 7,
     });
     assert.equal("password" in identity, false);
     assert.equal("passwordHash" in identity, false);
+  });
+
+  it("marks Credentials JWT identity with its current auth version and rejects stale or missing versions", () => {
+    const identity = credentialsTokenIdentity({ id: "customer-a", authVersion: 4 });
+    assert.equal(identity.customerId, "customer-a");
+    assert.equal(identity.authMethod, "credentials");
+    assert.equal(identity.authVersion, 4);
+    assert.equal(hasValidCustomerSessionProvenance({
+      customerId: "customer-a", authMethod: "credentials", authVersion: 4, currentAuthVersion: 4,
+    }), true);
+    assert.equal(hasValidCustomerSessionProvenance({
+      customerId: "customer-a", authMethod: "credentials", authVersion: 3, currentAuthVersion: 4,
+    }), false);
+    assert.equal(hasValidCustomerSessionProvenance({
+      customerId: "customer-a", authMethod: "credentials", currentAuthVersion: 4,
+    }), false);
+    assert.equal("password" in identity, false);
+    assert.equal("passwordHash" in identity, false);
+  });
+
+  it("accepts Google sessions without an auth version and rejects legacy or unknown provenance", () => {
+    const identity = googleTokenIdentity();
+    assert.deepEqual(identity, { authMethod: "google" });
+    assert.equal(hasValidCustomerSessionProvenance({
+      customerId: "google-customer", ...identity,
+    }), true);
+    assert.equal(customerIdForSession({ customerId: "google-customer", ...identity }), "google-customer");
+    assert.equal(customerIdForSession({ customerId: "legacy-customer" }), "");
+    assert.equal(customerIdForSession({ customerId: "unknown-customer", authMethod: "magic" }), "");
+    assert.equal(hasValidCustomerSessionProvenance({
+      customerId: "unknown-customer", authMethod: "magic", authVersion: 1, currentAuthVersion: 1,
+    }), false);
+  });
+
+  it("keeps auth provenance internal while preserving session.user.id resolution", () => {
+    const credentialsToken = credentialsTokenIdentity({ id: "customer-a", authVersion: 2 });
+    const publicSession = { user: { id: customerIdForSession(credentialsToken) } };
+    assert.deepEqual(publicSession, { user: { id: "customer-a" } });
+    assert.equal(customerIdForSession({ customerId: "customer-a" }), "");
+    assert.equal(customerIdForSession({ customerId: "customer-a", authMethod: "unknown" }), "");
+    assert.equal(customerIdForSession({ customerId: "google-customer", authMethod: "google" }), "google-customer");
+    assert.equal("authMethod" in publicSession.user, false);
+    assert.equal("authVersion" in publicSession.user, false);
+  });
+
+  it("adds auth_version with a safe default without changing Google-only customer rows", async () => {
+    const migration = await readFile("migrations/027_customer_credentials_auth_version.sql", "utf8");
+    assert.match(migration, /ADD COLUMN IF NOT EXISTS auth_version INTEGER NOT NULL DEFAULT 1/);
+    assert.match(migration, /CHECK \(auth_version >= 1\)/);
+    assert.doesNotMatch(migration, /UPDATE customers|DELETE FROM customers|customer_oauth_accounts/i);
   });
 });
 
