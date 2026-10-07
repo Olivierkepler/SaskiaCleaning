@@ -686,17 +686,17 @@ export default function DashboardTable({
 
   return (
     <section id="booking-workspace" className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           { label: "Total bookings", value: metrics.total, note: "All requests", icon: ClipboardList, tone: "bg-sky-50 text-sky-700" },
           { label: "Today’s bookings", value: metrics.todayCount, note: "Received today", icon: CalendarDays, tone: "bg-emerald-50 text-emerald-700" },
           { label: "Needs action", value: metrics.needsAction, note: "New requests", icon: CalendarDays, tone: "bg-rose-50 text-rose-700" },
           { label: "Unassigned", value: metrics.unassigned, note: "Awaiting a cleaner", icon: UserRoundX, tone: "bg-amber-50 text-amber-700" },
         ].map(({ label, value, note, icon: Icon, tone }) => (
-          <article key={label} className="rounded-[17px] border border-slate-200/80 bg-white p-4 shadow-[0_1px_6px_rgba(15,23,42,0.025)]">
+          <article key={label} className="min-w-0 rounded-[17px] border border-slate-200/80 bg-white p-4 shadow-[0_1px_6px_rgba(15,23,42,0.025)]">
             <div className="flex items-start justify-between gap-2.5">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-slate-500">{label}</p>
+              <div className="min-w-0">
+                <p className="break-words text-[10px] font-semibold uppercase tracking-[0.13em] text-slate-500">{label}</p>
                 <p className="mt-1.5 text-[26px] font-semibold leading-7 tracking-tight text-slate-950">{value}</p>
                 <p className="mt-1 text-[11px] text-slate-500">{note}</p>
               </div>
@@ -717,9 +717,9 @@ export default function DashboardTable({
         <>
           {unseenCount > 0 && (
             <div className="flex flex-col gap-2.5 border-b border-sky-100 bg-sky-50/60 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-              <div className="flex items-start gap-3">
+              <div className="flex min-w-0 items-start gap-3">
                 <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-sky-100/80 text-sky-700"><CalendarDays aria-hidden="true" className="size-4" /></span>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-semibold text-slate-900">{unseenCount} new booking request{unseenCount === 1 ? "" : "s"} need review.</p>
                   <p className="mt-0.5 text-xs text-slate-600">These requests have not been reviewed yet.</p>
                 </div>
@@ -767,7 +767,7 @@ export default function DashboardTable({
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[1fr_1fr_1fr_auto]">
+            <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-[1fr_1fr_1fr_auto]">
               <div>
                 <label
                   htmlFor="booking-sort"
@@ -1005,7 +1005,7 @@ export default function DashboardTable({
           </div>
 
           {/* Mobile cards */}
-          <div className="grid gap-4 p-4 md:hidden">
+          <div className="grid min-w-0 gap-4 p-4 md:hidden">
             {paginatedBookings.map((booking) => {
               const bookingStatus = getBookingStatus(booking.status);
               const isUnseen = !booking.seen;
@@ -1023,7 +1023,7 @@ export default function DashboardTable({
                 }`}
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <button
                         type="button"

@@ -106,14 +106,14 @@ export default function Navbar({
   };
 
   return (
-    <nav className={`relative z-30 ${mode === "utility" ? "mb-4 min-h-16 rounded-xl border border-slate-200/80 bg-white px-4 py-2.5 shadow-[0_1px_5px_rgba(15,23,42,0.025)] sm:px-5" : "mb-6 rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-slate-200"}`}>
-      <div className={`flex gap-3 ${mode === "utility" ? "min-h-[42px] items-center justify-between" : "flex-col sm:flex-row sm:items-center sm:justify-between"}`}>
-        <div>
-          <h2 className={`font-semibold leading-5 text-slate-900 ${mode === "utility" ? "text-[13px]" : "text-lg font-bold"}`}>{mode === "utility" ? "Operations workspace" : "Dashboard"}</h2>
+    <nav className={`relative z-30 w-full min-w-0 ${mode === "utility" ? "mb-4 min-h-14 rounded-xl border border-slate-200/80 bg-white px-3 py-2 shadow-[0_1px_5px_rgba(15,23,42,0.025)] sm:min-h-16 sm:px-5 sm:py-2.5" : "mb-6 rounded-2xl bg-white px-5 py-4 shadow-sm ring-1 ring-slate-200"}`}>
+      <div className={`flex min-w-0 gap-3 ${mode === "utility" ? "min-h-10 items-center justify-between" : "flex-col sm:flex-row sm:items-center sm:justify-between"}`}>
+        <div className={mode === "utility" ? "min-w-0" : ""}>
+          <h2 className={`font-semibold leading-5 text-slate-900 ${mode === "utility" ? "truncate text-xs sm:text-[13px]" : "text-lg font-bold"}`}>{mode === "utility" ? "Operations workspace" : "Dashboard"}</h2>
           <p className="text-[11px] leading-4 text-slate-500">{mode === "utility" ? "Saskia Cleaning" : "Manage booking requests"}</p>
         </div>
 
-        <div className={`flex items-center gap-2 ${mode === "utility" ? "shrink-0" : "flex-wrap"}`}>
+        <div className={`flex min-w-0 items-center gap-2 ${mode === "utility" ? "shrink-0" : "flex-wrap"}`}>
           {mode === "navigation" ? <div className="contents">
           <a
             href="/dashboard"

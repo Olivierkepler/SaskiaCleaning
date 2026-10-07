@@ -94,15 +94,15 @@ export default async function DashboardPage({
 
   return (
     <main className="min-h-screen bg-[#f5f7fb]">
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen min-w-0 flex-col xl:flex-row">
         <AdminSidebar
           unseenCount={unseenCount}
           pendingChangeRequestCount={pendingChangeRequestCount}
           opsNeedsAttentionCount={opsNeedsAttentionCount}
           isOwner={admin.role === "OWNER"}
         />
-        <div className="min-w-0 flex-1">
-          <div className="mx-auto w-full max-w-[1680px] px-4 py-4 sm:px-6 sm:py-6 xl:px-8">
+        <div className="min-w-0 w-full flex-1">
+          <div className="mx-auto w-full max-w-[1680px] min-w-0 px-4 py-4 sm:px-5 sm:py-6 lg:px-6 xl:px-8">
             <Navbar
               unseenCount={unseenCount}
               unseenBookings={unseenBookings}
@@ -114,7 +114,7 @@ export default async function DashboardPage({
             <header id="overview" className="mb-3 flex flex-col gap-2.5 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.15em] text-sky-700">Booking workspace</p>
-                <h1 className="text-[28px] font-semibold leading-8 tracking-tight text-slate-950">
+                <h1 className="text-3xl font-semibold leading-9 tracking-tight text-slate-950 sm:text-4xl">
                   Booking Requests
                 </h1>
                 <p className="mt-1.5 text-sm text-slate-500">
