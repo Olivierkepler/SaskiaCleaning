@@ -3,7 +3,23 @@ import { z } from "zod";
 import { customerPasswordSchema } from "@/app/lib/customer-credentials-pure";
 
 export const GOOGLE_LINK_INTENT_TTL_SECONDS = 10 * 60;
+export const CUSTOMER_AUTH_LINK_INTENT_CONSUMED_RETENTION_DAYS = 30;
 export const GOOGLE_LINK_INTENT_COOKIE = "saskia_google_link_intent";
+
+export function isCustomerAuthLinkIntentPrunable(input: {
+  expiresAt: Date | string;
+  consumedAt: Date | string | null;
+  now: Date;
+}): boolean {
+  const expiresAt = new Date(input.expiresAt).getTime();
+  const consumedAt = input.consumedAt === null
+    ? null
+    : new Date(input.consumedAt).getTime();
+  const oldConsumedBefore = input.now.getTime() - CUSTOMER_AUTH_LINK_INTENT_CONSUMED_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+  return expiresAt <= input.now.getTime() ||
+    (consumedAt !== null && consumedAt <= oldConsumedBefore);
+}
 
 export type AddPasswordResult =
   | { ok: true }

@@ -5,6 +5,7 @@ import { hashCustomerPassword } from "@/app/lib/customer-password";
 import { normalizeCustomerEmail } from "@/app/lib/customer-auth-pure";
 import {
   addPasswordSchema,
+  CUSTOMER_AUTH_LINK_INTENT_CONSUMED_RETENTION_DAYS,
   generateGoogleLinkNonce,
   hashGoogleLinkNonce,
   GOOGLE_LINK_INTENT_TTL_SECONDS,
@@ -136,4 +137,25 @@ export async function completeGoogleLinkIntent(input: {
     ) AS linked
   `;
   return Boolean((rows[0] as { linked?: boolean } | undefined)?.linked);
+}
+
+export async function pruneCustomerAuthLinkIntents(): Promise<number> {
+  const rows = await sql`
+    WITH eligible AS (
+      SELECT id
+      FROM customer_auth_link_intents
+      WHERE expires_at <= now()
+         OR consumed_at <= now() - make_interval(days => ${CUSTOMER_AUTH_LINK_INTENT_CONSUMED_RETENTION_DAYS})
+      ORDER BY expires_at
+      LIMIT 5000
+      FOR UPDATE SKIP LOCKED
+    ), deleted AS (
+      DELETE FROM customer_auth_link_intents AS intents
+      USING eligible
+      WHERE intents.id = eligible.id
+      RETURNING 1
+    )
+    SELECT count(*)::int AS deleted_count FROM deleted
+  `;
+  return Number((rows[0] as { deleted_count?: number } | undefined)?.deleted_count ?? 0);
 }

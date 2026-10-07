@@ -6,6 +6,7 @@ import {
 import { pruneExpiredAuthRateLimits } from "@/app/lib/auth-rate-limit";
 import { pruneEmailVerificationTokens } from "@/app/lib/customer-email-verification";
 import { prunePasswordResetTokens } from "@/app/lib/customer-password-reset";
+import { pruneCustomerAuthLinkIntents } from "@/app/lib/customer-auth-linking";
 
 /**
  * Internal cron: soft-release completed capacity after window_end.
@@ -52,6 +53,7 @@ export async function GET(req: Request) {
     let rateLimitRowsPruned = 0;
     let verificationTokenRowsPruned = 0;
     let passwordResetTokenRowsPruned = 0;
+    let customerAuthLinkIntentRowsPruned = 0;
     try {
       rateLimitRowsPruned = await pruneExpiredAuthRateLimits();
     } catch {
@@ -68,12 +70,18 @@ export async function GET(req: Request) {
     } catch {
       console.error("Password reset token cleanup failed.");
     }
+    try {
+      customerAuthLinkIntentRowsPruned = await pruneCustomerAuthLinkIntents();
+    } catch {
+      console.error("Customer auth link intent cleanup failed.");
+    }
     return NextResponse.json({
       ok: true,
       released: result.released,
       rateLimitRowsPruned,
       verificationTokenRowsPruned,
       passwordResetTokenRowsPruned,
+      customerAuthLinkIntentRowsPruned,
     });
   } catch (error) {
     console.error("Capacity release cron failed");

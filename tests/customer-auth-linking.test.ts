@@ -6,10 +6,12 @@ import {
   authSessionCookiePairsFromHeader,
   canAddPassword,
   canLinkGoogleIdentity,
+  CUSTOMER_AUTH_LINK_INTENT_CONSUMED_RETENTION_DAYS,
   generateGoogleLinkNonce,
   GOOGLE_LINK_INTENT_TTL_SECONDS,
   hashAuthSessionCookies,
   hashGoogleLinkNonce,
+  isCustomerAuthLinkIntentPrunable,
   isTrustedAccountActionOrigin,
 } from "../app/lib/customer-auth-linking-pure";
 
@@ -33,6 +35,45 @@ describe("explicit Google and password linking", () => {
     assert.match(digest, /^[a-f0-9]{64}$/);
     assert.notEqual(digest, nonce);
     assert.equal(GOOGLE_LINK_INTENT_TTL_SECONDS, 600);
+  });
+
+  it("prunes expired intents and consumed intents older than 30 days only", () => {
+    const now = new Date("2026-10-07T12:00:00.000Z");
+    const recent = new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000);
+    const old = new Date(now.getTime() - (CUSTOMER_AUTH_LINK_INTENT_CONSUMED_RETENTION_DAYS + 1) * 24 * 60 * 60 * 1000);
+
+    assert.equal(isCustomerAuthLinkIntentPrunable({
+      expiresAt: new Date(now.getTime() - 1),
+      consumedAt: null,
+      now,
+    }), true);
+    assert.equal(isCustomerAuthLinkIntentPrunable({
+      expiresAt: new Date(now.getTime() + 60_000),
+      consumedAt: old,
+      now,
+    }), true);
+    assert.equal(isCustomerAuthLinkIntentPrunable({
+      expiresAt: new Date(now.getTime() + 60_000),
+      consumedAt: null,
+      now,
+    }), false);
+    assert.equal(isCustomerAuthLinkIntentPrunable({
+      expiresAt: new Date(now.getTime() + 60_000),
+      consumedAt: recent,
+      now,
+    }), false);
+  });
+
+  it("uses bounded, repeat-safe cleanup without touching active intents", async () => {
+    const implementation = await readFile("app/lib/customer-auth-linking.ts", "utf8");
+    const maintenance = await readFile("app/api/internal/release-expired-capacity/route.ts", "utf8");
+    assert.match(implementation, /export async function pruneCustomerAuthLinkIntents/);
+    assert.match(implementation, /expires_at <= now\(\)/);
+    assert.match(implementation, /consumed_at <= now\(\) - make_interval\(days => \$\{CUSTOMER_AUTH_LINK_INTENT_CONSUMED_RETENTION_DAYS\}\)/);
+    assert.match(implementation, /LIMIT 5000\s+FOR UPDATE SKIP LOCKED/);
+    assert.match(implementation, /DELETE FROM customer_auth_link_intents/);
+    assert.match(maintenance, /pruneCustomerAuthLinkIntents\(\)/);
+    assert.match(maintenance, /customerAuthLinkIntentRowsPruned/);
   });
 
   it("binds the intent to Auth.js session cookies without storing the raw cookie", () => {
