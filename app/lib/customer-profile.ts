@@ -3,6 +3,7 @@ import "server-only";
 import { sql } from "@/app/lib/db";
 import {
   MAX_CUSTOMER_ADDRESSES,
+  type AdminCustomerProfilePatch,
   normalizeProfileName,
   normalizeProfilePhone,
   validateCustomerAddressInput,
@@ -118,6 +119,25 @@ export async function updateCustomerProfile(
   }
 
   return { ok: true, profile: mapProfile(row) };
+}
+
+export async function updateAdminCustomerProfile(
+  customerId: string,
+  patch: AdminCustomerProfilePatch,
+): Promise<CustomerProfile | null> {
+  const updateName = patch.name !== undefined;
+  const updatePhone = patch.phone !== undefined;
+  const rows = await sql`
+    UPDATE customers
+    SET
+      name = CASE WHEN ${updateName} THEN ${patch.name ?? null} ELSE name END,
+      phone = CASE WHEN ${updatePhone} THEN ${patch.phone ?? null} ELSE phone END,
+      updated_at = now()
+    WHERE id = ${customerId}
+    RETURNING id, email, name, phone, image, email_verified, created_at, updated_at
+  `;
+  const row = rows[0] as Record<string, unknown> | undefined;
+  return row ? mapProfile(row) : null;
 }
 
 export async function listCustomerAddresses(

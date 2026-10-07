@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import {
   BOOKING_STATUS_BADGE_CLASS,
@@ -83,10 +84,29 @@ export default function BookingDetailDrawer({
   const previousFocusRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
   const [entered, setEntered] = useState(false);
+  const router = useRouter();
+  const [editingCustomer, setEditingCustomer] = useState(false);
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [savingCustomer, setSavingCustomer] = useState(false);
+  const [customerError, setCustomerError] = useState<string | null>(null);
+  const [customerSaved, setCustomerSaved] = useState(false);
+  const [profileOverride, setProfileOverride] = useState<{
+    id: string;
+    name: string | null;
+    phone: string | null;
+  } | null>(null);
 
   useEffect(() => {
     onCloseRef.current = onClose;
   }, [onClose]);
+
+  useEffect(() => {
+    setEditingCustomer(false);
+    setCustomerError(null);
+    setCustomerSaved(false);
+    setProfileOverride(null);
+  }, [booking?.id]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -143,6 +163,56 @@ export default function BookingDetailDrawer({
   if (!booking || !isOpen) return null;
 
   const isNew = !booking.seen;
+  const customerNameValue =
+    profileOverride?.id === booking.profile_customer_id
+      ? profileOverride.name ?? booking.name
+      : booking.profile_name ?? booking.name;
+  const customerPhoneValue =
+    profileOverride?.id === booking.profile_customer_id
+      ? profileOverride.phone
+      : booking.profile_phone ?? booking.mobile;
+  const customerEmailValue = booking.profile_email ?? booking.email;
+
+  const beginCustomerEdit = () => {
+    setCustomerName(customerNameValue);
+    setCustomerPhone(customerPhoneValue ?? "");
+    setCustomerError(null);
+    setCustomerSaved(false);
+    setEditingCustomer(true);
+  };
+
+  const saveCustomer = async () => {
+    if (!booking.profile_customer_id || savingCustomer) return;
+    setSavingCustomer(true);
+    setCustomerError(null);
+    try {
+      const response = await fetch(
+        `/api/dashboard/customers/${encodeURIComponent(booking.profile_customer_id)}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: customerName, phone: customerPhone }),
+        },
+      );
+      const result = (await response.json().catch(() => null)) as
+        | { profile?: { id: string; name: string | null; phone: string | null }; error?: string }
+        | null;
+      if (!response.ok || !result?.profile) {
+        setCustomerError(result?.error || "Customer details could not be saved. Try again.");
+        return;
+      }
+      setProfileOverride(result.profile);
+      setCustomerName(result.profile.name ?? "");
+      setCustomerPhone(result.profile.phone ?? "");
+      setEditingCustomer(false);
+      setCustomerSaved(true);
+      router.refresh();
+    } catch {
+      setCustomerError("Customer details could not be saved. Check your connection and try again.");
+    } finally {
+      setSavingCustomer(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[80]">
@@ -199,17 +269,96 @@ export default function BookingDetailDrawer({
 
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pb-3 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] sm:px-6">
           <DetailSection title="Customer">
-            <div className="space-y-3">
-              <DetailValue label="Name" valueClassName="font-semibold text-slate-900">
-                {booking.name}
-              </DetailValue>
-              <DetailValue label="Email" valueClassName="text-slate-600">
-                {booking.email}
-              </DetailValue>
-              <DetailValue label="Phone" valueClassName="text-slate-600">
-                {booking.mobile || "—"}
-              </DetailValue>
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <span className="text-xs text-slate-500">
+                {booking.profile_customer_id ? "Customer profile" : "Booking contact"}
+              </span>
+              {booking.profile_customer_id && !editingCustomer && (
+                <button
+                  type="button"
+                  onClick={beginCustomerEdit}
+                  className="min-h-10 rounded-lg px-3 text-sm font-semibold text-sky-700 transition hover:bg-sky-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
+                >
+                  Edit customer
+                </button>
+              )}
             </div>
+            {editingCustomer ? (
+              <div className="space-y-3">
+                <label className="block text-xs font-medium text-slate-600">
+                  Name
+                  <input
+                    autoComplete="name"
+                    maxLength={80}
+                    value={customerName}
+                    onChange={(event) => setCustomerName(event.target.value)}
+                    className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-base text-slate-900 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  />
+                </label>
+                <label className="block text-xs font-medium text-slate-600">
+                  Phone
+                  <input
+                    type="tel"
+                    autoComplete="tel"
+                    maxLength={30}
+                    value={customerPhone}
+                    onChange={(event) => setCustomerPhone(event.target.value)}
+                    className="mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-base text-slate-900 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+                  />
+                </label>
+                <DetailValue label="Email" valueClassName="text-slate-600">
+                  {customerEmailValue}
+                </DetailValue>
+                <p className="text-xs leading-5 text-slate-500">
+                  Email is managed separately because it is used for account authentication.
+                </p>
+                {customerError && (
+                  <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
+                    {customerError}
+                  </p>
+                )}
+                <div className="flex flex-wrap justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={savingCustomer}
+                    onClick={() => { setEditingCustomer(false); setCustomerError(null); }}
+                    className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    disabled={savingCustomer}
+                    onClick={() => void saveCustomer()}
+                    className="min-h-11 rounded-xl bg-sky-700 px-4 text-sm font-semibold text-white hover:bg-sky-800 disabled:cursor-wait disabled:opacity-60"
+                  >
+                    {savingCustomer ? "Saving..." : "Save changes"}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <DetailValue label="Name" valueClassName="font-semibold text-slate-900">
+                  {customerNameValue}
+                </DetailValue>
+                <DetailValue label="Email" valueClassName="text-slate-600">
+                  {customerEmailValue}
+                </DetailValue>
+                <DetailValue label="Phone" valueClassName="text-slate-600">
+                  {customerPhoneValue || "—"}
+                </DetailValue>
+                {customerSaved && (
+                  <p role="status" className="text-sm font-medium text-emerald-700">
+                    Customer profile updated.
+                  </p>
+                )}
+                {!booking.profile_customer_id && (
+                  <p className="text-xs leading-5 text-slate-500">
+                    Customer profile editing is unavailable for this booking.
+                  </p>
+                )}
+              </div>
+            )}
           </DetailSection>
 
           <DetailSection title="Appointment">

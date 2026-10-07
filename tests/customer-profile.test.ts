@@ -3,10 +3,12 @@ import { describe, it } from "node:test";
 import {
   MAX_CUSTOMER_ADDRESSES,
   buildBookingPrefillFromProfile,
+  executeAdminCustomerProfilePatch,
   formatAddressForBookingSnapshot,
   normalizeProfileName,
   normalizeProfilePhone,
   normalizeUsPostalCode,
+  parseAdminCustomerProfilePatch,
   validateCustomerAddressInput,
 } from "../app/lib/customer-profile-pure";
 
@@ -32,6 +34,104 @@ describe("profile field validation", () => {
     // Profile update API ignores email; validators only cover name/phone.
     assert.ok(normalizeProfileName("Ada").ok);
     assert.ok(normalizeProfilePhone("8573528554").ok);
+  });
+});
+
+describe("admin customer profile updates", () => {
+  it("normalizes allowed name and phone fields", () => {
+    assert.deepEqual(parseAdminCustomerProfilePatch({
+      name: "  Ada   Lovelace ",
+      phone: "(857) 352-8554",
+    }), {
+      ok: true,
+      patch: { name: "Ada Lovelace", phone: "(857) 352-8554" },
+    });
+  });
+
+  it("rejects empty names and invalid phones", () => {
+    assert.equal(parseAdminCustomerProfilePatch({ name: "   " }).ok, false);
+    assert.equal(parseAdminCustomerProfilePatch({ phone: "123" }).ok, false);
+    assert.deepEqual(parseAdminCustomerProfilePatch({ phone: " " }), {
+      ok: true,
+      patch: { phone: null },
+    });
+  });
+
+  it("rejects email, route identity, unknown, and authentication fields", () => {
+    for (const input of [
+      { email: "new@example.com" },
+      { customerId: "other-customer" },
+      { arbitraryColumn: "value" },
+      { password: "secret" },
+      { password_hash: "hash" },
+      { auth_version: 2 },
+      { email_verified: true },
+      { oauth_provider_id: "provider-id" },
+    ]) {
+      assert.equal(parseAdminCustomerProfilePatch(input).ok, false);
+    }
+  });
+
+  it("requires an admin before updating and rejects unauthorized requests", async () => {
+    let updateCalled = false;
+    const result = await executeAdminCustomerProfilePatch(
+      { name: "New Name" },
+      {
+        authorized: false,
+        update: async () => { updateCalled = true; return null; },
+      },
+    );
+    assert.equal(result.status, 401);
+    assert.equal(updateCalled, false);
+  });
+
+  it("updates an authorized profile and returns 404 for an unknown customer", async () => {
+    const updated = await executeAdminCustomerProfilePatch(
+      { name: "  New   Name ", phone: "617-555-0100" },
+      {
+        authorized: true,
+        update: async (patch) => ({ id: "customer-1", ...patch }),
+      },
+    );
+    assert.deepEqual(updated, {
+      status: 200,
+      profile: { id: "customer-1", name: "New Name", phone: "617-555-0100" },
+    });
+
+    const missing = await executeAdminCustomerProfilePatch(
+      { name: "New Name" },
+      { authorized: true, update: async () => null },
+    );
+    assert.equal(missing.status, 404);
+  });
+
+  it("leaves credentials, OAuth ownership, and historical booking snapshots intact", async () => {
+    const account = {
+      name: "Old Name",
+      phone: "6175550000",
+      password_hash: "unchanged-hash",
+      auth_version: 4,
+      email_verified: true,
+      oauth_customer_id: "customer-1",
+    };
+    const snapshot = { name: "Booking Name", mobile: "6175559999", email: "old@example.com" };
+    const result = await executeAdminCustomerProfilePatch(
+      { name: "Updated Name", phone: "617-555-1111" },
+      {
+        authorized: true,
+        update: async (patch) => ({ ...account, ...patch }),
+      },
+    );
+    assert.equal(result.status, 200);
+    assert.equal(account.password_hash, "unchanged-hash");
+    assert.equal(account.auth_version, 4);
+    assert.equal(account.email_verified, true);
+    assert.equal(account.oauth_customer_id, "customer-1");
+    assert.deepEqual(snapshot, {
+      name: "Booking Name",
+      mobile: "6175559999",
+      email: "old@example.com",
+    });
   });
 });
 

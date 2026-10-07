@@ -6,6 +6,62 @@ export const MAX_CUSTOMER_ADDRESSES = 10;
 export const MAX_PROFILE_NAME_LENGTH = 80;
 export const MAX_PHONE_LENGTH = 30;
 
+export type AdminCustomerProfilePatch = {
+  name?: string;
+  phone?: string | null;
+};
+
+export function parseAdminCustomerProfilePatch(
+  input: unknown,
+): { ok: true; patch: AdminCustomerProfilePatch } | { ok: false; error: string } {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return { ok: false, error: "Invalid profile data." };
+  }
+
+  const record = input as Record<string, unknown>;
+  const allowed = new Set(["name", "phone"]);
+  if (Object.keys(record).some((key) => !allowed.has(key))) {
+    return { ok: false, error: "Only name and phone can be updated here." };
+  }
+  if (Object.keys(record).length === 0) {
+    return { ok: false, error: "Enter a name or phone number to update." };
+  }
+
+  const patch: AdminCustomerProfilePatch = {};
+  if (Object.hasOwn(record, "name")) {
+    const result = normalizeProfileName(record.name);
+    if (!result.ok) return result;
+    if (!result.name) return { ok: false, error: "Name is required." };
+    patch.name = result.name;
+  }
+  if (Object.hasOwn(record, "phone")) {
+    const result = normalizeProfilePhone(record.phone);
+    if (!result.ok) return result;
+    patch.phone = result.phone;
+  }
+  return { ok: true, patch };
+}
+
+export async function executeAdminCustomerProfilePatch<T>(
+  input: unknown,
+  dependencies: {
+    authorized: boolean;
+    update: (patch: AdminCustomerProfilePatch) => Promise<T | null>;
+  },
+): Promise<
+  | { status: 200; profile: T }
+  | { status: 400 | 401 | 404; error: string }
+> {
+  if (!dependencies.authorized) {
+    return { status: 401, error: "Unauthorized" };
+  }
+  const parsed = parseAdminCustomerProfilePatch(input);
+  if (!parsed.ok) return { status: 400, error: parsed.error };
+  const profile = await dependencies.update(parsed.patch);
+  if (!profile) return { status: 404, error: "Customer profile not found." };
+  return { status: 200, profile };
+}
+
 export type CustomerAddressInput = {
   label: string;
   addressLine1: string;

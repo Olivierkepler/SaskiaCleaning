@@ -31,6 +31,10 @@ type BookingRequest = {
   notes: string | null;
   referral_code: string | null;
   friend_discount_amount: number | null;
+  profile_customer_id: string | null;
+  profile_name: string | null;
+  profile_email: string | null;
+  profile_phone: string | null;
 };
 
 type BookingRow = Omit<BookingRequest, "friend_discount_amount"> & {
@@ -58,9 +62,14 @@ export default async function DashboardPage({
   const bookings = await sql`
     SELECT
       br.*,
-      ref.friend_discount_amount AS referral_friend_discount_amount
+      ref.friend_discount_amount AS referral_friend_discount_amount,
+      c.id AS profile_customer_id,
+      c.name AS profile_name,
+      c.email AS profile_email,
+      c.phone AS profile_phone
     FROM booking_requests br
     LEFT JOIN referrals ref ON ref.booking_request_id = br.id
+    LEFT JOIN customers c ON c.id = br.customer_id
     ORDER BY br.created_at DESC;
   `;
 

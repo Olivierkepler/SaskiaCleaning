@@ -47,6 +47,10 @@ export type BookingRequest = {
   name: string;
   email: string;
   mobile: string | null;
+  profile_customer_id: string | null;
+  profile_name: string | null;
+  profile_email: string | null;
+  profile_phone: string | null;
   bedrooms: number;
   bathrooms: number;
   status: BookingStatus;
@@ -359,9 +363,9 @@ export default function DashboardTable({
 
         const matchesSearch =
           String(booking.id).includes(query) ||
-          booking.name.toLowerCase().includes(query) ||
-          booking.email.toLowerCase().includes(query) ||
-          (booking.mobile?.toLowerCase().includes(query) ?? false) ||
+          (booking.profile_name ?? booking.name).toLowerCase().includes(query) ||
+          (booking.profile_email ?? booking.email).toLowerCase().includes(query) ||
+          ((booking.profile_phone ?? booking.mobile)?.toLowerCase().includes(query) ?? false) ||
           (booking.service?.toLowerCase().includes(query) ?? false) ||
           (booking.frequency?.toLowerCase().includes(query) ?? false) ||
           (booking.location?.toLowerCase().includes(query) ?? false) ||
@@ -919,7 +923,7 @@ export default function DashboardTable({
                           onClick={() => setSelectedBookingId(booking.id)}
                           className="truncate text-left transition hover:text-sky-700 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                         >
-                          {booking.name}
+                          {booking.profile_name ?? booking.name}
                         </button>
                         {isUnseen && (
                           <span className="shrink-0 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-sky-800">
@@ -927,8 +931,8 @@ export default function DashboardTable({
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 truncate text-xs text-slate-600" title={booking.email}>{booking.email}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">{booking.mobile || "—"}</p>
+                      <p className="mt-1 truncate text-xs text-slate-600" title={booking.profile_email ?? booking.email}>{booking.profile_email ?? booking.email}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{(booking.profile_phone ?? booking.mobile) || "—"}</p>
                     </td>
                     <td className="p-4 text-slate-700">
                       <p className="font-medium text-slate-800">{booking.service || "—"}</p>
@@ -1030,7 +1034,7 @@ export default function DashboardTable({
                         onClick={() => setSelectedBookingId(booking.id)}
                         className="text-left text-lg font-bold text-slate-900 transition hover:text-sky-700 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
                       >
-                        {booking.name}
+                        {booking.profile_name ?? booking.name}
                       </button>
                       {isUnseen && (
                         <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-blue-700">
@@ -1039,7 +1043,7 @@ export default function DashboardTable({
                       )}
                     </div>
                     <p className="break-all text-sm text-slate-500">
-                      {booking.email}
+                      {booking.profile_email ?? booking.email}
                     </p>
                     {(booking.service || booking.frequency) && (
                       <p className="mt-1 text-sm font-medium text-sky-700">
@@ -1105,7 +1109,7 @@ export default function DashboardTable({
                   <div className="flex justify-between gap-4">
                     <span className="text-slate-500">Mobile</span>
                     <span className="font-medium text-slate-800">
-                      {booking.mobile || "—"}
+                      {(booking.profile_phone ?? booking.mobile) || "—"}
                     </span>
                   </div>
 
