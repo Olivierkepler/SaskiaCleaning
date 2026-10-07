@@ -221,18 +221,7 @@ export default function LocationMapSection() {
               </a>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-white px-5 py-4 text-sm sm:px-6">
-              <span className="inline-flex items-center gap-2 font-medium text-slate-600">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
-                Serving Boston and nearby communities
-              </span>
-              <a
-                href="tel:+18573528554"
-                className="font-bold text-sky-700 transition hover:text-sky-800"
-              >
-                857-352-8554
-              </a>
-            </div>
+
           </motion.div>
         </motion.div>
       </div>
