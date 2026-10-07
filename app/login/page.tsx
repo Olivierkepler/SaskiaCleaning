@@ -203,11 +203,11 @@ export default async function LoginPage({
             {/* Login card */}
             <div
               className="
-                rounded-[28px]
-                bg-[#ECF0F3]/88
+                rounded-[18px]
+                bg-[#ECF0F3]/50
                 p-6
                 backdrop-blur-[2px]
-                shadow-[10px_10px_24px_rgba(163,177,198,0.40),-10px_-10px_24px_rgba(255,255,255,0.95)]
+                shadow-[6px_6px_16px_rgba(163,177,198,0.30),-6px_-6px_16px_rgba(255,255,255,0.90)]
                 sm:p-8
               "
             >
