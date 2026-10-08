@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   STAFF_AUTH_PORTAL_COOKIE,
   canRetainExistingAssignment,
+  canReceiveCleanerAssignment,
   canStaffTransitionStatus,
   cleanerPromotionHasAssignments,
   expectedAssignmentMatches,
@@ -45,6 +46,15 @@ describe("staff field validation", () => {
 });
 
 describe("assignment eligibility and stale edit safeguards", () => {
+  it("allows assignment only for open booking statuses", () => {
+    for (const status of ["new", "contacted", "scheduled"]) {
+      assert.equal(canReceiveCleanerAssignment(status), true);
+    }
+    for (const status of ["in_progress", "completed", "cancelled", "unknown", ""]) {
+      assert.equal(canReceiveCleanerAssignment(status), false);
+    }
+  });
+
   it("allows only active cleaners to receive assignments", () => {
     assert.equal(isAssignableCleaner({ role: "cleaner", isActive: true }), true);
     assert.equal(isAssignableCleaner({ role: "manager", isActive: true }), false);

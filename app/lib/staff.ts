@@ -5,6 +5,7 @@ import { deferSchedulingAfterCommit } from "@/app/lib/db";
 import { withSchedulingTransaction, withSchedulingSavepoint } from "@/app/lib/scheduling-transaction";
 import {
   canRetainExistingAssignment,
+  canReceiveCleanerAssignment,
   formatStaffRole,
   cleanerPromotionHasAssignments,
   expectedAssignmentMatches,
@@ -790,6 +791,7 @@ export async function listEligibleStaffForBooking(bookingId: number): Promise<
       }
     | undefined;
   if (!booking) return [];
+  if (!canReceiveCleanerAssignment(String(booking.status))) return [];
 
   const dateOnly = parseBookingDateOnly(booking.booking_date);
   const time = parseBookingTime(
@@ -903,8 +905,12 @@ export async function assignStaffToBooking(input: {
       status: 409,
     };
   }
-  if (String(booking.status) === "cancelled") {
-    return { ok: false, error: "Cannot assign a cancelled booking.", status: 400 };
+  if (!canReceiveCleanerAssignment(String(booking.status))) {
+    return {
+      ok: false,
+      error: "Assignments can only be changed for new, contacted, or scheduled bookings.",
+      status: 409,
+    };
   }
 
   const dateOnly = parseBookingDateOnly(

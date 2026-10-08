@@ -20,6 +20,17 @@ export function isAssignableCleaner(input: {
   return input.role === "cleaner" && input.isActive;
 }
 
+/** Only open bookings may receive a new or replacement cleaner assignment. */
+export const ASSIGNABLE_BOOKING_STATUSES = [
+  "new",
+  "contacted",
+  "scheduled",
+] as const;
+
+export function canReceiveCleanerAssignment(status: string): boolean {
+  return (ASSIGNABLE_BOOKING_STATUSES as readonly string[]).includes(status);
+}
+
 /** Assignment edits are valid only if the active assignment has not changed. */
 export function expectedAssignmentMatches(input: {
   expectedAssignmentId: string | null | undefined;

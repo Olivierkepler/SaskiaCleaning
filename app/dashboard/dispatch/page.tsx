@@ -29,7 +29,7 @@ export default async function DispatchPage({ searchParams }: { searchParams: Sea
   return (
     <AdminDashboardShell
       title="Dispatch Center"
-      description="Review scheduled cleaning work, assignment coverage, and dispatch exceptions. Assignment changes are not available in this view."
+      description="Review scheduled cleaning work, assign eligible cleaners to open bookings, and monitor dispatch exceptions."
       eyebrow="Scheduling workspace"
       unseenCount={0}
       unseenBookings={[]}

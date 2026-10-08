@@ -1,7 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  buildDispatchAssignmentRequest,
+  classifyAssignmentMutationResponse,
+  resolveSelectedCleanerId,
+  shouldRefreshDispatchAfterAssignment,
+} from "@/app/lib/dispatch-assignment-pure";
 
 type Eligible = { id: string; name: string; email: string };
 type Assignment = {
@@ -13,12 +19,19 @@ type Assignment = {
 
 export default function BookingAssignControl({
   bookingId,
+  dispatchMode = false,
+  allowUnassign = true,
+  triggerLabel,
 }: {
   bookingId: number;
+  dispatchMode?: boolean;
+  allowUnassign?: boolean;
+  triggerLabel?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [assignment, setAssignment] = useState<Assignment>(null);
   const [assignmentRefreshRequired, setAssignmentRefreshRequired] = useState(false);
   const [opsWindow, setOpsWindow] = useState<{
@@ -27,13 +40,16 @@ export default function BookingAssignControl({
   } | null>(null);
   const [eligible, setEligible] = useState<Eligible[]>([]);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [staffId, setStaffId] = useState("");
+  const mutationPending = useRef(false);
 
   // Enter the loading state when opened, or when the booking changes while open.
   function toggleOpen() {
     if (!open) {
       setLoading(true);
       setError("");
+      setNotice("");
     }
     setOpen(!open);
   }
@@ -69,7 +85,12 @@ export default function BookingAssignControl({
             : null,
         );
         setEligible(data.eligibleStaff ?? []);
-        setStaffId(data.assignment?.staffId ?? "");
+        setStaffId(
+          resolveSelectedCleanerId(
+            data.eligibleStaff ?? [],
+            data.assignment?.staffId,
+          ),
+        );
       })
       .catch((err: Error) => {
         if (!cancelled) setError(err.message);
@@ -82,9 +103,42 @@ export default function BookingAssignControl({
     };
   }, [open, bookingId]);
 
+  async function refreshAssignmentState() {
+    const latestResponse = await fetch(
+      `/api/dashboard/bookings/${bookingId}/assignment`,
+    );
+    const latest = await latestResponse.json();
+    if (!latestResponse.ok) {
+      throw new Error(latest.error || "Failed to refresh assignment state.");
+    }
+    setAssignment(latest.assignment);
+    setAssignmentRefreshRequired(false);
+    setStaffId(
+      resolveSelectedCleanerId(
+        latest.eligibleStaff ?? [],
+        latest.assignment?.staffId,
+      ),
+    );
+    setEligible(latest.eligibleStaff ?? []);
+    setOpsWindow(
+      latest.opsWindow
+        ? {
+            serviceRange: String(latest.opsWindow.serviceRange),
+            reservedUntil: latest.opsWindow.reservedUntil
+              ? String(latest.opsWindow.reservedUntil)
+              : null,
+          }
+        : null,
+    );
+  }
+
   async function save(unassign = false) {
+    if (mutationPending.current) return;
+    mutationPending.current = true;
     setLoading(true);
+    setSaving(true);
     setError("");
+    setNotice("");
     try {
       const response = await fetch(
         `/api/dashboard/bookings/${bookingId}/assignment`,
@@ -94,49 +148,61 @@ export default function BookingAssignControl({
           body: JSON.stringify(
             unassign
               ? { unassign: true, expectedAssignmentId: assignment?.id ?? null }
-              : { staffId, expectedAssignmentId: assignment?.id ?? null },
+              : buildDispatchAssignmentRequest({
+                  staffId,
+                  expectedAssignmentId: assignment?.id ?? null,
+                }),
           ),
         },
       );
       const data = await response.json();
       if (!response.ok) {
-        if (response.status === 409) {
+        const outcome = classifyAssignmentMutationResponse({
+          ok: response.ok,
+          status: response.status,
+        });
+        if (outcome === "conflict") {
           setAssignmentRefreshRequired(true);
           try {
-            const latestResponse = await fetch(
-              `/api/dashboard/bookings/${bookingId}/assignment`,
-            );
-            const latest = await latestResponse.json();
-            if (latestResponse.ok) {
-              setAssignment(latest.assignment);
-              setAssignmentRefreshRequired(false);
-              setStaffId(latest.assignment?.staffId ?? "");
-              setEligible(latest.eligibleStaff ?? []);
-              setOpsWindow(
-                latest.opsWindow
-                  ? {
-                      serviceRange: String(latest.opsWindow.serviceRange),
-                      reservedUntil: latest.opsWindow.reservedUntil
-                        ? String(latest.opsWindow.reservedUntil)
-                        : null,
-                    }
-                  : null,
-              );
-            }
+            await refreshAssignmentState();
           } catch {
             // Keep the conflict message visible; the admin can reopen to retry.
           }
         }
         setError(data.error || "Assignment failed");
+        if (
+          shouldRefreshDispatchAfterAssignment({
+            ok: response.ok,
+            status: response.status,
+          })
+        ) {
+          router.refresh();
+        }
         return;
       }
       setAssignment(data.assignment);
-      setOpen(false);
+      setNotice(
+        data.assignment?.staffName
+          ? `Assignment confirmed: ${data.assignment.staffName}.`
+          : "Assignment updated.",
+      );
+      if (dispatchMode) {
+        setAssignmentRefreshRequired(true);
+        try {
+          await refreshAssignmentState();
+        } catch {
+          // The saved state is confirmed; block further writes until refreshed.
+        }
+      } else {
+        setOpen(false);
+      }
       router.refresh();
     } catch {
       setError("Assignment failed");
     } finally {
+      mutationPending.current = false;
       setLoading(false);
+      setSaving(false);
     }
   }
 
@@ -147,14 +213,28 @@ export default function BookingAssignControl({
         onClick={toggleOpen}
         className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700"
       >
-        {assignment?.staffName
+        {triggerLabel ?? (assignment?.staffName
           ? `Assigned: ${assignment.staffName}`
-          : "Assign cleaner"}
+          : "Assign cleaner")}
       </button>
       {open ? (
         <div className="mt-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm">
-          {loading ? <p className="text-slate-500">Loading…</p> : null}
-          {error ? <p className="text-red-600">{error}</p> : null}
+          {loading ? (
+            <p role="status" className="text-slate-500">
+              {saving ? "Saving assignment…" : "Loading assignment options…"}
+            </p>
+          ) : null}
+          {error ? <p role="alert" className="text-red-600">{error}</p> : null}
+          {notice ? (
+            <p role="status" className="mb-2 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              {notice}
+            </p>
+          ) : null}
+          {dispatchMode ? (
+            <p className="mb-2 text-xs leading-5 text-slate-600">
+              Candidate availability is advisory. Saving rechecks cleaner eligibility and overlap; global business hours and scheduling blocks are not validated by this assignment API.
+            </p>
+          ) : null}
           {!loading ? (
             <>
               {opsWindow ? (
@@ -165,7 +245,14 @@ export default function BookingAssignControl({
                     : ""}
                 </p>
               ) : null}
+              <label
+                htmlFor={`booking-assignment-cleaner-${bookingId}`}
+                className="mt-2 block text-xs font-medium text-slate-700"
+              >
+                Cleaner
+              </label>
               <select
+                id={`booking-assignment-cleaner-${bookingId}`}
                 value={staffId}
                 onChange={(e) => setStaffId(e.target.value)}
                 className="mt-1 w-full rounded-lg border border-slate-200 px-2 py-1.5 text-sm"
@@ -191,7 +278,7 @@ export default function BookingAssignControl({
                 >
                   Save
                 </button>
-                {assignment ? (
+                {assignment && allowUnassign ? (
                   <button
                     type="button"
                     disabled={loading || assignmentRefreshRequired}

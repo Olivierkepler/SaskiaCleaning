@@ -3,6 +3,8 @@ import type { DispatchBooking } from "@/app/lib/dispatch-pure";
 import { formatEstimatedDuration } from "@/app/lib/booking-duration-pure";
 import { resolveEffectiveBufferMinutes } from "@/app/lib/booking-buffer-pure";
 import { formatBookingTime } from "@/app/lib/scheduling-pure";
+import { canManageDispatchAssignment } from "@/app/lib/dispatch-assignment-pure";
+import BookingAssignControl from "@/app/dashboard/BookingAssignControl";
 
 function assignmentLabel(booking: DispatchBooking): string {
   switch (booking.assignmentState) {
@@ -21,6 +23,10 @@ export default function DispatchBookingDetails({ booking }: { booking: DispatchB
       </aside>
     );
   }
+
+  const hasActiveAssignment =
+    booking.assignmentState === "active" ||
+    booking.assignmentState === "assigned_to_inactive_staff";
 
   return (
     <aside className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_2px_12px_rgba(15,23,42,0.035)] sm:p-6" aria-labelledby="dispatch-details-title">
@@ -65,7 +71,28 @@ export default function DispatchBookingDetails({ booking }: { booking: DispatchB
       <Link href={`/dashboard?booking=${booking.id}`} className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-sky-700 px-4 text-sm font-semibold text-white transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 sm:w-auto">
         Open booking management
       </Link>
-      <p className="mt-3 text-xs text-slate-500">Assignment changes are disabled in this read-only Dispatch phase.</p>
+      <section className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4" aria-labelledby="dispatch-assignment-title">
+        <h3 id="dispatch-assignment-title" className="text-sm font-semibold text-slate-900">Cleaner assignment</h3>
+        {canManageDispatchAssignment(booking.status) ? (
+          <>
+            <p className="mt-1 text-sm text-slate-600">
+              {hasActiveAssignment
+                ? `Current assignment: ${booking.staffName ?? "Cleaner unavailable"}. You can reassign this booking.`
+                : "No active cleaner is assigned. Select an eligible cleaner to assign this booking."}
+            </p>
+            <BookingAssignControl
+              bookingId={booking.id}
+              dispatchMode
+              allowUnassign={false}
+              triggerLabel={hasActiveAssignment ? "Change cleaner" : "Assign cleaner"}
+            />
+          </>
+        ) : (
+          <p className="mt-1 text-sm text-slate-600">
+            Assignment changes are unavailable for {booking.status.replaceAll("_", " ")} bookings in Dispatch.
+          </p>
+        )}
+      </section>
     </aside>
   );
 }
