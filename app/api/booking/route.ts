@@ -20,6 +20,7 @@ import { CAPACITY_CONFLICT_MESSAGE } from "@/app/lib/staff-capacity-pure";
 import { resolveDurationForBooking } from "@/app/lib/booking-duration";
 import { getJobBufferMinutes } from "@/app/lib/booking-buffer";
 import { priceBookingRequest } from "@/app/lib/booking-pricing-pure";
+import { logBookingDiagnostic } from "@/app/lib/booking-diagnostics";
 
 function parseNonNegativeInteger(value: unknown): number | null {
   const parsed = Number(value);
@@ -146,6 +147,7 @@ export async function POST(req: Request) {
       time: bookingTime,
       durationMinutes: durationResult.minutes,
       bufferMinutes,
+      diagnosticEvent: "BOOKING_CAPACITY_QUERY_FAILED",
     });
 
     if (!slotCheck.ok) {
@@ -271,7 +273,7 @@ export async function POST(req: Request) {
       }
       booking = claim.booking;
     } catch (insertError) {
-      console.error("Booking capacity claim failed:", insertError);
+      logBookingDiagnostic("BOOKING_TRANSACTION_FAILED", insertError);
       return NextResponse.json(
         { error: CAPACITY_CONFLICT_MESSAGE },
         { status: 409 },
@@ -311,7 +313,7 @@ export async function POST(req: Request) {
           WHERE id = ${activeReferralCode.id}
         `;
       } catch (referralError) {
-        console.error("Referral tracking failed after booking insert:", referralError);
+        logBookingDiagnostic("BOOKING_REFERRAL_TRACKING_FAILED", referralError);
 
         return NextResponse.json(
           { error: "Failed to save booking referral tracking." },
@@ -325,7 +327,7 @@ export async function POST(req: Request) {
       booking,
     });
   } catch (error) {
-    console.error(error);
+    logBookingDiagnostic("BOOKING_REQUEST_FAILED", error);
 
     return NextResponse.json(
       { error: "Failed to save booking." },

@@ -48,6 +48,12 @@ import { sendEmail } from "@/app/lib/email";
 import { formatEstimatedDuration } from "@/app/lib/booking-duration-pure";
 import { resolveDurationForBooking } from "@/app/lib/booking-duration";
 import { withSchedulingTransaction, withSchedulingSavepoint } from "@/app/lib/scheduling-transaction";
+import {
+  logBookingDiagnostic,
+  logBookingDiagnosticCategory,
+  runBookingNotificationSafely,
+  type BookingDiagnosticEvent,
+} from "@/app/lib/booking-diagnostics";
 
 function mapTimeOff(
   start: unknown,
@@ -401,6 +407,7 @@ export async function assertSlotHasCapacity(input: {
   bufferMinutes?: number;
   excludeBookingId?: number | null;
   requireTime?: boolean;
+  diagnosticEvent?: BookingDiagnosticEvent;
 }): Promise<
   | { ok: true; time: string; window: CapacityWindow }
   | { ok: false; error: string; status: number; conflict?: boolean }
@@ -466,7 +473,10 @@ export async function assertSlotHasCapacity(input: {
     }
     return { ok: true, time: parsed, window };
   } catch (error) {
-    console.error("Capacity check failed:", error);
+    logBookingDiagnostic(
+      input.diagnosticEvent ?? "SCHEDULING_CAPACITY_QUERY_FAILED",
+      error,
+    );
     return {
       ok: false,
       error: CAPACITY_UNAVAILABLE_MESSAGE,
@@ -550,6 +560,7 @@ async function createBookingWithCapacityClaimInTransaction(
     time: fields.bookingTime,
     durationMinutes: fields.durationMinutes,
     bufferMinutes,
+    diagnosticEvent: "BOOKING_CAPACITY_QUERY_FAILED",
   });
   if (!slotCheck.ok) {
     return { ok: false, error: slotCheck.error, status: slotCheck.status };
@@ -559,7 +570,7 @@ async function createBookingWithCapacityClaimInTransaction(
   try {
     staff = await loadStaffCapacitySnapshotsForDate(fields.bookingDate);
   } catch (error) {
-    console.error("Capacity infrastructure error:", error);
+    logBookingDiagnostic("BOOKING_STAFF_CAPACITY_FAILED", error);
     return { ok: false, error: CAPACITY_UNAVAILABLE_MESSAGE, status: 503 };
   }
 
@@ -619,18 +630,23 @@ async function createBookingWithCapacityClaimInTransaction(
 
       const booking = rows[0] as Record<string, unknown> | undefined;
       if (!booking) {
+        logBookingDiagnosticCategory(
+          "BOOKING_CLAIM_FAILED",
+          "EMPTY_CLAIM_RESULT",
+        );
         return { ok: false, error: CAPACITY_UNAVAILABLE_MESSAGE, status: 503 };
       }
 
-      const staffRows = await sql`
-          SELECT name, email FROM staff_members WHERE id = ${candidate.id} LIMIT 1
-        `;
-      const member = staffRows[0] as
-          | { name: string; email: string }
-          | undefined;
-      if (member?.email) {
-        deferSchedulingAfterCommit(async () => {
-          try {
+      deferSchedulingAfterCommit(() =>
+        runBookingNotificationSafely(async () => {
+          const staffRows = await sql`
+            SELECT name, email FROM staff_members WHERE id = ${candidate.id} LIMIT 1
+          `;
+          const member = staffRows[0] as
+            | { name: string; email: string }
+            | undefined;
+          if (!member?.email) return;
+
           await sendEmail({
             to: member.email,
             subject: `New job assignment — Saskia Cleaning (#${booking.id})`,
@@ -651,11 +667,8 @@ async function createBookingWithCapacityClaimInTransaction(
               "— Saskia Cleaning",
             ].join("\n"),
           });
-          } catch {
-            console.error("Auto-assignment email failed");
-          }
-        });
-      }
+        }),
+      );
 
       return {
         ok: true,
@@ -664,7 +677,7 @@ async function createBookingWithCapacityClaimInTransaction(
       };
     } catch (error) {
       if (isOverlapClaimViolation(error)) continue;
-      console.error("Booking capacity claim failed:", error);
+      logBookingDiagnostic("BOOKING_CLAIM_FAILED", error);
       return { ok: false, error: CAPACITY_UNAVAILABLE_MESSAGE, status: 503 };
     }
   }
