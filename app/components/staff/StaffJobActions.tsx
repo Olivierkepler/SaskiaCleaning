@@ -49,7 +49,7 @@ export default function StaffJobActions({
   return (
     <div className="mt-6 space-y-3">
       {error ? (
-        <p role="alert" className="text-sm font-medium text-red-600">
+      <p role="alert" aria-live="assertive" className="rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-sm font-medium text-rose-800">
           {error}
         </p>
       ) : null}
@@ -58,7 +58,8 @@ export default function StaffJobActions({
           type="button"
           disabled={loading}
           onClick={() => void updateStatus("in_progress")}
-          className="w-full rounded-2xl bg-sky-500 px-4 py-3.5 text-sm font-bold text-white disabled:opacity-50"
+          aria-busy={loading}
+          className="min-h-12 w-full rounded-xl bg-sky-700 px-4 py-3.5 text-sm font-bold text-white transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Updating…" : "Start job"}
         </button>
@@ -68,7 +69,8 @@ export default function StaffJobActions({
           type="button"
           disabled={loading}
           onClick={() => void updateStatus("completed")}
-          className="w-full rounded-2xl bg-emerald-600 px-4 py-3.5 text-sm font-bold text-white disabled:opacity-50"
+          aria-busy={loading}
+          className="min-h-12 w-full rounded-xl bg-emerald-700 px-4 py-3.5 text-sm font-bold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? "Updating…" : "Mark complete"}
         </button>
