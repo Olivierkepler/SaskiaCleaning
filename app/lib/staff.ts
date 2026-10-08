@@ -623,7 +623,7 @@ export async function listAssignmentBookingIds(): Promise<Set<number>> {
   );
 }
 
-async function staffIsEligibleForSlot(input: {
+export async function staffIsEligibleForSlot(input: {
   staffId: string;
   dateOnly: string;
   time: string;

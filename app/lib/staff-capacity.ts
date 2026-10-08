@@ -231,6 +231,48 @@ function filterCandidatesForDuration(input: {
   });
 }
 
+/**
+ * Validate the global slot rules (date, configured increment, business hours,
+ * and scheduling blocks) without considering cleaner capacity. Callers that
+ * mutate appointments must invoke this while holding the scheduling lock.
+ */
+export async function validateAppointmentWindowBasics(input: {
+  dateOnly: string;
+  time: string;
+  durationMinutes: number;
+}): Promise<"VALID" | "INVALID_APPOINTMENT" | "BLOCKED_TIME"> {
+  if (!isValidBookingDateOnly(input.dateOnly)) return "INVALID_APPOINTMENT";
+  const time = parseBookingTime(input.time);
+  if (!time) return "INVALID_APPOINTMENT";
+
+  const [weekly, blocks] = await Promise.all([
+    getWeeklyAvailabilityForDate(input.dateOnly),
+    listBlocksForDate(input.dateOnly),
+  ]);
+  const serviceWindow = getBookingWindow({
+    dateOnly: input.dateOnly,
+    startTime: time,
+    durationMinutes: input.durationMinutes,
+  });
+  if (!serviceWindow || !weekly || !weekly.isActive) return "INVALID_APPOINTMENT";
+
+  if (blocks.some((block) => schedulingBlockOverlapsWindow({
+    blockStartTime: block.startTime,
+    blockEndTime: block.endTime,
+    window: serviceWindow,
+  }))) {
+    return "BLOCKED_TIME";
+  }
+
+  const candidate = filterCandidatesForDuration({
+    dateOnly: input.dateOnly,
+    weekly,
+    blocks,
+    durationMinutes: input.durationMinutes,
+  }).some((slot) => slot.time === time);
+  return candidate ? "VALID" : "INVALID_APPOINTMENT";
+}
+
 export async function getCapacityAwareSlotsForDate(
   dateOnly: string,
   options?: {
