@@ -38,6 +38,19 @@ export type BookingPricingResult =
     }
   | { ok: false; error: string };
 
+export const BOOKING_SERVICE_LABELS = [
+  "Standard",
+  "Deep clean",
+  "Move-out",
+  "Commercial",
+] as const;
+export type BookingServiceLabel = (typeof BOOKING_SERVICE_LABELS)[number];
+
+export const DEEP_CLEAN_SIZE_LABELS = ["Studio", "1–2 bed", "3–4 bed", "5+ bed"] as const;
+export const DEEP_CLEAN_CONDITION_LABELS = ["Good", "Needs work", "Very dirty"] as const;
+export const MOVE_OUT_SQUARE_FOOTAGE_LABELS = ["Under 500", "500–1000", "1000–1500", "1500+"] as const;
+export const COMMERCIAL_SQUARE_FOOTAGE_LABELS = ["Under 1k", "1k–2.5k", "2.5k–5k", "5k+"] as const;
+
 export const STANDARD_FREQUENCY_DISCOUNTS = {
   "One-time": 0,
   "Bi-weekly": 10,
@@ -133,6 +146,64 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function hasExactKeys(value: Record<string, unknown>, keys: readonly string[]): boolean {
   return Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
+}
+
+function normalizeStoredExtras(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value) as unknown;
+  } catch {
+    return [value];
+  }
+}
+
+/**
+ * Resolve the pricing snapshot for an existing booking without guessing.
+ * Legacy Standard rows can be recovered only when their stored rounded
+ * bathroom count maps to exactly one original estimator choice.
+ */
+export function resolveBookingPricingInputs(input: {
+  service: unknown;
+  frequency: unknown;
+  bedrooms: unknown;
+  bathrooms: unknown;
+  extras: unknown;
+  pricingInputs: unknown;
+}): PricingInputSnapshot | null {
+  let snapshot = input.pricingInputs;
+  if (typeof snapshot === "string") {
+    try {
+      snapshot = JSON.parse(snapshot) as unknown;
+    } catch {
+      return null;
+    }
+  }
+
+  if (snapshot == null && input.service === "Standard") {
+    const bathrooms = Number(input.bathrooms);
+    const candidates = BATH_VALS.flatMap((value, index) =>
+      Math.ceil(value) === bathrooms ? [index] : [],
+    );
+    if (candidates.length !== 1) return null;
+    snapshot = { version: 1, kind: "standard", bathroomIndex: candidates[0] };
+  }
+
+  const result = priceBookingSelections({
+    ...input,
+    extras: normalizeStoredExtras(input.extras),
+    pricingInputs: snapshot,
+  });
+  return result.ok ? result.pricingInputs : null;
+}
+
+export function pricingExtrasForService(service: unknown): readonly { label: string; price: number }[] | null {
+  switch (service) {
+    case "Standard": return STANDARD_ADDONS;
+    case "Deep clean": return DEEP_CLEAN_ADDONS;
+    case "Move-out": return MOVE_OUT_ADDONS;
+    case "Commercial": return COMMERCIAL_ADDONS;
+    default: return null;
+  }
 }
 
 /** Validate client selections, discard client estimates, and calculate canonically. */

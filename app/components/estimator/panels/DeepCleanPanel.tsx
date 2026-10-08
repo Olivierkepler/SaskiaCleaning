@@ -8,7 +8,7 @@ import {
   DEEP_CLEAN_ADDONS,
 } from "../constants";
 import type { DeepCleanAddonLabel, PriceRange } from "../types";
-import { calculateDeepCleanEstimate } from "@/app/lib/booking-pricing-pure";
+import { calculateDeepCleanEstimate, DEEP_CLEAN_CONDITION_LABELS, DEEP_CLEAN_SIZE_LABELS } from "@/app/lib/booking-pricing-pure";
 import { toggleInSet } from "../utils";
 import { AddonGrid } from "../ui/Addon";
 import { Checklist } from "../ui/Checklist";
@@ -47,19 +47,6 @@ export function DeepCleanPanel({
   const condIdx = conditionIndex ?? localCondIdx;
   const setSize = (index: number) => { setLocalSizeIdx(index); onSizeIndexChange?.(index); };
   const setCond = (index: number) => { setLocalCondIdx(index); onConditionIndexChange?.(index); };
-
-  const SIZES = [
-    "Studio",
-    "1–2 bed",
-    "3–4 bed",
-    "5+ bed",
-  ];
-
-  const CONDS = [
-    "Good",
-    "Needs work",
-    "Very dirty",
-  ];
 
   const toggle = useCallback(
     (label: DeepCleanAddonLabel) => {
@@ -103,7 +90,7 @@ export function DeepCleanPanel({
 
           <DiscreteSlider
             value={sizeIdx}
-            options={SIZES.map((label, index) => ({
+            options={DEEP_CLEAN_SIZE_LABELS.map((label, index) => ({
               label,
               value: index,
             }))}
@@ -137,7 +124,7 @@ export function DeepCleanPanel({
 
           <DiscreteSlider
             value={condIdx}
-            options={CONDS.map((label, index) => ({
+            options={DEEP_CLEAN_CONDITION_LABELS.map((label, index) => ({
               label,
               value: index,
             }))}

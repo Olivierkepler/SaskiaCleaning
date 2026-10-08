@@ -8,7 +8,7 @@ import {
   MOVE_OUT_ADDONS,
 } from "../constants";
 import type { MoveOutAddonLabel, PriceRange } from "../types";
-import { calculateMoveOutEstimate } from "@/app/lib/booking-pricing-pure";
+import { calculateMoveOutEstimate, MOVE_OUT_SQUARE_FOOTAGE_LABELS } from "@/app/lib/booking-pricing-pure";
 import { toggleInSet } from "../utils";
 import { AddonGrid } from "../ui/Addon";
 import { CollapsibleGroup } from "../ui/CollapsibleGroup";
@@ -47,13 +47,6 @@ export function MoveOutPanel({
     "Condo",
     "House",
     "Studio",
-  ];
-
-  const SQFTS = [
-    "Under 500",
-    "500–1000",
-    "1000–1500",
-    "1500+",
   ];
 
   const toggle = useCallback(
@@ -132,7 +125,7 @@ export function MoveOutPanel({
 
           <DiscreteSlider
             value={sqftIdx}
-            options={SQFTS.map((label, index) => ({
+            options={MOVE_OUT_SQUARE_FOOTAGE_LABELS.map((label, index) => ({
               label,
               value: index,
             }))}

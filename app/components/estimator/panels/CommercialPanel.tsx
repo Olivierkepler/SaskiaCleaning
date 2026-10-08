@@ -9,7 +9,7 @@ import {
   FREQ_DISPLAY_KEYS,
 } from "../constants";
 import type { CommercialAddonLabel, PriceRange } from "../types";
-import { calculateCommercialEstimate, COMMERCIAL_SCHEDULES } from "@/app/lib/booking-pricing-pure";
+import { calculateCommercialEstimate, COMMERCIAL_SCHEDULES, COMMERCIAL_SQUARE_FOOTAGE_LABELS } from "@/app/lib/booking-pricing-pure";
 import { toggleInSet } from "../utils";
 import { AddonGrid } from "../ui/Addon";
 import { DiscreteSlider } from "../ui/DiscreteSlider";
@@ -61,13 +61,6 @@ export function CommercialPanel({
     "Restaurant",
     "Medical",
     "Gym",
-  ];
-
-  const SQFTS = [
-    "Under 1k",
-    "1k–2.5k",
-    "2.5k–5k",
-    "5k+",
   ];
 
   const TIMINGS = [
@@ -165,7 +158,7 @@ export function CommercialPanel({
 
               <DiscreteSlider
                 value={sqftIdx}
-                options={SQFTS.map((label, index) => ({
+            options={COMMERCIAL_SQUARE_FOOTAGE_LABELS.map((label, index) => ({
                   label,
                   value: index,
                 }))}

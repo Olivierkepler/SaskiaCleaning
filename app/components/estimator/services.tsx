@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { K } from "./constants";
+import { BOOKING_SERVICE_LABELS } from "@/app/lib/booking-pricing-pure";
 
 export type EstimatorService = {
   image: string;
@@ -13,28 +14,28 @@ export type EstimatorService = {
 export const SERVICES: readonly EstimatorService[] = [
   {
     image: "/images/standard/Designer(15).png",
-    label: "Standard",
+    label: BOOKING_SERVICE_LABELS[0],
     photo: "/images/booking/Designer(9).png",
     headline: <>Find the right cleaner<br />from Boston&apos;s best<span style={{ color: K.blue }}>.</span></>,
     bookLabel: "Book now",
   },
   {
     image: "/images/deepclean/Designer(19).png",
-    label: "Deep clean",
+    label: BOOKING_SERVICE_LABELS[1],
     photo: "/images/boston.jpg",
     headline: <>Book a deep clean<br />that actually goes deep<span style={{ color: K.blue }}>.</span></>,
     bookLabel: "Book deep clean",
   },
   {
     image: "/images/moveout/moveout.png",
-    label: "Move-out",
+    label: BOOKING_SERVICE_LABELS[2],
     photo: "/images/boston.jpg",
     headline: <>Leave spotless.<br />Get your deposit back<span style={{ color: K.blue }}>.</span></>,
     bookLabel: "Book move-out clean",
   },
   {
     image: "/images/commercial/commercial.png",
-    label: "Commercial",
+    label: BOOKING_SERVICE_LABELS[3],
     photo: "/images/boston.jpg",
     headline: <>Professional cleaning<br />for your business<span style={{ color: K.blue }}>.</span></>,
     bookLabel: "Book commercial clean",

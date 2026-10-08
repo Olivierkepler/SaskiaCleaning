@@ -11,6 +11,20 @@ import {
 } from "../../lib/booking-status";
 import BookingAssignControl from "../BookingAssignControl";
 import type { BookingRequest } from "../DashboardTable";
+import { BATH_VALS, STANDARD_BEDROOM_VALUES } from "@/app/components/estimator/constants";
+import {
+  BOOKING_SERVICE_LABELS,
+  COMMERCIAL_SCHEDULES,
+  COMMERCIAL_SQUARE_FOOTAGE_LABELS,
+  DEEP_CLEAN_CONDITION_LABELS,
+  DEEP_CLEAN_SIZE_LABELS,
+  MOVE_OUT_SQUARE_FOOTAGE_LABELS,
+  STANDARD_FREQUENCIES,
+  priceBookingSelections,
+  pricingExtrasForService,
+  resolveBookingPricingInputs,
+  type PricingInputSnapshot,
+} from "@/app/lib/booking-pricing-pure";
 
 type BookingDetailDrawerProps = {
   booking: BookingRequest | null;
@@ -65,6 +79,42 @@ function DetailValue({
   );
 }
 
+type PricingFormSelections = {
+  bathroomIndex: number | null;
+  deepCleanSizeIndex: number | null;
+  deepCleanConditionIndex: number | null;
+  moveOutSquareFootageIndex: number | null;
+  commercialSquareFootageIndex: number | null;
+  commercialScheduleIndex: number | null;
+};
+
+function pricingFormFromSnapshot(snapshot: PricingInputSnapshot | null): PricingFormSelections {
+  return {
+    bathroomIndex: snapshot?.kind === "standard" ? snapshot.bathroomIndex : null,
+    deepCleanSizeIndex: snapshot?.kind === "deep-clean" ? snapshot.sizeIndex : null,
+    deepCleanConditionIndex: snapshot?.kind === "deep-clean" ? snapshot.conditionIndex : null,
+    moveOutSquareFootageIndex: snapshot?.kind === "move-out" ? snapshot.squareFootageIndex : null,
+    commercialSquareFootageIndex: snapshot?.kind === "commercial" ? snapshot.squareFootageIndex : null,
+    commercialScheduleIndex: snapshot?.kind === "commercial" ? snapshot.scheduleIndex : null,
+  };
+}
+
+function snapshotForService(service: string, selection: PricingFormSelections): PricingInputSnapshot | null {
+  if (service === "Standard" && selection.bathroomIndex != null) {
+    return { version: 1, kind: "standard", bathroomIndex: selection.bathroomIndex };
+  }
+  if (service === "Deep clean" && selection.deepCleanSizeIndex != null && selection.deepCleanConditionIndex != null) {
+    return { version: 1, kind: "deep-clean", sizeIndex: selection.deepCleanSizeIndex, conditionIndex: selection.deepCleanConditionIndex };
+  }
+  if (service === "Move-out" && selection.moveOutSquareFootageIndex != null) {
+    return { version: 1, kind: "move-out", squareFootageIndex: selection.moveOutSquareFootageIndex };
+  }
+  if (service === "Commercial" && selection.commercialSquareFootageIndex != null && selection.commercialScheduleIndex != null) {
+    return { version: 1, kind: "commercial", squareFootageIndex: selection.commercialSquareFootageIndex, scheduleIndex: selection.commercialScheduleIndex };
+  }
+  return null;
+}
+
 export default function BookingDetailDrawer({
   booking,
   isOpen,
@@ -99,6 +149,13 @@ export default function BookingDetailDrawer({
   const [editingBooking, setEditingBooking] = useState(false);
   const [bookingLocation, setBookingLocation] = useState("");
   const [bookingNotes, setBookingNotes] = useState("");
+  const [bookingService, setBookingService] = useState("");
+  const [bookingFrequency, setBookingFrequency] = useState("");
+  const [bookingBedrooms, setBookingBedrooms] = useState("");
+  const [bookingBathrooms, setBookingBathrooms] = useState("");
+  const [bookingExtras, setBookingExtras] = useState<string[]>([]);
+  const [pricingForm, setPricingForm] = useState<PricingFormSelections>(pricingFormFromSnapshot(null));
+  const [canEditPricing, setCanEditPricing] = useState(false);
   const [savingBooking, setSavingBooking] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
   const [bookingSaved, setBookingSaved] = useState(false);
@@ -121,6 +178,7 @@ export default function BookingDetailDrawer({
     setBookingError(null);
     setBookingSaved(false);
     setBookingOverride(null);
+    setCanEditPricing(false);
   }, [booking?.id]);
 
   useEffect(() => {
@@ -193,6 +251,27 @@ export default function BookingDetailDrawer({
       : booking.location;
   const bookingNotesValue =
     bookingOverride?.id === booking.id ? bookingOverride.notes : booking.notes;
+  const currentPricingSnapshot = resolveBookingPricingInputs({
+    service: booking.service,
+    frequency: booking.frequency,
+    bedrooms: booking.bedrooms,
+    bathrooms: booking.bathrooms,
+    extras: booking.extras,
+    pricingInputs: booking.pricing_inputs,
+  });
+  const editorSnapshot = snapshotForService(bookingService, pricingForm);
+  const editorPricingPreview = canEditPricing && editorSnapshot
+    ? priceBookingSelections({
+        service: bookingService,
+        frequency: bookingFrequency,
+        bedrooms: bookingBedrooms === "" ? Number.NaN : Number(bookingBedrooms),
+        bathrooms: bookingBathrooms === "" ? Number.NaN : Number(bookingBathrooms),
+        extras: bookingExtras,
+        pricingInputs: editorSnapshot,
+      })
+    : null;
+  const editorExtraCatalog = pricingExtrasForService(bookingService) ?? [];
+  const editorSelectClassName = "mt-1.5 min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-base text-slate-900 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
 
   const beginCustomerEdit = () => {
     setCustomerName(customerNameValue);
@@ -238,9 +317,31 @@ export default function BookingDetailDrawer({
   const beginBookingEdit = () => {
     setBookingLocation(bookingLocationValue ?? "");
     setBookingNotes(bookingNotesValue ?? "");
+    const resolvedSnapshot = currentPricingSnapshot;
+    setCanEditPricing(resolvedSnapshot !== null);
+    setBookingService(booking.service ?? "");
+    setBookingFrequency(booking.frequency ?? "");
+    setBookingBedrooms(booking.bedrooms == null ? "" : String(booking.bedrooms));
+    setBookingBathrooms(booking.bathrooms == null ? "" : String(booking.bathrooms));
+    setBookingExtras(extras);
+    setPricingForm(pricingFormFromSnapshot(resolvedSnapshot));
     setBookingError(null);
     setBookingSaved(false);
     setEditingBooking(true);
+  };
+
+  const handleBookingServiceChange = (service: string) => {
+    if (service === bookingService) return;
+    setBookingService(service);
+    setBookingExtras([]);
+    setPricingForm(pricingFormFromSnapshot(null));
+    if (service === "Standard") {
+      setBookingBedrooms("");
+      setBookingBathrooms("");
+    } else {
+      setBookingBedrooms("0");
+      setBookingBathrooms("0");
+    }
   };
 
   const cancelBookingEdit = () => {
@@ -252,12 +353,64 @@ export default function BookingDetailDrawer({
     if (savingBooking) return;
     const originalLocation = (bookingLocationValue ?? "").trim();
     const originalNotes = (bookingNotesValue ?? "").trim();
-    const patch: { location?: string; notes?: string | null } = {};
+    const patch: Record<string, unknown> = {};
     if (bookingLocation.trim() !== originalLocation) {
       patch.location = bookingLocation;
     }
     if (bookingNotes.trim() !== originalNotes) {
       patch.notes = bookingNotes;
+    }
+    if (canEditPricing) {
+      const originalSnapshot = resolveBookingPricingInputs({
+        service: booking.service,
+        frequency: booking.frequency,
+        bedrooms: booking.bedrooms,
+        bathrooms: booking.bathrooms,
+        extras: booking.extras,
+        pricingInputs: booking.pricing_inputs,
+      });
+      const newSnapshot = snapshotForService(bookingService, pricingForm);
+      const bedrooms = bookingBedrooms === "" ? Number.NaN : Number(bookingBedrooms);
+      const bathrooms = bookingBathrooms === "" ? Number.NaN : Number(bookingBathrooms);
+      const pricingChanged =
+        bookingService !== (booking.service ?? "") ||
+        (bookingService === "Standard" && (
+          bookingFrequency !== (booking.frequency ?? "") ||
+          bedrooms !== booking.bedrooms ||
+          bathrooms !== booking.bathrooms
+        )) ||
+        JSON.stringify(bookingExtras) !== JSON.stringify(extras) ||
+        JSON.stringify(newSnapshot) !== JSON.stringify(originalSnapshot);
+
+      if (pricingChanged) {
+        if (!newSnapshot || !Number.isInteger(bedrooms) || !Number.isInteger(bathrooms)) {
+          setBookingError("Choose all pricing details for the selected service before saving.");
+          return;
+        }
+        const preview = priceBookingSelections({
+          service: bookingService,
+          frequency: bookingFrequency,
+          bedrooms,
+          bathrooms,
+          extras: bookingExtras,
+          pricingInputs: newSnapshot,
+        });
+        if (!preview.ok) {
+          setBookingError(preview.error);
+          return;
+        }
+        patch.service = bookingService;
+        patch.extras = bookingExtras;
+        patch.pricingInputs = newSnapshot;
+        if (bookingService === "Standard") {
+          patch.frequency = bookingFrequency;
+          patch.bedrooms = bedrooms;
+          patch.bathrooms = bathrooms;
+        } else if (booking.service === "Standard") {
+          patch.bedrooms = 0;
+          patch.bathrooms = 0;
+        }
+      }
     }
     if (Object.keys(patch).length === 0) {
       setEditingBooking(false);
@@ -317,7 +470,7 @@ export default function BookingDetailDrawer({
                 Booking details
               </h2>
               {editingBooking && (
-                <p className="mt-1 text-xs font-medium text-sky-700">Editing booking location and notes</p>
+                <p className="mt-1 text-xs font-medium text-sky-700">Editing booking details</p>
               )}
             </div>
             <div className="flex shrink-0 items-center gap-1">
@@ -460,15 +613,128 @@ export default function BookingDetailDrawer({
             >
               {appointmentLabel}
             </DetailValue>
+            {editingBooking && <p className="mt-2 text-xs text-slate-500">Date and time are read-only in this phase.</p>}
           </DetailSection>
 
           <DetailSection title="Service">
-            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-              <DetailValue label="Service">{booking.service || "—"}</DetailValue>
-              <DetailValue label="Frequency">{booking.frequency || "One-time"}</DetailValue>
-              <DetailValue label="Bedrooms">{booking.bedrooms}</DetailValue>
-              <DetailValue label="Bathrooms">{booking.bathrooms}</DetailValue>
-            </div>
+            {editingBooking && canEditPricing ? (
+              <div className="space-y-4">
+                <label className="block text-xs font-medium text-slate-600">
+                  Service
+                  <select className={editorSelectClassName} value={bookingService} onChange={(event) => handleBookingServiceChange(event.target.value)}>
+                    <option value="">Choose a service</option>
+                    {BOOKING_SERVICE_LABELS.map((service) => <option key={service} value={service}>{service}</option>)}
+                  </select>
+                </label>
+                {bookingService === "Standard" && (
+                  <>
+                    <label className="block text-xs font-medium text-slate-600">
+                      Frequency
+                      <select className={editorSelectClassName} value={bookingFrequency} onChange={(event) => setBookingFrequency(event.target.value)}>
+                        <option value="">Choose a frequency</option>
+                        {STANDARD_FREQUENCIES.map((frequency) => <option key={frequency} value={frequency}>{frequency}</option>)}
+                      </select>
+                    </label>
+                    <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
+                      <label className="block text-xs font-medium text-slate-600">
+                        Bedrooms
+                        <select className={editorSelectClassName} value={bookingBedrooms} onChange={(event) => setBookingBedrooms(event.target.value)}>
+                          <option value="">Choose</option>
+                          {STANDARD_BEDROOM_VALUES.map((value) => <option key={value} value={value}>{value === 0 ? "Studio" : value === 4 ? "4+ rooms" : `${value} ${value === 1 ? "room" : "rooms"}`}</option>)}
+                        </select>
+                      </label>
+                      <label className="block text-xs font-medium text-slate-600">
+                        Bathrooms
+                        <select className={editorSelectClassName} value={pricingForm.bathroomIndex == null ? "" : String(pricingForm.bathroomIndex)} onChange={(event) => {
+                          const index = event.target.value === "" ? null : Number(event.target.value);
+                          setPricingForm((current) => ({ ...current, bathroomIndex: index }));
+                          setBookingBathrooms(index == null ? "" : String(Math.ceil(BATH_VALS[index])));
+                        }}>
+                          <option value="">Choose</option>
+                          {BATH_VALS.map((value, index) => <option key={index} value={index}>{value} {value === 1 ? "bath" : "baths"}</option>)}
+                        </select>
+                      </label>
+                    </div>
+                  </>
+                )}
+                {bookingService === "Deep clean" && (
+                  <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
+                    <label className="block text-xs font-medium text-slate-600">
+                      Home size
+                      <select className={editorSelectClassName} value={pricingForm.deepCleanSizeIndex == null ? "" : String(pricingForm.deepCleanSizeIndex)} onChange={(event) => setPricingForm((current) => ({ ...current, deepCleanSizeIndex: event.target.value === "" ? null : Number(event.target.value) }))}>
+                        <option value="">Choose</option>
+                        {DEEP_CLEAN_SIZE_LABELS.map((value, index) => <option key={value} value={index}>{value}</option>)}
+                      </select>
+                    </label>
+                    <label className="block text-xs font-medium text-slate-600">
+                      Condition
+                      <select className={editorSelectClassName} value={pricingForm.deepCleanConditionIndex == null ? "" : String(pricingForm.deepCleanConditionIndex)} onChange={(event) => setPricingForm((current) => ({ ...current, deepCleanConditionIndex: event.target.value === "" ? null : Number(event.target.value) }))}>
+                        <option value="">Choose</option>
+                        {DEEP_CLEAN_CONDITION_LABELS.map((value, index) => <option key={value} value={index}>{value}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                )}
+                {bookingService === "Move-out" && (
+                  <label className="block text-xs font-medium text-slate-600">
+                    Square footage
+                    <select className={editorSelectClassName} value={pricingForm.moveOutSquareFootageIndex == null ? "" : String(pricingForm.moveOutSquareFootageIndex)} onChange={(event) => setPricingForm((current) => ({ ...current, moveOutSquareFootageIndex: event.target.value === "" ? null : Number(event.target.value) }))}>
+                      <option value="">Choose</option>
+                      {MOVE_OUT_SQUARE_FOOTAGE_LABELS.map((value, index) => <option key={value} value={index}>{value}</option>)}
+                    </select>
+                  </label>
+                )}
+                {bookingService === "Commercial" && (
+                  <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2">
+                    <label className="block text-xs font-medium text-slate-600">
+                      Square footage
+                      <select className={editorSelectClassName} value={pricingForm.commercialSquareFootageIndex == null ? "" : String(pricingForm.commercialSquareFootageIndex)} onChange={(event) => setPricingForm((current) => ({ ...current, commercialSquareFootageIndex: event.target.value === "" ? null : Number(event.target.value) }))}>
+                        <option value="">Choose</option>
+                        {COMMERCIAL_SQUARE_FOOTAGE_LABELS.map((value, index) => <option key={value} value={index}>{value}</option>)}
+                      </select>
+                    </label>
+                    <label className="block text-xs font-medium text-slate-600">
+                      Schedule
+                      <select className={editorSelectClassName} value={pricingForm.commercialScheduleIndex == null ? "" : String(pricingForm.commercialScheduleIndex)} onChange={(event) => setPricingForm((current) => ({ ...current, commercialScheduleIndex: event.target.value === "" ? null : Number(event.target.value) }))}>
+                        <option value="">Choose</option>
+                        {COMMERCIAL_SCHEDULES.map((schedule, index) => <option key={schedule.label} value={index}>{schedule.label}</option>)}
+                      </select>
+                    </label>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+                <DetailValue label="Service">{booking.service || "—"}</DetailValue>
+                <DetailValue label="Frequency">{booking.frequency || "One-time"}</DetailValue>
+                <DetailValue label="Bedrooms">{booking.bedrooms}</DetailValue>
+                <DetailValue label="Bathrooms">
+                  {currentPricingSnapshot?.kind === "standard"
+                    ? BATH_VALS[currentPricingSnapshot.bathroomIndex]
+                    : booking.bathrooms}
+                </DetailValue>
+                {currentPricingSnapshot?.kind === "deep-clean" && (
+                  <>
+                    <DetailValue label="Home size">{DEEP_CLEAN_SIZE_LABELS[currentPricingSnapshot.sizeIndex]}</DetailValue>
+                    <DetailValue label="Condition">{DEEP_CLEAN_CONDITION_LABELS[currentPricingSnapshot.conditionIndex]}</DetailValue>
+                  </>
+                )}
+                {currentPricingSnapshot?.kind === "move-out" && (
+                  <DetailValue label="Square footage">{MOVE_OUT_SQUARE_FOOTAGE_LABELS[currentPricingSnapshot.squareFootageIndex]}</DetailValue>
+                )}
+                {currentPricingSnapshot?.kind === "commercial" && (
+                  <>
+                    <DetailValue label="Square footage">{COMMERCIAL_SQUARE_FOOTAGE_LABELS[currentPricingSnapshot.squareFootageIndex]}</DetailValue>
+                    <DetailValue label="Schedule">{COMMERCIAL_SCHEDULES[currentPricingSnapshot.scheduleIndex]?.label ?? "—"}</DetailValue>
+                  </>
+                )}
+              </div>
+            )}
+            {editingBooking && !canEditPricing && (
+              <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+                Pricing details for this older booking cannot be safely edited. Location and notes are still available.
+              </p>
+            )}
           </DetailSection>
 
           <DetailSection title="Property">
@@ -491,7 +757,24 @@ export default function BookingDetailDrawer({
           </DetailSection>
 
           <DetailSection title="Extras">
-            {extras.length > 0 ? (
+            {editingBooking && canEditPricing ? (
+              <div className="flex flex-wrap gap-2">
+                {editorExtraCatalog.map((extra) => {
+                  const checked = bookingExtras.includes(extra.label);
+                  return (
+                    <label key={extra.label} className={`flex min-h-11 max-w-full items-center gap-2 rounded-xl border px-3 py-2 text-sm ${checked ? "border-sky-300 bg-sky-50 text-sky-900" : "border-slate-200 bg-white text-slate-700"}`}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => setBookingExtras((current) => checked ? current.filter((value) => value !== extra.label) : [...current, extra.label])}
+                        className="size-4 accent-sky-700"
+                      />
+                      <span className="break-words [overflow-wrap:anywhere]">{extra.label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            ) : extras.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {extras.map((extra, index) => (
                   <span
@@ -544,6 +827,19 @@ export default function BookingDetailDrawer({
             <div className="text-sm [&>span]:text-xl [&>span]:font-semibold [&>span]:text-slate-900 [&>div>p:last-child]:text-base [&>div>p:last-child]:font-semibold">
               {estimateContent}
             </div>
+            {editingBooking && canEditPricing && (
+              <div className="mt-3 rounded-xl bg-sky-50 px-3 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-sky-800">Updated estimate preview</p>
+                {editorPricingPreview?.ok ? (
+                  <p className="mt-1 text-lg font-semibold text-slate-950">
+                    ${editorPricingPreview.estimate.low.toLocaleString("en-US")}–${editorPricingPreview.estimate.high.toLocaleString("en-US")}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-sm text-slate-600">Choose the required pricing details to preview.</p>
+                )}
+                <p className="mt-1 text-xs text-slate-500">The server recalculates the saved estimate.</p>
+              </div>
+            )}
           </DetailSection>
 
           <DetailSection title="Assignment">

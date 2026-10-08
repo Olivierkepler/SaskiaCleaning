@@ -65,6 +65,7 @@ export type BookingRequest = {
   estimate_low: number | null;
   estimate_mid: number | null;
   estimate_high: number | null;
+  pricing_inputs?: unknown;
   notes: string | null;
   referral_code: string | null;
   friend_discount_amount: number | null;
