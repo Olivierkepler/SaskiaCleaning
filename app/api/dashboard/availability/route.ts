@@ -88,7 +88,7 @@ export async function PUT(req: Request) {
     const body = await req.json();
 
     if (body?.jobBufferMinutes != null && body?.days == null) {
-      const updated = await updateJobBufferMinutes(body.jobBufferMinutes);
+      const updated = await updateJobBufferMinutes(body.jobBufferMinutes, gate.admin.id);
       if (!updated.ok) {
         return NextResponse.json({ error: updated.error }, { status: 400 });
       }
@@ -147,10 +147,10 @@ export async function PUT(req: Request) {
     }
 
     const result = await withSchedulingTransaction(async () => {
-      const updated = await upsertWeeklyAvailability(normalized);
+      const updated = await upsertWeeklyAvailability(normalized, gate.admin.id);
       let jobBufferMinutes: number;
       if (bufferInput?.ok) {
-        const bufferResult = await updateJobBufferMinutes(bufferInput.minutes);
+        const bufferResult = await updateJobBufferMinutes(bufferInput.minutes, gate.admin.id);
         if (!bufferResult.ok) throw new Error(bufferResult.error);
         jobBufferMinutes = bufferResult.jobBufferMinutes;
       } else {

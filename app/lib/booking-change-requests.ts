@@ -23,6 +23,11 @@ import {
 import { parseBookingDateOnly } from "@/app/lib/customer-bookings-pure";
 import { deferSchedulingAfterCommit } from "@/app/lib/db";
 import { withSchedulingSavepoint, withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
+import {
+  getCurrentSchedulingPolicyRevision,
+  isSchedulingPolicyHistoryError,
+  recordBookingScheduleValidation,
+} from "@/app/lib/scheduling-policy-history";
 
 export type BookingChangeRequest = {
   id: number;
@@ -395,6 +400,7 @@ export async function countPendingAdminChangeRequests(): Promise<number> {
 async function approveBookingChangeRequestInTransaction(input: {
   requestId: number;
   customerMessage?: string | null;
+  adminUserId?: string | null;
 }): Promise<
   | { ok: true; request: BookingChangeRequest }
   | { ok: false; error: string; status: number }
@@ -529,6 +535,7 @@ async function approveBookingChangeRequestInTransaction(input: {
         newTime: slotCheck.time,
         changeRequestId: input.requestId,
         customerMessage,
+        adminUserId: input.adminUserId,
       });
       if (!moved.ok) {
         return {
@@ -609,14 +616,78 @@ async function approveBookingChangeRequestInTransaction(input: {
       request.requested_time == null ? null : String(request.requested_time),
     );
     if (!requestedTime) {
+      let assignmentRevalidationSucceeded = false;
       try {
         const { revalidateAssignmentAfterReschedule } = await import(
           "@/app/lib/staff"
         );
         await revalidateAssignmentAfterReschedule(request.booking_id);
+        assignmentRevalidationSucceeded = true;
       } catch (error) {
         console.error("Assignment revalidation after reschedule failed");
         void error;
+      }
+
+      // A legacy date-only request may still move a booking that already has a
+      // time. Capture evidence only when its existing assignment review and a
+      // read-only aggregate scheduling check succeed. A failed check never
+      // changes this legacy approval result.
+      if (assignmentRevalidationSucceeded) {
+        const policyRevision = await getCurrentSchedulingPolicyRevision();
+        if (policyRevision != null) {
+          try {
+            await withSchedulingSavepoint(async () => {
+              const bookingRows = await sql`
+                SELECT booking_date, booking_time, duration_minutes, buffer_minutes
+                FROM booking_requests
+                WHERE id = ${request.booking_id}
+                LIMIT 1
+              `;
+              const booking = bookingRows[0] as {
+                booking_date: string | Date | null;
+                booking_time: string | null;
+                duration_minutes: number | null;
+                buffer_minutes: number | null;
+              } | undefined;
+              const bookingDate = parseBookingDateOnly(booking?.booking_date ?? null);
+              const bookingTime = parseBookingTime(booking?.booking_time ?? null);
+              if (!bookingDate || !bookingTime || !booking) return;
+              const { resolveEffectiveDurationMinutes } = await import(
+                "@/app/lib/booking-duration-pure"
+              );
+              const { resolveEffectiveBufferMinutes } = await import(
+                "@/app/lib/booking-buffer-pure"
+              );
+              const durationMinutes = resolveEffectiveDurationMinutes(
+                booking.duration_minutes == null ? null : Number(booking.duration_minutes),
+              );
+              const bufferMinutes = resolveEffectiveBufferMinutes(
+                booking.buffer_minutes == null ? null : Number(booking.buffer_minutes),
+              );
+              const slotCheck = await assertSlotAvailable({
+                dateOnly: bookingDate,
+                time: bookingTime,
+                durationMinutes,
+                bufferMinutes,
+                excludeBookingId: request.booking_id,
+              });
+              if (!slotCheck.ok) return;
+              await recordBookingScheduleValidation({
+                bookingId: request.booking_id,
+                appointmentDate: bookingDate,
+                appointmentTime: slotCheck.time,
+                durationMinutes,
+                bufferMinutes,
+                source: "customer_reschedule",
+                changeRequestId: request.id,
+                adminUserId: input.adminUserId,
+              });
+            });
+          } catch (error) {
+            if (isSchedulingPolicyHistoryError(error)) throw error;
+            console.error("Legacy date-only reschedule history check skipped.");
+          }
+        }
       }
     }
   }

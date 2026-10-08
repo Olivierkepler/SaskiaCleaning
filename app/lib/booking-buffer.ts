@@ -6,6 +6,7 @@ import "server-only";
 
 import { sql } from "@/app/lib/db";
 import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
+import { recordSchedulingPolicyChange } from "@/app/lib/scheduling-policy-history";
 import {
   DEFAULT_JOB_BUFFER_MINUTES,
   normalizeBufferMinutes,
@@ -57,6 +58,7 @@ export async function getSchedulingBufferSettings(): Promise<SchedulingBufferSet
 
 export async function updateJobBufferMinutes(
   value: unknown,
+  changedByAdminId?: string | null,
 ): Promise<
   | { ok: true; jobBufferMinutes: number }
   | { ok: false; error: string }
@@ -65,6 +67,15 @@ export async function updateJobBufferMinutes(
   if (!normalized.ok) return normalized;
 
   return withSchedulingTransaction(async () => {
+  const beforeRows = await sql`
+    SELECT job_buffer_minutes
+    FROM scheduling_settings
+    WHERE id = 1
+    LIMIT 1
+  `;
+  const rawBefore = (beforeRows[0] as { job_buffer_minutes?: number } | undefined)?.job_buffer_minutes;
+  const before = normalizeBufferMinutes(rawBefore);
+  const beforeMinutes = before.ok ? before.minutes : DEFAULT_JOB_BUFFER_MINUTES;
   const rows = await sql`
     INSERT INTO scheduling_settings (id, job_buffer_minutes, updated_at)
     VALUES (1, ${normalized.minutes}, now())
@@ -75,9 +86,17 @@ export async function updateJobBufferMinutes(
     RETURNING job_buffer_minutes
   `;
   const row = rows[0] as { job_buffer_minutes: number } | undefined;
+  const updatedMinutes = Number(row?.job_buffer_minutes ?? normalized.minutes);
+  if (beforeMinutes !== updatedMinutes) {
+    await recordSchedulingPolicyChange({
+      changeType: "default_buffer",
+      details: { previousMinutes: beforeMinutes, nextMinutes: updatedMinutes },
+      changedByAdminId,
+    });
+  }
   return {
     ok: true,
-    jobBufferMinutes: Number(row?.job_buffer_minutes ?? normalized.minutes),
+    jobBufferMinutes: updatedMinutes,
   };
   });
 }

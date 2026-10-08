@@ -6,6 +6,8 @@ import "server-only";
 
 import { sql } from "@/app/lib/db";
 import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
+import { isSchedulingPolicyHistoryError, recordSchedulingPolicyChange } from "@/app/lib/scheduling-policy-history";
+import { hasPolicyValueChanged } from "@/app/lib/scheduling-policy-history-pure";
 import {
   calculateBookingDuration,
   normalizeDurationMinutes,
@@ -61,6 +63,7 @@ export async function upsertServiceDurationRule(input: {
   id?: number;
   serviceKey: string;
   durationMinutes: number;
+  changedByAdminId?: string | null;
 }): Promise<
   | { ok: true; rule: ServiceDurationRule & { id: number } }
   | { ok: false; error: string; status: number }
@@ -77,6 +80,13 @@ export async function upsertServiceDurationRule(input: {
   return withSchedulingTransaction(async () => {
   try {
     if (input.id) {
+      const previousRows = await sql`
+        SELECT service_key, duration_minutes
+        FROM service_duration_rules
+        WHERE id = ${input.id}
+        LIMIT 1
+      `;
+      const previous = previousRows[0] as { service_key: string; duration_minutes: number } | undefined;
       const rows = await sql`
         UPDATE service_duration_rules
         SET
@@ -90,12 +100,27 @@ export async function upsertServiceDurationRule(input: {
       if (!row) {
         return { ok: false, error: "Rule not found.", status: 404 };
       }
+      const next = { serviceKey: String(row.service_key), durationMinutes: Number(row.duration_minutes) };
+      if (hasPolicyValueChanged(
+        previous ? { serviceKey: previous.service_key, durationMinutes: Number(previous.duration_minutes) } : null,
+        next,
+      )) {
+        await recordSchedulingPolicyChange({
+          changeType: "service_duration_rule",
+          details: {
+            operation: "update",
+            ruleId: Number(row.id),
+            previous: previous ? { serviceKey: previous.service_key, durationMinutes: Number(previous.duration_minutes) } : null,
+            next,
+          },
+          changedByAdminId: input.changedByAdminId,
+        });
+      }
       return {
         ok: true,
         rule: {
           id: Number(row.id),
-          serviceKey: String(row.service_key),
-          durationMinutes: Number(row.duration_minutes),
+          ...next,
         },
       };
     }
@@ -106,15 +131,21 @@ export async function upsertServiceDurationRule(input: {
       RETURNING id, service_key, duration_minutes
     `;
     const row = rows[0] as Record<string, unknown>;
+    const next = { serviceKey: String(row.service_key), durationMinutes: Number(row.duration_minutes) };
+    await recordSchedulingPolicyChange({
+      changeType: "service_duration_rule",
+      details: { operation: "create", ruleId: Number(row.id), previous: null, next },
+      changedByAdminId: input.changedByAdminId,
+    });
     return {
       ok: true,
       rule: {
         id: Number(row.id),
-        serviceKey: String(row.service_key),
-        durationMinutes: Number(row.duration_minutes),
+          ...next,
       },
     };
   } catch (error) {
+    if (isSchedulingPolicyHistoryError(error)) throw error;
     const message = error instanceof Error ? error.message : String(error);
     if (message.includes("service_duration_rules_service_key_uidx")) {
       return {
@@ -131,13 +162,26 @@ export async function upsertServiceDurationRule(input: {
 
 export async function deleteServiceDurationRule(
   id: number,
+  changedByAdminId?: string | null,
 ): Promise<boolean> {
   return withSchedulingTransaction(async () => {
   const rows = await sql`
     DELETE FROM service_duration_rules
     WHERE id = ${id}
-    RETURNING id
+    RETURNING id, service_key, duration_minutes
   `;
-  return Boolean(rows[0]);
+  const row = rows[0] as { id: number; service_key: string; duration_minutes: number } | undefined;
+  if (!row) return false;
+  await recordSchedulingPolicyChange({
+    changeType: "service_duration_rule",
+    details: {
+      operation: "delete",
+      ruleId: Number(row.id),
+      previous: { serviceKey: row.service_key, durationMinutes: Number(row.duration_minutes) },
+      next: null,
+    },
+    changedByAdminId,
+  });
+  return true;
   });
 }

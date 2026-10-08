@@ -32,6 +32,7 @@ export async function PUT(req: Request) {
       id: typeof body?.id === "number" ? body.id : undefined,
       serviceKey: String(body?.serviceKey ?? ""),
       durationMinutes: Number(body?.durationMinutes),
+      changedByAdminId: gate.admin.id,
     });
     if (!result.ok) {
       return NextResponse.json(
@@ -57,7 +58,7 @@ export async function DELETE(req: Request) {
     if (!Number.isInteger(id) || id <= 0) {
       return NextResponse.json({ error: "id required." }, { status: 400 });
     }
-    const ok = await deleteServiceDurationRule(id);
+    const ok = await deleteServiceDurationRule(id, gate.admin.id);
     if (!ok) {
       return NextResponse.json({ error: "Not found." }, { status: 404 });
     }

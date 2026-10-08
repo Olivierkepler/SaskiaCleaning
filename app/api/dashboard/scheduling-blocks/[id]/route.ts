@@ -18,7 +18,7 @@ const gate = await requireAdminApi();
       return NextResponse.json({ error: "Invalid block id." }, { status: 400 });
     }
 
-    const deleted = await deleteSchedulingBlock(blockId);
+    const deleted = await deleteSchedulingBlock(blockId, gate.admin.id);
     if (!deleted) {
       return NextResponse.json({ error: "Block not found." }, { status: 404 });
     }

@@ -275,7 +275,7 @@ export function classifyAssignmentConflict(input: {
 
 export function createTransactionBoundAppointmentMove(
   withTransaction: <T>(operation: () => Promise<T>) => Promise<T>,
-  execute: (input: AppointmentMoveInput) => Promise<AppointmentMoveResult>,
-): (input: AppointmentMoveInput) => Promise<AppointmentMoveResult> {
-  return (input) => withTransaction(() => execute(input));
+  execute: (input: AppointmentMoveInput, adminUserId?: string | null) => Promise<AppointmentMoveResult>,
+): (input: AppointmentMoveInput, adminUserId?: string | null) => Promise<AppointmentMoveResult> {
+  return (input, adminUserId) => withTransaction(() => execute(input, adminUserId));
 }

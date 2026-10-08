@@ -60,8 +60,9 @@ export async function PATCH(req: Request) {
   const result =
     action === "approve"
       ? await approveBookingChangeRequest({
-          requestId,
-          customerMessage,
+        requestId,
+        customerMessage,
+        adminUserId: gate.admin.id,
         })
       : await rejectBookingChangeRequest({
           requestId,

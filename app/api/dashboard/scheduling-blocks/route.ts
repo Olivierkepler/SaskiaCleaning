@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       startTime: body?.startTime ?? null,
       endTime: body?.endTime ?? null,
       reason: body?.reason ?? null,
-    });
+    }, gate.admin.id);
 
     if ("error" in result) {
       return NextResponse.json({ error: result.error }, { status: 400 });

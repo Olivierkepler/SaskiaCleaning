@@ -74,7 +74,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       bookingId,
       bookingDate,
       bookingTime,
-    }),
+    }, gate.admin.id),
     updateDetails: async (detailsInput) => {
       const updated = await executeAdminBookingDetailsPatch(detailsInput, {
         authorized: true,

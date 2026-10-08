@@ -18,6 +18,10 @@ import {
 } from "@/app/lib/appointment-move-pure";
 import { resolveEffectiveDurationMinutes } from "@/app/lib/booking-duration-pure";
 import { resolveEffectiveBufferMinutes } from "@/app/lib/booking-buffer-pure";
+import {
+  isSchedulingPolicyHistoryError,
+  recordBookingScheduleValidation,
+} from "@/app/lib/scheduling-policy-history";
 
 class MoveRollbackError extends Error {
   constructor(readonly reason: "STALE_BOOKING" | "STALE_ASSIGNMENT") {
@@ -33,7 +37,7 @@ function isConstraintConflict(error: unknown): boolean {
       /booking_assignments_staff_window_excl|booking_assignments_staff_active_slot_uidx|booking_assignments_one_active_primary_uidx|exclusion constraint/i.test(candidate.message));
 }
 
-async function moveInsideTransaction(input: AppointmentMoveInput): Promise<AppointmentMoveResult> {
+async function moveInsideTransaction(input: AppointmentMoveInput, adminUserId?: string | null): Promise<AppointmentMoveResult> {
   return executeAppointmentMove(input, {
     loadBookingForUpdate: async (bookingId) => {
       const rows = await sql`
@@ -164,6 +168,15 @@ async function moveInsideTransaction(input: AppointmentMoveInput): Promise<Appoi
       const row = moved[0] as { booking_updated?: boolean; assignment_updated?: boolean } | undefined;
       if (!row?.booking_updated) return "STALE_BOOKING";
       if (assignment && !row.assignment_updated) throw new MoveRollbackError("STALE_ASSIGNMENT");
+      await recordBookingScheduleValidation({
+        bookingId: booking.id,
+        appointmentDate: bookingDate,
+        appointmentTime: bookingTime,
+        durationMinutes: window.durationMinutes,
+        bufferMinutes: window.bufferMinutes,
+        source: "admin_appointment_move",
+        adminUserId,
+      });
       return "UPDATED";
     },
   });
@@ -180,10 +193,12 @@ const moveInSerializedDomain = createTransactionBoundAppointmentMove(
  */
 export async function moveBookingAppointmentSafely(
   input: AppointmentMoveInput,
+  adminUserId?: string | null,
 ): Promise<AppointmentMoveResult> {
   try {
-    return await moveInSerializedDomain(input);
+    return await moveInSerializedDomain(input, adminUserId);
   } catch (error) {
+    if (isSchedulingPolicyHistoryError(error)) throw error;
     if (error instanceof MoveRollbackError) {
       return { ok: false, reason: error.reason === "STALE_ASSIGNMENT" ? "STALE_ASSIGNMENT" : "CONCURRENT_CONFLICT" };
     }

@@ -6,6 +6,8 @@ import type {
   BookingDiagnosticEvent,
 } from "@/app/lib/booking-diagnostics";
 import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
+import { recordSchedulingPolicyChange } from "@/app/lib/scheduling-policy-history";
+import { hasPolicyValueChanged } from "@/app/lib/scheduling-policy-history-pure";
 import {
   parseBookingTime,
   getZonedDateParts,
@@ -192,9 +194,10 @@ export async function upsertWeeklyAvailability(
     slotIntervalMinutes: number;
     isActive: boolean;
   }>,
+  changedByAdminId?: string | null,
 ): Promise<WeeklyAvailability[]> {
   return withSchedulingTransaction(async () => {
-  for (const day of days) {
+  const normalizedDays = days.map((day) => {
     const start = parseBookingTime(day.startTime);
     const end = parseBookingTime(day.endTime);
     if (
@@ -206,6 +209,36 @@ export async function upsertWeeklyAvailability(
     ) {
       throw new Error("Invalid availability row.");
     }
+    return { ...day, startTime: start, endTime: end };
+  });
+  const existingRows = await sql`
+    SELECT day_of_week, start_time, end_time, slot_interval_minutes, is_active
+    FROM scheduling_availability
+  `;
+  const existingByDay = new Map((existingRows as Array<Record<string, unknown>>).map((row) => [
+    Number(row.day_of_week),
+    {
+      dayOfWeek: Number(row.day_of_week),
+      startTime: parseBookingTime(String(row.start_time)),
+      endTime: parseBookingTime(String(row.end_time)),
+      slotIntervalMinutes: Number(row.slot_interval_minutes),
+      isActive: Boolean(row.is_active),
+    },
+  ]));
+  const finalByDay = new Map(normalizedDays.map((day) => [day.dayOfWeek, day]));
+  const changes = [...finalByDay.values()].flatMap((day) => {
+    const before = existingByDay.get(day.dayOfWeek) ?? null;
+    const after = {
+      dayOfWeek: day.dayOfWeek,
+      startTime: day.startTime,
+      endTime: day.endTime,
+      slotIntervalMinutes: day.slotIntervalMinutes,
+      isActive: day.isActive,
+    };
+    return hasPolicyValueChanged(before, after) ? [{ before, after }] : [];
+  });
+
+  for (const day of normalizedDays) {
 
     await sql`
       INSERT INTO scheduling_availability (
@@ -213,8 +246,8 @@ export async function upsertWeeklyAvailability(
       )
       VALUES (
         ${day.dayOfWeek},
-        ${start}::time,
-        ${end}::time,
+        ${day.startTime}::time,
+        ${day.endTime}::time,
         ${day.slotIntervalMinutes},
         ${day.isActive},
         now()
@@ -228,6 +261,14 @@ export async function upsertWeeklyAvailability(
     `;
   }
 
+  if (changes.length > 0) {
+    await recordSchedulingPolicyChange({
+      changeType: "weekly_availability",
+      details: { changedDays: changes },
+      changedByAdminId,
+    });
+  }
+
   return listWeeklyAvailability();
   });
 }
@@ -237,7 +278,7 @@ export async function createSchedulingBlock(input: {
   startTime?: string | null;
   endTime?: string | null;
   reason?: string | null;
-}): Promise<{ id: number } | { error: string }> {
+}, changedByAdminId?: string | null): Promise<{ id: number } | { error: string }> {
   if (!isValidBookingDateOnly(input.blockDate)) {
     return { error: "Invalid block date." };
   }
@@ -274,21 +315,50 @@ export async function createSchedulingBlock(input: {
     )
     RETURNING id
   `;
+  const id = Number((rows[0] as { id: number }).id);
+  await recordSchedulingPolicyChange({
+    changeType: "scheduling_block_created",
+    details: {
+      operation: "create",
+      blockId: id,
+      blockDate: input.blockDate,
+      startTime: start,
+      endTime: end,
+    },
+    changedByAdminId,
+  });
 
-  return { id: Number((rows[0] as { id: number }).id) };
+  return { id };
   });
 }
 
 export async function deleteSchedulingBlock(
   blockId: number,
+  changedByAdminId?: string | null,
 ): Promise<boolean> {
   return withSchedulingTransaction(async () => {
   const rows = await sql`
     DELETE FROM scheduling_blocks
     WHERE id = ${blockId}
-    RETURNING id
+    RETURNING id, block_date, start_time, end_time
   `;
-  return Boolean(rows[0]);
+  const row = rows[0] as Record<string, unknown> | undefined;
+  if (!row) return false;
+  const blockDate = row.block_date instanceof Date
+    ? row.block_date.toISOString().slice(0, 10)
+    : String(row.block_date).slice(0, 10);
+  await recordSchedulingPolicyChange({
+    changeType: "scheduling_block_deleted",
+    details: {
+      operation: "delete",
+      blockId: Number(row.id),
+      blockDate,
+      startTime: row.start_time == null ? null : parseBookingTime(String(row.start_time)),
+      endTime: row.end_time == null ? null : parseBookingTime(String(row.end_time)),
+    },
+    changedByAdminId,
+  });
+  return true;
   });
 }
 

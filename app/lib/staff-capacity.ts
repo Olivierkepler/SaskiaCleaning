@@ -48,6 +48,7 @@ import { sendEmail } from "@/app/lib/email";
 import { formatEstimatedDuration } from "@/app/lib/booking-duration-pure";
 import { resolveDurationForBooking } from "@/app/lib/booking-duration";
 import { withSchedulingTransaction, withSchedulingSavepoint } from "@/app/lib/scheduling-transaction";
+import { isSchedulingPolicyHistoryError, recordBookingScheduleValidation } from "@/app/lib/scheduling-policy-history";
 import {
   logBookingDiagnostic,
   logBookingDiagnosticCategory,
@@ -642,6 +643,15 @@ async function createBookingWithCapacityClaimInTransaction(
         return { ok: false, error: CAPACITY_UNAVAILABLE_MESSAGE, status: 503 };
       }
 
+      await recordBookingScheduleValidation({
+        bookingId: Number(booking.id),
+        appointmentDate: fields.bookingDate,
+        appointmentTime: fields.bookingTime,
+        durationMinutes: fields.durationMinutes,
+        bufferMinutes,
+        source: "customer_booking",
+      });
+
       deferSchedulingAfterCommit(() =>
         runBookingNotificationSafely(async () => {
           const staffRows = await sql`
@@ -681,6 +691,7 @@ async function createBookingWithCapacityClaimInTransaction(
         staffId: String(booking.claimed_staff_id ?? candidate.id),
       };
     } catch (error) {
+      if (isSchedulingPolicyHistoryError(error)) throw error;
       if (isOverlapClaimViolation(error)) continue;
       logBookingDiagnostic("BOOKING_CLAIM_FAILED", error);
       return { ok: false, error: CAPACITY_UNAVAILABLE_MESSAGE, status: 503 };
@@ -706,6 +717,7 @@ async function rescheduleBookingWithCapacityClaimInTransaction(input: {
   changeRequestId: number;
   customerMessage: string | null;
   preferStaffId?: string | null;
+  adminUserId?: string | null;
 }): Promise<
   | { ok: true; staffId: string; retained: boolean }
   | { ok: false; error: string; status: number }
@@ -879,19 +891,26 @@ async function rescheduleBookingWithCapacityClaimInTransaction(input: {
         };
       }
 
+      await recordBookingScheduleValidation({
+        bookingId: input.bookingId,
+        appointmentDate: input.newDate,
+        appointmentTime: input.newTime,
+        durationMinutes,
+        bufferMinutes,
+        source: "customer_reschedule",
+        changeRequestId: input.changeRequestId,
+        adminUserId: input.adminUserId,
+      });
+
       if (!retained && currentStaffId && currentStaffId !== chosenId) {
-        const [prevRows, nextRows] = await Promise.all([
+        deferSchedulingAfterCommit(async () => {
+          try {
+          const [prevRows, nextRows] = await Promise.all([
             sql`SELECT name, email FROM staff_members WHERE id = ${currentStaffId} LIMIT 1`,
             sql`SELECT name, email FROM staff_members WHERE id = ${chosenId} LIMIT 1`,
           ]);
-          const prev = prevRows[0] as
-            | { name: string; email: string }
-            | undefined;
-          const next = nextRows[0] as
-            | { name: string; email: string }
-            | undefined;
-        deferSchedulingAfterCommit(async () => {
-          try {
+          const prev = prevRows[0] as { name: string; email: string } | undefined;
+          const next = nextRows[0] as { name: string; email: string } | undefined;
           if (prev?.email) {
             await sendEmail({
               to: prev.email,
@@ -931,6 +950,7 @@ async function rescheduleBookingWithCapacityClaimInTransaction(input: {
 
       return { ok: true, staffId: chosenId, retained };
     } catch (error) {
+      if (isSchedulingPolicyHistoryError(error)) throw error;
       if (isOverlapClaimViolation(error)) continue;
       console.error("Reschedule capacity claim failed:", error);
       return { ok: false, error: CAPACITY_UNAVAILABLE_MESSAGE, status: 503 };
