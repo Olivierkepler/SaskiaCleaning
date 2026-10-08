@@ -12,6 +12,58 @@ export function isStaffRole(value: string): value is StaffRole {
   return (STAFF_ROLES as readonly string[]).includes(value);
 }
 
+/** Only active cleaners may receive a new cleaning assignment. */
+export function isAssignableCleaner(input: {
+  role: string;
+  isActive: boolean;
+}): boolean {
+  return input.role === "cleaner" && input.isActive;
+}
+
+/** Assignment edits are valid only if the active assignment has not changed. */
+export function expectedAssignmentMatches(input: {
+  expectedAssignmentId: string | null | undefined;
+  actualAssignmentId: string | null;
+}): boolean {
+  return (
+    input.expectedAssignmentId !== undefined &&
+    input.expectedAssignmentId === input.actualAssignmentId
+  );
+}
+
+export function validateExpectedAssignmentId(input: {
+  provided: boolean;
+  value: unknown;
+}): { ok: true; assignmentId: string | null } | { ok: false } {
+  if (!input.provided) return { ok: false };
+  if (input.value === null) return { ok: true, assignmentId: null };
+  if (typeof input.value !== "string" || !input.value.trim()) {
+    return { ok: false };
+  }
+  return { ok: true, assignmentId: input.value };
+}
+
+/** Cleaner promotion is blocked while future active assignments remain. */
+export function cleanerPromotionHasAssignments(input: {
+  currentRole: string;
+  nextRole: string;
+  activeFutureAssignments: number;
+}): boolean {
+  return (
+    input.currentRole === "cleaner" &&
+    input.nextRole === "manager" &&
+    input.activeFutureAssignments > 0
+  );
+}
+
+export function canRetainExistingAssignment(input: {
+  isActive: boolean;
+  slotAvailable: boolean;
+  hasConflict: boolean;
+}): boolean {
+  return input.isActive && input.slotAvailable && !input.hasConflict;
+}
+
 export function normalizeStaffEmail(
   email: string,
 ): { ok: true; email: string } | { ok: false; error: string } {

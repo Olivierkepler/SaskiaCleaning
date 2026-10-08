@@ -2,9 +2,13 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   STAFF_AUTH_PORTAL_COOKIE,
+  canRetainExistingAssignment,
   canStaffTransitionStatus,
+  cleanerPromotionHasAssignments,
+  expectedAssignmentMatches,
   formatStaffRole,
   hasExactSlotStaffConflict,
+  isAssignableCleaner,
   isStaffActionableStatus,
   isStaffRole,
   isTimeWithinStaffAvailability,
@@ -12,6 +16,7 @@ import {
   normalizeStaffName,
   normalizeStaffPhone,
   staffTimeOffBlocksSlot,
+  validateExpectedAssignmentId,
 } from "../app/lib/staff-pure";
 
 describe("staff field validation", () => {
@@ -36,6 +41,114 @@ describe("staff field validation", () => {
     assert.equal(isStaffRole("cleaner"), true);
     assert.equal(isStaffRole("admin"), false);
     assert.equal(formatStaffRole("manager"), "Manager");
+  });
+});
+
+describe("assignment eligibility and stale edit safeguards", () => {
+  it("allows only active cleaners to receive assignments", () => {
+    assert.equal(isAssignableCleaner({ role: "cleaner", isActive: true }), true);
+    assert.equal(isAssignableCleaner({ role: "manager", isActive: true }), false);
+    assert.equal(isAssignableCleaner({ role: "cleaner", isActive: false }), false);
+  });
+
+  it("retains an existing manager assignment only while active and valid", () => {
+    assert.equal(
+      canRetainExistingAssignment({
+        isActive: true,
+        slotAvailable: true,
+        hasConflict: false,
+      }),
+      true,
+    );
+    assert.equal(
+      canRetainExistingAssignment({
+        isActive: false,
+        slotAvailable: true,
+        hasConflict: false,
+      }),
+      false,
+    );
+    assert.equal(
+      canRetainExistingAssignment({
+        isActive: true,
+        slotAvailable: true,
+        hasConflict: true,
+      }),
+      false,
+    );
+  });
+
+  it("blocks stale assignment edits before mutation", () => {
+    const writes: string[] = [];
+    const expectedAssignmentId = "assignment-loaded-by-admin";
+    const actualAssignmentId = "assignment-changed-by-another-admin";
+    if (expectedAssignmentMatches({ expectedAssignmentId, actualAssignmentId })) {
+      writes.push("replace assignment");
+    }
+    assert.deepEqual(writes, []);
+    assert.equal(
+      expectedAssignmentMatches({
+        expectedAssignmentId: null,
+        actualAssignmentId: "newly-created-assignment",
+      }),
+      false,
+    );
+    assert.equal(
+      expectedAssignmentMatches({
+        expectedAssignmentId: "same-assignment",
+        actualAssignmentId: "same-assignment",
+      }),
+      true,
+    );
+    assert.equal(
+      expectedAssignmentMatches({
+        expectedAssignmentId: undefined,
+        actualAssignmentId: null,
+      }),
+      false,
+    );
+    assert.equal(
+      expectedAssignmentMatches({
+        expectedAssignmentId: null,
+        actualAssignmentId: null,
+      }),
+      true,
+    );
+    assert.deepEqual(
+      validateExpectedAssignmentId({ provided: false, value: undefined }),
+      { ok: false },
+    );
+    assert.deepEqual(
+      validateExpectedAssignmentId({ provided: true, value: null }),
+      { ok: true, assignmentId: null },
+    );
+  });
+
+  it("blocks cleaner promotion while future assignments remain", () => {
+    assert.equal(
+      cleanerPromotionHasAssignments({
+        currentRole: "cleaner",
+        nextRole: "manager",
+        activeFutureAssignments: 1,
+      }),
+      true,
+    );
+    assert.equal(
+      cleanerPromotionHasAssignments({
+        currentRole: "cleaner",
+        nextRole: "manager",
+        activeFutureAssignments: 0,
+      }),
+      false,
+    );
+    assert.equal(
+      cleanerPromotionHasAssignments({
+        currentRole: "manager",
+        nextRole: "manager",
+        activeFutureAssignments: 5,
+      }),
+      false,
+    );
   });
 });
 

@@ -5,6 +5,7 @@ import {
   SCHEDULING_LOCK_DOMAIN,
   type SchedulingTransactionClient,
 } from "../app/lib/scheduling-transaction-pure";
+import { expectedAssignmentMatches } from "../app/lib/staff-pure";
 
 function fixture() {
   const calls: string[] = [];
@@ -75,4 +76,44 @@ test("shared scheduling lock serializes concurrent writer operations", async () 
   unlock?.();
   await Promise.all([first, second]);
   assert.deepEqual(order, ["first:start", "first:end", "second:start", "second:end"]);
+});
+
+test("concurrent assignment edits serialize and reject the stale second edit", async () => {
+  let currentAssignmentId: string | null = null;
+  let tail = Promise.resolve();
+  const createWriter = (nextAssignmentId: string) => {
+    let releaseLock: () => void = () => {};
+    return runSchedulingTransaction({
+      connect: async () => ({
+        query: async () => ({ rows: [] }),
+        release: () => releaseLock(),
+      }),
+      begin: async () => undefined,
+      acquireLock: async () => {
+        const previous = tail;
+        let release!: () => void;
+        tail = new Promise<void>((resolve) => { release = resolve; });
+        await previous;
+        releaseLock = release;
+      },
+      operation: async () => {
+        const expectedAssignmentId = null;
+        if (!expectedAssignmentMatches({
+          expectedAssignmentId,
+          actualAssignmentId: currentAssignmentId,
+        })) return false;
+        currentAssignmentId = nextAssignmentId;
+        return true;
+      },
+      commit: async () => undefined,
+      rollback: async () => undefined,
+    });
+  };
+
+  const results = await Promise.all([
+    createWriter("assignment-a"),
+    createWriter("assignment-b"),
+  ]);
+  assert.deepEqual(results, [true, false]);
+  assert.equal(currentAssignmentId, "assignment-a");
 });

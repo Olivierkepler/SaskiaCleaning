@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 type Eligible = { id: string; name: string; email: string };
 type Assignment = {
+  id: string;
   staffId: string;
   staffName?: string;
   staffEmail?: string;
@@ -19,6 +20,7 @@ export default function BookingAssignControl({
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [assignment, setAssignment] = useState<Assignment>(null);
+  const [assignmentRefreshRequired, setAssignmentRefreshRequired] = useState(false);
   const [opsWindow, setOpsWindow] = useState<{
     serviceRange: string;
     reservedUntil: string | null;
@@ -55,6 +57,7 @@ export default function BookingAssignControl({
         if (cancelled) return;
         if (!res.ok) throw new Error(data.error || "Failed to load");
         setAssignment(data.assignment);
+        setAssignmentRefreshRequired(false);
         setOpsWindow(
           data.opsWindow
             ? {
@@ -88,11 +91,42 @@ export default function BookingAssignControl({
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(unassign ? { unassign: true } : { staffId }),
+          body: JSON.stringify(
+            unassign
+              ? { unassign: true, expectedAssignmentId: assignment?.id ?? null }
+              : { staffId, expectedAssignmentId: assignment?.id ?? null },
+          ),
         },
       );
       const data = await response.json();
       if (!response.ok) {
+        if (response.status === 409) {
+          setAssignmentRefreshRequired(true);
+          try {
+            const latestResponse = await fetch(
+              `/api/dashboard/bookings/${bookingId}/assignment`,
+            );
+            const latest = await latestResponse.json();
+            if (latestResponse.ok) {
+              setAssignment(latest.assignment);
+              setAssignmentRefreshRequired(false);
+              setStaffId(latest.assignment?.staffId ?? "");
+              setEligible(latest.eligibleStaff ?? []);
+              setOpsWindow(
+                latest.opsWindow
+                  ? {
+                      serviceRange: String(latest.opsWindow.serviceRange),
+                      reservedUntil: latest.opsWindow.reservedUntil
+                        ? String(latest.opsWindow.reservedUntil)
+                        : null,
+                    }
+                  : null,
+              );
+            }
+          } catch {
+            // Keep the conflict message visible; the admin can reopen to retry.
+          }
+        }
         setError(data.error || "Assignment failed");
         return;
       }
@@ -151,7 +185,7 @@ export default function BookingAssignControl({
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  disabled={!staffId || loading}
+                  disabled={!staffId || loading || assignmentRefreshRequired}
                   onClick={() => void save(false)}
                   className="rounded-lg bg-sky-500 px-2.5 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
                 >
@@ -160,7 +194,7 @@ export default function BookingAssignControl({
                 {assignment ? (
                   <button
                     type="button"
-                    disabled={loading}
+                    disabled={loading || assignmentRefreshRequired}
                     onClick={() => void save(true)}
                     className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700"
                   >

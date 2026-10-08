@@ -4,8 +4,12 @@ import { sql } from "@/app/lib/db";
 import { deferSchedulingAfterCommit } from "@/app/lib/db";
 import { withSchedulingTransaction, withSchedulingSavepoint } from "@/app/lib/scheduling-transaction";
 import {
+  canRetainExistingAssignment,
   formatStaffRole,
+  cleanerPromotionHasAssignments,
+  expectedAssignmentMatches,
   hasOverlappingStaffConflict,
+  isAssignableCleaner,
   isStaffRole,
   normalizeStaffEmail,
   normalizeStaffName,
@@ -257,8 +261,25 @@ export async function updateStaffMember(
   const isActive = Boolean(record.isActive);
 
   return withSchedulingTransaction(async () => {
+  const currentRows = await sql`
+    SELECT role, is_active
+    FROM staff_members
+    WHERE id = ${staffId}
+    LIMIT 1
+  `;
+  const current = currentRows[0] as
+    | { role: string; is_active: boolean }
+    | undefined;
+  if (!current) {
+    return { ok: false, error: "Staff member not found.", status: 404 };
+  }
+
+  const needsAssignmentCheck =
+    !isActive || (current.role === "cleaner" && role === "manager");
+  const upcoming = needsAssignmentCheck
+    ? await countUpcomingAssignmentsForStaff(staffId)
+    : 0;
   if (!isActive) {
-    const upcoming = await countUpcomingAssignmentsForStaff(staffId);
     if (upcoming > 0) {
       return {
         ok: false,
@@ -266,6 +287,22 @@ export async function updateStaffMember(
         status: 409,
       };
     }
+  }
+
+  if (
+    isActive &&
+    cleanerPromotionHasAssignments({
+      currentRole: current.role,
+      nextRole: role,
+      activeFutureAssignments: upcoming,
+    })
+  ) {
+    return {
+      ok: false,
+      error:
+        "Cannot change this cleaner to a manager while future jobs are assigned. Reassign those bookings first.",
+      status: 409,
+    };
   }
 
   const rows = await sql`
@@ -631,7 +668,24 @@ export async function staffIsEligibleForSlot(input: {
   bufferMinutes: number;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   const staff = await findStaffById(input.staffId);
-  if (!staff || !staff.isActive) {
+  if (!staff || !isAssignableCleaner(staff)) {
+    return { ok: false, error: "That staff member is not available." };
+  }
+
+  return validateStaffAvailabilityForSlot(input, staff);
+}
+
+async function validateStaffAvailabilityForSlot(
+  input: {
+    staffId: string;
+    dateOnly: string;
+    time: string;
+    durationMinutes: number;
+    bufferMinutes: number;
+  },
+  staff: StaffMember,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!staff.isActive) {
     return { ok: false, error: "That staff member is not available." };
   }
 
@@ -753,6 +807,7 @@ export async function listEligibleStaffForBooking(bookingId: number): Promise<
     SELECT *
     FROM staff_members
     WHERE is_active = true
+      AND role = 'cleaner'
     ORDER BY name ASC
   `;
 
@@ -818,6 +873,7 @@ export async function listEligibleStaffForBooking(bookingId: number): Promise<
 export async function assignStaffToBooking(input: {
   bookingId: number;
   staffId: string;
+  expectedAssignmentId?: string | null;
   assignedBy?: string | null;
 }): Promise<
   | { ok: true; assignment: BookingAssignment }
@@ -833,6 +889,19 @@ export async function assignStaffToBooking(input: {
   const booking = bookingRows[0] as Record<string, unknown> | undefined;
   if (!booking) {
     return { ok: false, error: "Booking not found.", status: 404 };
+  }
+  const previous = await getAssignmentForBooking(input.bookingId);
+  if (
+    !expectedAssignmentMatches({
+      expectedAssignmentId: input.expectedAssignmentId,
+      actualAssignmentId: previous?.id ?? null,
+    })
+  ) {
+    return {
+      ok: false,
+      error: "Assignment changed while you were editing. Refresh the booking and try again.",
+      status: 409,
+    };
   }
   if (String(booking.status) === "cancelled") {
     return { ok: false, error: "Cannot assign a cancelled booking.", status: 400 };
@@ -926,7 +995,6 @@ export async function assignStaffToBooking(input: {
     };
   }
 
-  const previous = await getAssignmentForBooking(input.bookingId);
   const assignedBy = input.assignedBy?.trim() || "dashboard";
   const windowStartIso = window.windowStartUtc.toISOString();
   const windowEndIso = window.windowEndUtc.toISOString();
@@ -1045,6 +1113,7 @@ export async function assignStaffToBooking(input: {
 
 export async function unassignBooking(
   bookingId: number,
+  expectedAssignmentId?: string | null,
 ): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
   return withSchedulingTransaction(async () => {
   const bookingRows = await sql`
@@ -1062,6 +1131,19 @@ export async function unassignBooking(
     | undefined;
   if (!booking) {
     return { ok: false, error: "Booking not found.", status: 404 };
+  }
+  const previous = await getAssignmentForBooking(bookingId);
+  if (
+    !expectedAssignmentMatches({
+      expectedAssignmentId,
+      actualAssignmentId: previous?.id ?? null,
+    })
+  ) {
+    return {
+      ok: false,
+      error: "Assignment changed while you were editing. Refresh the booking and try again.",
+      status: 409,
+    };
   }
 
   // Phase 11.8: active timed bookings must keep a primary claim so capacity
@@ -1083,7 +1165,6 @@ export async function unassignBooking(
     };
   }
 
-  const previous = await getAssignmentForBooking(bookingId);
   const rows = await sql`
     UPDATE booking_assignments
     SET
@@ -1191,13 +1272,21 @@ export async function revalidateAssignmentAfterReschedule(
   });
 
   if (assignment && window) {
-    const eligibility = await staffIsEligibleForSlot({
+    const slotInput = {
       staffId: assignment.staffId,
       dateOnly,
       time,
       durationMinutes,
       bufferMinutes,
-    });
+    };
+    const assignedStaff = await findStaffById(assignment.staffId);
+    // A role policy change must not silently replace an existing manager
+    // assignment. Existing managers may be retained only when still active,
+    // available, and conflict-free; they remain ineligible for new claims.
+    const eligibility =
+      assignedStaff?.role === "manager" && assignedStaff.isActive
+        ? await validateStaffAvailabilityForSlot(slotInput, assignedStaff)
+        : await staffIsEligibleForSlot(slotInput);
     const conflictRows = await sql`
       SELECT
         a.booking_id,
@@ -1236,7 +1325,13 @@ export async function revalidateAssignmentAfterReschedule(
       candidateBufferMinutes: bufferMinutes,
     });
 
-    if (eligibility.ok && !conflict) {
+    if (
+      canRetainExistingAssignment({
+        isActive: Boolean(assignedStaff?.isActive),
+        slotAvailable: eligibility.ok,
+        hasConflict: conflict,
+      })
+    ) {
       await sql`
         UPDATE booking_assignments
         SET
@@ -1257,6 +1352,7 @@ export async function revalidateAssignmentAfterReschedule(
     const assigned = await assignStaffToBooking({
       bookingId,
       staffId: eligible[0].id,
+      expectedAssignmentId: assignment?.id ?? null,
       assignedBy: "reschedule-revalidate",
     });
     if (assigned.ok) return "reassigned";

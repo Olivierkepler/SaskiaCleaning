@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/app/lib/admin-auth";
+import { validateExpectedAssignmentId } from "@/app/lib/staff-pure";
 import {
   assignStaffToBooking,
   getAssignmentForBooking,
@@ -99,8 +100,24 @@ export async function PUT(req: Request, context: RouteContext) {
   }
 
   const body = await req.json();
+  const expectedAssignment = validateExpectedAssignmentId({
+    provided:
+      body !== null &&
+      typeof body === "object" &&
+      Object.prototype.hasOwnProperty.call(body, "expectedAssignmentId"),
+    value: body?.expectedAssignmentId,
+  });
+  if (!expectedAssignment.ok) {
+    return NextResponse.json(
+      {
+        error: "A valid expected assignment is required. Refresh the booking and try again.",
+      },
+      { status: 400 },
+    );
+  }
+  const expectedAssignmentId = expectedAssignment.assignmentId;
   if (body?.unassign === true) {
-    const result = await unassignBooking(bookingId);
+    const result = await unassignBooking(bookingId, expectedAssignmentId);
     if (!result.ok) {
       return NextResponse.json({ error: result.error }, { status: result.status });
     }
@@ -115,6 +132,7 @@ export async function PUT(req: Request, context: RouteContext) {
   const result = await assignStaffToBooking({
     bookingId,
     staffId,
+    expectedAssignmentId,
     assignedBy: "dashboard",
   });
   if (!result.ok) {
