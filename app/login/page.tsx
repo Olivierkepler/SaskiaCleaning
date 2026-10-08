@@ -194,17 +194,7 @@ export default async function LoginPage({
                 {t("signInTitle")}
               </h1>
 
-              <p
-                className="
-                  mt-4
-                  max-w-md
-                  text-[15px]
-                  leading-7
-                  text-slate-600
-                "
-              >
-                {t("description")}
-              </p>
+
             </div>
 
             {/* Login card */}

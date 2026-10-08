@@ -59,9 +59,10 @@ export default function RegistrationForm() {
 
   return (
     <>
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
+      <form onSubmit={handleSubmit}
+      className="space-y-5 ">
+        <div className="grid gap-4 sm:grid-cols-2  ">
+          <div >
             <label htmlFor="register-first-name" className={labelClassName}>
               First name
             </label>
