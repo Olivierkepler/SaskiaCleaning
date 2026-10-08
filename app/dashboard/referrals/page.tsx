@@ -13,13 +13,15 @@ import {
   serializeReferralNotification,
   type ReferralNotificationRow,
 } from "../../lib/referral-notifications";
-import Navbar from "../components/Navbar";
+import AdminDashboardShell from "../components/AdminDashboardShell";
+import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
+import { countOpsNeedsAttention } from "@/app/lib/ops-exceptions";
 import ReferralDashboard from "./ReferralDashboard";
 
 export default async function ReferralsDashboardPage() {
   const admin = await requireAdmin();
 
-  const [codeRows, referralRows, bookingRows, notificationRows] =
+  const [codeRows, referralRows, bookingRows, notificationRows, pendingChangeRequestCount, opsNeedsAttentionCount] =
     await Promise.all([
     sql`
       SELECT *
@@ -79,6 +81,8 @@ export default async function ReferralsDashboardPage() {
       LEFT JOIN referral_codes rc ON rc.id = r.referral_code_id
       ORDER BY rn.created_at DESC, rn.id DESC
     `,
+    countPendingAdminChangeRequests(),
+    countOpsNeedsAttention(),
   ]);
 
   const referralCodes = (codeRows as ReferralCodeRow[]).map(serializeReferralCode);
@@ -107,33 +111,25 @@ export default async function ReferralsDashboardPage() {
   const unseenCount = bookingRows.filter((booking) => !booking.seen).length;
 
   return (
-    <main className="min-h-screen bg-slate-100 py-6">
-      <div className="mx-auto max-w-full px-4 sm:px-6 lg:px-20">
-        <Navbar
-          isOwner={admin.role === "OWNER"}
-          unseenCount={unseenCount}
-          unseenBookings={unseenBookings}
-        />
-
-        <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-            Referrals
-          </h1>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">
-            Manage referral codes and track referral rewards.
-          </p>
-        </div>
-
-        <ReferralDashboard
-          referralCodes={referralCodes}
-          referrals={referrals}
-          notifications={notifications}
-          analytics={analytics}
-          funnel={funnel}
-          topReferrers={topReferrers}
-          referrerExportRows={referrerExportRows}
-        />
-      </div>
-    </main>
+    <AdminDashboardShell
+      title="Referrals"
+      description="Manage referral codes, track customer rewards, and review referral activity."
+      eyebrow="Customer growth"
+      unseenCount={unseenCount}
+      unseenBookings={unseenBookings}
+      pendingChangeRequestCount={pendingChangeRequestCount}
+      opsNeedsAttentionCount={opsNeedsAttentionCount}
+      isOwner={admin.role === "OWNER"}
+    >
+      <ReferralDashboard
+        referralCodes={referralCodes}
+        referrals={referrals}
+        notifications={notifications}
+        analytics={analytics}
+        funnel={funnel}
+        topReferrers={topReferrers}
+        referrerExportRows={referrerExportRows}
+      />
+    </AdminDashboardShell>
   );
 }

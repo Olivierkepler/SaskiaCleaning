@@ -1,13 +1,15 @@
 import { requireAdmin } from "@/app/lib/admin-auth";
 import { sql } from "../../lib/db";
 import { serializePromoCard, type PromoCardRow } from "../../lib/promo-cards";
-import Navbar from "../components/Navbar";
+import AdminDashboardShell from "../components/AdminDashboardShell";
 import PromoCardsTable from "./PromoCardsTable";
+import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
+import { countOpsNeedsAttention } from "@/app/lib/ops-exceptions";
 
 export default async function PromoCardsDashboardPage() {
   const admin = await requireAdmin();
 
-  const [promoRows, bookingRows] = await Promise.all([
+  const [promoRows, bookingRows, pendingChangeRequestCount, opsNeedsAttentionCount] = await Promise.all([
     sql`
       SELECT *
       FROM promo_cards
@@ -18,6 +20,8 @@ export default async function PromoCardsDashboardPage() {
       FROM booking_requests
       ORDER BY created_at DESC
     `,
+    countPendingAdminChangeRequests(),
+    countOpsNeedsAttention(),
   ]);
 
   const cards = (promoRows as PromoCardRow[]).map(serializePromoCard);
@@ -35,25 +39,17 @@ export default async function PromoCardsDashboardPage() {
   const unseenCount = bookingRows.filter((booking) => !booking.seen).length;
 
   return (
-    <main className="min-h-screen bg-slate-100 py-6">
-      <div className="mx-auto max-w-full px-4 sm:px-6 lg:px-20">
-        <Navbar
-          isOwner={admin.role === "OWNER"}
-          unseenCount={unseenCount}
-          unseenBookings={unseenBookings}
-        />
-
-        <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-            Promo Cards
-          </h1>
-          <p className="mt-2 text-sm text-slate-600 sm:text-base">
-            Manage homepage promo cards shown in AdCardGrid.
-          </p>
-        </div>
-
-        <PromoCardsTable cards={cards} />
-      </div>
-    </main>
+    <AdminDashboardShell
+      title="Promo Cards"
+      description="Manage the promotional cards displayed on the customer homepage."
+      eyebrow="Customer experience"
+      unseenCount={unseenCount}
+      unseenBookings={unseenBookings}
+      pendingChangeRequestCount={pendingChangeRequestCount}
+      opsNeedsAttentionCount={opsNeedsAttentionCount}
+      isOwner={admin.role === "OWNER"}
+    >
+      <PromoCardsTable cards={cards} />
+    </AdminDashboardShell>
   );
 }

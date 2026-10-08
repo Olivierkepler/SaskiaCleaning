@@ -50,10 +50,10 @@ type AnalyticsFilter =
 type NotificationStatusFilter = "all" | "sent" | "failed" | "skipped";
 
 const inputClassName =
-  "w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-sky-400 focus:ring-2 focus:ring-sky-100";
+  "min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100";
 
 const labelClassName =
-  "mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500";
+  "mb-1.5 block text-xs font-semibold text-slate-600";
 
 function formatMoney(amount: number) {
   return `$${amount}`;
@@ -243,11 +243,11 @@ function MetricCard({
   hint?: string;
 }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+    <div className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_12px_rgba(15,23,42,0.035)] sm:p-5">
+      <p className="text-xs font-medium text-slate-500">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-bold text-slate-900">{value}</p>
+      <p className="mt-2 text-2xl font-semibold tracking-tight tabular-nums text-slate-950">{value}</p>
       {hint && <p className="mt-1 text-xs text-slate-500">{hint}</p>}
     </div>
   );
@@ -261,19 +261,19 @@ function AnalyticsSection({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
-      <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-700">
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_12px_rgba(15,23,42,0.035)] sm:p-5">
+      <h2 className="mb-4 text-sm font-semibold text-slate-800">
         {title}
       </h2>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">{children}</div>
-    </div>
+    </section>
   );
 }
 
 function ReferralFunnel({ steps }: { steps: ReferralFunnelStep[] }) {
   return (
-    <div className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-slate-200 sm:p-5">
-      <h2 className="mb-4 text-sm font-bold uppercase tracking-wide text-slate-700">
+    <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_12px_rgba(15,23,42,0.035)] sm:p-5">
+      <h2 className="mb-4 text-sm font-semibold text-slate-800">
         Referral funnel
       </h2>
       <div className="space-y-3">
@@ -296,15 +296,15 @@ function ReferralFunnel({ steps }: { steps: ReferralFunnelStep[] }) {
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
 
 function TopReferrersTable({ referrers }: { referrers: TopReferrerStats[] }) {
   return (
-    <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.035)]">
       <div className="border-b border-slate-200 p-4 sm:p-5">
-        <h2 className="text-lg font-bold text-slate-900">Top referrers</h2>
+        <h2 className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">Top referrers</h2>
         <p className="text-sm text-slate-500">
           Ranked by completed referrals (top 10)
         </p>
@@ -364,7 +364,7 @@ function TopReferrersTable({ referrers }: { referrers: TopReferrerStats[] }) {
           </table>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -420,13 +420,14 @@ function NotificationHistorySection({
   onToggleExpanded: () => void;
 }) {
   return (
-    <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+    <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.035)]">
       <div className="border-b border-slate-200 p-4 sm:p-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <button
             type="button"
             onClick={onToggleExpanded}
-            className="flex items-start gap-2 text-left"
+              aria-expanded={isExpanded}
+              className="flex min-w-0 items-start gap-2 rounded-lg text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
           >
             <span className="mt-0.5 text-slate-400">{isExpanded ? "▾" : "▸"}</span>
             <span>
@@ -444,7 +445,7 @@ function NotificationHistorySection({
               type="button"
               onClick={onExportCsv}
               disabled={notifications.length === 0}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Export notifications CSV
             </button>
@@ -606,7 +607,7 @@ function NotificationHistorySection({
             </div>
           </>
         ))}
-    </div>
+    </section>
   );
 }
 
@@ -1160,7 +1161,7 @@ export default function ReferralDashboard({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-5 sm:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-bold text-slate-900">Referral analytics</h2>
@@ -1173,7 +1174,7 @@ export default function ReferralDashboard({
             type="button"
             onClick={handleSendOutstandingSummary}
             disabled={isSendingSummary || isSubmitting}
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSendingSummary
               ? "Sending summary..."
@@ -1183,7 +1184,7 @@ export default function ReferralDashboard({
             type="button"
             onClick={handleExportAnalyticsCsv}
             disabled={referrerExportRows.length === 0}
-            className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-50"
+            className="min-h-11 rounded-xl bg-sky-700 px-4 text-sm font-semibold text-white transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Export analytics CSV
           </button>
@@ -1272,11 +1273,11 @@ export default function ReferralDashboard({
         </div>
       )}
 
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+      <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.035)]">
         <div className="space-y-4 border-b border-slate-200 p-4 sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Referral codes</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-950">Referral codes</h2>
               <p className="text-sm text-slate-500">
                 {filteredCodes.length} code{filteredCodes.length === 1 ? "" : "s"}
               </p>
@@ -1295,7 +1296,7 @@ export default function ReferralDashboard({
                   setEditingId(null);
                   setMessage(null);
                 }}
-                className="rounded-lg bg-sky-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-600"
+                className="min-h-11 rounded-xl bg-sky-700 px-4 text-sm font-semibold text-white transition hover:bg-sky-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2"
               >
                 {showCreateForm ? "Hide create form" : "Create code"}
               </button>
@@ -1430,13 +1431,13 @@ export default function ReferralDashboard({
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="rounded-2xl bg-white shadow-sm ring-1 ring-slate-200">
+      <section className="min-w-0 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.035)]">
         <div className="space-y-4 border-b border-slate-200 p-4 sm:p-5">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-950">
                 Referral tracking
               </h2>
               <p className="text-sm text-slate-500">
@@ -1700,7 +1701,7 @@ export default function ReferralDashboard({
             </table>
           </div>
         )}
-      </div>
+      </section>
 
       <NotificationHistorySection
         notifications={filteredNotifications}

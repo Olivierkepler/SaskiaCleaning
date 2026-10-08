@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/app/lib/admin-auth";
-import Navbar from "../components/Navbar";
+import AdminDashboardShell from "../components/AdminDashboardShell";
 import { sql } from "@/app/lib/db";
 import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
 import { listOpsExceptions } from "@/app/lib/ops-exceptions";
@@ -8,7 +8,7 @@ import OperationsClient from "./OperationsClient";
 export default async function OperationsDashboardPage() {
   const admin = await requireAdmin();
 
-  const [{ items, summary }, pendingCount, unseenRows] = await Promise.all([
+  const [{ items, summary }, pendingCount, unseenRows, unseenCountRows] = await Promise.all([
     listOpsExceptions(),
     countPendingAdminChangeRequests(),
     sql`
@@ -18,7 +18,9 @@ export default async function OperationsDashboardPage() {
       ORDER BY created_at DESC
       LIMIT 10
     `,
+    sql`SELECT COUNT(*)::int AS count FROM booking_requests WHERE seen = false`,
   ]);
+  const unseenCount = Number((unseenCountRows[0] as { count: number } | undefined)?.count ?? 0);
 
   const unseenBookings = (
     unseenRows as Array<{
@@ -39,28 +41,17 @@ export default async function OperationsDashboardPage() {
   }));
 
   return (
-    <main className="min-h-screen bg-slate-100 py-6">
-      <Navbar
-        unseenCount={unseenBookings.length}
-        unseenBookings={unseenBookings}
-        pendingChangeRequestCount={pendingCount}
-        opsNeedsAttentionCount={summary.needsAttention}
-        isOwner={admin.role === "OWNER"}
-      />
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-            Operations
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Scheduling exceptions that need admin attention. Capacity-held
-            completed jobs before buffer expiry are informational. Manual
-            release never deletes assignment history.
-          </p>
-        </div>
-
-        <OperationsClient initialItems={items} summary={summary} />
-      </div>
-    </main>
+    <AdminDashboardShell
+      title="Operations"
+      description="Scheduling exceptions that need admin attention. Capacity-held completed jobs before buffer expiry are informational; manual release preserves assignment history."
+      eyebrow="Scheduling workspace"
+      unseenCount={unseenCount}
+      unseenBookings={unseenBookings}
+      pendingChangeRequestCount={pendingCount}
+      opsNeedsAttentionCount={summary.needsAttention}
+      isOwner={admin.role === "OWNER"}
+    >
+      <OperationsClient initialItems={items} summary={summary} />
+    </AdminDashboardShell>
   );
 }

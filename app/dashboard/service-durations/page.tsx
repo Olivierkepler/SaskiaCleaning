@@ -1,29 +1,46 @@
 import { requireAdmin } from "@/app/lib/admin-auth";
-import Navbar from "@/app/dashboard/components/Navbar";
+import AdminDashboardShell from "../components/AdminDashboardShell";
+import { sql } from "@/app/lib/db";
+import { countPendingAdminChangeRequests } from "@/app/lib/booking-change-requests";
+import { countOpsNeedsAttention } from "@/app/lib/ops-exceptions";
 import ServiceDurationsClient from "./ServiceDurationsClient";
 
 export default async function ServiceDurationsPage() {
   const admin = await requireAdmin();
+  const [unseenRows, unseenCountRows, pendingChangeRequestCount, opsNeedsAttentionCount] = await Promise.all([
+    sql`
+      SELECT id, name, email, created_at, service, location
+      FROM booking_requests
+      WHERE seen = false
+      ORDER BY created_at DESC
+      LIMIT 10
+    `,
+    sql`SELECT COUNT(*)::int AS count FROM booking_requests WHERE seen = false`,
+    countPendingAdminChangeRequests(),
+    countOpsNeedsAttention(),
+  ]);
+  const unseenBookings = (unseenRows as Array<{
+    id: number;
+    name: string;
+    email: string;
+    created_at: string;
+    service: string | null;
+    location: string | null;
+  }>).map((booking) => ({ ...booking, created_at: String(booking.created_at) }));
+  const unseenCount = Number((unseenCountRows[0] as { count: number } | undefined)?.count ?? 0);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <Navbar
-        unseenCount={0}
-        unseenBookings={[]}
-        isOwner={admin.role === "OWNER"}
-      />
-      <main className="mx-auto max-w-3xl px-4 py-8">
-        <h1 className="mb-2 text-2xl font-bold text-slate-950">
-          Service durations
-        </h1>
-        <p className="mb-6 text-sm text-slate-600">
-          These values control scheduling capacity for new bookings only.
-          Existing bookings keep their stored duration snapshot. Initial seeds
-          are architecture defaults — edit to match Saskia&apos;s business
-          timing.
-        </p>
-        <ServiceDurationsClient />
-      </main>
-    </div>
+    <AdminDashboardShell
+      title="Service Durations"
+      description="Maintain service duration rules used for scheduling new bookings. Existing bookings retain their saved duration snapshot."
+      eyebrow="Scheduling workspace"
+      unseenCount={unseenCount}
+      unseenBookings={unseenBookings}
+      pendingChangeRequestCount={pendingChangeRequestCount}
+      opsNeedsAttentionCount={opsNeedsAttentionCount}
+      isOwner={admin.role === "OWNER"}
+    >
+      <ServiceDurationsClient />
+    </AdminDashboardShell>
   );
 }

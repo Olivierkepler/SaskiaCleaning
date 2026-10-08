@@ -78,16 +78,16 @@ export default function ChangeRequestsTable({
 
   if (requests.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">
+      <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-[0_2px_12px_rgba(15,23,42,0.035)]">
         No pending customer change requests.
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       {error ? (
-        <p role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <p role="alert" aria-live="assertive" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
           {error}
         </p>
       ) : null}
@@ -95,24 +95,24 @@ export default function ChangeRequestsTable({
       {requests.map((request) => (
         <article
           key={request.id}
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6"
+          className="min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_12px_rgba(15,23,42,0.035)] sm:p-6"
         >
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-sky-500">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-700">
                 {formatChangeRequestTypeLabel(request.request_type)} request
               </p>
-              <h2 className="mt-1 text-lg font-semibold text-slate-900">
+              <h2 className="mt-1 text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
                 Booking #{request.booking_id} ·{" "}
                 {request.booking_service || "Cleaning"}
               </h2>
             </div>
-            <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-amber-800">
+            <span className="inline-flex min-h-7 items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
               Pending
             </span>
           </div>
 
-          <dl className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
+          <dl className="mt-4 grid min-w-0 gap-3 rounded-xl bg-slate-50/70 p-3 text-sm text-slate-600 sm:grid-cols-2 sm:p-4">
             <div>
               <dt className="text-xs uppercase tracking-wide text-slate-400">
                 Customer
@@ -133,7 +133,7 @@ export default function ChangeRequestsTable({
             </div>
             {request.request_type === "reschedule" ? (
               <div>
-                <dt className="text-xs uppercase tracking-wide text-slate-400">
+                <dt className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                   Requested date
                 </dt>
                 <dd className="font-semibold text-slate-900">
@@ -173,7 +173,7 @@ export default function ChangeRequestsTable({
                   ? "Requested date is unavailable. Please submit another date."
                   : "Optional note for the customer"
               }
-              className="mt-1.5 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
+              className="mt-1.5 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-sky-500 focus:ring-4 focus:ring-sky-100"
             />
           </label>
 
@@ -182,7 +182,7 @@ export default function ChangeRequestsTable({
               type="button"
               disabled={busyId != null}
               onClick={() => void resolve(request.id, "approve")}
-              className="rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+              className="min-h-11 rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:opacity-60"
             >
               {busyId === request.id ? "Saving…" : "Approve"}
             </button>
@@ -190,7 +190,7 @@ export default function ChangeRequestsTable({
               type="button"
               disabled={busyId != null}
               onClick={() => void resolve(request.id, "reject")}
-              className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+              className="min-h-11 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 disabled:opacity-60"
             >
               Reject
             </button>

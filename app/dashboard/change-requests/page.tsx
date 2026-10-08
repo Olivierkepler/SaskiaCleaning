@@ -1,16 +1,17 @@
 import { requireAdmin } from "@/app/lib/admin-auth";
-import Navbar from "../components/Navbar";
+import AdminDashboardShell from "../components/AdminDashboardShell";
 import { sql } from "@/app/lib/db";
 import {
   countPendingAdminChangeRequests,
   listPendingAdminChangeRequests,
 } from "@/app/lib/booking-change-requests";
+import { countOpsNeedsAttention } from "@/app/lib/ops-exceptions";
 import ChangeRequestsTable from "./ChangeRequestsTable";
 
 export default async function DashboardChangeRequestsPage() {
   const admin = await requireAdmin();
 
-  const [requests, pendingCount, unseenRows] = await Promise.all([
+  const [requests, pendingCount, unseenRows, unseenCountRows, opsNeedsAttentionCount] = await Promise.all([
     listPendingAdminChangeRequests(),
     countPendingAdminChangeRequests(),
     sql`
@@ -20,53 +21,46 @@ export default async function DashboardChangeRequestsPage() {
       ORDER BY created_at DESC
       LIMIT 10
     `,
+    sql`SELECT COUNT(*)::int AS count FROM booking_requests WHERE seen = false`,
+    countOpsNeedsAttention(),
   ]);
 
-  const unseenBookings = (
-    unseenRows as Array<{
-      id: number;
-      name: string;
-      email: string;
-      created_at: string;
-      service: string | null;
-      location: string | null;
-    }>
-  ).map((booking) => ({
-    id: booking.id,
-    name: booking.name,
-    email: booking.email,
-    created_at: String(booking.created_at),
-    service: booking.service,
-    location: booking.location,
-  }));
-
-  const unseenCount = unseenBookings.length;
+  const unseenBookings = (unseenRows as Array<{
+    id: number;
+    name: string;
+    email: string;
+    created_at: string;
+    service: string | null;
+    location: string | null;
+  }>).map((booking) => ({ ...booking, created_at: String(booking.created_at) }));
+  const unseenCount = Number((unseenCountRows[0] as { count: number } | undefined)?.count ?? 0);
+  const rescheduleCount = requests.filter((request) => request.request_type === "reschedule").length;
+  const cancellationCount = requests.length - rescheduleCount;
 
   return (
-    <main className="min-h-screen bg-slate-100 py-6">
-      <Navbar
-        unseenCount={unseenCount}
-        unseenBookings={unseenBookings}
-        pendingChangeRequestCount={pendingCount}
-        isOwner={admin.role === "OWNER"}
-      />
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="mb-6 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200 sm:p-6">
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
-            Booking change requests
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Pending customer cancellation and reschedule requests:{" "}
-            <span className="font-semibold text-slate-900">{pendingCount}</span>
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            Approving a request updates the booking. Rejecting leaves the
-            booking unchanged and lets the customer submit again.
-          </p>
-        </div>
-
-        <ChangeRequestsTable initialRequests={requests} />
-      </div>
-    </main>
+    <AdminDashboardShell
+      title="Change Requests"
+      description="Review customer cancellation and reschedule requests. Approvals update the booking; rejections leave it unchanged."
+      eyebrow="Customer requests"
+      unseenCount={unseenCount}
+      unseenBookings={unseenBookings}
+      pendingChangeRequestCount={pendingCount}
+      opsNeedsAttentionCount={opsNeedsAttentionCount}
+      isOwner={admin.role === "OWNER"}
+    >
+      <section aria-label="Change request summary" className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {[
+          { label: "Pending requests", value: pendingCount, tone: "text-amber-700" },
+          { label: "Reschedule requests", value: rescheduleCount, tone: "text-sky-700" },
+          { label: "Cancellation requests", value: cancellationCount, tone: "text-slate-800" },
+        ].map((item) => (
+          <article key={item.label} className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_2px_12px_rgba(15,23,42,0.035)] sm:p-5">
+            <p className="text-xs font-medium text-slate-500">{item.label}</p>
+            <p className={`mt-2 text-2xl font-semibold tracking-tight tabular-nums ${item.tone}`}>{item.value}</p>
+          </article>
+        ))}
+      </section>
+      <ChangeRequestsTable initialRequests={requests} />
+    </AdminDashboardShell>
   );
 }
