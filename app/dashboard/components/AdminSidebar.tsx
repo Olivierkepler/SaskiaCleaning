@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Activity,
+  ArrowLeftRight,
   CalendarCheck,
   CalendarDays,
   Clock3,
@@ -35,6 +36,7 @@ const groups = [
       { label: "Bookings", href: "/dashboard#booking-workspace", icon: CalendarDays },
       { label: "Leads", href: "/dashboard/leads", icon: ContactRound },
       { label: "Operations", href: "/dashboard/operations", icon: Activity, badge: "operations" as const },
+      { label: "Dispatch", href: "/dashboard/dispatch", icon: ArrowLeftRight },
     ],
   },
   {

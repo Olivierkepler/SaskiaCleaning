@@ -11,6 +11,8 @@ type AdminDashboardShellProps = {
   pendingChangeRequestCount: number;
   opsNeedsAttentionCount: number;
   isOwner: boolean;
+  allowMarkSeen?: boolean;
+  showNotifications?: boolean;
   children: ReactNode;
 };
 
@@ -23,6 +25,8 @@ export default function AdminDashboardShell({
   pendingChangeRequestCount,
   opsNeedsAttentionCount,
   isOwner,
+  allowMarkSeen = true,
+  showNotifications = true,
   children,
 }: AdminDashboardShellProps) {
   return (
@@ -43,6 +47,8 @@ export default function AdminDashboardShell({
               opsNeedsAttentionCount={opsNeedsAttentionCount}
               isOwner={isOwner}
               mode="utility"
+              allowMarkSeen={allowMarkSeen}
+              showNotifications={showNotifications}
             />
             <header className="mb-6 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div className="min-w-0">
