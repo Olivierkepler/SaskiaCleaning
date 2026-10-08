@@ -114,7 +114,7 @@ export default function OperationsClient({
     });
   }, [filter, initialItems]);
 
-  async function markComplete(bookingId: number) {
+  async function markComplete(bookingId: number, expectedStatus: string) {
     setBusyId(bookingId);
     setError("");
     setMessage("");
@@ -124,7 +124,7 @@ export default function OperationsClient({
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "completed" }),
+          body: JSON.stringify({ status: "completed", expectedStatus }),
         },
       );
       const data = await res.json();
@@ -318,7 +318,7 @@ export default function OperationsClient({
                     <button
                       type="button"
                       disabled={busyId === item.bookingId}
-                      onClick={() => void markComplete(item.bookingId)}
+                      onClick={() => void markComplete(item.bookingId, item.status)}
                       className="inline-flex min-h-10 items-center justify-center rounded-xl bg-emerald-700 px-3 text-xs font-semibold text-white transition hover:bg-emerald-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 disabled:opacity-50"
                     >
                       Mark complete

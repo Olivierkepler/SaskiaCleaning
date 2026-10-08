@@ -550,17 +550,22 @@ export default function DashboardTable({
   };
 
   const handleStatusChange = async (id: number, status: BookingStatus) => {
+    const currentBooking = bookings.find((booking) => booking.id === id);
+    const expectedStatus = currentBooking
+      ? getBookingStatus(currentBooking.status)
+      : undefined;
     const response = await fetch(
       `/api/booking/${id}/status`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
+        body: JSON.stringify({ status, expectedStatus }),
       }
     );
 
     if (!response.ok) {
-      alert("Failed to update booking status.");
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      alert(data.error || "Failed to update booking status.");
       return;
     }
 
