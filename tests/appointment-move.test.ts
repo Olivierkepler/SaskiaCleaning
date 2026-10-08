@@ -4,6 +4,7 @@ import {
   classifyAssignmentConflict,
   createTransactionBoundAppointmentMove,
   executeAppointmentMove,
+  mapAppointmentMoveFailure,
   type AppointmentMoveDependencies,
   type AppointmentMoveInput,
 } from "../app/lib/appointment-move-pure";
@@ -256,4 +257,19 @@ test("assignment conflict classifier distinguishes service overlap from buffer-o
       status: "scheduled",
     }],
   }), "TRAVEL_BUFFER_CONFLICT");
+});
+
+test("appointment move conflicts map to controlled client-safe HTTP responses", () => {
+  for (const reason of [
+    "BLOCKED_TIME", "NO_CAPACITY", "STAFF_UNAVAILABLE", "STAFF_TIME_OFF",
+    "ASSIGNMENT_OVERLAP", "TRAVEL_BUFFER_CONFLICT", "STALE_ASSIGNMENT", "CONCURRENT_CONFLICT",
+  ] as const) {
+    const mapped = mapAppointmentMoveFailure(reason);
+    assert.equal(mapped.status, 409);
+    assert.ok(mapped.error.length > 0);
+    assert.doesNotMatch(mapped.error, /sql|postgres|constraint/i);
+  }
+  assert.equal(mapAppointmentMoveFailure("INVALID_APPOINTMENT").status, 400);
+  assert.equal(mapAppointmentMoveFailure("NOT_FOUND").status, 404);
+  assert.equal(mapAppointmentMoveFailure("PERSISTENCE_FAILURE").status, 500);
 });

@@ -273,6 +273,30 @@ export async function validateAppointmentWindowBasics(input: {
   return candidate ? "VALID" : "INVALID_APPOINTMENT";
 }
 
+/** Canonical scheduler times only; does not promise staff or capacity availability. */
+export async function getAppointmentTimeOptionsForDate(input: {
+  dateOnly: string;
+  durationMinutes: number;
+  bufferMinutes: number;
+}): Promise<AvailableSlot[]> {
+  if (!isValidBookingDateOnly(input.dateOnly)) return [];
+  const [weekly, blocks] = await Promise.all([
+    getWeeklyAvailabilityForDate(input.dateOnly),
+    listBlocksForDate(input.dateOnly),
+  ]);
+  return filterCandidatesForDuration({
+    dateOnly: input.dateOnly,
+    weekly,
+    blocks,
+    durationMinutes: input.durationMinutes,
+  }).filter((slot) => getCapacityWindow({
+    dateOnly: input.dateOnly,
+    startTime: slot.time,
+    durationMinutes: input.durationMinutes,
+    bufferMinutes: input.bufferMinutes,
+  }) !== null);
+}
+
 export async function getCapacityAwareSlotsForDate(
   dateOnly: string,
   options?: {

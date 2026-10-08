@@ -73,6 +73,21 @@ describe("admin booking details validation", () => {
     assert.equal(parseAdminBookingDetailsPatch({ extras: "Inside fridge" }).ok, false);
   });
 
+  it("accepts appointment date and time together but rejects partial or combined pricing edits", () => {
+    assert.deepEqual(parseAdminBookingDetailsPatch({ bookingDate: "2026-11-12", bookingTime: "10:30" }), {
+      ok: true,
+      patch: { bookingDate: "2026-11-12", bookingTime: "10:30" },
+    });
+    assert.equal(parseAdminBookingDetailsPatch({ bookingDate: "2026-11-12" }).ok, false);
+    assert.equal(parseAdminBookingDetailsPatch({ bookingDate: "2026-02-31", bookingTime: "10:30" }).ok, false);
+    assert.equal(parseAdminBookingDetailsPatch({ bookingDate: "2026-11-12", bookingTime: "25:30" }).ok, false);
+    const combined = parseAdminBookingDetailsPatch({
+      bookingDate: "2026-11-12", bookingTime: "10:30", service: "Standard",
+    });
+    assert.equal(combined.ok, false);
+    if (!combined.ok) assert.match(combined.error, /Save the service change first/);
+  });
+
   it("rejects unknown and protected properties", () => {
     for (const input of [
       { bookingDate: "2027-01-01" },
@@ -126,6 +141,15 @@ describe("admin booking details mutation boundary", () => {
   it("returns 404 when the booking is missing", async () => {
     const result = await executeAdminBookingDetailsPatch({ notes: "Update" }, dependencies(null));
     assert.equal(result.status, 404);
+  });
+
+  it("does not let the booking details executor bypass the appointment move authority", async () => {
+    let writes = 0;
+    const result = await executeAdminBookingDetailsPatch({
+      bookingDate: "2026-11-12", bookingTime: "10:30",
+    }, dependencies(baseBooking, { update: async () => { writes += 1; return { ok: true, booking: null }; } }));
+    assert.equal(result.status, 400);
+    assert.equal(writes, 0);
   });
 
   it("reprices Standard edits and persists the canonical bathroom snapshot", async () => {

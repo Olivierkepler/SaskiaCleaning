@@ -88,6 +88,31 @@ type PricingFormSelections = {
   commercialScheduleIndex: number | null;
 };
 
+function bookingDateInputValue(date: string | Date | null): string {
+  if (!date) return "";
+  const value = date instanceof Date ? date.toISOString().slice(0, 10) : String(date).slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : "";
+}
+
+function appointmentTimeInputValue(time: string | null | undefined): string {
+  const match = typeof time === "string" ? time.match(/^(\d{1,2}:\d{2})/) : null;
+  return match ? match[1].padStart(5, "0") : "";
+}
+
+function formatAppointmentValue(date: string | Date | null, time: string | null | undefined): string {
+  const dateOnly = bookingDateInputValue(date);
+  if (!dateOnly) return "—";
+  const [year, month, day] = dateOnly.split("-").map(Number);
+  const dateLabel = new Intl.DateTimeFormat("en-US", {
+    month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
+  const parsedTime = appointmentTimeInputValue(time);
+  if (!parsedTime) return `${dateLabel} · Time not specified`;
+  const [hour, minute] = parsedTime.split(":").map(Number);
+  const period = hour >= 12 ? "PM" : "AM";
+  return `${dateLabel} · ${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${period}`;
+}
+
 function pricingFormFromSnapshot(snapshot: PricingInputSnapshot | null): PricingFormSelections {
   return {
     bathroomIndex: snapshot?.kind === "standard" ? snapshot.bathroomIndex : null,
@@ -154,6 +179,11 @@ export default function BookingDetailDrawer({
   const [bookingBedrooms, setBookingBedrooms] = useState("");
   const [bookingBathrooms, setBookingBathrooms] = useState("");
   const [bookingExtras, setBookingExtras] = useState<string[]>([]);
+  const [bookingDate, setBookingDate] = useState("");
+  const [bookingTime, setBookingTime] = useState("");
+  const [appointmentTimes, setAppointmentTimes] = useState<Array<{ value: string; label: string }>>([]);
+  const [loadingAppointmentTimes, setLoadingAppointmentTimes] = useState(false);
+  const [appointmentTimesError, setAppointmentTimesError] = useState<string | null>(null);
   const [pricingForm, setPricingForm] = useState<PricingFormSelections>(pricingFormFromSnapshot(null));
   const [canEditPricing, setCanEditPricing] = useState(false);
   const [savingBooking, setSavingBooking] = useState(false);
@@ -163,7 +193,35 @@ export default function BookingDetailDrawer({
     id: number;
     location: string | null;
     notes: string | null;
+    booking_date?: string | Date | null;
+    booking_time?: string | null;
   } | null>(null);
+
+  useEffect(() => {
+    if (!isOpen || !editingBooking || !booking || !bookingDate) return;
+    const controller = new AbortController();
+    setLoadingAppointmentTimes(true);
+    setAppointmentTimesError(null);
+    fetch(`/api/dashboard/bookings/${booking.id}/details?date=${encodeURIComponent(bookingDate)}`, {
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const result = await response.json().catch(() => null) as
+          | { times?: Array<{ value: string; label: string }>; error?: string }
+          | null;
+        if (!response.ok || !result?.times) throw new Error(result?.error || "Appointment times could not be loaded.");
+        setAppointmentTimes(result.times);
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setAppointmentTimes([]);
+        setAppointmentTimesError(error instanceof Error ? error.message : "Appointment times could not be loaded.");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingAppointmentTimes(false);
+      });
+    return () => controller.abort();
+  }, [isOpen, editingBooking, booking?.id, bookingDate]);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -179,6 +237,10 @@ export default function BookingDetailDrawer({
     setBookingSaved(false);
     setBookingOverride(null);
     setCanEditPricing(false);
+    setAppointmentTimes([]);
+    setAppointmentTimesError(null);
+    setBookingDate("");
+    setBookingTime("");
   }, [booking?.id]);
 
   useEffect(() => {
@@ -251,6 +313,19 @@ export default function BookingDetailDrawer({
       : booking.location;
   const bookingNotesValue =
     bookingOverride?.id === booking.id ? bookingOverride.notes : booking.notes;
+  const currentBookingDate = bookingDateInputValue(
+    bookingOverride?.id === booking.id && bookingOverride.booking_date !== undefined
+      ? bookingOverride.booking_date
+      : booking.booking_date,
+  );
+  const currentBookingTime = appointmentTimeInputValue(
+    bookingOverride?.id === booking.id && bookingOverride.booking_time !== undefined
+      ? bookingOverride.booking_time
+      : booking.booking_time,
+  );
+  const bookingAppointmentValue = bookingOverride?.id === booking.id && bookingOverride.booking_date !== undefined
+    ? formatAppointmentValue(bookingOverride.booking_date, bookingOverride.booking_time)
+    : appointmentLabel;
   const currentPricingSnapshot = resolveBookingPricingInputs({
     service: booking.service,
     frequency: booking.frequency,
@@ -324,6 +399,8 @@ export default function BookingDetailDrawer({
     setBookingBedrooms(booking.bedrooms == null ? "" : String(booking.bedrooms));
     setBookingBathrooms(booking.bathrooms == null ? "" : String(booking.bathrooms));
     setBookingExtras(extras);
+    setBookingDate(currentBookingDate);
+    setBookingTime(currentBookingTime);
     setPricingForm(pricingFormFromSnapshot(resolvedSnapshot));
     setBookingError(null);
     setBookingSaved(false);
@@ -354,6 +431,12 @@ export default function BookingDetailDrawer({
     const originalLocation = (bookingLocationValue ?? "").trim();
     const originalNotes = (bookingNotesValue ?? "").trim();
     const patch: Record<string, unknown> = {};
+    const appointmentChanged = bookingDate !== currentBookingDate || bookingTime !== currentBookingTime;
+    let pricingChanged = false;
+    if (appointmentChanged && (!bookingDate || !bookingTime)) {
+      setBookingError("Choose both an appointment date and time.");
+      return;
+    }
     if (bookingLocation.trim() !== originalLocation) {
       patch.location = bookingLocation;
     }
@@ -372,7 +455,7 @@ export default function BookingDetailDrawer({
       const newSnapshot = snapshotForService(bookingService, pricingForm);
       const bedrooms = bookingBedrooms === "" ? Number.NaN : Number(bookingBedrooms);
       const bathrooms = bookingBathrooms === "" ? Number.NaN : Number(bookingBathrooms);
-      const pricingChanged =
+      pricingChanged =
         bookingService !== (booking.service ?? "") ||
         (bookingService === "Standard" && (
           bookingFrequency !== (booking.frequency ?? "") ||
@@ -412,6 +495,14 @@ export default function BookingDetailDrawer({
         }
       }
     }
+    if (appointmentChanged && pricingChanged) {
+      setBookingError("Save the service change first, then edit the appointment.");
+      return;
+    }
+    if (appointmentChanged) {
+      patch.bookingDate = bookingDate;
+      patch.bookingTime = bookingTime;
+    }
     if (Object.keys(patch).length === 0) {
       setEditingBooking(false);
       return;
@@ -428,13 +519,19 @@ export default function BookingDetailDrawer({
         },
       );
       const result = (await response.json().catch(() => null)) as
-        | { booking?: { id: number; location: string | null; notes: string | null }; error?: string }
+        | { booking?: { id: number; location?: string | null; notes?: string | null; booking_date?: string | Date | null; booking_time?: string | null }; error?: string }
         | null;
       if (!response.ok || !result?.booking) {
         setBookingError(result?.error || "Booking details could not be saved. Try again.");
         return;
       }
-      setBookingOverride(result.booking);
+      setBookingOverride({
+        id: result.booking.id,
+        location: Object.hasOwn(result.booking, "location") ? result.booking.location ?? null : bookingLocationValue,
+        notes: Object.hasOwn(result.booking, "notes") ? result.booking.notes ?? null : bookingNotesValue,
+        booking_date: result.booking.booking_date ?? booking.booking_date,
+        booking_time: result.booking.booking_time ?? booking.booking_time ?? null,
+      });
       setEditingBooking(false);
       setBookingSaved(true);
       router.refresh();
@@ -611,9 +708,51 @@ export default function BookingDetailDrawer({
               label="Requested date and time"
               valueClassName="font-semibold text-slate-900"
             >
-              {appointmentLabel}
+              {bookingAppointmentValue}
             </DetailValue>
-            {editingBooking && <p className="mt-2 text-xs text-slate-500">Date and time are read-only in this phase.</p>}
+            {editingBooking && (
+              <div className="mt-3 space-y-3">
+                <label htmlFor={`drawer-appointment-date-${booking.id}`} className="block text-xs font-medium text-slate-600">
+                  Date
+                  <input
+                    id={`drawer-appointment-date-${booking.id}`}
+                    type="date"
+                    value={bookingDate}
+                    onChange={(event) => { setBookingDate(event.target.value); setBookingTime(""); }}
+                    disabled={savingBooking}
+                    className="mt-1.5 min-h-11 w-full min-w-0 rounded-xl border border-slate-200 bg-white px-3 text-base text-slate-900 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50"
+                  />
+                </label>
+                <label htmlFor={`drawer-appointment-time-${booking.id}`} className="block text-xs font-medium text-slate-600">
+                  Time
+                  <select
+                    id={`drawer-appointment-time-${booking.id}`}
+                    value={bookingTime}
+                    onChange={(event) => setBookingTime(event.target.value)}
+                    disabled={savingBooking || loadingAppointmentTimes || !bookingDate}
+                    className={`${editorSelectClassName} disabled:bg-slate-50`}
+                  >
+                    <option value="">Choose a time</option>
+                    {bookingTime && !appointmentTimes.some((time) => time.value === bookingTime) && bookingDate === currentBookingDate && (
+                      <option value={bookingTime}>{formatAppointmentValue(bookingDate, bookingTime).split(" · ")[1]}</option>
+                    )}
+                    {appointmentTimes.map((time) => <option key={time.value} value={time.value}>{time.label}</option>)}
+                  </select>
+                </label>
+                <p aria-live="polite" className="text-xs leading-5 text-slate-500">
+                  {loadingAppointmentTimes
+                    ? "Loading schedule times…"
+                    : appointmentTimesError
+                      ? appointmentTimesError
+                      : "Times follow the configured schedule. Cleaner availability and capacity are confirmed when saved."}
+                </p>
+              </div>
+            )}
+            {bookingError && editingBooking && (
+              <p role="alert" aria-live="assertive" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm leading-5 text-rose-700">
+                {bookingError}
+              </p>
+            )}
           </DetailSection>
 
           <DetailSection title="Service">
@@ -809,11 +948,6 @@ export default function BookingDetailDrawer({
             ) : (
               <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700 [overflow-wrap:anywhere]">
                 {bookingNotesValue?.trim() || "No additional notes."}
-              </p>
-            )}
-            {bookingError && editingBooking && (
-              <p role="alert" className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">
-                {bookingError}
               </p>
             )}
             {bookingSaved && !editingBooking && (

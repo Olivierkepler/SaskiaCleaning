@@ -38,6 +38,25 @@ export type AppointmentMoveResult =
     }
   | { ok: false; reason: AppointmentMoveFailure };
 
+export function mapAppointmentMoveFailure(reason: AppointmentMoveFailure): {
+  status: 400 | 404 | 409 | 500;
+  error: string;
+} {
+  switch (reason) {
+    case "INVALID_APPOINTMENT": return { status: 400, error: "Choose a valid appointment date and time." };
+    case "NOT_FOUND": return { status: 404, error: "Booking not found." };
+    case "BLOCKED_TIME": return { status: 409, error: "This time is blocked for scheduling." };
+    case "NO_CAPACITY": return { status: 409, error: "No cleaning team is available for this appointment." };
+    case "STAFF_UNAVAILABLE": return { status: 409, error: "The assigned cleaner is not available at this time." };
+    case "STAFF_TIME_OFF": return { status: 409, error: "The assigned cleaner is unavailable on this date." };
+    case "ASSIGNMENT_OVERLAP": return { status: 409, error: "The assigned cleaner already has another booking at this time." };
+    case "TRAVEL_BUFFER_CONFLICT": return { status: 409, error: "This appointment is too close to another assigned booking." };
+    case "STALE_ASSIGNMENT": return { status: 409, error: "The assignment changed while you were editing. Review the booking and try again." };
+    case "CONCURRENT_CONFLICT": return { status: 409, error: "The schedule changed while you were editing. Review the booking and try again." };
+    case "PERSISTENCE_FAILURE": return { status: 500, error: "The appointment could not be saved." };
+  }
+}
+
 export type AppointmentMoveInput = {
   bookingId: unknown;
   bookingDate: unknown;

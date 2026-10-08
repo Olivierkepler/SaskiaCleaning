@@ -8,6 +8,7 @@ import {
   type BookingPricingResult,
   type PricingInputSnapshot,
 } from "@/app/lib/booking-pricing-pure";
+import { isValidBookingDateOnly, parseBookingTime } from "@/app/lib/scheduling-pure";
 
 export const MAX_ADMIN_BOOKING_LOCATION_LENGTH = 500;
 export const MAX_ADMIN_BOOKING_NOTES_LENGTH = 4_000;
@@ -21,6 +22,8 @@ export type AdminBookingDetailsPatch = {
   bathrooms?: number;
   extras?: string[];
   pricingInputs?: PricingInputSnapshot;
+  bookingDate?: string;
+  bookingTime?: string;
 };
 
 export type AdminBookingForEdit = {
@@ -75,13 +78,27 @@ export function parseAdminBookingDetailsPatch(
   if (!isRecord(input)) return { ok: false, error: "Invalid booking details." };
 
   const allowed = new Set([
-    "location", "notes", "service", "frequency", "bedrooms", "bathrooms", "extras", "pricingInputs",
+    "location", "notes", "service", "frequency", "bedrooms", "bathrooms", "extras", "pricingInputs", "bookingDate", "bookingTime",
   ]);
   if (Object.keys(input).some((key) => !allowed.has(key))) {
     return { ok: false, error: "This booking field cannot be edited here." };
   }
   if (Object.keys(input).length === 0) {
     return { ok: false, error: "Enter booking details to update." };
+  }
+
+  const hasBookingDate = Object.hasOwn(input, "bookingDate");
+  const hasBookingTime = Object.hasOwn(input, "bookingTime");
+  if (hasBookingDate !== hasBookingTime) {
+    return { ok: false, error: "Choose both an appointment date and time." };
+  }
+  if (hasBookingDate) {
+    if (typeof input.bookingDate !== "string" || !isValidBookingDateOnly(input.bookingDate)) {
+      return { ok: false, error: "Choose a valid appointment date." };
+    }
+    if (typeof input.bookingTime !== "string" || !parseBookingTime(input.bookingTime)) {
+      return { ok: false, error: "Choose a valid appointment time." };
+    }
   }
 
   const patch: AdminBookingDetailsPatch = {};
@@ -136,6 +153,16 @@ export function parseAdminBookingDetailsPatch(
   if (Object.hasOwn(input, "pricingInputs")) {
     if (!isRecord(input.pricingInputs)) return { ok: false, error: "Pricing details are missing or invalid." };
     patch.pricingInputs = input.pricingInputs as unknown as PricingInputSnapshot;
+  }
+
+  if (hasBookingDate) {
+    patch.bookingDate = input.bookingDate as string;
+    patch.bookingTime = parseBookingTime(input.bookingTime as string)!;
+  }
+  const priceSensitive = ["service", "frequency", "bedrooms", "bathrooms", "extras", "pricingInputs"]
+    .some((key) => Object.hasOwn(patch, key));
+  if (hasBookingDate && priceSensitive) {
+    return { ok: false, error: "Save the service change first, then edit the appointment." };
   }
 
   return { ok: true, patch };
@@ -259,6 +286,9 @@ export async function executeAdminBookingDetailsPatch<T>(
   if (!dependencies.authorized) return { status: 401, error: "Unauthorized" };
   const parsed = parseAdminBookingDetailsPatch(input);
   if (!parsed.ok) return { status: 400, error: parsed.error };
+  if (parsed.patch.bookingDate !== undefined || parsed.patch.bookingTime !== undefined) {
+    return { status: 400, error: "Appointment changes must use the scheduling move authority." };
+  }
 
   const current = await dependencies.load();
   if (!current) return { status: 404, error: "Booking not found." };
