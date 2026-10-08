@@ -1,4 +1,5 @@
 import { normalizeReferralCode } from "@/app/lib/referrals";
+import type { PricingInputSnapshot } from "@/app/lib/booking-pricing-pure";
 
 import type { PriceRange, ServiceIndex } from "../types";
 import { formatBookingDateForApi, getBookingRoomCounts } from "../utils";
@@ -15,6 +16,7 @@ export type BookingPayload = {
   bookingDate: string | undefined;
   bookingTime: string | undefined;
   extras: string[];
+  pricingInputs: PricingInputSnapshot;
   estimateLow: number;
   estimateMid: number;
   estimateHigh: number;
@@ -36,6 +38,11 @@ export type BuildBookingPayloadInput = {
   bookingTime: string | null;
   standardBedIndex: number;
   standardBathIndex: number;
+  deepCleanSizeIndex: number;
+  deepCleanConditionIndex: number;
+  moveOutSquareFootageIndex: number;
+  commercialSquareFootageIndex: number;
+  commercialScheduleIndex: number;
   standardSelectedAddons: ReadonlySet<string>;
   deepCleanSelectedAddons: ReadonlySet<string>;
   moveOutSelectedAddons: ReadonlySet<string>;
@@ -73,6 +80,11 @@ export function buildBookingPayload({
   bookingTime,
   standardBedIndex,
   standardBathIndex,
+  deepCleanSizeIndex,
+  deepCleanConditionIndex,
+  moveOutSquareFootageIndex,
+  commercialSquareFootageIndex,
+  commercialScheduleIndex,
   standardSelectedAddons,
   deepCleanSelectedAddons,
   moveOutSelectedAddons,
@@ -95,7 +107,16 @@ export function buildBookingPayload({
         ? Array.from(deepCleanSelectedAddons)
         : serviceIndex === 2
           ? Array.from(moveOutSelectedAddons)
-          : Array.from(commercialSelectedAddons);
+        : Array.from(commercialSelectedAddons);
+
+  const pricingInputs: PricingInputSnapshot =
+    serviceIndex === 0
+      ? { version: 1, kind: "standard", bathroomIndex: standardBathIndex }
+      : serviceIndex === 1
+        ? { version: 1, kind: "deep-clean", sizeIndex: deepCleanSizeIndex, conditionIndex: deepCleanConditionIndex }
+        : serviceIndex === 2
+          ? { version: 1, kind: "move-out", squareFootageIndex: moveOutSquareFootageIndex }
+          : { version: 1, kind: "commercial", squareFootageIndex: commercialSquareFootageIndex, scheduleIndex: commercialScheduleIndex };
 
   const normalizedReferralCode = referralCode.trim()
     ? normalizeReferralCode(referralCode)
@@ -113,6 +134,7 @@ export function buildBookingPayload({
     bookingDate: formatBookingDateForApi(date),
     bookingTime: bookingTime ?? undefined,
     extras,
+    pricingInputs,
     estimateLow: prices.low,
     estimateMid: prices.mid,
     estimateHigh: prices.high,

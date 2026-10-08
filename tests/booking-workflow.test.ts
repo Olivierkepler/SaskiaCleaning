@@ -23,6 +23,11 @@ function bookingInput(
     bookingTime: "09:00",
     standardBedIndex: 3,
     standardBathIndex: 3,
+    deepCleanSizeIndex: 1,
+    deepCleanConditionIndex: 0,
+    moveOutSquareFootageIndex: 1,
+    commercialSquareFootageIndex: 0,
+    commercialScheduleIndex: 3,
     standardSelectedAddons: new Set(["Inside oven", "Windows"]),
     deepCleanSelectedAddons: new Set(["Wall scrub"]),
     moveOutSelectedAddons: new Set(["Garage clean"]),
@@ -58,6 +63,7 @@ describe("booking payload construction", () => {
       bookingDate: "2026-10-09",
       bookingTime: "09:00",
       extras: ["Inside oven", "Windows"],
+      pricingInputs: { version: 1, kind: "standard", bathroomIndex: 3 },
       estimateLow: 180,
       estimateMid: 220,
       estimateHigh: 260,
@@ -123,6 +129,19 @@ describe("booking payload construction", () => {
         bookingInput({ serviceIndex: testCase.serviceIndex }),
       );
       assert.deepEqual(payload.extras, testCase.expected);
+    }
+  });
+
+  it("includes a versioned snapshot of each service's pricing selections", () => {
+    const cases = [
+      { serviceIndex: 0 as const, expected: { version: 1, kind: "standard", bathroomIndex: 3 } },
+      { serviceIndex: 1 as const, expected: { version: 1, kind: "deep-clean", sizeIndex: 1, conditionIndex: 0 } },
+      { serviceIndex: 2 as const, expected: { version: 1, kind: "move-out", squareFootageIndex: 1 } },
+      { serviceIndex: 3 as const, expected: { version: 1, kind: "commercial", squareFootageIndex: 0, scheduleIndex: 3 } },
+    ];
+    for (const testCase of cases) {
+      const payload = buildBookingPayload(bookingInput({ serviceIndex: testCase.serviceIndex }));
+      assert.deepEqual(payload.pricingInputs, testCase.expected);
     }
   });
 

@@ -11,6 +11,28 @@ import { RHODE_ISLAND_LOCATIONS } from "@/app/data/rhodeIslandLocations";
 import BookingSummary from "@/app/components/BookingSummary";
 import { normalizeReferralCode, parseReferralCodeFromSearchParams } from "@/app/lib/referrals";
 import { IoChatbubblesOutline } from "react-icons/io5";
+import {
+  BATH_VALS,
+  COMMERCIAL_ADDONS,
+  DEEP_CLEAN_ADDONS,
+  MOVE_OUT_ADDONS,
+  STANDARD_ADDONS,
+} from "@/app/components/estimator/constants";
+import type {
+  CommercialAddonLabel,
+  DeepCleanAddonLabel,
+  MoveOutAddonLabel,
+  PriceRange,
+  StandardAddonLabel,
+} from "@/app/components/estimator/types";
+import {
+  calculateCommercialEstimate,
+  calculateDeepCleanEstimate,
+  calculateMoveOutEstimate,
+  calculateStandardEstimate,
+  COMMERCIAL_SCHEDULES,
+  STANDARD_FREQUENCIES,
+} from "@/app/lib/booking-pricing-pure";
 const K = {
   blue:         "#38BDF8",
   blueHover:    "#0EA5E9",
@@ -39,20 +61,9 @@ const LOCATIONS = {
   } as const;
 
 type StateKey = keyof typeof LOCATIONS;
-type PriceRange = ReturnType<typeof calc>;
 type ServiceIndex = 0 | 1 | 2 | 3;
 
-const BED_BASE  = [90, 120, 150, 180, 210];
-const BATH_VALS = [1, 1.5, 2, 2.5, 3];
 const STANDARD_BEDROOM_VALUES = [0, 1, 2, 3, 4] as const;
-const DEEP_BASE = [160, 220, 300, 400];
-const DEEP_COND = [0, 40, 80];
-const MO_BASE   = [180, 240, 320, 420];
-const COM_BASE  = [200, 320, 480, 700];
-
-function calc(mid: number) {
-  return { low: Math.round(mid * 0.85), mid, high: Math.round(mid * 1.18) };
-}
 
 type BookingSubmitStatus = "idle" | "loading" | "success" | "error";
 
@@ -685,15 +696,6 @@ function useIsLargeScreen() {
       </section>
     );
   }
-const STANDARD_ADDONS = [
-  { label: "Inside fridge", price: 15, image: "/images/standard/modernfridge.png" },
-  { label: "Inside oven", price: 20, image: "/images/standard/modernoven.png" },
-  { label: "Laundry fold", price: 25, image: "/images/standard/towel.png" },
-  { label: "Windows", price: 30, image: "/images/standard/window.png" },
-] as const;
-
-type StandardAddonLabel = (typeof STANDARD_ADDONS)[number]["label"];
-
 type StandardPreviewImage = {
   src: string;
   alt: string;
@@ -818,15 +820,6 @@ function DynamicServiceGallery({
   );
 }
 
-const DEEP_CLEAN_ADDONS = [
-  { label: "Wall Trim", price: 35, image: "/images/deepclean/baseboard.png" },
-  { label: "Inside cabinets", price: 40, image: "/images/deepclean/cabinet.png" },
-  { label: "Wall scrub", price: 30, image: "/images/deepclean/wall.png" },
-  { label: "Carpet steam", price: 45, image: "/images/deepclean/carpet1.png" },
-] as const;
-
-type DeepCleanAddonLabel = (typeof DEEP_CLEAN_ADDONS)[number]["label"];
-
 const DEEP_CLEAN_PREVIEW_IMAGES = {
   default: [
     { src: "/images/deepclean/Designer(19).png", alt: "Deep cleaning service" },
@@ -848,15 +841,6 @@ function buildDeepCleanGalleryImages(selectedAddons: Set<string>): StandardPrevi
   }
   return images;
 }
-
-const MOVE_OUT_ADDONS = [
-  { label: "Carpet steam", price: 50, image: "/images/deepclean/carpet1.png" },
-  { label: "Patch & paint", price: 40, image: "/images/moveout/paint.png" },
-  { label: "Window wash", price: 35, image: "/images/moveout/window.png" },
-  { label: "Garage clean", price: 60, image: "/images/moveout/garage.png" },
-] as const;
-
-type MoveOutAddonLabel = (typeof MOVE_OUT_ADDONS)[number]["label"];
 
 const MOVE_OUT_PREVIEW_IMAGES = {
   default: [
@@ -903,15 +887,6 @@ function buildMoveOutGalleryImages(selectedAddons: Set<string>): StandardPreview
   return images;
 }
 
-const COMMERCIAL_ADDONS = [
-  { label: "Floor wax", price: 60, image: "/images/commercial/wax.png" },
-  { label: "Pressure wash", price: 45, image: "/images/commercial/pressure.png" },
-  { label: "Window ext.", price: 55, image: "/images/commercial/windowext.png" },
-  { label: "Sanitize", price: 40, image: "/images/commercial/sanitize.png" },
-] as const;
-
-type CommercialAddonLabel = (typeof COMMERCIAL_ADDONS)[number]["label"];
-
 const COMMERCIAL_PREVIEW_IMAGES = {
   default: [
     {
@@ -955,13 +930,6 @@ function buildCommercialGalleryImages(selectedAddons: Set<string>): StandardPrev
 }
 
 // ── Service panels ─────────────────────────────────────────────────────────────
-const FREQS = [
-  { label: "One-time",  discount: 0  },
-  { label: "Bi-weekly", discount: 10 },
-  { label: "Weekly",    discount: 15 },
-  { label: "Monthly",   discount: 5  },
-];
-
 function StandardPanel({
     onPrice,
     frequency,
@@ -983,9 +951,7 @@ function StandardPanel({
     onBedIdxChange: (index: number) => void;
     onBathIdxChange: (index: number) => void;
   }) {
-  const freqIdx = FREQS.findIndex(
-    (item) => item.label === frequency
-  );
+  const freqIdx = STANDARD_FREQUENCIES.indexOf(frequency as (typeof STANDARD_FREQUENCIES)[number]);
 
 
   const BEDS = ["Studio", "1 room", "2 rooms", "3 rooms", "4+ rooms"];
@@ -996,30 +962,9 @@ function StandardPanel({
     },
     [selectedAddons, onSelectedAddonsChange],
   );
-  const addonTotal = STANDARD_ADDONS.reduce(
-    (sum, addon) => sum + (selectedAddons.has(addon.label) ? addon.price : 0),
-    0,
-  );
-
   useEffect(() => {
-    const b =
-    BED_BASE[bedIdx] +
-    (BATH_VALS[bathIdx] - 1) * 18 +
-    addonTotal;
-  
-  const discount =
-    freqIdx >= 0 ? FREQS[freqIdx].discount : 0;
-  
-  onPrice(
-    calc(
-      Math.round(
-        b * (1 - discount / 100)
-      )
-    )
-  );
-
-
-  }, [bedIdx, bathIdx, freqIdx, addonTotal, onPrice]);
+    onPrice(calculateStandardEstimate({ bedrooms: bedIdx, bathroomIndex: bathIdx, frequency, extras: [...selectedAddons] }));
+  }, [bedIdx, bathIdx, frequency, selectedAddons, onPrice]);
 
 
 
@@ -1034,7 +979,7 @@ function StandardPanel({
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Frequency">
-<ChipGroup options={FREQS.map((f) => f.label)} selectedIndex={freqIdx} onSelect={(index) => onFrequencyChange(FREQS[index].label)} />
+<ChipGroup options={STANDARD_FREQUENCIES} selectedIndex={freqIdx} onSelect={(index) => onFrequencyChange(STANDARD_FREQUENCIES[index])} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Add-ons">
@@ -1064,12 +1009,7 @@ function DeepCleanPanel({
     },
     [selectedAddons, onSelectedAddonsChange],
   );
-  const addonTotal = DEEP_CLEAN_ADDONS.reduce(
-    (sum, addon) => sum + (selectedAddons.has(addon.label) ? addon.price : 0),
-    0,
-  );
-
-  useEffect(() => onPrice(calc(DEEP_BASE[sizeIdx] + DEEP_COND[condIdx] + addonTotal)), [sizeIdx, condIdx, addonTotal, onPrice]);
+  useEffect(() => onPrice(calculateDeepCleanEstimate({ sizeIndex: sizeIdx, conditionIndex: condIdx, extras: [...selectedAddons] })), [sizeIdx, condIdx, selectedAddons, onPrice]);
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -1123,12 +1063,7 @@ function MoveOutPanel({
     },
     [selectedAddons, onSelectedAddonsChange],
   );
-  const addonTotal = MOVE_OUT_ADDONS.reduce(
-    (sum, addon) => sum + (selectedAddons.has(addon.label) ? addon.price : 0),
-    0,
-  );
-
-  useEffect(() => onPrice(calc(MO_BASE[sqftIdx] + addonTotal)), [sqftIdx, addonTotal, onPrice]);
+  useEffect(() => onPrice(calculateMoveOutEstimate({ squareFootageIndex: sqftIdx, extras: [...selectedAddons] })), [sqftIdx, selectedAddons, onPrice]);
 
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -1164,8 +1099,6 @@ function MoveOutPanel({
   );
 }
 
-const SCHEDS    = [{ label: "Daily", mult: 1.4 }, { label: "3x/week", mult: 1 }, { label: "Weekly", mult: .7 }, { label: "One-time", mult: .5 }];
-
 function CommercialPanel({
   onPrice,
   selectedAddons,
@@ -1192,15 +1125,7 @@ function CommercialPanel({
     },
     [selectedAddons, onSelectedAddonsChange],
   );
-  const addonTotal = COMMERCIAL_ADDONS.reduce(
-    (sum, addon) => sum + (selectedAddons.has(addon.label) ? addon.price : 0),
-    0,
-  );
-
-  useEffect(
-    () => onPrice(calc(Math.round((COM_BASE[sqftIdx] + addonTotal) * SCHEDS[schedIdx].mult))),
-    [sqftIdx, schedIdx, addonTotal, onPrice],
-  );
+  useEffect(() => onPrice(calculateCommercialEstimate({ squareFootageIndex: sqftIdx, scheduleIndex: schedIdx, extras: [...selectedAddons] })), [sqftIdx, schedIdx, selectedAddons, onPrice]);
 
   return (
     <div className="grid gap-4 lg:grid-cols-2 ">
@@ -1213,7 +1138,7 @@ function CommercialPanel({
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Schedule" defaultOpen>
-<ChipGroup options={SCHEDS.map((s) => s.label)} selectedIndex={schedIdx} onSelect={setSched} />
+<ChipGroup options={COMMERCIAL_SCHEDULES.map((schedule) => schedule.label)} selectedIndex={schedIdx} onSelect={setSched} />
       </CollapsibleGroup>
   
       <CollapsibleGroup title="Add-ons" defaultOpen>

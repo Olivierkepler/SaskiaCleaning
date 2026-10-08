@@ -421,6 +421,7 @@ export type BookingInsertFields = {
   durationMinutes: number;
   bufferMinutes: number;
   extrasJson: string;
+  pricingInputsJson: string;
   estimateLow: number | null;
   estimateMid: number | null;
   estimateHigh: number | null;
@@ -488,7 +489,7 @@ export async function createBookingWithCapacityClaim(
           INSERT INTO booking_requests (
             name, email, mobile, bedrooms, bathrooms, service, frequency,
             location, booking_date, booking_time, duration_minutes,
-            buffer_minutes, extras,
+            buffer_minutes, extras, pricing_inputs,
             estimate_low, estimate_mid, estimate_high, notes,
             referral_code, seen, customer_id
           )
@@ -499,7 +500,7 @@ export async function createBookingWithCapacityClaim(
             ${fields.bookingDate}::date, ${fields.bookingTime}::time,
             ${fields.durationMinutes},
             ${bufferMinutes},
-            ${fields.extrasJson},
+            ${fields.extrasJson}, ${fields.pricingInputsJson}::jsonb,
             ${fields.estimateLow}, ${fields.estimateMid}, ${fields.estimateHigh},
             ${fields.notes}, ${fields.referralCode}, false, ${fields.customerId}
           )

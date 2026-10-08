@@ -5,12 +5,12 @@ import { useTranslations } from "next-intl";
 
 import {
   ADDON_DISPLAY_KEYS,
-  COM_BASE,
   COMMERCIAL_ADDONS,
   FREQ_DISPLAY_KEYS,
 } from "../constants";
 import type { CommercialAddonLabel, PriceRange } from "../types";
-import { calc, toggleInSet } from "../utils";
+import { calculateCommercialEstimate, COMMERCIAL_SCHEDULES } from "@/app/lib/booking-pricing-pure";
+import { toggleInSet } from "../utils";
 import { AddonGrid } from "../ui/Addon";
 import { DiscreteSlider } from "../ui/DiscreteSlider";
 
@@ -18,19 +18,20 @@ export type CommercialPanelProps = {
   onPrice: (price: PriceRange) => void;
   selectedAddons: Set<string>;
   onSelectedAddonsChange: (addons: Set<string>) => void;
+  squareFootageIndex?: number;
+  onSquareFootageIndexChange?: (index: number) => void;
+  scheduleIndex?: number;
+  onScheduleIndexChange?: (index: number) => void;
 };
-
-const SCHEDS = [
-  { label: "Daily", mult: 1.4 },
-  { label: "3x/week", mult: 1 },
-  { label: "Weekly", mult: 0.7 },
-  { label: "One-time", mult: 0.5 },
-];
 
 export function CommercialPanel({
   onPrice,
   selectedAddons,
   onSelectedAddonsChange,
+  squareFootageIndex,
+  onSquareFootageIndexChange,
+  scheduleIndex,
+  onScheduleIndexChange,
 }: CommercialPanelProps) {
   const t = useTranslations("booking");
 
@@ -45,8 +46,12 @@ export function CommercialPanel({
   };
 
   const [typeIdx, setType] = useState(0);
-  const [sqftIdx, setSqft] = useState(0);
-  const [schedIdx, setSched] = useState(3);
+  const [localSqftIdx, setLocalSqftIdx] = useState(0);
+  const [localSchedIdx, setLocalSchedIdx] = useState(3);
+  const sqftIdx = squareFootageIndex ?? localSqftIdx;
+  const schedIdx = scheduleIndex ?? localSchedIdx;
+  const setSqft = (index: number) => { setLocalSqftIdx(index); onSquareFootageIndexChange?.(index); };
+  const setSched = (index: number) => { setLocalSchedIdx(index); onScheduleIndexChange?.(index); };
   const [timingIdx, setTiming] = useState(-1);
   const [contractIdx, setContract] = useState(0);
 
@@ -87,30 +92,9 @@ export function CommercialPanel({
     [selectedAddons, onSelectedAddonsChange],
   );
 
-  const addonTotal = COMMERCIAL_ADDONS.reduce(
-    (sum, addon) =>
-      sum +
-      (selectedAddons.has(addon.label)
-        ? addon.price
-        : 0),
-    0,
-  );
-
   useEffect(() => {
-    onPrice(
-      calc(
-        Math.round(
-          (COM_BASE[sqftIdx] + addonTotal) *
-            SCHEDS[schedIdx].mult,
-        ),
-      ),
-    );
-  }, [
-    sqftIdx,
-    schedIdx,
-    addonTotal,
-    onPrice,
-  ]);
+    onPrice(calculateCommercialEstimate({ squareFootageIndex: sqftIdx, scheduleIndex: schedIdx, extras: [...selectedAddons] }));
+  }, [sqftIdx, schedIdx, selectedAddons, onPrice]);
 
   return (
     <div className="grid gap-5">
@@ -209,7 +193,7 @@ export function CommercialPanel({
 
               <DiscreteSlider
                 value={schedIdx}
-                options={SCHEDS.map((schedule, index) => ({
+                options={COMMERCIAL_SCHEDULES.map((schedule, index) => ({
                   label: translateFreq(schedule.label),
                   value: index,
                 }))}

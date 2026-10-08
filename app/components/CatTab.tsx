@@ -119,6 +119,11 @@ layoutVariant = "public",
   const [standardBathIdx, setStandardBathIdx] = useState(
     repeatBookingPrefill?.standardBathroomIndex ?? 0,
   );
+  const [deepCleanSizeIdx, setDeepCleanSizeIdx] = useState(1);
+  const [deepCleanConditionIdx, setDeepCleanConditionIdx] = useState(0);
+  const [moveOutSquareFootageIdx, setMoveOutSquareFootageIdx] = useState(1);
+  const [commercialSquareFootageIdx, setCommercialSquareFootageIdx] = useState(0);
+  const [commercialScheduleIdx, setCommercialScheduleIdx] = useState(3);
   const [bookingFormOpen, setBookingFormOpen] = useState(false);
   // Apply the profile prefill once, at mount, via lazy initial state.
   const [initialPrefill] = useState(() =>
@@ -403,6 +408,11 @@ layoutVariant = "public",
         bookingTime,
         standardBedIndex: standardBedIdx,
         standardBathIndex: standardBathIdx,
+        deepCleanSizeIndex: deepCleanSizeIdx,
+        deepCleanConditionIndex: deepCleanConditionIdx,
+        moveOutSquareFootageIndex: moveOutSquareFootageIdx,
+        commercialSquareFootageIndex: commercialSquareFootageIdx,
+        commercialScheduleIndex: commercialScheduleIdx,
         standardSelectedAddons,
         deepCleanSelectedAddons,
         moveOutSelectedAddons,
@@ -722,9 +732,19 @@ onFrequencyChange={setFrequency}
 standardSelectedAddons={standardSelectedAddons}
 onStandardSelectedAddonsChange={handleStandardAddonsChange}
 standardBedIndex={standardBedIdx}
-standardBathIndex={standardBathIdx}
-onStandardBedIndexChange={setStandardBedIdx}
-onStandardBathIndexChange={setStandardBathIdx}
+              standardBathIndex={standardBathIdx}
+              onStandardBedIndexChange={setStandardBedIdx}
+              onStandardBathIndexChange={setStandardBathIdx}
+              deepCleanSizeIndex={deepCleanSizeIdx}
+              onDeepCleanSizeIndexChange={setDeepCleanSizeIdx}
+              deepCleanConditionIndex={deepCleanConditionIdx}
+              onDeepCleanConditionIndexChange={setDeepCleanConditionIdx}
+              moveOutSquareFootageIndex={moveOutSquareFootageIdx}
+              onMoveOutSquareFootageIndexChange={setMoveOutSquareFootageIdx}
+              commercialSquareFootageIndex={commercialSquareFootageIdx}
+              onCommercialSquareFootageIndexChange={setCommercialSquareFootageIdx}
+              commercialScheduleIndex={commercialScheduleIdx}
+              onCommercialScheduleIndexChange={setCommercialScheduleIdx}
 deepCleanSelectedAddons={deepCleanSelectedAddons}
 onDeepCleanSelectedAddonsChange={handleDeepCleanAddonsChange}
 moveOutSelectedAddons={moveOutSelectedAddons}

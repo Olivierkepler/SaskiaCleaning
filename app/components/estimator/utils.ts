@@ -13,11 +13,7 @@ import {
   STANDARD_GALLERY_DEFAULT_WIDTH,
   STANDARD_PREVIEW_IMAGES,
 } from "./constants";
-import type { PriceRange, ServiceIndex, StandardPreviewImage } from "./types";
-
-export function calc(mid: number): PriceRange {
-  return { low: Math.round(mid * 0.85), mid, high: Math.round(mid * 1.18) };
-}
+import type { ServiceIndex, StandardPreviewImage } from "./types";
 
 export function formatBookingDateForApi(date: Date | null): string | undefined {
   if (!date) return undefined;

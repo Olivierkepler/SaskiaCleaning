@@ -22,6 +22,16 @@ export type CustomizationPanelProps = {
   standardBathIndex: number;
   onStandardBedIndexChange: (index: number) => void;
   onStandardBathIndexChange: (index: number) => void;
+  deepCleanSizeIndex: number;
+  onDeepCleanSizeIndexChange: (index: number) => void;
+  deepCleanConditionIndex: number;
+  onDeepCleanConditionIndexChange: (index: number) => void;
+  moveOutSquareFootageIndex: number;
+  onMoveOutSquareFootageIndexChange: (index: number) => void;
+  commercialSquareFootageIndex: number;
+  onCommercialSquareFootageIndexChange: (index: number) => void;
+  commercialScheduleIndex: number;
+  onCommercialScheduleIndexChange: (index: number) => void;
   deepCleanSelectedAddons: Set<string>;
   onDeepCleanSelectedAddonsChange: (addons: Set<string>) => void;
   moveOutSelectedAddons: Set<string>;
@@ -43,6 +53,16 @@ export function CustomizationPanel({
   standardBathIndex,
   onStandardBedIndexChange,
   onStandardBathIndexChange,
+  deepCleanSizeIndex,
+  onDeepCleanSizeIndexChange,
+  deepCleanConditionIndex,
+  onDeepCleanConditionIndexChange,
+  moveOutSquareFootageIndex,
+  onMoveOutSquareFootageIndexChange,
+  commercialSquareFootageIndex,
+  onCommercialSquareFootageIndexChange,
+  commercialScheduleIndex,
+  onCommercialScheduleIndexChange,
   deepCleanSelectedAddons,
   onDeepCleanSelectedAddonsChange,
   moveOutSelectedAddons,
@@ -68,18 +88,28 @@ export function CustomizationPanel({
       onPrice={onPrice}
       selectedAddons={deepCleanSelectedAddons}
       onSelectedAddonsChange={onDeepCleanSelectedAddonsChange}
+      sizeIndex={deepCleanSizeIndex}
+      onSizeIndexChange={onDeepCleanSizeIndexChange}
+      conditionIndex={deepCleanConditionIndex}
+      onConditionIndexChange={onDeepCleanConditionIndexChange}
     />,
     <MoveOutPanel
       key="mo"
       onPrice={onPrice}
       selectedAddons={moveOutSelectedAddons}
       onSelectedAddonsChange={onMoveOutSelectedAddonsChange}
+      squareFootageIndex={moveOutSquareFootageIndex}
+      onSquareFootageIndexChange={onMoveOutSquareFootageIndexChange}
     />,
     <CommercialPanel
       key="com"
       onPrice={onPrice}
       selectedAddons={commercialSelectedAddons}
       onSelectedAddonsChange={onCommercialSelectedAddonsChange}
+      squareFootageIndex={commercialSquareFootageIndex}
+      onSquareFootageIndexChange={onCommercialSquareFootageIndexChange}
+      scheduleIndex={commercialScheduleIndex}
+      onScheduleIndexChange={onCommercialScheduleIndexChange}
     />,
   ];
 

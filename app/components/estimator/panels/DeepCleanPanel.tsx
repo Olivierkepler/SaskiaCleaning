@@ -5,12 +5,11 @@ import { useTranslations } from "next-intl";
 
 import {
   ADDON_DISPLAY_KEYS,
-  DEEP_BASE,
   DEEP_CLEAN_ADDONS,
-  DEEP_COND,
 } from "../constants";
 import type { DeepCleanAddonLabel, PriceRange } from "../types";
-import { calc, toggleInSet } from "../utils";
+import { calculateDeepCleanEstimate } from "@/app/lib/booking-pricing-pure";
+import { toggleInSet } from "../utils";
 import { AddonGrid } from "../ui/Addon";
 import { Checklist } from "../ui/Checklist";
 import { CollapsibleGroup } from "../ui/CollapsibleGroup";
@@ -20,12 +19,20 @@ export type DeepCleanPanelProps = {
   onPrice: (price: PriceRange) => void;
   selectedAddons: Set<string>;
   onSelectedAddonsChange: (addons: Set<string>) => void;
+  sizeIndex?: number;
+  onSizeIndexChange?: (index: number) => void;
+  conditionIndex?: number;
+  onConditionIndexChange?: (index: number) => void;
 };
 
 export function DeepCleanPanel({
   onPrice,
   selectedAddons,
   onSelectedAddonsChange,
+  sizeIndex,
+  onSizeIndexChange,
+  conditionIndex,
+  onConditionIndexChange,
 }: DeepCleanPanelProps) {
   const t = useTranslations("booking");
 
@@ -34,8 +41,12 @@ export function DeepCleanPanel({
     return key ? t(key as "insideFridge") : label;
   };
 
-  const [sizeIdx, setSize] = useState(1);
-  const [condIdx, setCond] = useState(0);
+  const [localSizeIdx, setLocalSizeIdx] = useState(1);
+  const [localCondIdx, setLocalCondIdx] = useState(0);
+  const sizeIdx = sizeIndex ?? localSizeIdx;
+  const condIdx = conditionIndex ?? localCondIdx;
+  const setSize = (index: number) => { setLocalSizeIdx(index); onSizeIndexChange?.(index); };
+  const setCond = (index: number) => { setLocalCondIdx(index); onConditionIndexChange?.(index); };
 
   const SIZES = [
     "Studio",
@@ -59,29 +70,9 @@ export function DeepCleanPanel({
     [selectedAddons, onSelectedAddonsChange],
   );
 
-  const addonTotal = DEEP_CLEAN_ADDONS.reduce(
-    (sum, addon) =>
-      sum +
-      (selectedAddons.has(addon.label)
-        ? addon.price
-        : 0),
-    0,
-  );
-
   useEffect(() => {
-    onPrice(
-      calc(
-        DEEP_BASE[sizeIdx] +
-          DEEP_COND[condIdx] +
-          addonTotal,
-      ),
-    );
-  }, [
-    sizeIdx,
-    condIdx,
-    addonTotal,
-    onPrice,
-  ]);
+    onPrice(calculateDeepCleanEstimate({ sizeIndex: sizeIdx, conditionIndex: condIdx, extras: [...selectedAddons] }));
+  }, [sizeIdx, condIdx, selectedAddons, onPrice]);
 
   return (
     <div className="grid gap-5">

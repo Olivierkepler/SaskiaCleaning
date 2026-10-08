@@ -6,12 +6,12 @@ import { useTranslations } from "next-intl";
 import {
   ADDON_DISPLAY_KEYS,
   BATH_VALS,
-  BED_BASE,
   FREQ_DISPLAY_KEYS,
   STANDARD_ADDONS,
 } from "../constants";
 import type { PriceRange, StandardAddonLabel } from "../types";
-import { calc, toggleInSet } from "../utils";
+import { calculateStandardEstimate, STANDARD_FREQUENCIES } from "@/app/lib/booking-pricing-pure";
+import { toggleInSet } from "../utils";
 import { AddonGrid } from "../ui/Addon";
 import { DiscreteSlider } from "../ui/DiscreteSlider";
 
@@ -26,13 +26,6 @@ export type StandardPanelProps = {
   onBedIdxChange: (index: number) => void;
   onBathIdxChange: (index: number) => void;
 };
-
-const FREQS = [
-  { label: "One-time", discount: 0 },
-  { label: "Bi-weekly", discount: 10 },
-  { label: "Weekly", discount: 15 },
-  { label: "Monthly", discount: 5 },
-];
 
 export function StandardPanel({
   onPrice,
@@ -57,9 +50,7 @@ export function StandardPanel({
     return key ? t(key as "oneTime") : label;
   };
 
-  const freqIdx = FREQS.findIndex(
-    (item) => item.label === frequency,
-  );
+  const freqIdx = STANDARD_FREQUENCIES.indexOf(frequency as (typeof STANDARD_FREQUENCIES)[number]);
 
   const BEDS = [
     t("studio"),
@@ -78,38 +69,19 @@ export function StandardPanel({
     [selectedAddons, onSelectedAddonsChange],
   );
 
-  const addonTotal = STANDARD_ADDONS.reduce(
-    (sum, addon) =>
-      sum +
-      (selectedAddons.has(addon.label)
-        ? addon.price
-        : 0),
-    0,
-  );
-
   useEffect(() => {
-    const base =
-      BED_BASE[bedIdx] +
-      (BATH_VALS[bathIdx] - 1) * 18 +
-      addonTotal;
-
-    const discount =
-      freqIdx >= 0
-        ? FREQS[freqIdx].discount
-        : 0;
-
-    onPrice(
-      calc(
-        Math.round(
-          base * (1 - discount / 100),
-        ),
-      ),
-    );
+    onPrice(calculateStandardEstimate({
+      bedrooms: bedIdx,
+      bathroomIndex: bathIdx,
+      frequency: freqIdx >= 0 ? STANDARD_FREQUENCIES[freqIdx] : frequency,
+      extras: [...selectedAddons],
+    }));
   }, [
     bedIdx,
     bathIdx,
     freqIdx,
-    addonTotal,
+    frequency,
+    selectedAddons,
     onPrice,
   ]);
 
@@ -218,11 +190,11 @@ export function StandardPanel({
 
             <DiscreteSlider
               value={frequency}
-              options={FREQS.map((frequencyOption) => ({
+              options={STANDARD_FREQUENCIES.map((frequencyOption) => ({
                 label: translateFreq(
-                  frequencyOption.label,
+                  frequencyOption,
                 ),
-                value: frequencyOption.label,
+                value: frequencyOption,
               }))}
               onChange={onFrequencyChange}
               ariaLabel={t("frequency")}

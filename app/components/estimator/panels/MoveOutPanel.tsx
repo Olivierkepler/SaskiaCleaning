@@ -5,11 +5,11 @@ import { useTranslations } from "next-intl";
 
 import {
   ADDON_DISPLAY_KEYS,
-  MO_BASE,
   MOVE_OUT_ADDONS,
 } from "../constants";
 import type { MoveOutAddonLabel, PriceRange } from "../types";
-import { calc, toggleInSet } from "../utils";
+import { calculateMoveOutEstimate } from "@/app/lib/booking-pricing-pure";
+import { toggleInSet } from "../utils";
 import { AddonGrid } from "../ui/Addon";
 import { CollapsibleGroup } from "../ui/CollapsibleGroup";
 import { DiscreteSlider } from "../ui/DiscreteSlider";
@@ -19,12 +19,16 @@ export type MoveOutPanelProps = {
   onPrice: (price: PriceRange) => void;
   selectedAddons: Set<string>;
   onSelectedAddonsChange: (addons: Set<string>) => void;
+  squareFootageIndex?: number;
+  onSquareFootageIndexChange?: (index: number) => void;
 };
 
 export function MoveOutPanel({
   onPrice,
   selectedAddons,
   onSelectedAddonsChange,
+  squareFootageIndex,
+  onSquareFootageIndexChange,
 }: MoveOutPanelProps) {
   const t = useTranslations("booking");
 
@@ -34,7 +38,9 @@ export function MoveOutPanel({
   };
 
   const [typeIdx, setType] = useState(0);
-  const [sqftIdx, setSqft] = useState(1);
+  const [localSqftIdx, setLocalSqftIdx] = useState(1);
+  const sqftIdx = squareFootageIndex ?? localSqftIdx;
+  const setSqft = (index: number) => { setLocalSqftIdx(index); onSquareFootageIndexChange?.(index); };
 
   const TYPES = [
     "Apartment",
@@ -59,27 +65,9 @@ export function MoveOutPanel({
     [selectedAddons, onSelectedAddonsChange],
   );
 
-  const addonTotal = MOVE_OUT_ADDONS.reduce(
-    (sum, addon) =>
-      sum +
-      (selectedAddons.has(addon.label)
-        ? addon.price
-        : 0),
-    0,
-  );
-
   useEffect(() => {
-    onPrice(
-      calc(
-        MO_BASE[sqftIdx] +
-          addonTotal,
-      ),
-    );
-  }, [
-    sqftIdx,
-    addonTotal,
-    onPrice,
-  ]);
+    onPrice(calculateMoveOutEstimate({ squareFootageIndex: sqftIdx, extras: [...selectedAddons] }));
+  }, [sqftIdx, selectedAddons, onPrice]);
 
   return (
     <div className="grid gap-5">

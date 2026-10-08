@@ -19,6 +19,7 @@ import {
 import { CAPACITY_CONFLICT_MESSAGE } from "@/app/lib/staff-capacity-pure";
 import { resolveDurationForBooking } from "@/app/lib/booking-duration";
 import { getJobBufferMinutes } from "@/app/lib/booking-buffer";
+import { priceBookingRequest } from "@/app/lib/booking-pricing-pure";
 
 function parseNonNegativeInteger(value: unknown): number | null {
   const parsed = Number(value);
@@ -58,9 +59,6 @@ export async function POST(req: Request) {
       bookingDate,
       bookingTime,
       extras,
-      estimateLow,
-      estimateMid,
-      estimateHigh,
       notes,
       referralCode,
       selectedAddressId,
@@ -98,6 +96,11 @@ export async function POST(req: Request) {
         { error: "Bedrooms and bathrooms must be non-negative integers." },
         { status: 400 }
       );
+    }
+
+    const pricing = priceBookingRequest(body);
+    if (!pricing.ok) {
+      return NextResponse.json({ error: pricing.error }, { status: 400 });
     }
 
     const parsedBookingDate = normalizeBookingDate(bookingDate);
@@ -152,7 +155,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const extrasArray = Array.isArray(extras) ? extras : [];
+    const extrasArray = pricing.extras;
 
     const normalizedReferralCode =
       referralCode != null && String(referralCode).trim() !== ""
@@ -251,9 +254,10 @@ export async function POST(req: Request) {
         durationMinutes: durationResult.minutes,
         bufferMinutes,
         extrasJson: JSON.stringify(extrasArray),
-        estimateLow: estimateLow ?? null,
-        estimateMid: estimateMid ?? null,
-        estimateHigh: estimateHigh ?? null,
+        pricingInputsJson: JSON.stringify(pricing.pricingInputs),
+        estimateLow: pricing.estimate.low,
+        estimateMid: pricing.estimate.mid,
+        estimateHigh: pricing.estimate.high,
         notes: notes || null,
         referralCode: normalizedReferralCode,
         customerId,
