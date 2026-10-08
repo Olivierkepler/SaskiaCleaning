@@ -5,6 +5,7 @@
 import "server-only";
 
 import { sql } from "@/app/lib/db";
+import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
 import { parseBookingDateOnly } from "@/app/lib/customer-bookings-pure";
 import {
   formatBookingTime,
@@ -349,7 +350,7 @@ export async function countOpsNeedsAttention(): Promise<number> {
  * Admin manual soft-release for one booking.
  * Does NOT change booking status.
  */
-export async function adminReleaseBookingCapacity(input: {
+async function adminReleaseBookingCapacityInTransaction(input: {
   bookingId: number;
   confirm: unknown;
   reason?: unknown;
@@ -434,4 +435,10 @@ export async function adminReleaseBookingCapacity(input: {
     assignmentId: String(row.id),
     releaseReason: "admin_release",
   };
+}
+
+export function adminReleaseBookingCapacity(
+  input: Parameters<typeof adminReleaseBookingCapacityInTransaction>[0],
+): ReturnType<typeof adminReleaseBookingCapacityInTransaction> {
+  return withSchedulingTransaction(() => adminReleaseBookingCapacityInTransaction(input));
 }

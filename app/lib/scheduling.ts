@@ -1,6 +1,7 @@
 import "server-only";
 
 import { sql } from "@/app/lib/db";
+import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
 import {
   parseBookingTime,
   getZonedDateParts,
@@ -184,6 +185,7 @@ export async function upsertWeeklyAvailability(
     isActive: boolean;
   }>,
 ): Promise<WeeklyAvailability[]> {
+  return withSchedulingTransaction(async () => {
   for (const day of days) {
     const start = parseBookingTime(day.startTime);
     const end = parseBookingTime(day.endTime);
@@ -219,6 +221,7 @@ export async function upsertWeeklyAvailability(
   }
 
   return listWeeklyAvailability();
+  });
 }
 
 export async function createSchedulingBlock(input: {
@@ -252,6 +255,7 @@ export async function createSchedulingBlock(input: {
       ? input.reason.trim().slice(0, 200)
       : null;
 
+  return withSchedulingTransaction(async () => {
   const rows = await sql`
     INSERT INTO scheduling_blocks (block_date, start_time, end_time, reason)
     VALUES (
@@ -264,17 +268,20 @@ export async function createSchedulingBlock(input: {
   `;
 
   return { id: Number((rows[0] as { id: number }).id) };
+  });
 }
 
 export async function deleteSchedulingBlock(
   blockId: number,
 ): Promise<boolean> {
+  return withSchedulingTransaction(async () => {
   const rows = await sql`
     DELETE FROM scheduling_blocks
     WHERE id = ${blockId}
     RETURNING id
   `;
   return Boolean(rows[0]);
+  });
 }
 
 export function isActiveSlotUniqueViolation(error: unknown): boolean {

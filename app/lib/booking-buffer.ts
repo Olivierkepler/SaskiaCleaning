@@ -5,6 +5,7 @@
 import "server-only";
 
 import { sql } from "@/app/lib/db";
+import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
 import {
   DEFAULT_JOB_BUFFER_MINUTES,
   normalizeBufferMinutes,
@@ -63,6 +64,7 @@ export async function updateJobBufferMinutes(
   const normalized = normalizeBufferMinutes(value);
   if (!normalized.ok) return normalized;
 
+  return withSchedulingTransaction(async () => {
   const rows = await sql`
     INSERT INTO scheduling_settings (id, job_buffer_minutes, updated_at)
     VALUES (1, ${normalized.minutes}, now())
@@ -77,4 +79,5 @@ export async function updateJobBufferMinutes(
     ok: true,
     jobBufferMinutes: Number(row?.job_buffer_minutes ?? normalized.minutes),
   };
+  });
 }

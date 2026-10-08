@@ -3,6 +3,7 @@ import { requireAdminApi } from "@/app/lib/admin-auth";
 import { sql } from "@/app/lib/db";
 import { resolveDurationForBooking } from "@/app/lib/booking-duration";
 import { executeAdminBookingDetailsPatch } from "@/app/lib/admin-booking-details-pure";
+import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
@@ -25,7 +26,7 @@ export async function PATCH(request: Request, context: RouteContext) {
   }
 
   try {
-    const result = await executeAdminBookingDetailsPatch(body, {
+    const result = await withSchedulingTransaction(() => executeAdminBookingDetailsPatch(body, {
       authorized: true,
       load: async () => {
         const rows = await sql`
@@ -159,7 +160,7 @@ export async function PATCH(request: Request, context: RouteContext) {
           },
         };
       },
-    });
+    }));
 
     if (result.status !== 200) {
       return NextResponse.json({ error: result.error }, { status: result.status });

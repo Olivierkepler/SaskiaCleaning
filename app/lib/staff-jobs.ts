@@ -7,6 +7,7 @@ import {
 } from "@/app/lib/staff-pure";
 import { normalizeBookingExtras } from "@/app/lib/customer-bookings-pure";
 import { isBookingStatus, type BookingStatus } from "@/app/lib/booking-status";
+import { withSchedulingSavepoint, withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
 
 /** Minimum fields a cleaner needs to perform a job. */
 export type StaffJob = {
@@ -119,7 +120,7 @@ export async function getStaffJobById(
   return row ? mapJob(row) : null;
 }
 
-export async function transitionStaffJobStatus(input: {
+async function transitionStaffJobStatusInTransaction(input: {
   staffId: string;
   bookingId: number;
   nextStatus: string;
@@ -204,7 +205,9 @@ export async function transitionStaffJobStatus(input: {
       const { releaseCompletedCapacityIfWindowElapsed } = await import(
         "@/app/lib/capacity-release"
       );
-      await releaseCompletedCapacityIfWindowElapsed(input.bookingId);
+      await withSchedulingSavepoint(() =>
+        releaseCompletedCapacityIfWindowElapsed(input.bookingId),
+      );
     } catch (error) {
       console.error("Failed to release capacity after completion window check");
       void error;
@@ -212,6 +215,12 @@ export async function transitionStaffJobStatus(input: {
   }
 
   return { ok: true, job: mapJob(row) };
+}
+
+export function transitionStaffJobStatus(
+  input: Parameters<typeof transitionStaffJobStatusInTransaction>[0],
+): ReturnType<typeof transitionStaffJobStatusInTransaction> {
+  return withSchedulingTransaction(() => transitionStaffJobStatusInTransaction(input));
 }
 
 export function partitionStaffJobs(jobs: StaffJob[], today: string): {

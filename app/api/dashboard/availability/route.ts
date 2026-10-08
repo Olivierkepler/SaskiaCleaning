@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/app/lib/admin-auth";
+import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
+import { normalizeBufferMinutes } from "@/app/lib/booking-buffer-pure";
 import {
   listWeeklyAvailability,
   upsertWeeklyAvailability,
@@ -137,21 +139,28 @@ export async function PUT(req: Request) {
       },
     );
 
-    const updated = await upsertWeeklyAvailability(normalized);
-
-    let jobBufferMinutes: number | undefined;
-    if (body?.jobBufferMinutes != null) {
-      const bufferResult = await updateJobBufferMinutes(body.jobBufferMinutes);
-      if (!bufferResult.ok) {
-        return NextResponse.json({ error: bufferResult.error }, { status: 400 });
-      }
-      jobBufferMinutes = bufferResult.jobBufferMinutes;
-    } else {
-      const settings = await getSchedulingBufferSettings();
-      jobBufferMinutes = settings.jobBufferMinutes;
+    const bufferInput = body?.jobBufferMinutes == null
+      ? null
+      : normalizeBufferMinutes(body.jobBufferMinutes);
+    if (bufferInput && !bufferInput.ok) {
+      return NextResponse.json({ error: bufferInput.error }, { status: 400 });
     }
 
-    return NextResponse.json({ days: updated, jobBufferMinutes });
+    const result = await withSchedulingTransaction(async () => {
+      const updated = await upsertWeeklyAvailability(normalized);
+      let jobBufferMinutes: number;
+      if (bufferInput?.ok) {
+        const bufferResult = await updateJobBufferMinutes(bufferInput.minutes);
+        if (!bufferResult.ok) throw new Error(bufferResult.error);
+        jobBufferMinutes = bufferResult.jobBufferMinutes;
+      } else {
+        const settings = await getSchedulingBufferSettings();
+        jobBufferMinutes = settings.jobBufferMinutes;
+      }
+      return { days: updated, jobBufferMinutes };
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error(error);
     return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/app/lib/admin-auth";
 import { sql } from "../../../lib/db";
+import { withSchedulingTransaction } from "../../../lib/scheduling-transaction";
 
 export async function DELETE(
   req: Request,
@@ -12,10 +13,10 @@ export async function DELETE(
 
     const { id } = await params;
 
-    await sql`
+    await withSchedulingTransaction(() => sql`
       DELETE FROM booking_requests
       WHERE id = ${Number(id)}
-    `;
+    `);
 
     return NextResponse.json({ success: true });
   } catch (error) {

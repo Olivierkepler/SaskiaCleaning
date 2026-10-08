@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAdminApi } from "@/app/lib/admin-auth";
 import { sql } from "../../../../lib/db";
 import { isBookingStatus } from "../../../../lib/booking-status";
+import { withSchedulingSavepoint, withSchedulingTransaction } from "../../../../lib/scheduling-transaction";
 
 export async function PATCH(
   req: Request,
@@ -40,23 +41,26 @@ export async function PATCH(
       return NextResponse.json({ error: "Invalid status." }, { status: 400 });
     }
 
-    const result = await sql`
+    const result = await withSchedulingTransaction(async () => {
+    const updated = await sql`
       UPDATE booking_requests
       SET status = ${status}
       WHERE id = ${bookingId}
       RETURNING *;
     `;
 
-    if (!result[0]) {
-      return NextResponse.json({ error: "Booking not found." }, { status: 404 });
+    if (!updated[0]) {
+      return null;
     }
 
     if (status === "cancelled") {
       try {
-        const { releaseAssignmentCapacity } = await import(
-          "@/app/lib/capacity-release"
-        );
-        await releaseAssignmentCapacity(bookingId, "cancelled");
+        await withSchedulingSavepoint(async () => {
+          const { releaseAssignmentCapacity } = await import(
+            "@/app/lib/capacity-release"
+          );
+          await releaseAssignmentCapacity(bookingId, "cancelled");
+        });
       } catch (releaseError) {
         console.error("Failed to release assignment capacity:", releaseError);
       }
@@ -64,13 +68,21 @@ export async function PATCH(
 
     if (status === "completed") {
       try {
-        const { releaseCompletedCapacityIfWindowElapsed } = await import(
-          "@/app/lib/capacity-release"
-        );
-        await releaseCompletedCapacityIfWindowElapsed(bookingId);
+        await withSchedulingSavepoint(async () => {
+          const { releaseCompletedCapacityIfWindowElapsed } = await import(
+            "@/app/lib/capacity-release"
+          );
+          await releaseCompletedCapacityIfWindowElapsed(bookingId);
+        });
       } catch (releaseError) {
         console.error("Failed to release completed capacity:", releaseError);
       }
+    }
+    return updated[0];
+    });
+
+    if (!result) {
+      return NextResponse.json({ error: "Booking not found." }, { status: 404 });
     }
 
     return NextResponse.json({

@@ -6,6 +6,7 @@
 import "server-only";
 
 import { sql } from "@/app/lib/db";
+import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
 import {
   type CapacityReleaseReason,
   isCapacityReleaseReason,
@@ -24,6 +25,7 @@ export type CapacityCleanupResult = {
 export async function releaseExpiredCompletedCapacity(input?: {
   source?: CapacityCleanupResult["source"];
 }): Promise<CapacityCleanupResult> {
+  return withSchedulingTransaction(async () => {
   const source = input?.source ?? "cron";
   const rows = await sql`
     UPDATE booking_assignments a
@@ -52,6 +54,7 @@ export async function releaseExpiredCompletedCapacity(input?: {
     );
   }
   return { released, source };
+  });
 }
 
 /**
@@ -62,6 +65,7 @@ export async function releaseAssignmentCapacity(
   bookingId: number,
   reason: CapacityReleaseReason = "cancelled",
 ): Promise<number> {
+  return withSchedulingTransaction(async () => {
   const safeReason: CapacityReleaseReason = isCapacityReleaseReason(reason)
     ? reason
     : "cancelled";
@@ -78,6 +82,7 @@ export async function releaseAssignmentCapacity(
     RETURNING id
   `;
   return Array.isArray(rows) ? rows.length : 0;
+  });
 }
 
 /**
@@ -87,6 +92,7 @@ export async function releaseAssignmentCapacity(
 export async function releaseCompletedCapacityIfWindowElapsed(
   bookingId: number,
 ): Promise<number> {
+  return withSchedulingTransaction(async () => {
   const rows = await sql`
     UPDATE booking_assignments a
     SET
@@ -115,6 +121,7 @@ export async function releaseCompletedCapacityIfWindowElapsed(
     );
   }
   return released;
+  });
 }
 
 /** Read-only count of rows eligible for completed-window cleanup. */

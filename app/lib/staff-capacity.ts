@@ -5,7 +5,7 @@
 
 import "server-only";
 
-import { sql } from "@/app/lib/db";
+import { deferSchedulingAfterCommit, sql } from "@/app/lib/db";
 import {
   dayOfWeekForDateOnly,
   generateAvailableSlots,
@@ -46,6 +46,8 @@ import {
 } from "@/app/lib/staff-capacity-pure";
 import { sendEmail } from "@/app/lib/email";
 import { formatEstimatedDuration } from "@/app/lib/booking-duration-pure";
+import { resolveDurationForBooking } from "@/app/lib/booking-duration";
+import { withSchedulingTransaction, withSchedulingSavepoint } from "@/app/lib/scheduling-transaction";
 
 function mapTimeOff(
   start: unknown,
@@ -446,12 +448,26 @@ function isOverlapClaimViolation(error: unknown): boolean {
  * (service duration + post-job buffer snapshot).
  * Retries next cleaner on unique/exclusion conflict.
  */
-export async function createBookingWithCapacityClaim(
+async function createBookingWithCapacityClaimInTransaction(
   fields: BookingInsertFields,
 ): Promise<
   | { ok: true; booking: Record<string, unknown>; staffId: string }
   | { ok: false; error: string; status: number }
 > {
+  const durationResult = await resolveDurationForBooking({
+    service: fields.service,
+    bedrooms: fields.bedrooms,
+    bathrooms: fields.bathrooms,
+    extras: JSON.parse(fields.extrasJson) as unknown,
+  });
+  if (!durationResult.ok) {
+    return { ok: false, error: durationResult.error, status: 400 };
+  }
+  fields = {
+    ...fields,
+    durationMinutes: durationResult.minutes,
+    bufferMinutes: await getJobBufferMinutes(),
+  };
   const bufferMinutes = resolveEffectiveBufferMinutes(fields.bufferMinutes);
   const window = getCapacityWindow({
     dateOnly: fields.bookingDate,
@@ -461,6 +477,16 @@ export async function createBookingWithCapacityClaim(
   });
   if (!window) {
     return { ok: false, error: SLOT_UNAVAILABLE_MESSAGE, status: 400 };
+  }
+
+  const slotCheck = await assertSlotHasCapacity({
+    dateOnly: fields.bookingDate,
+    time: fields.bookingTime,
+    durationMinutes: fields.durationMinutes,
+    bufferMinutes,
+  });
+  if (!slotCheck.ok) {
+    return { ok: false, error: slotCheck.error, status: slotCheck.status };
   }
 
   let staff: StaffCapacitySnapshot[];
@@ -484,7 +510,7 @@ export async function createBookingWithCapacityClaim(
 
   for (const candidate of ordered) {
     try {
-      const rows = await sql`
+      const rows = await withSchedulingSavepoint(() => sql`
         WITH new_booking AS (
           INSERT INTO booking_requests (
             name, email, mobile, bedrooms, bathrooms, service, frequency,
@@ -523,21 +549,22 @@ export async function createBookingWithCapacityClaim(
         SELECT nb.*, na.staff_id AS claimed_staff_id
         FROM new_booking nb
         INNER JOIN new_assignment na ON na.booking_id = nb.id
-      `;
+      `);
 
       const booking = rows[0] as Record<string, unknown> | undefined;
       if (!booking) {
         return { ok: false, error: CAPACITY_UNAVAILABLE_MESSAGE, status: 503 };
       }
 
-      try {
-        const staffRows = await sql`
+      const staffRows = await sql`
           SELECT name, email FROM staff_members WHERE id = ${candidate.id} LIMIT 1
         `;
-        const member = staffRows[0] as
+      const member = staffRows[0] as
           | { name: string; email: string }
           | undefined;
-        if (member?.email) {
+      if (member?.email) {
+        deferSchedulingAfterCommit(async () => {
+          try {
           await sendEmail({
             to: member.email,
             subject: `New job assignment — Saskia Cleaning (#${booking.id})`,
@@ -558,10 +585,10 @@ export async function createBookingWithCapacityClaim(
               "— Saskia Cleaning",
             ].join("\n"),
           });
-        }
-      } catch (emailError) {
-        console.error("Auto-assignment email failed");
-        void emailError;
+          } catch {
+            console.error("Auto-assignment email failed");
+          }
+        });
       }
 
       return {
@@ -579,10 +606,16 @@ export async function createBookingWithCapacityClaim(
   return { ok: false, error: CAPACITY_CONFLICT_MESSAGE, status: 409 };
 }
 
+export function createBookingWithCapacityClaim(
+  fields: BookingInsertFields,
+): ReturnType<typeof createBookingWithCapacityClaimInTransaction> {
+  return withSchedulingTransaction(() => createBookingWithCapacityClaimInTransaction(fields));
+}
+
 /**
  * Atomically approve reschedule using stored duration_minutes + buffer_minutes.
  */
-export async function rescheduleBookingWithCapacityClaim(input: {
+async function rescheduleBookingWithCapacityClaimInTransaction(input: {
   bookingId: number;
   newDate: string;
   newTime: string;
@@ -612,6 +645,17 @@ export async function rescheduleBookingWithCapacityClaim(input: {
   const bufferMinutes = resolveEffectiveBufferMinutes(
     booking.buffer_minutes == null ? null : Number(booking.buffer_minutes),
   );
+
+  const slotCheck = await assertSlotHasCapacity({
+    dateOnly: input.newDate,
+    time: input.newTime,
+    durationMinutes,
+    bufferMinutes,
+    excludeBookingId: input.bookingId,
+  });
+  if (!slotCheck.ok) {
+    return { ok: false, error: slotCheck.error, status: slotCheck.status };
+  }
 
   const window = getCapacityWindow({
     dateOnly: input.newDate,
@@ -689,7 +733,7 @@ export async function rescheduleBookingWithCapacityClaim(input: {
   for (const chosenId of candidates) {
     const retained = chosenId === currentStaffId;
     try {
-      const rows = await sql`
+      const rows = await withSchedulingSavepoint(() => sql`
         WITH claim_request AS (
           UPDATE booking_change_requests
           SET
@@ -741,7 +785,7 @@ export async function rescheduleBookingWithCapacityClaim(input: {
           RETURNING staff_id
         )
         SELECT staff_id FROM new_assignment
-      `;
+      `);
 
       if (!rows[0]) {
         return {
@@ -752,8 +796,7 @@ export async function rescheduleBookingWithCapacityClaim(input: {
       }
 
       if (!retained && currentStaffId && currentStaffId !== chosenId) {
-        try {
-          const [prevRows, nextRows] = await Promise.all([
+        const [prevRows, nextRows] = await Promise.all([
             sql`SELECT name, email FROM staff_members WHERE id = ${currentStaffId} LIMIT 1`,
             sql`SELECT name, email FROM staff_members WHERE id = ${chosenId} LIMIT 1`,
           ]);
@@ -763,6 +806,8 @@ export async function rescheduleBookingWithCapacityClaim(input: {
           const next = nextRows[0] as
             | { name: string; email: string }
             | undefined;
+        deferSchedulingAfterCommit(async () => {
+          try {
           if (prev?.email) {
             await sendEmail({
               to: prev.email,
@@ -794,10 +839,10 @@ export async function rescheduleBookingWithCapacityClaim(input: {
               ].join("\n"),
             });
           }
-        } catch (emailError) {
-          console.error("Reschedule assignment email failed");
-          void emailError;
-        }
+          } catch {
+            console.error("Reschedule assignment email failed");
+          }
+        });
       }
 
       return { ok: true, staffId: chosenId, retained };
@@ -811,9 +856,13 @@ export async function rescheduleBookingWithCapacityClaim(input: {
   return { ok: false, error: CAPACITY_CONFLICT_MESSAGE, status: 409 };
 }
 
+export function rescheduleBookingWithCapacityClaim(input: Parameters<typeof rescheduleBookingWithCapacityClaimInTransaction>[0]): ReturnType<typeof rescheduleBookingWithCapacityClaimInTransaction> {
+  return withSchedulingTransaction(() => rescheduleBookingWithCapacityClaimInTransaction(input));
+}
+
 export { releaseAssignmentCapacity } from "@/app/lib/capacity-release";
 
-export async function backfillUnassignedFutureBookings(): Promise<{
+async function backfillUnassignedFutureBookingsInTransaction(): Promise<{
   assigned: number;
   remaining: number;
   remainingIds: number[];
@@ -892,4 +941,8 @@ export async function backfillUnassignedFutureBookings(): Promise<{
   }
 
   return { assigned, remaining: remainingIds.length, remainingIds };
+}
+
+export function backfillUnassignedFutureBookings(): ReturnType<typeof backfillUnassignedFutureBookingsInTransaction> {
+  return withSchedulingTransaction(backfillUnassignedFutureBookingsInTransaction);
 }

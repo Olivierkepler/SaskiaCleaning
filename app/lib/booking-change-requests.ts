@@ -21,6 +21,8 @@ import {
   parseBookingTime,
 } from "@/app/lib/scheduling-pure";
 import { parseBookingDateOnly } from "@/app/lib/customer-bookings-pure";
+import { deferSchedulingAfterCommit } from "@/app/lib/db";
+import { withSchedulingSavepoint, withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
 
 export type BookingChangeRequest = {
   id: number;
@@ -390,7 +392,7 @@ export async function countPendingAdminChangeRequests(): Promise<number> {
   return Number((rows[0] as { count: number } | undefined)?.count ?? 0);
 }
 
-export async function approveBookingChangeRequest(input: {
+async function approveBookingChangeRequestInTransaction(input: {
   requestId: number;
   customerMessage?: string | null;
 }): Promise<
@@ -625,23 +627,29 @@ export async function approveBookingChangeRequest(input: {
       const { releaseAssignmentCapacity } = await import(
         "@/app/lib/capacity-release"
       );
-      const { sendEmail } = await import("@/app/lib/email");
       const assignment = await getAssignmentForBooking(request.booking_id);
       if (assignment?.staffEmail) {
-        await sendEmail({
-          to: assignment.staffEmail,
-          subject: `Job cancelled — Saskia Cleaning (#${request.booking_id})`,
-          text: [
-            `Hi ${assignment.staffName ?? "there"},`,
-            "",
-            `Booking #${request.booking_id} was cancelled.`,
-            "It is no longer an active job.",
-            "",
-            "— Saskia Cleaning",
-          ].join("\n"),
+        const staffEmail = assignment.staffEmail;
+        const staffName = assignment.staffName;
+        deferSchedulingAfterCommit(async () => {
+          const { sendEmail } = await import("@/app/lib/email");
+          await sendEmail({
+            to: staffEmail,
+            subject: `Job cancelled — Saskia Cleaning (#${request.booking_id})`,
+            text: [
+              `Hi ${staffName ?? "there"},`,
+              "",
+              `Booking #${request.booking_id} was cancelled.`,
+              "It is no longer an active job.",
+              "",
+              "— Saskia Cleaning",
+            ].join("\n"),
+          });
         });
       }
-      await releaseAssignmentCapacity(request.booking_id, "cancelled");
+      await withSchedulingSavepoint(() =>
+        releaseAssignmentCapacity(request.booking_id, "cancelled"),
+      );
     } catch (error) {
       console.error("Cancel assignment cleanup failed");
       void error;
@@ -668,12 +676,14 @@ export async function approveBookingChangeRequest(input: {
       | undefined;
 
     if (booking) {
-      await notifyCustomerBookingChangeResolution({
-        request,
-        bookingEmail: booking.email,
-        bookingName: booking.name,
-        service: booking.service,
-        outcome: "approved",
+      deferSchedulingAfterCommit(async () => {
+        await notifyCustomerBookingChangeResolution({
+          request,
+          bookingEmail: booking.email,
+          bookingName: booking.name,
+          service: booking.service,
+          outcome: "approved",
+        });
       });
     }
   } catch (error) {
@@ -682,6 +692,12 @@ export async function approveBookingChangeRequest(input: {
   }
 
   return { ok: true, request };
+}
+
+export function approveBookingChangeRequest(
+  input: Parameters<typeof approveBookingChangeRequestInTransaction>[0],
+): ReturnType<typeof approveBookingChangeRequestInTransaction> {
+  return withSchedulingTransaction(() => approveBookingChangeRequestInTransaction(input));
 }
 
 export async function rejectBookingChangeRequest(input: {

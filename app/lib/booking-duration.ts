@@ -5,6 +5,7 @@
 import "server-only";
 
 import { sql } from "@/app/lib/db";
+import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
 import {
   calculateBookingDuration,
   normalizeDurationMinutes,
@@ -73,6 +74,7 @@ export async function upsertServiceDurationRule(input: {
     return { ok: false, error: duration.error, status: 400 };
   }
 
+  return withSchedulingTransaction(async () => {
   try {
     if (input.id) {
       const rows = await sql`
@@ -124,15 +126,18 @@ export async function upsertServiceDurationRule(input: {
     console.error(error);
     return { ok: false, error: "Failed to save duration rule.", status: 500 };
   }
+  });
 }
 
 export async function deleteServiceDurationRule(
   id: number,
 ): Promise<boolean> {
+  return withSchedulingTransaction(async () => {
   const rows = await sql`
     DELETE FROM service_duration_rules
     WHERE id = ${id}
     RETURNING id
   `;
   return Boolean(rows[0]);
+  });
 }

@@ -1,6 +1,8 @@
 import "server-only";
 
 import { sql } from "@/app/lib/db";
+import { deferSchedulingAfterCommit } from "@/app/lib/db";
+import { withSchedulingTransaction, withSchedulingSavepoint } from "@/app/lib/scheduling-transaction";
 import {
   formatStaffRole,
   hasOverlappingStaffConflict,
@@ -171,6 +173,7 @@ export async function createStaffMember(input: unknown): Promise<
       : "cleaner";
   const isActive = record.isActive !== false;
 
+  return withSchedulingTransaction(async () => {
   try {
     const rows = await sql`
       INSERT INTO staff_members (email, name, phone, role, is_active)
@@ -187,7 +190,8 @@ export async function createStaffMember(input: unknown): Promise<
     await seedDefaultStaffAvailability(staff.id);
 
     // Invite email failure must not roll back creation.
-    try {
+    deferSchedulingAfterCommit(async () => {
+      try {
       await sendEmail({
         to: staff.email,
         subject: "You've been added to Saskia Cleaning",
@@ -205,10 +209,11 @@ export async function createStaffMember(input: unknown): Promise<
           "— Saskia Cleaning",
         ].join("\n"),
       });
-    } catch (error) {
-      console.error("Staff invite email failed");
-      void error;
-    }
+      } catch (error) {
+        console.error("Staff invite email failed");
+        void error;
+      }
+    });
 
     return { ok: true, staff };
   } catch (error) {
@@ -223,6 +228,7 @@ export async function createStaffMember(input: unknown): Promise<
     console.error(error);
     return { ok: false, error: "Failed to create staff member.", status: 500 };
   }
+  });
 }
 
 export async function updateStaffMember(
@@ -250,6 +256,7 @@ export async function updateStaffMember(
       : "cleaner";
   const isActive = Boolean(record.isActive);
 
+  return withSchedulingTransaction(async () => {
   if (!isActive) {
     const upcoming = await countUpcomingAssignmentsForStaff(staffId);
     if (upcoming > 0) {
@@ -277,6 +284,7 @@ export async function updateStaffMember(
     return { ok: false, error: "Staff member not found.", status: 404 };
   }
   return { ok: true, staff: mapStaff(row) };
+  });
 }
 
 export async function countUpcomingAssignmentsForStaff(
@@ -322,6 +330,7 @@ export async function upsertStaffAvailability(
   | { ok: true; days: StaffAvailabilityDay[] }
   | { ok: false; error: string; status: number; conflictCount?: number }
 > {
+  return withSchedulingTransaction(async () => {
   // Detect future assignments that would fall outside the new weekly windows.
   const futureRows = await sql`
     SELECT a.slot_date, a.slot_time, b.duration_minutes, b.buffer_minutes
@@ -423,6 +432,7 @@ export async function upsertStaffAvailability(
     `;
   }
   return { ok: true, days: await listStaffAvailability(staffId) };
+  });
 }
 
 export async function listStaffTimeOff(
@@ -482,6 +492,7 @@ export async function createStaffTimeOff(input: {
       ? input.reason.trim().slice(0, 200)
       : null;
 
+  return withSchedulingTransaction(async () => {
   const assignmentRows = await sql`
     SELECT a.slot_time, b.duration_minutes, b.buffer_minutes
     FROM booking_assignments a
@@ -548,12 +559,14 @@ export async function createStaffTimeOff(input: {
     RETURNING id
   `;
   return { ok: true, id: Number((rows[0] as { id: number }).id) };
+  });
 }
 
 export async function deleteStaffTimeOff(
   staffId: string,
   timeOffId: number,
 ): Promise<boolean> {
+  return withSchedulingTransaction(async () => {
   const rows = await sql`
     DELETE FROM staff_time_off
     WHERE id = ${timeOffId}
@@ -561,6 +574,7 @@ export async function deleteStaffTimeOff(
     RETURNING id
   `;
   return Boolean(rows[0]);
+  });
 }
 
 export async function getAssignmentForBooking(
@@ -809,6 +823,7 @@ export async function assignStaffToBooking(input: {
   | { ok: true; assignment: BookingAssignment }
   | { ok: false; error: string; status: number }
 > {
+  return withSchedulingTransaction(async () => {
   const bookingRows = await sql`
     SELECT id, booking_date, booking_time, duration_minutes, buffer_minutes, status, name, email, service, location, mobile
     FROM booking_requests
@@ -917,19 +932,16 @@ export async function assignStaffToBooking(input: {
   const windowEndIso = window.windowEndUtc.toISOString();
 
   try {
-    // Soft-release any prior active primary, then insert new claim with slot fields.
-    await sql`
-      UPDATE booking_assignments
-      SET
-        is_active = false,
-        released_at = now(),
-        release_reason = 'admin_release',
-        updated_at = now()
-      WHERE booking_id = ${input.bookingId}
-        AND is_active = true
-    `;
-
-    const rows = await sql`
+    // Preserve the old assignment if a new claim fails; the transaction lock
+    // keeps validation and this replacement inside one scheduling boundary.
+    const rows = await withSchedulingSavepoint(async () => {
+      await sql`
+        UPDATE booking_assignments
+        SET is_active = false, released_at = now(),
+            release_reason = 'admin_release', updated_at = now()
+        WHERE booking_id = ${input.bookingId} AND is_active = true
+      `;
+      return sql`
       INSERT INTO booking_assignments (
         booking_id, staff_id, assigned_by, is_primary,
         slot_date, slot_time, is_active,
@@ -947,7 +959,8 @@ export async function assignStaffToBooking(input: {
         ${windowEndIso}::timestamptz
       )
       RETURNING *
-    `;
+      `;
+    });
 
     const assignmentRow = rows[0] as Record<string, unknown>;
     const staff = await findStaffById(input.staffId);
@@ -962,8 +975,9 @@ export async function assignStaffToBooking(input: {
       staffEmail: staff?.email,
     };
 
-    // Notify new assignee (and previous if reassigned). Failures are non-fatal.
-    try {
+    // Notifications run after commit so the global scheduling lock stays short.
+    deferSchedulingAfterCommit(async () => {
+      try {
       if (staff?.email) {
         await sendEmail({
           to: staff.email,
@@ -1004,10 +1018,11 @@ export async function assignStaffToBooking(input: {
           ].join("\n"),
         });
       }
-    } catch (error) {
-      console.error("Assignment notification failed");
-      void error;
-    }
+      } catch (error) {
+        console.error("Assignment notification failed");
+        void error;
+      }
+    });
 
     return { ok: true, assignment };
   } catch (error) {
@@ -1025,11 +1040,13 @@ export async function assignStaffToBooking(input: {
     }
     throw error;
   }
+  });
 }
 
 export async function unassignBooking(
   bookingId: number,
 ): Promise<{ ok: true } | { ok: false; error: string; status: number }> {
+  return withSchedulingTransaction(async () => {
   const bookingRows = await sql`
     SELECT status, booking_date, booking_time
     FROM booking_requests
@@ -1083,9 +1100,11 @@ export async function unassignBooking(
   }
 
   if (previous?.staffEmail) {
-    try {
+    const previousStaffEmail = previous.staffEmail;
+    deferSchedulingAfterCommit(async () => {
+      try {
       await sendEmail({
-        to: previous.staffEmail,
+        to: previousStaffEmail,
         subject: `Job unassigned — Saskia Cleaning (#${bookingId})`,
         text: [
           `Hi ${previous.staffName ?? "there"},`,
@@ -1095,13 +1114,15 @@ export async function unassignBooking(
           "— Saskia Cleaning",
         ].join("\n"),
       });
-    } catch (error) {
-      console.error("Unassign notification failed");
-      void error;
-    }
+      } catch (error) {
+        console.error("Unassign notification failed");
+        void error;
+      }
+    });
   }
 
   return { ok: true };
+  });
 }
 
 /**
@@ -1112,6 +1133,7 @@ export async function unassignBooking(
 export async function revalidateAssignmentAfterReschedule(
   bookingId: number,
 ): Promise<"retained" | "reassigned" | "unassigned" | "none"> {
+  return withSchedulingTransaction(async () => {
   const assignment = await getAssignmentForBooking(bookingId);
 
   const bookingRows = await sql`
@@ -1242,4 +1264,5 @@ export async function revalidateAssignmentAfterReschedule(
 
   // Keep prior assignment active if we could not move — safer than freeing capacity.
   return assignment ? "retained" : "none";
+  });
 }
