@@ -20,7 +20,10 @@ import { CAPACITY_CONFLICT_MESSAGE } from "@/app/lib/staff-capacity-pure";
 import { resolveDurationForBooking } from "@/app/lib/booking-duration";
 import { getJobBufferMinutes } from "@/app/lib/booking-buffer";
 import { priceBookingRequest } from "@/app/lib/booking-pricing-pure";
-import { logBookingDiagnostic } from "@/app/lib/booking-diagnostics";
+import {
+  BOOKING_CAPACITY_DIAGNOSTIC_STAGES,
+  logBookingDiagnostic,
+} from "@/app/lib/booking-diagnostics";
 
 function parseNonNegativeInteger(value: unknown): number | null {
   const parsed = Number(value);
@@ -148,6 +151,7 @@ export async function POST(req: Request) {
       durationMinutes: durationResult.minutes,
       bufferMinutes,
       diagnosticEvent: "BOOKING_CAPACITY_QUERY_FAILED",
+      diagnosticStage: BOOKING_CAPACITY_DIAGNOSTIC_STAGES.PREFLIGHT,
     });
 
     if (!slotCheck.ok) {

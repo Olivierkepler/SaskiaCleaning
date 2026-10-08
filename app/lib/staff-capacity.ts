@@ -52,6 +52,7 @@ import {
   logBookingDiagnostic,
   logBookingDiagnosticCategory,
   runBookingNotificationSafely,
+  BOOKING_CAPACITY_DIAGNOSTIC_STAGES,
   type BookingDiagnosticEvent,
 } from "@/app/lib/booking-diagnostics";
 
@@ -408,6 +409,8 @@ export async function assertSlotHasCapacity(input: {
   excludeBookingId?: number | null;
   requireTime?: boolean;
   diagnosticEvent?: BookingDiagnosticEvent;
+  diagnosticStage?:
+    | (typeof BOOKING_CAPACITY_DIAGNOSTIC_STAGES)[keyof typeof BOOKING_CAPACITY_DIAGNOSTIC_STAGES];
 }): Promise<
   | { ok: true; time: string; window: CapacityWindow }
   | { ok: false; error: string; status: number; conflict?: boolean }
@@ -476,6 +479,7 @@ export async function assertSlotHasCapacity(input: {
     logBookingDiagnostic(
       input.diagnosticEvent ?? "SCHEDULING_CAPACITY_QUERY_FAILED",
       error,
+      input.diagnosticStage,
     );
     return {
       ok: false,
@@ -561,6 +565,7 @@ async function createBookingWithCapacityClaimInTransaction(
     durationMinutes: fields.durationMinutes,
     bufferMinutes,
     diagnosticEvent: "BOOKING_CAPACITY_QUERY_FAILED",
+    diagnosticStage: BOOKING_CAPACITY_DIAGNOSTIC_STAGES.TRANSACTION_RECHECK,
   });
   if (!slotCheck.ok) {
     return { ok: false, error: slotCheck.error, status: slotCheck.status };

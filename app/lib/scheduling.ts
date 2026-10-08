@@ -1,7 +1,10 @@
 import "server-only";
 
 import { sql } from "@/app/lib/db";
-import type { BookingDiagnosticEvent } from "@/app/lib/booking-diagnostics";
+import type {
+  BookingCapacityDiagnosticStage,
+  BookingDiagnosticEvent,
+} from "@/app/lib/booking-diagnostics";
 import { withSchedulingTransaction } from "@/app/lib/scheduling-transaction";
 import {
   parseBookingTime,
@@ -161,6 +164,7 @@ export async function assertSlotAvailable(input: {
   ignoreOccupiedTime?: string | null;
   requireTime?: boolean;
   diagnosticEvent?: BookingDiagnosticEvent;
+  diagnosticStage?: BookingCapacityDiagnosticStage;
 }): Promise<
   | { ok: true; time: string }
   | { ok: false; error: string; status: number; conflict?: boolean }
@@ -174,6 +178,7 @@ export async function assertSlotAvailable(input: {
     excludeBookingId: input.excludeBookingId,
     requireTime: input.requireTime,
     diagnosticEvent: input.diagnosticEvent,
+    diagnosticStage: input.diagnosticStage,
   });
   if (!result.ok) return result;
   return { ok: true, time: result.time };
